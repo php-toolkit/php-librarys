@@ -6,11 +6,12 @@
 namespace inhere\tools\collections;
 
 use RuntimeException;
-use inhere\tools\exceptions\ParseDataException;
+use inhere\tools\exceptions\DataParseException;
 
 /**
  * Class DataCollector - 数据收集器 (数据存储器 - DataStorage)
  * @package inhere\tools\collections
+ *
  * 支持 链式的子节点 设置 和 值获取
  * e.g:
  * ```
@@ -74,7 +75,7 @@ class DataCollector extends SimpleCollection
      * @param string $format
      * @param string $name
      */
-    public function __construct ($data, $format = 'php', $name = 'box1')
+    public function __construct($data, $format = 'php', $name = 'box1')
     {
         // Optionally load supplied data.
         if (is_array($data) || is_object($data)) {
@@ -82,6 +83,8 @@ class DataCollector extends SimpleCollection
         } elseif ($data && is_string($data)) {
             $this->load($data, $format);
         }
+
+        parent::__construct();
 
         $this->name = $name;
     }
@@ -539,7 +542,7 @@ class DataCollector extends SimpleCollection
     /**
      * @param $data
      * @return array
-     * @throws RuntimeException
+     * @throws DataParseException
      */
     public static function parseJson($data)
     {
@@ -571,7 +574,7 @@ class DataCollector extends SimpleCollection
         if ( json_last_error() === JSON_ERROR_NONE ) {
             return $data;
         } else {
-            throw new ParseDataException('json config data parse error :'.json_last_error_msg());
+            throw new DataParseException('json config data parse error :'.json_last_error_msg());
         }
     }
 

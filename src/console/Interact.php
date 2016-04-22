@@ -8,18 +8,14 @@
  * file: CliInteract.php
  */
 
-namespace ulue\cli;
-
-// fcgi doesn't have STDIN and STDOUT defined by default
-// defined('STDIN') or define('STDIN', fopen('php://stdin', 'r'));
-// defined('STDOUT') or define('STDOUT', fopen('php://stdout', 'w'));
+namespace inhere\tools\console;
 
 /**
- *
+ * Class Interact
+ * @package inhere\tools\console
  */
 class Interact
 {
-
     const STAR_LINE = "*************************************%s*************************************\n";
 
     const TAB    = '    ';
@@ -36,7 +32,6 @@ class Interact
     static public function panel($data, $title='Info panel')
     {
         $data = is_array($data) ? array_filter($data) : [trim($data)];
-        $tab = "    ";
 
         echo PHP_EOL . self::TAB . sprintf(self::STAR_LINE,$title) ;
 
@@ -66,13 +61,12 @@ class Interact
         echo self::NL_TAB . $question;
 
         $option    = is_array($option) ? $option : explode(',', $option);
+        // no set key
         $isNumeric = isset($option[0]);
         $keys = [];
 
         foreach ($option as $key => $value) {
-
-            $isNumeric && $key++;
-            $keys[] = $key;
+            $keys[] = $isNumeric ? ++$key : $key;
 
             echo self::NL_TAB . " $key) $value";
         }
@@ -80,10 +74,10 @@ class Interact
         if ($allowExit) {
             $keys[] = 'q';
 
-            echo self::NL_TAB . " q) quit";
+            echo self::NL_TAB . ' q) quit';
         }
 
-        echo self::NL_TAB . "You choice : ";
+        echo self::NL_TAB . 'You choice : ';
 
         $r = self::readRow();
 
@@ -93,7 +87,7 @@ class Interact
             $r = self::readRow();
         }
 
-        if ($r == 'q' || !in_array($r, $keys) ) {
+        if ($r === 'q' || !in_array($r, $keys) ) {
             exit("\n\n Quit,ByeBye.\n");
         }
 
@@ -154,7 +148,7 @@ class Interact
     static public function loopAsk($question, callable $callbackVerify = null, $allowed=3)
     {
         $question = ucfirst(trim($question));
-        $allowed = ((int)$allowed > 4 || $allowed < 1) ? 3 : $allowed;
+        $allowed = ((int)$allowed > 4 || $allowed < 1) ? 3 : (int)$allowed;
         $loop  = true;
         $key  = 1;
 
@@ -174,7 +168,7 @@ class Interact
                 break;
             }
 
-            if ($key == $allowed) {
+            if ($key === $allowed) {
                 exit(self::NL_TAB."You've entered incorrectly $allowed times in a row !!\n");
             }
 
@@ -206,7 +200,8 @@ class Interact
 
     /**
      * 输出，会在前添加换行符并自动缩进
-     * @param  string  $text
+     * @param  string $text
+     * @param bool $newLine
      * @param  boolean $exit
      */
     static public function out($text, $newLine=true, $exit=false)

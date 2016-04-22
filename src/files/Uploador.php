@@ -32,19 +32,20 @@ class Uploador
     public $config = array();
 
     /**
+     * @param array $config
      * @param string $path 保存路径
-     * @param null $ext 可用扩展名
+     * @param null|string $ext 可用扩展名
      * @param string $size 大小
      * @param string $waterMarkOn 水印是否开始
      * @param int|string $thumbOn 缩略图是否开启
      * @param array $thumb 缩略图配置
      */
-    function __construct(
+    public function __construct(array $config,
         $path='',        $ext='',    $size='',
         $waterMarkOn='', $thumbOn=1, $thumb=array()
     ) {
-        $config         = $this->config = Ulue::$app->get("upload");
-        $this->path     = empty($path) ? $config['path'] : $path; //上传路径
+        $this->config = $config;
+        $this->path     = !$path ? $config['path'] : $path; //上传路径
         $this->ext      = empty($ext) && !is_array($ext) ? array_keys($config['ext_size']) : $ext; //上传类型
         $ext            = array();
         foreach ($this->ext as $v) {
@@ -134,7 +135,7 @@ class Uploador
         }
 
         //对上传图片进行处理
-        $img = new GImage();
+        $img = new Picture();
 
         //缩略图处理
         if ( $this->thumbOn ){
@@ -175,7 +176,7 @@ class Uploador
      */
     private function checkDir($path)
     {
-        return (is_dir($path) || mkdir($path, 0664, true)) && is_writable($path) ? true: false;
+        return (is_dir($path) || mkdir($path, 0664, true)) && is_writable($path);
     }
 
     /**

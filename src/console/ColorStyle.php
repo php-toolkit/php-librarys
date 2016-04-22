@@ -6,9 +6,7 @@
  * @todo  unused
  */
 
-// namespace ulue\cli;
-
-// use ulue\core\Core;
+namespace inhere\tools\console;
 
 /**
  *@link https://github.com/ventoviro/windwalker-IO
@@ -69,14 +67,14 @@ final class ColorStyle
 
     /**
      * Constructor
-     * @param   string  $bg       Background color.
-     * @param   array   $options  Style options.
-     * @throws  \InvalidArgumentException
+     * @param string $fg
+     * @param string $bg Background color.
+     * @param array $options Style options.
      */
     public function __construct($fg = '', $bg = '', $options = [])
     {
         if ($fg) {
-            if (false == array_key_exists($fg, static::$knownColors)) {
+            if (false === array_key_exists($fg, static::$knownColors)) {
                 throw new \InvalidArgumentException(
                     sprintf('Invalid foreground color "%1$s" [%2$s]',
                         $fg,
@@ -89,7 +87,7 @@ final class ColorStyle
         }
 
         if ($bg) {
-            if (false == array_key_exists($bg, static::$knownColors)) {
+            if (false === array_key_exists($bg, static::$knownColors)) {
                 throw new \InvalidArgumentException(
                     sprintf('Invalid background color "%1$s" [%2$s]',
                         $bg,
@@ -102,7 +100,7 @@ final class ColorStyle
         }
 
         foreach ($options as $option) {
-            if (false == array_key_exists($option, static::$knownOptions)) {
+            if (false === array_key_exists($option, static::$knownOptions)) {
                 throw new \InvalidArgumentException(
                     sprintf('Invalid option "%1$s" [%2$s]',
                         $option,
@@ -125,7 +123,8 @@ final class ColorStyle
 
     /**
      * Create a color style from a parameter string.
-     * @throws  \RuntimeException
+     * @param $string
+     * @return ColorStyle
      */
     public static function fromString($string)
     {

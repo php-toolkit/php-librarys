@@ -8,12 +8,12 @@
  * Uesd: 主要功能是 hi
  */
 
-namespace inhere\tools\fileSystem;
+namespace inhere\tools\files;
 
+use inhere\tools\exceptions\NotFoundException;
 use inhere\tools\helpers\StrHelper;
-//use ulue\core\utils\StaticInvoker;
 
-abstract class AbstractFileSystem //extends StaticInvoker
+abstract class AbstractFileSystem
 {
     /**
      * 转换为标准的路径结构
@@ -23,7 +23,7 @@ abstract class AbstractFileSystem //extends StaticInvoker
     static public function pathFormat($dirName)
     {
         $dirName = str_ireplace('\\','/', trim($dirName));
-        return substr($dirName,-1) == '/' ? $dirName: $dirName.'/';
+        return substr($dirName,-1) === '/' ? $dirName: $dirName.'/';
     }
 
     /**
@@ -31,19 +31,19 @@ abstract class AbstractFileSystem //extends StaticInvoker
      * @param  string | array $files 要检查的文件(文件列表)
      * @param  string $ext 是否检查后缀
      * @throws \InvalidArgumentException
-     * @throws \NotFoundException
+     * @throws NotFoundException
      * @return array|string [type]        [description]
      */
     static public function exists($files, $ext=null)
     {
-        $ext    = $ext ? trim($ext,'. ') : false;
+        $ext    = $ext ? trim($ext,'. ') : null;
         $files  = StrHelper::toArray($files);
 
         foreach ($files as $file) {
             $file = trim($file);
 
             if (!file_exists($file)) {
-                throw new \NotFoundException("文件 {$file} 不存在！");
+                throw new NotFoundException("文件 {$file} 不存在！");
             }
 
             // if ( $ext && strrchr($file,'.') != '.'.$ext ) {
@@ -56,29 +56,32 @@ abstract class AbstractFileSystem //extends StaticInvoker
         return $files;
     }
 
-    static public function chmodr($path, $filemode)
+    /**
+     * @param $path
+     * @param int $mode
+     * @return bool
+     */
+    static public function chmodr($path, $mode = 0664)
     {
-        if (!is_dir($path))
-            return @chmod($path, $filemode);
+        if (!is_dir($path)) {
+            return @chmod($path, $mode);
+        }
+
         $dh = opendir($path);
-        while (($file = readdir($dh)) !== false)
-        {
-            if ($file != '.' && $file != '..')
-            {
-                $fullpath = $path.'/'.$file;
-                if (is_link($fullpath))
+        while (($file = readdir($dh)) !== false) {
+            if ($file !== '.' && $file !== '..') {
+                $fullPath = $path.'/'.$file;
+                if (is_link($fullPath)) {
                     return false;
-                elseif (!is_dir($fullpath) && !@chmod($fullpath, $filemode))
+                } elseif (!is_dir($fullPath) && !@chmod($fullPath, $mode)) {
                     return false;
-                elseif (!self::chmodr($fullpath, $filemode))
+                } elseif (!self::chmodr($fullPath, $mode)) {
                     return false;
+                }
             }
         }
         closedir($dh);
-        if (@chmod($path, $filemode))
-            return true;
-        else
-            return false;
+        return @chmod($path, $mode) ? true : false;
     }
 
     /**
@@ -87,7 +90,6 @@ abstract class AbstractFileSystem //extends StaticInvoker
      * @from web
      * @access public
      * @param  string  $file_path   文件路径
-     * @param  bool    $rename_prv  是否在检查修改权限时检查执行rename()函数的权限
      * @return int  返回值的取值范围为{0 <= x <= 15}，每个值表示的含义可由四位二进制数组合推出。
      *                  返回值在二进制计数法中，四位由高到低分别代表
      *                  可执行rename()函数权限 |可对文件追加内容权限 |可写入文件权限|可读取文件权限。
@@ -101,7 +103,7 @@ abstract class AbstractFileSystem //extends StaticInvoker
 
         $mark = 0;
 
-        if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN') {
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
 
             /* 测试文件 */
             $test_file = $file_path . '/cf_test.txt';

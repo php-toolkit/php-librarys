@@ -8,21 +8,26 @@
 
 namespace inhere\tools\traits;
 
+use inhere\tools\exceptions\InvalidArgumentException;
 
+/**
+ * Class TraitObjectHelper
+ * @package inhere\tools\traits
+ */
 trait TraitObjectHelper
 {
     /**
      * php对象转换成为数组
-     * @param object $object
+     * @param mixed $object
      * @return array|bool
      */
     static public function toArray($object)
     {
         if ( ! is_object($object) ) {
-            \Trigger::error('参数必须是个对象！');
+            throw new InvalidArgumentException('参数必须是个对象！');
         }
 
-        $arr = array();
+        $arr = [];
 
         foreach($object as $attr => $value){
             /*if (is_object($value)){

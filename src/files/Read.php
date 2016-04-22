@@ -8,8 +8,16 @@
  * Uesd: 主要功能是 文件相关信息获取
  */
 
-namespace inhere\tools\fileSystem;
+namespace inhere\tools\files;
 
+use app\extensions\exceptions\FileReadException;
+use app\extensions\exceptions\FileSystemException;
+use inhere\tools\exceptions\NotFoundException;
+
+/**
+ * Class Read
+ * @package inhere\tools\files
+ */
 abstract class Read extends File
 {
     /**
@@ -40,7 +48,7 @@ abstract class Read extends File
     {
         $ini = trim($ini);
 
-        if (is_file($ini) && self::getSuffix($ini,true)=='ini') {
+        if (is_file($ini) && self::getSuffix($ini,true)==='ini') {
             return parse_ini_file($ini, (bool)$process_sections, (int)$scanner_mode);
         }
 
@@ -54,11 +62,11 @@ abstract class Read extends File
     static public function contents($file)
     {
         if ( !file_exists($file) ) {
-            throw new \NotFoundException("文件{$file}不存在!");
+            throw new NotFoundException("文件{$file}不存在!");
         }
 
         if (!is_readable($file)) {
-            throw new \FileSystemException("文件{$file}不可读！");
+            throw new FileReadException("文件{$file}不可读！");
         }
 
         return trim(file_get_contents($file));
@@ -93,7 +101,7 @@ abstract class Read extends File
      * @param  integer $startLine [开始行数 默认第1行]
      * @param  integer $endLine [结束行数 默认第50行]
      * @param  string $method [打开文件方式]
-     * @throws \FileSystemException
+     * @throws FileSystemException
      * @return array             返回内容
      */
     static public function lines($fileName, $startLine = 1, $endLine = 50, $method = 'rb')
@@ -112,16 +120,15 @@ abstract class Read extends File
                       $content[] = $obj_file->current(); // current()获取当前行内容
                       $obj_file->next(); // 下一行
                   }
-            }catch(\Exception $e)
-            {
-                throw new \FileSystemException("读取文件--{$fileName} 发生错误！");
+            }catch(\Exception $e) {
+                throw new FileSystemException("读取文件--{$fileName} 发生错误！");
             }
 
         } else { //PHP<5.1
             $openFile   = fopen($fileName, $method);
 
             if (!$openFile) {
-                throw new \FileSystemException('error:can not read file--'.$fileName);
+                throw new FileSystemException('error:can not read file--'.$fileName);
             }
 
             # 移动指针 跳过前$startLine行
@@ -145,7 +152,7 @@ abstract class Read extends File
      * @param string $fileName 含完整路径的文件
      * @param  integer $current [当前行数]
      * @param  integer $lineNum [获取行数] = $lineNum*2+1
-     * @throws \FileSystemException
+     * @throws FileSystemException
      * @return array [type]            [description]
      */
     static public function symmetry($fileName,$current=1,$lineNum=3)

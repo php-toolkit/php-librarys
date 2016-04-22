@@ -34,35 +34,31 @@ echo strtotime("last Monday"), "\n";
      */
     static public function isDate($strTime,$format= 'Y/m/d')
     {
-        if (empty($strTime) || (!is_string($strTime) && !is_numeric($strTime)) ) {
+        if (!$strTime || (!is_string($strTime) && !is_numeric($strTime)) ) {
             return false;
         }
 
         $strTime = trim($strTime);
 
         //@example timestamp 1325347200
-        if ( is_integer($strTime) ) {
+        if ( is_int($strTime) ) {
             $date = date($format,$strTime);
 
-            return $date ? $date : false;
+            return $date ? : false;
 
             //@example date 2015/04/05
         } else {
             $time = strtotime($strTime);
 
-            if (!$time) {
-                return false;
-            }
-
-            return date($format,$time);
+            return $time ? date($format,$time) : false;
         }
     }
 
     //获取指定日期所在月的第一天和最后一天
     static public function getTheMonth($date)
     {
-        $firstDay = date("Y-m-01",strtotime($date));
-        $lastDay  = date("Y-m-d",strtotime("$firstDay +1 month -1 day"));
+        $firstDay = date('Y-m-01',strtotime($date));
+        $lastDay  = date('Y-m-d', strtotime("$firstDay +1 month -1 day"));
 
         return array($firstDay,$lastDay);
     }
@@ -80,33 +76,31 @@ echo strtotime("last Monday"), "\n";
     //获取指定日期下个月的第一天和最后一天
     static public function getNextMonth($date)
     {
-
         $arr = getdate();
 
-        if ($arr['mon'] == 12) {
+        if ($arr['mon'] === 12) {
             $year       = $arr['year'] +1;
             $month      = $arr['mon'] -11;
             $day        = $arr['mday'];
 
-            if ($day < 10) {
-                $mday       = '0'.$day;
-            } else {
-                $mday       = $day;
-            }
+            $mday       = $day < 10 ? '0'.$day : $day;
 
-            $firstday   = $year.'-0'.$month.'-01';
-            $lastday    = $year.'-0'.$month.'-'.$mday;
+            $firstDay   = $year.'-0'.$month.'-01';
+            $lastDay    = $year.'-0'.$month.'-'.$mday;
         } else {
             $time     = strtotime($date);
-            $firstday = date('Y-m-01',strtotime(date('Y',$time).'-'.(date('m',$time)+1).'-01'));
-            $lastday  = date('Y-m-d',strtotime("$firstday +1 month -1 day"));
+            $firstDay = date('Y-m-01',strtotime(date('Y',$time).'-'.(date('m',$time)+1).'-01'));
+            $lastDay  = date('Y-m-d',strtotime("$firstDay +1 month -1 day"));
         }
 
-        return array($firstday,$lastday);
+        return [$firstDay,$lastDay];
     }
 
     /**
      * 获得几天前，几小时前，几月前
+     * @param $time
+     * @param null|array $unit
+     * @return string
      */
     static public function before($time,$unit=null)
     {
@@ -114,13 +108,10 @@ echo strtotime("last Monday"), "\n";
             return false;
         }
 
-        $unit    = is_null($unit) ?
-            array("年","月","星期","日","小时","分钟","秒") :
-            $unit;
+        $unit    = $unit ?: ['年','月','星期','日','小时','分钟','秒'];
         $nowTime = time();
 
-        switch(true)
-        {
+        switch(true) {
             case $time<($nowTime - 31536000):
                 return floor(($nowTime - $time)/31536000).$unit[0];
             case $time<($nowTime - 2592000):

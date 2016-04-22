@@ -11,6 +11,12 @@
  * File: ActiveData.php
  */
 
+namespace inhere\tools\collections;
+
+/**
+ * Class ActiveData
+ * @package inhere\tools\collections
+ */
 class ActiveData implements \ArrayAccess, \IteratorAggregate
 {
     public function __construct(array $data=[])
@@ -34,16 +40,11 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
                 $name = 'attr_'.$name;
             }
 
-            if (empty($name)) {
+            if (!$name) {
                 $name = 'attr_';
             }
 
-            # code...
-            if ( is_array($value) ) {
-                $this->$name = (new self)->load($value);
-            } else {
-                $this->$name = $value;
-            }
+            $this->$name = is_array($value) ? (new static)->load($value) :$value;
         }
 
         return $this;
@@ -58,7 +59,7 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
     /**
      * @return array
      */
-    public function getAll()
+    public function all()
     {
         $class = new \ReflectionClass( get_class($this) );
         $attrs = array();

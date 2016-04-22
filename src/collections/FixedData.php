@@ -10,10 +10,15 @@
  *     仅允许通过实例化时 或 调用load() 载入数据
  * File: FixedData.php StrictData.php
  */
+namespace inhere\tools\collections;
+use inhere\tools\exceptions\UnknownCalledException;
 
+/**
+ * Class FixedData
+ * @package inhere\tools\collections
+ */
 class FixedData extends ActiveData
 {
-
     public function isStrict()
     {
         return true;
@@ -31,17 +36,16 @@ class FixedData extends ActiveData
 
     public function __set($name, $value)
     {
-        throw new \UnknownCalledException(sprintf('设置不存在的属性 %s ！',$name));
+        throw new UnknownCalledException(sprintf('设置不存在的属性 %s ！',$name));
     }
 
     public function __get($name)
     {
-        if ( $value=$this->get($name) )
-        {
+        if ( $value=$this->get($name) ) {
             return $value;
         }
 
-        throw new \UnknownCalledException(sprintf('获取不存在的属性 %s ！',$name));
+        throw new UnknownCalledException(sprintf('获取不存在的属性 %s ！',$name));
     }
 
 }// end class FixedData

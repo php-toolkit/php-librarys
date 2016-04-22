@@ -5,14 +5,19 @@
  * Date: 14-3-16
  * Time: 下午1:34
  * name: 生成图片验证码,Captcha-验证码 .
- * use :    1. $captcha = new ulue\helper\Captcha(....); $captcha->show()
+ * use :    1. $captcha = new Captcha(....); $captcha->show()
  *          2. Captcha::make(...)->show()
  */
 namespace inhere\tools\files;
 
+use inhere\tools\exceptions\NotFoundException;
+
+/**
+ * Class Captcha
+ * @package inhere\tools\files
+ */
 class Captcha
 {
-    static private $owner = null;        // 对象
     private $img;               // 资源
     public $width;              // 画布宽
     public $height;             // 画布高
@@ -31,30 +36,35 @@ class Captcha
 
     public $config = [];            // 配置
 
+    /**
+     * @param array $config
+     * @return static
+     */
     public static function make($config=[])
     {
-        # code...
+        return new static($config);
     }
 
     /**
      * 构造函数
      * 配置优先级 __construct > $this->config() > $fileConfig > $this->defaultConfig()
+     * @param array $config
      */
     public function __construct(array $config=[])
     {
         $defaultConfig  = $this->defaultConfig();
 
-        if (!empty($config)) {
+        if ($config) {
             $config = array_merge( $defaultConfig, $config);
         } else {
             $config = $this->defaultConfig();
         }
 
         $this->config = $config;
-        $this->font = $config['font'];
+        $this->font   = $config['font'];
 
         if (!is_file($this->font)) {
-            \Trigger::error("验证码字体文件不存在");
+            throw new NotFoundException('验证码字体文件不存在');
         }
 
         $this->codeStr = $config['str'];
@@ -86,17 +96,20 @@ class Captcha
     }
 
     // 画干扰点-可选 imagesetpixel($this->img,x坐标,y坐标,颜色)
+    /**
+     * @return $this
+     */
     private function drawPixel()
     {
         for($i=1; $i<=$this->pixelNum;$i++)
         {
-            //$pixelColor = imagecolorallocate( $this->img,rand(100,240), rand(100,240), rand(100,
+            //$pixelColor = imagecolorallocate( $this->img,rand(100,240), mt_rand(100,240), mt_rand(100,
             //240) );//点颜色
             //imagesetpixel($this->img,rand(0,$this->width),rand(0,$this->height),$pixelColor);
             $char ='.';
-            $pixelColor = imagecolorallocate($this->img, rand(140,200),rand(140,200),rand(140,200));
+            $pixelColor = imagecolorallocate($this->img, mt_rand(140,200),mt_rand(140,200),mt_rand(140,200));
             imagefttext(
-                $this->img, 8 , rand(-30,30), rand(6, $this->width), rand(6,$this->height - 5),
+                $this->img, 8 , mt_rand(-30,30), mt_rand(6, $this->width), mt_rand(6,$this->height - 5),
                 $pixelColor,    $this->font,  $char
             );
         }
@@ -104,30 +117,37 @@ class Captcha
         return $this;
     }
 
-    // 画干扰直线-可选 imageline($this->img,起点坐标x.y，终点坐标x.y，颜色)
+    /**
+     * 画干扰直线-可选
+     * @return $this
+     */
     private function drawLine()
     {
         for($i=1;$i<=$this->lineNum;$i++)
         {
-            $lineColor = imagecolorallocate($this->img, rand(150,250), rand(150,250), rand(150,250) );
+            $lineColor = imagecolorallocate($this->img, mt_rand(150,250), mt_rand(150,250), mt_rand(150,250) );
+            //($this->img,起点坐标x.y，终点坐标x.y，颜色)
             imageline(
-                $this->img,           rand(0,$this->width),  rand(0,$this->height),
-                rand(0,$this->width), rand(0,$this->height), $lineColor
+                $this->img,           mt_rand(0,$this->width),  mt_rand(0,$this->height),
+                mt_rand(0,$this->width), mt_rand(0,$this->height), $lineColor
             );
         }
 
         return $this;
     }
 
-    // 画干扰弧线-可选
+    /**
+     * 画干扰弧线-可选
+     * @return $this
+     */
     private function drawAec()
     {
         for($i=1;$i<=$this->aecNum;$i++)
         {
-            $arcColor = imagecolorallocate($this->img, rand(150,250), rand(150,250), rand(150,250));
+            $arcColor = imagecolorallocate($this->img, mt_rand(150,250), mt_rand(150,250), mt_rand(150,250));
             imagearc(
-                $this->img,  rand(0,$this->width), rand(0,$this->height), rand(0,100),
-                rand(0,100), rand(-90,90),         rand(70,360),          $arcColor
+                $this->img,  mt_rand(0,$this->width), mt_rand(0,$this->height), mt_rand(0,100),
+                mt_rand(0,100), mt_rand(-90,90),     mt_rand(70,360),          $arcColor
             );
         }
 
@@ -142,11 +162,11 @@ class Captcha
 
         for($i=0;$i<$this->charNum;$i++)
         {
-            $char = $this->codeStr[ rand( 0,strlen($this->codeStr)-1) ];
+            $char = $this->codeStr[ mt_rand( 0,strlen($this->codeStr)-1) ];
             $captchaStr .=$char;
-            $fontColor = imagecolorallocate($this->img, rand(80,200),rand(80,200),rand(80,200));
+            $fontColor = imagecolorallocate($this->img, mt_rand(80,200), mt_rand(80,200), mt_rand(80,200));
             imagefttext(
-                $this->img, $this->fontSize ,  rand(-30,30), $i*$x + mt_rand(6, 10),
+                $this->img, $this->fontSize ,  mt_rand(-30,30), $i*$x + mt_rand(6, 10),
                 mt_rand($this->height / 1.3,   $this->height - 5),   $fontColor,
                 $this->font,  $char
             );
@@ -155,10 +175,10 @@ class Captcha
         $this->captcha = strtolower($captchaStr);
 
         //把纯的验证码字符串放置到SESSION中进行保存，便于后面进行验证对比
-        $_SESSION[$this->session_key] = md5( $this->captcha );
+        $_SESSION[$this->config['session_key']] = md5( $this->captcha );
 
         //设置cookie到前端浏览器，可用于前端验证
-        setcookie($this->session_key, md5( $this->captcha ));
+        setcookie($this->config['session_key'], md5( $this->captcha ));
     }
 
     /**
@@ -174,11 +194,11 @@ class Captcha
     {
        for($i=0;$i<$this->fontNum;$i++)
        {
-            $char      = $this->codeStr[ rand( 0,strlen($this->codeStr)-1) ];
-            $fontColor = imagecolorallocate($this->img, rand(180,240),rand(180,240),rand(180,240));
+            $char      = $this->codeStr[ mt_rand( 0,strlen($this->codeStr)-1) ];
+            $fontColor = imagecolorallocate($this->img, mt_rand(180,240), mt_rand(180,240), mt_rand(180,240));
             imagefttext(
-                $this->img, rand(4,8) , rand(-30,40), rand(8,$this->width-10),
-                rand(10,$this->height-10), $fontColor, $this->font, $char
+                $this->img, mt_rand(4,8) , mt_rand(-30,40), mt_rand(8,$this->width-10),
+                mt_rand(10,$this->height-10), $fontColor, $this->font, $char
             );
        }
     }
@@ -221,8 +241,8 @@ class Captcha
     {
         $this->create();
 
-        header("Cache-Control: max-age=1, s-maxage=1, no-cache, must-revalidate");
-        header("Content-type: image/png;charset=utf8");//生成图片格式png jpeg 。。。
+        header('Cache-Control: max-age=1, s-maxage=1, no-cache, must-revalidate');
+        header('Content-type: image/png;charset=utf8');//生成图片格式png jpeg 。。。
 
         ob_clean();
         //生成图片,在浏览器中进行显示-格式png，与上面的header声明对应

@@ -8,22 +8,26 @@
  * file: Color.php
  */
 
-namespace ulue\cli;
+namespace inhere\tools\console;
 
-use ulue\core\Core;
+use inhere\tools\StdBase;
 
 /**
- *@link https://github.com/ventoviro/windwalker-IO
+ * Class Colors
+ * @package inhere\tools\console
+ * @link https://github.com/ventoviro/windwalker-IO
  */
-class Colors extends Core
+class Colors extends StdBase
 {
     /**
      * Flag to remove color codes from the output
+     * @var bool
      */
     public $noColors = false;
 
     /**
      * Regex to match tags
+     * @var string
      */
     protected $tagFilter = '/<([a-z=;]+)>(.*?)<\/\\1>/s';
 
@@ -34,11 +38,13 @@ class Colors extends Core
 
     /**
      * Array of ColorStyle objects
+     * @var array[]
      */
     protected $styles = [];
 
     /**
      * Known colors
+     * @var array
      */
     private static $knownColors = [
         'black'   => 0,
@@ -53,6 +59,7 @@ class Colors extends Core
 
     /**
      * Known styles
+     * @var array
      */
     private static $knownOptions = [
         'bold'       => 1,      // 加粗
@@ -65,11 +72,13 @@ class Colors extends Core
 
     /**
      * Foreground base value
+     * @var int
      */
     private static $fgBase = 30;
 
     /**
      * Background base value
+     * @var int
      */
     private static $bgBase = 40;
 
@@ -82,8 +91,6 @@ class Colors extends Core
      */
     public function __construct($fg = '', $bg = '', array $options = [])
     {
-        parent::__construct();
-
         if ($fg || $bg || $options) {
             $this->addStyle('base', [
                 'fgColor' => $fg,
@@ -200,15 +207,13 @@ class Colors extends Core
      * @param string $text
      * @param   string $tag The matched tag.
      * @param   string $match The match.
-     * @param   array $style The color style to apply.
+     * @param   array $styles The color style to apply.
      * @return mixed
      */
-    protected function replaceColors($text, $tag, $match, array $style)
+    protected function replaceColors($text, $tag, $match, array $styles)
     {
-        $style   = $this->styleToString($style);
-        $replace = $this->noColors
-            ? $match
-            : "\033[" . $style . "m" . $match . "\033[0m";
+        $style   = $this->styleToString($styles);
+        $replace = $this->noColors ? $match : "\033[{$style}m{$match}\033[0m";
 
         return str_replace('<' . $tag . '>' . $match . '</' . $tag . '>', $replace, $text);
     }
@@ -241,7 +246,6 @@ class Colors extends Core
      * @param $name
      * @param array $styleOptions
      * @return $this
-     * @internal param array $style The color style.
      */
     public function addStyle($name, array $styleOptions=[])
     {
@@ -250,6 +254,10 @@ class Colors extends Core
         return $this;
     }
 
+    /**
+     * @param $name
+     * @return null|string
+     */
     public function getStyle($name)
     {
         if (!isset($this->styles[$name])) {
@@ -292,7 +300,7 @@ class Colors extends Core
         list($fg, $bg, $options) = array_values($styleOptions);
 
         if ($fg) {
-            if (false == array_key_exists($fg, static::$knownColors)) {
+            if (false === array_key_exists($fg, static::$knownColors)) {
                 throw new \InvalidArgumentException(
                     sprintf('Invalid foreground color "%1$s" [%2$s]',
                         $fg, implode(', ', $this->getKnownColors())
@@ -304,7 +312,7 @@ class Colors extends Core
         }
 
         if ($bg) {
-            if (false == array_key_exists($bg, static::$knownColors)) {
+            if (false === array_key_exists($bg, static::$knownColors)) {
                 throw new \InvalidArgumentException(
                     sprintf('Invalid background color "%1$s" [%2$s]',
                         $bg, implode(', ', $this->getKnownColors())
@@ -316,7 +324,7 @@ class Colors extends Core
         }
 
         foreach ($options as $option) {
-            if (false == array_key_exists($option, static::$knownOptions)) {
+            if (false === array_key_exists($option, static::$knownOptions)) {
                 throw new \InvalidArgumentException(
                     sprintf('Invalid option "%1$s" [%2$s]',
                         $option,

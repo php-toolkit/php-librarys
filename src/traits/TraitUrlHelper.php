@@ -9,7 +9,10 @@
 
 namespace inhere\tools\traits;
 
-
+/**
+ * Class TraitUrlHelper
+ * @package inhere\tools\traits
+ */
 trait TraitUrlHelper
 {
     static public function isUrl($str)
@@ -19,33 +22,32 @@ trait TraitUrlHelper
         return preg_match($rule,$str)===1;
     }
 
+    // Build arrays of values we need to decode before parsing
+    protected static  $entities       = array(
+        '%21', '%2A', '%27', '%28', '%29', '%3B', '%3A', '%40', '%26',
+        '%3D', '%24', '%2C', '%2F', '%3F', '%23', '%5B', '%5D'
+    );
+
+    protected static $replacements   = array(
+        '!'  , '*'  , "'"  ,  '(' ,  ')' ,  ';' ,  ':' ,  '@' ,  '&' ,
+        '='  , '$'  , ','  ,  '/' ,  '?' ,  '#' ,  '[' ,  ']'
+    );
+
     static public function parseUrl($url)
     {
-        $result         = false;
-
-        // Build arrays of values we need to decode before parsing
-        $entities       = array(
-            '%21', '%2A', '%27', '%28', '%29', '%3B', '%3A', '%40', '%26',
-            '%3D', '%24', '%2C', '%2F', '%3F', '%23', '%5B', '%5D'
-        );
-        $replacements   = array(
-            '!'  , '*'  , "'"  ,  "(" ,  ")" ,  ";" ,  ":" ,  "@" ,  "&" ,
-            "="  , "$"  , ","  ,  "/" ,  "?" ,  "#" ,  "[" ,  "]"
-        );
+        $result         = [];
 
         // Create encoded URL with special URL characters decoded so it can be parsed
         // All other characters will be encoded
-        $encodedURL     = str_replace($entities, $replacements, urlencode($url));
+        $encodedURL     = str_replace(self::$entities, self::$replacements, urlencode($url));
 
         // Parse the encoded URL
         $encodedParts   = parse_url($encodedURL);
 
         // Now, decode each value of the resulting array
-        if ($encodedParts)
-        {
-            foreach ($encodedParts as $key => $value)
-            {
-                $result[$key] = urldecode(str_replace($replacements, $entities, $value));
+        if ($encodedParts) {
+            foreach ($encodedParts as $key => $value) {
+                $result[$key] = urldecode(str_replace(self::$replacements, self::$entities, $value));
             }
         }
 
@@ -73,18 +75,7 @@ trait TraitUrlHelper
         // 若已被编码的url，将被解码，再继续重新编码
         $url       = urldecode($url);
         $encodeUrl = urlencode($url);
-
-        // Build arrays of values we need to decode before parsing
-        $entities       = array(
-            '%21', '%2A', '%27', '%28', '%29', '%3B', '%3A', '%40', '%26',
-            '%3D', '%24', '%2C', '%2F', '%3F', '%23', '%5B', '%5D'
-        );
-        $replacements   = array(
-            '!'  , '*'  , "'"  ,  "(" ,  ")" ,  ";" ,  ":" ,  "@" ,  "&" ,
-            "="  , "$"  , ","  ,  "/" ,  "?" ,  "#" ,  "[" ,  "]"
-        );
-
-        $encodeUrl = str_replace( $entities, $replacements, $encodeUrl);
+        $encodeUrl = str_replace( self::$entities, self::$replacements, $encodeUrl);
 
         return $encodeUrl;
     }
@@ -99,11 +90,11 @@ trait TraitUrlHelper
      * @param  string $url [description]
      * @return mixed|string [type]      [description]
      */
-    static public function _encode($url)
+    static public function encode2($url)
     {
         $url         = trim($url);
 
-        if (empty($url) || !is_string($url) ) {
+        if (!$url || !is_string($url) ) {
             return $url;
         }
 
@@ -112,17 +103,8 @@ trait TraitUrlHelper
         $encodeUrl   = rawurlencode(mb_convert_encoding($url, 'utf-8'));
 
         // $url  = rawurlencode($url);
-        // Build arrays of values we need to decode before parsing
-        $entities    = array(
-            '%21', '%2A', '%27', '%28', '%29', '%3B', '%3A', '%40', '%26',
-            '%3D', '%24', '%2C', '%2F', '%3F', '%23', '%5B', '%5D'
-        );
-        $replacements= array(
-            '!'  , '*'  , "'"  ,  "(" ,  ")" ,  ";" ,  ":" ,  "@" ,  "&" ,
-            "="  , "$"  , ","  ,  "/" ,  "?" ,  "#" ,  "[" ,  "]"
-        );
 
-        $encodeUrl = str_replace( $entities, $replacements, $encodeUrl);
+        $encodeUrl = str_replace( self::$entities, self::$replacements, $encodeUrl);
 
         return $encodeUrl;
     }

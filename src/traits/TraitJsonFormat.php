@@ -10,12 +10,18 @@
 namespace inhere\tools\traits;
 
 
+use inhere\tools\exceptions\NotFoundException;
+
+/**
+ * Class TraitJsonFormat
+ * @package inhere\tools\traits
+ */
 trait TraitJsonFormat
 {
     static public function loadFile($file, $toArray=true)
     {
         if (!file_exists($file)) {
-            throw new \NotFoundException("没有找到或不存在资源文件{$file}");
+            throw new NotFoundException("没有找到或不存在资源文件{$file}");
         }
 
         $data = file_get_contents($file);
@@ -35,7 +41,7 @@ trait TraitJsonFormat
             // 去掉空白
             '/(?!\w)\s*?(?!\w)/is'
 
-        ),  array("",'',' '), $data);
+        ),  array('','',' '), $data);
 
         if ($toArray) {
             return json_decode($data, true);
@@ -81,7 +87,7 @@ trait TraitJsonFormat
             // 去掉空白行
             "/(\n[\r])+/is"
 
-        ),  array("",'',"\n"), $data);
+        ),  array('','',"\n"), $data);
 
         if (!$output) {
             return $data;
@@ -117,10 +123,10 @@ trait TraitJsonFormat
         $name  = basename($output, '.json');
         $file  = $dir . '/' . $name . '.' . $options['type'].'.json';
 
-        if ( $type == 'min' )
+        if ( $type === 'min' )
         {
             // 去掉空白
-            $data = preg_replace('/(?!\w)\s*?(?!\w)/is', '',$data);
+            $data = preg_replace('/(?!\w)\s*?(?!\w)/i', '',$data);
         }
 
 

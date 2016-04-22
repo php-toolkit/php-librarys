@@ -42,17 +42,14 @@ trait TraitGetOption
      */
     public function getOption($name, $default = null, $mode = 'loose')
     {
-        if (array_key_exists($name, $this->options))
-        {
+        if (array_key_exists($name, $this->options)) {
             $value = $this->options[$name];
 
-            if ($mode =='strict' || $this->theGetMode()=='strict')
-            {
+            if ($mode ==='strict' || $this->theGetMode()==='strict') {
                 $value = $value ?: $default;
             }
 
-        } else
-        {
+        } else {
             $value = $default;
         }
 

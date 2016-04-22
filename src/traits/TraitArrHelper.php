@@ -31,14 +31,12 @@ trait TraitArrHelper
         foreach($new as $key => $value) {
             if ( array_key_exists($key, $old) && is_array($value)) {
                 $old[$key] = self::recursiveMerge($old[$key], $new[$key]);
-            } else if (is_integer($key)) {
+            } elseif (is_int($key)) {
                 $old[] = $value;
             } else {
                 $old[$key] = $value;
             }
         }
-
-        unset($new);
 
         return $old;
     }
@@ -65,7 +63,7 @@ trait TraitArrHelper
      * php数组转换成为对象
      * @param array $array
      * @param string $class
-     * @return object|bool
+     * @return mixed
      */
     static public function toObject(array $array, $class = '\stdClass')
     {
@@ -78,7 +76,7 @@ trait TraitArrHelper
         foreach ($array as $name=>$value) {
             $name = trim($name);
 
-            if (empty($name) || is_numeric($name)) {
+            if (!$name || is_numeric($name)) {
                 continue;
             }
 
@@ -151,9 +149,7 @@ trait TraitArrHelper
 
     static public function getFormatString($array,$length=400)
     {
-        ob_start();
-        var_export($array);
-        $string = ob_get_clean();
+        $string = var_export($array, true);
 
         # 将非空格替换为一个空格
         $string = preg_replace('/[\n\r\t]/', ' ', $string);
@@ -181,16 +177,15 @@ trait TraitArrHelper
             //     break;
             // }
 
-            if (is_array($value)) {
-                $array[$key]    = gettype($value).'(...)';
-            } else if ( is_object($value)) {
-                $array[$key]    = gettype($value).'(...)';
+            if (is_array($value) || is_object($value)) {
+                $value = gettype($value).'(...)';
             } else if (is_string($value) || is_numeric($value)) {
-                $value        = trim($value);
-                $array[$key]  = strlen($value);
+                $value = strlen(trim($value));
             } else {
-                $array[$key]  = gettype($value)."($value)";
+                $value = gettype($value)."($value)";
             }
+
+            $array[$key] = $value;
         }
 
         $num++;
@@ -381,24 +376,23 @@ trait TraitArrHelper
             return array_column($input, $columnKey, $indexKey);
         }
 
-        $columnKeyIsNumber  = is_numeric($columnKey)    ? true : false;
-        $indexKeyIsNull     = is_null($indexKey)        ? true : false;
-        $indexKeyIsNumber   = is_numeric($indexKey)     ? true : false;
+        $columnKeyIsNumber  = is_numeric($columnKey);
+        $indexKeyIsNull     = null === $indexKey;
+        $indexKeyIsNumber   = is_numeric($indexKey);
         $result             = array();
 
         foreach((array)$input as $key=>$row) {
             if ($columnKeyIsNumber) {
                 $tmp            = array_slice($row, $columnKey, 1);
-                $tmp            = (is_array($tmp) && !empty($tmp)) ? current($tmp) : null;
+                $tmp            = (is_array($tmp) && $tmp) ? current($tmp) : null;
             } else {
                 $tmp            = isset($row[$columnKey]) ? $row[$columnKey] : null;
             }
             if (!$indexKeyIsNull) {
-                if ($indexKeyIsNumber)
-                {
+                if ($indexKeyIsNumber) {
                     $key            = array_slice($row, $indexKey, 1);
                     $key            = (is_array($key) && !empty($key)) ? current($key) : null;
-                    $key            = is_null($key) ? 0 : $key;
+                    $key            = null === $key ? 0 : $key;
                 } else {
                     $key            = isset($row[$indexKey]) ? $row[$indexKey] : 0;
                 }

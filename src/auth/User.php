@@ -8,7 +8,7 @@
 
 namespace inhere\tools\auth;
 
-use inhere\toots\interfaces\CollectionInterface;
+use inhere\tools\interfaces\CollectionInterface;
 use inhere\tools\collections\SimpleCollection;
 
 /**

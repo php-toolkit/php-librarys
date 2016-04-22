@@ -8,11 +8,14 @@
  * Uesd: 主要功能是 文件相关信息获取
  */
 
-namespace inhere\tools\fileSystem;
+namespace inhere\tools\files;
 
-use Trigger,
-    inhere\tools\helpers\StrHelper;
+use inhere\tools\helpers\StrHelper;
 
+/**
+ * Class File
+ * @package inhere\tools\files
+ */
 class File extends AbstractFileSystem
 {
     public static function getName($file, $ext=null)

@@ -10,7 +10,10 @@
 
 namespace inhere\tools\traits;
 
-
+/**
+ * Class TraitUseAlias
+ * @package inhere\tools\traits
+ */
 trait TraitUseAlias
 {
     private $_aliases       = [];
@@ -46,22 +49,6 @@ trait TraitUseAlias
 
         if ( !isset($this->_aliases[$alias]) ) {
             $this->_aliases[$alias] = trim($value);
-        }
-
-        return $this;
-    }
-
-    /**
-     * 设置一个别名 (内部使用)
-     * @author inhere
-     * @date   2015-09-05
-     * @param  string     $alias
-     * @param  string     $value
-     */
-    protected function setAlias($alias, $value)
-    {
-        if ($value) {
-            $this->_aliases[trim($alias)] = $value;
         }
 
         return $this;

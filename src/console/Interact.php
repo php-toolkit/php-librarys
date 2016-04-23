@@ -180,6 +180,86 @@ class Interact
     }
 
     /**
+     * @param $messages
+     * @param string|null $type
+     * @param string|array $style
+     */
+    public static function block($messages, $type = null, $style='default')
+    {
+        $messages = is_array($messages) ? array_values($messages) : array($messages);
+
+        // add type
+        if ($type) {
+            $messages[0] = sprintf('[%s] %s', $type, $messages[0]);
+        }
+
+        $colors = static::getColors();
+
+        if (is_string($style) && !$colors->hasStyle($style)) {
+            $style = '';
+        } elseif ( is_array($style) ) {
+            $colors->addStyle($style[0], $style[1]);
+        }
+
+        $text = implode(PHP_EOL, $messages);
+
+        // at windows CMD , don't handle ...
+        if ( static::colorIsSupported() ) {
+            $text = "<{$style}>". $text ."</{$style}>";
+            $text = static::getColors()->handle($text);
+        }
+
+        static::out($text);
+    }
+
+    public static function primary($messages, $type = '')
+    {
+        static::block($messages, $type, 'primary');
+    }
+    public static function success($messages, $type = '')
+    {
+        static::block($messages, $type, 'success');
+    }
+    public static function info($messages, $type = 'INFO')
+    {
+        static::block($messages, $type, 'info');
+    }
+    public static function warning($messages, $type = 'WARNING')
+    {
+        static::block($messages, $type, 'warning');
+    }
+    public static function danger($messages, $type = 'DANGER')
+    {
+        static::block($messages, $type, 'danger');
+    }
+    public static function error($messages, $type = 'ERROR')
+    {
+        static::block($messages, $type, 'error');
+    }
+    public static function comment($messages, $type = 'COMMENT')
+    {
+        static::block($messages, $type, 'comment');
+    }
+    public static function question($messages, $type = '')
+    {
+        static::block($messages, $type, 'question');
+    }
+
+    /**
+     * @var Colors
+     */
+    private static $colors;
+
+    public static function getColors()
+    {
+        if (!static::$colors) {
+            static::$colors = new Colors();
+        }
+
+        return static::$colors;
+    }
+
+    /**
      * 读取输入信息
      * @return string
      */
@@ -216,6 +296,35 @@ class Interact
         for ($i=0; $i<$number; $i++) {
             echo ' ';
         }
+    }
+
+    /**
+     * Returns true if STDOUT supports colorization.
+     * This code has been copied and adapted from
+     * \Symfony\Component\Console\Output\OutputStream.
+     * @return boolean
+     */
+    public static function colorIsSupported()
+    {
+        if (DIRECTORY_SEPARATOR === '\\') {
+            return false !== getenv('ANSICON') || 'ON' === getenv('ConEmuANSI') || '1' !== getenv('AT_CMD');
+        }
+
+        if (!defined('STDOUT')) {
+            return false;
+        }
+
+        return static::isInteractive(STDOUT);
+    }
+
+    /**
+     * Returns if the file descriptor is an interactive terminal or not.
+     * @param  int|resource $fileDescriptor
+     * @return boolean
+     */
+    public static function isInteractive($fileDescriptor)
+    {
+        return function_exists('posix_isatty') && @posix_isatty($fileDescriptor);
     }
 
 } // end class

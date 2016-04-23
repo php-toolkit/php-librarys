@@ -31,7 +31,7 @@ class Language extends DataCollector
     protected $lang = 'en';
 
     /**
-     * fallback lang
+     * fallback language
      * @var string
      */
     protected $fallbackLang = 'en';
@@ -81,6 +81,11 @@ class Language extends DataCollector
      */
     protected $others = [];
 
+    /**
+     * @var array
+     */
+    protected $fallbackData = [];
+
     // use monofile. e.g: at config dir `{$this->path}/en.yml`
     const TYPE_MONOFILE  = 1;
 
@@ -89,15 +94,16 @@ class Language extends DataCollector
 
     /**
      * @param array $options
+     * @param string $fileType
      */
-    public function __construct(array $options)
+    public function __construct(array $options, $fileType=self::FORMAT_YML)
     {
         parent::__construct(null, static::FORMAT_PHP, 'language');
 
-        $this->prepare($options);
+        $this->prepare($options, $fileType);
     }
 
-    protected function prepare($options)
+    protected function prepare($options, $fileType)
     {
         foreach (['lang', 'fallbackLang', 'path', 'defaultFile'] as $key) {
             if ( isset($options[$key]) ) {
@@ -109,11 +115,8 @@ class Language extends DataCollector
             $this->type = (int)$options['type'];
         }
 
-        // maybe use path alias
-        // $this->path = Slim::alias($this->path);
-
         $this->mainFile = $this->type === static::TYPE_MONOFILE ?
-            $this->path . DIRECTORY_SEPARATOR . "{$this->lang}.yml" :
+            $this->path . DIRECTORY_SEPARATOR . "{$this->lang}.{$fileType}" :
             $this->getDirectoryFile($this->defaultFile);
 
         // check
@@ -122,7 +125,7 @@ class Language extends DataCollector
         }
 
         // load main language file data.
-        $this->loadYaml($this->mainFile);
+        $this->load($this->mainFile, $fileType);
     }
 
     /**
@@ -163,10 +166,10 @@ class Language extends DataCollector
      * @param $key
      * @param array $args
      * @param string $default
-     * @param string $lang
+     * param string $lang
      * @return string
      */
-    public function translate($key, $args = [], $default = 'No translate.', $lang = '')
+    public function translate($key, $args = [], $default = 'No translate.')
     {
         if ( !$key ) {
             throw new \InvalidArgumentException('A lack of parameters or error.');
@@ -203,7 +206,6 @@ class Language extends DataCollector
 
     /**
      * @param $key
-     * @param array $args
      * @param string $default
      * @return mixed|string
      */

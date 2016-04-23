@@ -39,7 +39,7 @@ class DataCollector extends SimpleCollection
      * data
      * @var array
      */
-    private $data = [];
+    protected $data = [];
 
     /**
      * @var array

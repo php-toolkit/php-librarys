@@ -134,7 +134,7 @@ class Colors extends StdBase
         )->addStyle(
             'info',
             [
-                'bgColor' => 'cyan', 'options' => ['bold']
+                /*'bgColor' => 'cyan', */'options' => ['bold']
             ]
         )->addStyle(
             'warning',

@@ -317,15 +317,14 @@ class Uploader
         }
 
         $maxSize = $this->config['maxSize'] > 0 ? $this->config['maxSize'] : 0;
-        $ext      = strtolower($file['ext']);
+        $extList = $this->config['ext'];
+        $fileExt     = strtolower($file['ext']);
 
-        if ( !in_array($ext, $this->config['ext']) ){
+        if ($extList && !in_array($fileExt, $extList) ){
             $this->error = '不允许的上传文件类型！';
-        }
-        if ( $maxSize && $file['size'] > $maxSize ){
+        } elseif ( $maxSize && $file['size'] > $maxSize ){
             $this->error = '上传文件超出允许大小！';
-        }
-        if ( !is_uploaded_file($file['tmp_name'])){
+        } elseif ( !is_uploaded_file($file['tmp_name'])){
             $this->error = '非法文件！';
         }
 

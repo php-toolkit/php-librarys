@@ -75,7 +75,7 @@ class Captcha
             static::$sessionKey = $config['sessionKey'];
         }
 
-        $this->codeStr = $config['str'];
+        $this->codeStr = $config['rand_str'];
 
         $this->fontSize = isset($config['font_size'])   ? $config['font_size']  : $defaultConfig['font_size'];
         $this->charNum  = isset($config['length'])      ? $config['length']     : $defaultConfig['length'];
@@ -182,10 +182,10 @@ class Captcha
         $this->captcha = strtolower($captchaStr);
 
         //把纯的验证码字符串放置到SESSION中进行保存，便于后面进行验证对比
-        $_SESSION[$this->config['session_key']] = md5( $this->captcha );
+        $_SESSION[static::$sessionKey] = md5( $this->captcha );
 
         //设置cookie到前端浏览器，可用于前端验证
-        setcookie($this->config['session_key'], md5( $this->captcha ));
+        setcookie(static::$sessionKey, md5( $this->captcha ));
     }
 
     //填充干扰字符-可选
@@ -222,10 +222,10 @@ class Captcha
         );
 
         imagefilledrectangle($this->img,0,0,$this->width,$this->height,$bgColor);
-        //给资源画上边框-可选 rgb(153, 153, 255)
-        $borderColor = imagecolorallocate($this->img, 153, 153, 255); // 0-255
 
-        imagerectangle($this->img, 0, 0, $this->width-1, $this->height-1,$borderColor);
+        //给资源画上边框-可选 rgb(153, 153, 255)
+//        $borderColor = imagecolorallocate($this->img, 153, 153, 255); // 0-255
+//        imagerectangle($this->img, 0, 0, $this->width-1, $this->height-1,$borderColor);
 
         $this->drawLine();
         $this->drawChar();

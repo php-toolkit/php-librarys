@@ -239,9 +239,8 @@ class Picture
     }
 
     /**
-     *
      * 图片裁切处理
-     * @param string| $img   操作的图片文件路径
+     * @param string| $img   操作的图片文件路径(原图)
      * @param string|  $outFile 另存文件名
      * @param string|  $path 文件存放路径
      * @param string|  $thumbWidth 缩略图宽度

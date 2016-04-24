@@ -69,7 +69,6 @@ class SimpleCollection implements CollectionInterface
         }
     }
 
-
     /**
      * @param array $data
      * @return $this
@@ -183,6 +182,14 @@ class SimpleCollection implements CollectionInterface
     public function count()
     {
         return count($this->data);
+    }
+
+    /**
+     * @return string
+     */
+    public function jsonSerialize()
+    {
+        return json_encode($this->data);
     }
 
     /********************************************************************************

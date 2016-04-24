@@ -36,6 +36,10 @@ class Captcha
 
     public $config = [];            // 配置
 
+
+    // 存入SESSION的键值
+    protected static $sessionKey = 'app_captcha';
+
     /**
      * @param array $config
      * @return static
@@ -67,6 +71,10 @@ class Captcha
             throw new NotFoundException('验证码字体文件不存在');
         }
 
+        if (!empty($config['sessionKey'])) {
+            static::$sessionKey = $config['sessionKey'];
+        }
+
         $this->codeStr = $config['str'];
 
         $this->fontSize = isset($config['font_size'])   ? $config['font_size']  : $defaultConfig['font_size'];
@@ -91,7 +99,6 @@ class Captcha
            ,'font_size'    => '24'   #验证码字体大小
            ,'pixel_num'    => '10'   #干扰点数量
            ,'font_num'     => '50'    #干扰字符数量
-           ,'session_key'  => 'app_captcha' #存入SESSION的键值，
        ];
     }
 
@@ -181,14 +188,6 @@ class Captcha
         setcookie($this->config['session_key'], md5( $this->captcha ));
     }
 
-    /**
-     * 返回验证码
-     */
-    public function getCaptcha()
-    {
-        return $this->captcha;
-    }
-
     //填充干扰字符-可选
     private function drawChars()
     {
@@ -236,7 +235,10 @@ class Captcha
         return $this;
     }
 
-    //显示
+    /**
+     * 显示
+     * @return bool
+     */
     public function show()
     {
         $this->create();
@@ -246,9 +248,36 @@ class Captcha
 
         ob_clean();
         //生成图片,在浏览器中进行显示-格式png，与上面的header声明对应
-        imagepng($this->img);
+        $success = imagepng($this->img);
         // 已经显示图片后，可销毁，释放内存（可选）
         imagedestroy($this->img);
+
+        return $success;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getImg()
+    {
+        return $this->img;
+    }
+
+    /**
+     * 返回验证码
+     */
+    public function getCaptcha()
+    {
+        return $this->captcha;
+    }
+
+    /**
+     * @param $captcha
+     * @return bool
+     */
+    public static function verify($captcha)
+    {
+        return isset($_SESSION[static::$sessionKey]) && md5($captcha) === $_SESSION[static::$sessionKey];
     }
 
     private function checkGd()

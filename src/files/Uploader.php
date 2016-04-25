@@ -16,6 +16,12 @@ namespace inhere\tools\files;
 class Uploader
 {
     /**
+     * $_FILES
+     * @var array
+     */
+    private $_data = [];
+
+    /**
      * 错误信息
      * @var string
      */
@@ -88,24 +94,31 @@ class Uploader
      */
     public function __construct(array $config = [], array $waterConfig = [], array $thumbConfig = [])
     {
+        $this->_data = &$_FILES;
         $this->config = array_merge($this->config, $config);
         $this->waterConfig = $waterConfig;
         $this->thumbConfig = $thumbConfig;
     }
 
     /**
-     * @param string $key key of the $_FILES
+     * @param string $name key of the $_FILES
      * @param string $targetFile save to the path
      * @return $this
      */
-    public function uploadOne($key, $targetFile)
+    public function uploadOne($name, $targetFile)
     {
-        if (!$key || !isset($_FILES[$key])) {
-            $this->error = "key [$key] don't exists of the _FILES";
+        if (!$name || !isset($this->_data[$name])) {
+            $this->error = "name [$name] don't exists of the _FILES";
             return $this;
         }
 
-        $file = $_FILES[$key];
+        $file = $this->decodeData([
+            $this->_data['name'],
+            $this->_data['type'],
+            $this->_data['tmp_name'],
+            $this->_data['error'],
+            $this->_data['size']
+        ]);
 
         //文件信息
         $info = pathinfo( $file['name'] );
@@ -160,7 +173,7 @@ class Uploader
                 continue;
             }
 
-            $uploadFile = $this->moveTo($file);
+            $uploadFile = $this->moveTo($file, $this->config['path']);
 
             //判断文件是图片，
             if ( in_array($file['ext'], static::$imageTypes) && getimagesize($file['tmp_name']) ) {
@@ -182,6 +195,52 @@ class Uploader
 
         return $this->uploadedFiles;
     }
+
+    public function get($name, $default = null)
+    {
+        if (isset($this->_data[$name])) {
+            $results = $this->decodeData([
+                    $this->_data[$name]['name'],
+                    $this->_data[$name]['type'],
+                    $this->_data[$name]['tmp_name'],
+                    $this->_data[$name]['error'],
+                    $this->_data[$name]['size']
+                ]);
+
+            return $results;
+        }
+
+        return $default;
+    }
+
+    /**
+     * Method to decode a data array.
+     * @param   array  $data  The data array to decode.
+     * @return  array
+     */
+    protected function decodeData(array $data)
+    {
+        $result = [];
+
+        if (is_array($data[0])) {
+            foreach ($data[0] as $k => $v) {
+                $result[$k] = $this->decodeData([
+                    $data[0][$k], $data[1][$k], $data[2][$k], $data[3][$k], $data[4][$k]
+                ]);
+            }
+
+            return $result;
+        }
+
+        return [
+            'name' => $data[0],
+            'type' => $data[1],
+            'tmp_name' => $data[2],
+            'error' => $data[3],
+            'size' => $data[4]
+        ];
+    }
+
 
     /**
      * 存储文件

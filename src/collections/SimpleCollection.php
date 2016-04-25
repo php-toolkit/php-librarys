@@ -48,6 +48,20 @@ class SimpleCollection implements CollectionInterface
     }
 
     /**
+     * @param $name
+     * @param $value
+     * @return $this
+     */
+    public function add($name, $value)
+    {
+        if ( !$this->has($name) ) {
+            $this->set($name, $value);
+        }
+
+        return $this;
+    }
+
+    /**
      * Get collection item for key
          * @param string $key     The data key
      * @param mixed  $default The default value to return if data key does not exist
@@ -67,6 +81,21 @@ class SimpleCollection implements CollectionInterface
         foreach ($items as $key => $value) {
             $this->set($key, $value);
         }
+    }
+
+    /**
+     * @param array $names
+     * @return $this
+     */
+    public function gets(array $names)
+    {
+        $values = [];
+
+        foreach ($names as $name ) {
+            $values[] = $this->get($name);
+        }
+
+        return $values;
     }
 
     /**
@@ -175,6 +204,10 @@ class SimpleCollection implements CollectionInterface
         $this->remove($key);
     }
 
+    /********************************************************************************
+     * Countable interface
+     *******************************************************************************/
+
     /**
      * Get number of items in collection
          * @return int
@@ -184,12 +217,30 @@ class SimpleCollection implements CollectionInterface
         return count($this->data);
     }
 
+    /********************************************************************************
+     * JsonSerializable interface
+     *******************************************************************************/
+
     /**
      * @return string
      */
     public function jsonSerialize()
     {
         return json_encode($this->data);
+    }
+
+    /********************************************************************************
+     * Serializable interface
+     *******************************************************************************/
+
+    public function serialize()
+    {
+        return serialize($this->data);
+    }
+
+    public function unserialize($serialized)
+    {
+        $this->data = unserialize($serialized);
     }
 
     /********************************************************************************
@@ -204,6 +255,10 @@ class SimpleCollection implements CollectionInterface
     {
         return new ArrayIterator($this->data);
     }
+
+    /********************************************************************************
+     * Magic method
+     *******************************************************************************/
 
     public function __get($name)
     {

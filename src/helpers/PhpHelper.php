@@ -14,7 +14,7 @@ class PhpHelper
      * @param  boolean $totalReport true: 检查完后报告结果(array). false: 立即报告出错的;若全部加载了，返回 true
      * @return array|bool
      */
-    static public function extensionIsLoaded($extensions=[], $totalReport=false)
+    public static function extensionIsLoaded($extensions=[], $totalReport=false)
     {
         $allTotal = [];
 
@@ -43,7 +43,7 @@ class PhpHelper
      * @param bool $zend_extensions
      * @return array
      */
-    static public function getLoadedExtension($zend_extensions = false)
+    public static function getLoadedExtension($zend_extensions = false)
     {
         return get_loaded_extensions($zend_extensions);
     }
@@ -54,7 +54,7 @@ class PhpHelper
      * @param int $max_size optional max file size
      * @return int max file size in bytes
      */
-    static public function getMaxUploadSize($max_size = 0)
+    public static function getMaxUploadSize($max_size = 0)
     {
         $post_max_size = StrHelper::convertBytes(ini_get('post_max_size'));
         $upload_max_filesize = StrHelper::convertBytes(ini_get('upload_max_filesize'));
@@ -71,7 +71,7 @@ class PhpHelper
      * Get PHP version
      * @return string
      */
-    static public function getVersion()
+    public static function getVersion()
     {
         if ( defined('HHVM_VERSION') )
         {
@@ -87,7 +87,7 @@ class PhpHelper
      * setStrict
      * @return  void
      */
-    static public function setStrict()
+    public static function setStrict()
     {
         error_reporting(32767);
     }
@@ -96,7 +96,7 @@ class PhpHelper
      * setMuted
      * @return  void
      */
-    static public function setMuted()
+    public static function setMuted()
     {
         error_reporting(0);
     }
@@ -107,7 +107,7 @@ class PhpHelper
     /**
      * @return bool
      */
-    static public function isWin()
+    public static function isWin()
     {
         return strstr(PHP_OS, 'WIN') ? true : false;
     }
@@ -115,7 +115,7 @@ class PhpHelper
     /**
      * @return bool
      */
-    static public function isCgi()
+    public static function isCgi()
     {
         return strpos(PHP_SAPI, 'cgi') !== false ? true : false;   #  cgi环境
     }
@@ -124,7 +124,7 @@ class PhpHelper
      * isWeb
      * @return  boolean
      */
-    static public function isWeb()
+    public static function isWeb()
     {
         return in_array(
             PHP_SAPI,
@@ -143,7 +143,7 @@ class PhpHelper
      * isCli
      * @return  boolean
      */
-    static public function isCli()
+    public static function isCli()
     {
         return in_array(
             PHP_SAPI,
@@ -158,7 +158,7 @@ class PhpHelper
      * isHHVM
      * @return  boolean
      */
-    static public function isHHVM()
+    public static function isHHVM()
     {
         return defined('HHVM_VERSION');
     }
@@ -167,7 +167,7 @@ class PhpHelper
      * isPHP
      * @return  boolean
      */
-    static public function isPHP()
+    public static function isPHP()
     {
         return !static::isHHVM();
     }
@@ -176,7 +176,7 @@ class PhpHelper
      * isEmbed
      * @return  boolean
      */
-    static public function isEmbed()
+    public static function isEmbed()
     {
         return in_array(
             PHP_SAPI,
@@ -190,7 +190,7 @@ class PhpHelper
      * Returns true when the runtime used is PHP and Xdebug is loaded.
      * @return boolean
      */
-    static public function hasXdebug()
+    public static function hasXdebug()
     {
         return static::isPHP() && extension_loaded('xdebug');
     }
@@ -199,7 +199,7 @@ class PhpHelper
      * supportPcntl
      * @return  boolean
      */
-    static public function hasPcntl()
+    public static function hasPcntl()
     {
         return extension_loaded('PCNTL');
     }
@@ -208,7 +208,7 @@ class PhpHelper
      * supportCurl
      * @return  boolean
      */
-    static public function hasCurl()
+    public static function hasCurl()
     {
         return function_exists('curl_init');
     }
@@ -217,13 +217,13 @@ class PhpHelper
      * supportMcrypt
      * @return  boolean
      */
-    static public function hasMcrypt()
+    public static function hasMcrypt()
     {
         return extension_loaded('mcrypt');
     }
 
     //检查 Apache mod_rewrite 是否开启
-    static public function checkApacheRewriteMode()
+    public static function checkApacheRewriteMode()
     {
         if ( function_exists('apache_get_modules') )
         {
@@ -233,5 +233,48 @@ class PhpHelper
 
         return true;
         // return false;
+    }
+
+    /**
+     * Method to execute a command in the terminal
+     * Uses :
+     * 1. system
+     * 2. passthru
+     * 3. exec
+     * 4. shell_exec
+     * @param $command
+     * @return array
+     */
+    public static function terminal($command)
+    {
+        $return_var = 1;
+
+        //system
+        if (function_exists('system')) {
+            ob_start();
+            system($command , $return_var);
+            $output = ob_get_contents();
+            ob_end_clean();
+
+        // passthru
+        } elseif (function_exists('passthru')) {
+            ob_start();
+            passthru($command , $return_var);
+            $output = ob_get_contents();
+            ob_end_clean();
+        //exec
+        } else if (function_exists('exec')) {
+            exec($command , $output , $return_var);
+            $output = implode("\n" , $output);
+
+        //shell_exec
+        } else if (function_exists('shell_exec')) {
+            $output = shell_exec($command) ;
+        } else {
+            $output = 'Command execution not possible on this system';
+            $return_var = 0;
+        }
+
+        return array('output' => $output , 'status' => $return_var);
     }
 }

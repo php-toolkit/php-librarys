@@ -18,7 +18,7 @@ abstract class DataHelper
     * @param mixed $default_value (optional)
     * @return mixed Value
     */
-    static public function getValue($key, $default_value = false)
+    public static function getValue($key, $default_value = false)
     {
         if (!isset($key) || empty($key) || !is_string($key))
             return false;
@@ -36,19 +36,19 @@ abstract class DataHelper
      * Get all values from $_POST/$_GET
      * @return mixed
      */
-    static public function getAllValues()
+    public static function getAllValues()
     {
         return $_POST + $_GET;
     }
 
-    static public function getIsset($key)
+    public static function getIsset($key)
     {
         if (!isset($key) || empty($key) || !is_string($key))
             return false;
         return isset($_POST[$key]) ? true : (isset($_GET[$key]) ? true : false);
     }
 
-    static public function safePostVars()
+    public static function safePostVars()
     {
         if (!isset($_POST) || !is_array($_POST))
             $_POST = array();
@@ -63,14 +63,14 @@ abstract class DataHelper
     * @param bool $full String contains HTML or not (optional)
     * @return string Sanitized string
     */
-    static public function safeOutput($string, $html = false)
+    public static function safeOutput($string, $html = false)
     {
         if (!$html)
             $string = strip_tags($string);
         return @self::htmlentitiesUTF8($string, ENT_QUOTES);
     }
 
-    static public function htmlentitiesUTF8($string, $type = ENT_QUOTES)
+    public static function htmlentitiesUTF8($string, $type = ENT_QUOTES)
     {
         if (is_array($string))
             return array_map(array(__CLASS__, 'htmlentitiesUTF8'), $string);
@@ -78,7 +78,7 @@ abstract class DataHelper
         return htmlentities((string)$string, $type, 'utf-8');
     }
 
-    static public function htmlentitiesDecodeUTF8($string)
+    public static function htmlentitiesDecodeUTF8($string)
     {
         if (is_array($string))
         {
@@ -95,13 +95,13 @@ abstract class DataHelper
      * @param string $string String to transform
      * @return string New string
      */
-    static public function nl2br($str)
+    public static function nl2br($str)
     {
         return str_replace(array("\r\n", "\r", "\n"), '<br />', $str);
     }
 
 
-    static public function argvToGET($argc, $argv)
+    public static function argvToGET($argc, $argv)
     {
         if ($argc <= 1)
             return null;
@@ -120,7 +120,7 @@ abstract class DataHelper
      * @param $data array|string
      * @return array|string
      */
-    static public function trim($data)
+    public static function trim($data)
     {
         if (is_scalar($data)) {
             return trim($data);
@@ -146,7 +146,7 @@ abstract class DataHelper
      *    ]
      * @return array
      */
-    static public function buildQueryParams($data, $separator='/')
+    public static function buildQueryParams($data, $separator='/')
     {
         $arrData = is_string($data) ? explode( $separator , $data) : $data;
         $arrData = array_values(array_filter( $arrData ));
@@ -168,7 +168,7 @@ abstract class DataHelper
      * 由于 strip_tags() 无法实际验证 HTML，不完整或者破损标签将导致更多的数据被删除。
      * $allow_tags 允许的标记,多个以空格隔开
      **/
-    static public function stripTags ( $data , $allow_tags=null )
+    public static function stripTags ( $data , $allow_tags=null )
     {
         if ( is_array ( $data ) ){
 
@@ -194,7 +194,7 @@ abstract class DataHelper
      * htmlspecialchars() <--> htmlspecialchars_decode() — 将特殊的 HTML 实体转换回普通字符
      * ENT_COMPAT ENT_QUOTES ENT_NOQUOTES ENT_HTML401 ENT_XML1 ENT_XHTML ENT_HTML5
      * */
-    static public function htmlEscape($data, $type = 0 ,$encoding = 'UTF-8'  )
+    public static function htmlEscape($data, $type = 0 ,$encoding = 'UTF-8'  )
     {
         if ( is_array($data) ){
 
@@ -220,7 +220,7 @@ abstract class DataHelper
         return $data;
     }
      //去掉html转义
-    static public function htmlUnescap($data, $type =0 ,$encoding = 'UTF-8' )
+    public static function htmlUnescap($data, $type =0 ,$encoding = 'UTF-8' )
     {
         if ( is_array($data) ){
 
@@ -249,7 +249,7 @@ abstract class DataHelper
      * @param int $level 增强
      * @return array|string|void
      */
-    static public function slashes($data , $escape=1, $level=0 )
+    public static function slashes($data , $escape=1, $level=0 )
     {
         if (is_array($data)){
             foreach ($data as $key => $value) {
@@ -284,7 +284,7 @@ abstract class DataHelper
         return $data;
     }
 
-    static public function escape_query($str)
+    public static function escape_query($str)
     {
         return strtr($str, array(
             "\0" => "",
@@ -304,7 +304,7 @@ abstract class DataHelper
      * @param $out_charset
      * @return array|string|void
      */
-    static public function changeEncode($data ,$in_charset='GBK' , $out_charset='UTF-8' )
+    public static function changeEncode($data ,$in_charset='GBK' , $out_charset='UTF-8' )
     {
         if ( is_array($data) ){
 

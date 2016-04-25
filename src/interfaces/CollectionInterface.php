@@ -5,7 +5,7 @@ namespace inhere\tools\interfaces;
 /**
  * Collection Interface
  */
-interface CollectionInterface extends \ArrayAccess, \Countable, \IteratorAggregate, \JsonSerializable
+interface CollectionInterface extends \Serializable, \ArrayAccess, \Countable, \IteratorAggregate, \JsonSerializable
 {
     public function set($key, $value);
 

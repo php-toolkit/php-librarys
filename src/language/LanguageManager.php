@@ -231,17 +231,21 @@ class LanguageManager extends DataCollector
      */
     public function loadOtherFile($filename)
     {
+        if ( $this->isMonofile() ) {
+            return null;
+        }
+
         // the first time fetch, instantiate it
         if ( !isset($this->others[$filename]) ) {
             $otherFile = $this->spliceLangFilePath($filename);
 
             if ( is_file($otherFile) ) {
                 $this->loadedOtherFiles[$filename]  = $otherFile;
-                $this->others[$filename] = new DataCollector($otherFile, static::FORMAT_YML, $filename);
+                $this->others[$filename] = DataCollector::make($otherFile, $this->fileType, $filename);
             }
         }
 
-        return isset($this->others[$filename]) ? $this->others[$filename] : [];
+        return isset($this->others[$filename]) ? $this->others[$filename] : null;
     }
 
     /*********************************************************************************
@@ -303,20 +307,21 @@ class LanguageManager extends DataCollector
      */
     public function loadFallbackOtherFile($filename)
     {
-        if ( ) {
-            # code...
+        if ( $this->isMonofile() ) {
+            return null;
         }
+
         // the first time fetch, instantiate it
         if ( !isset($this->fallbackData[$filename]) ) {
             $otherFile = $this->spliceLangFilePath($filename);
 
             if ( is_file($otherFile) ) {
-                $this->loadedOtherFiles[$filename]  = $otherFile;
-                $this->fallbackData[$filename] = new DataCollector($otherFile, static::FORMAT_YML, $filename);
+                $this->loadedOtherFiles['fallback'][$filename]  = $otherFile;
+                $this->fallbackData[$filename] = DataCollector::make($otherFile, $this->fileType, $filename);
             }
         }
 
-        return isset($this->fallbackData[$filename]) ? $this->fallbackData[$filename] : [];
+        return isset($this->fallbackData[$filename]) ? $this->fallbackData[$filename] : null;
     }
 
     /*********************************************************************************

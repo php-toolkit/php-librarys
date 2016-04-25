@@ -32,7 +32,10 @@ class Uploader
      */
     private $picture;
 
-    //上传成功的 文件信息
+    /**
+     * 上传成功的 文件信息
+     * @var array
+     */
     private $uploadedFiles = [];
 
     /**
@@ -47,6 +50,8 @@ class Uploader
 
         // 保存文件路径
         'path' => '',
+
+        'basepath' => '',
 
         // 允许的文件类型 e.g. ['jpg', 'png']
         'ext' => [],
@@ -105,37 +110,17 @@ class Uploader
      * @param string $targetFile save to the path
      * @return $this
      */
-    public function uploadOne($name, $targetFile)
+    public function uploadOne($name, $targetPath)
     {
         if (!$name || !isset($this->_data[$name])) {
             $this->error = "name [$name] don't exists of the _FILES";
             return $this;
         }
 
-        $file = $this->decodeData([
-            $this->_data['name'],
-            $this->_data['type'],
-            $this->_data['tmp_name'],
-            $this->_data['error'],
-            $this->_data['size']
-        ]);
+        !$targetPath && ($targetPath = $this->config['path']);
+        $result = $this->_uploadHandle($this->_data[$name], $targetPath);
 
-        //文件信息
-        $info = pathinfo( $file['name'] );
-
-        //获得文件扩展名 文件名
-        isset($info['extension']) && ($file['ext'] = $info['extension']);
-        $file['filename']  = $info['filename'];
-
-        //没有文件 || 文件不合法，跳过
-        if ( !$this->_checkFile($file) ){
-            return $this;
-        }
-
-        $this->moveTo($file, $targetFile);
-
-        $this->result = $file;
-        $this->result['targetFile'] = $targetFile;
+        $this->result = $result;
 
         return $this;
     }
@@ -149,68 +134,67 @@ class Uploader
      */
     public function uploadMulti(array $keys = [], $targetPath = '')
     {
-        $targetPath && ($this->config['path'] = $targetPath);
-
-        if (!$files = $this->_formatFiles($_FILES)) {
+        if (!$this->_data) {
             return false;
         }
 
-        //验证文件
-        foreach($files as $key => $file){
+        !$targetPath && ($targetPath = $this->config['path']);
+
+        foreach($this->_data as $key => $file){
             if ($keys && !in_array($key, $keys)) {
                 continue;
             }
 
-            //文件信息
-            $info = pathinfo( $file['name'] );
+            $this->result[$key] = $this->_uploadHandle($file, $targetPath);
+        }
 
-            //获得文件扩展名 文件名
-            isset($info['extension']) && ($file['ext'] = $info['extension']);
-            $file['filename']  = $info['filename'];
+        return $this;
+    }
+
+    protected function _uploadHandle($sourceFile, $targetPath)
+    {
+        $filename = $sourceFile['name'];
+
+        if ( is_array($filename) ) {
+            $result = [];
+            $file = $this->_decodeData([
+                $filename,
+                $sourceFile['type'],
+                $sourceFile['tmp_name'],
+                $sourceFile['error'],
+                $sourceFile['size']
+            ]);
+
+            foreach ($file as $key => $value) {
+                $result[$key] = $this->_uploadHandle($value, $targetPath);
+            }
+        } else {
+            $file = $sourceFile;
+            //文件信息
+            $file['ext'] = pathinfo($file['name'], PATHINFO_EXTENSION);
 
             //没有文件 || 文件不合法，跳过
             if ( !$this->_checkFile($file) ){
-                continue;
+                return [];
             }
 
-            $uploadFile = $this->moveTo($file, $this->config['path']);
+            $result = $this->moveTo($file, $targetPath);
 
             //判断文件是图片，
-            if ( in_array($file['ext'], static::$imageTypes) && getimagesize($file['tmp_name']) ) {
+            if ( in_array($file['ext'], static::$imageTypes) && getimagesize($result['targetFile']) ) {
                 //缩略图处理
                 if ($this->config['thumbOn']) {
-                    $this->cutThumb($uploadFile['targetFile'], $uploadFile['targetName'], false);
+                    $this->cutThumb($result['targetFile'], $result['targetName'], false);
                 }
 
                 //加水印
                 if ($this->config['waterOn']) {
-                    $this->addWater($uploadFile['targetFile'], $uploadFile['targetName'], false);
+                    $this->addWater($result['targetFile'], $result['targetName'], false);
                 }
             }
-
-            if ( $uploadFile ){
-                $this->uploadedFiles[] = $uploadFile;//$this->uploadedFile[] 多维数组，处理多文件上传
-            }
         }
 
-        return $this->uploadedFiles;
-    }
-
-    public function get($name, $default = null)
-    {
-        if (isset($this->_data[$name])) {
-            $results = $this->decodeData([
-                    $this->_data[$name]['name'],
-                    $this->_data[$name]['type'],
-                    $this->_data[$name]['tmp_name'],
-                    $this->_data[$name]['error'],
-                    $this->_data[$name]['size']
-                ]);
-
-            return $results;
-        }
-
-        return $default;
+        return $result;
     }
 
     /**
@@ -218,13 +202,13 @@ class Uploader
      * @param   array  $data  The data array to decode.
      * @return  array
      */
-    protected function decodeData(array $data)
+    protected function _decodeData(array $data)
     {
         $result = [];
 
         if (is_array($data[0])) {
             foreach ($data[0] as $k => $v) {
-                $result[$k] = $this->decodeData([
+                $result[$k] = $this->_decodeData([
                     $data[0][$k], $data[1][$k], $data[2][$k], $data[3][$k], $data[4][$k]
                 ]);
             }
@@ -241,17 +225,16 @@ class Uploader
         ];
     }
 
-
     /**
      * 存储文件
      * @param array $file 上传文件信息数组
-     * @param $targetFile
+     * @param $targetPath
      * @return array
      */
-    private function moveTo($file, $targetFile = '')
+    private function moveTo($file, $targetPath = '')
     {
-        $nowName    = time().'_'.mt_rand(1,9999).'.'.$file['ext'];
-        $filePath   = $targetFile ? : $this->config['path'] . DIRECTORY_SEPARATOR . $nowName;
+        $nowName    = time().'_'.mt_rand(1000,9999).'.'.$file['ext'];
+        $filePath   = ($targetPath ? : $this->config['path']) . DIRECTORY_SEPARATOR . $nowName;
 
         $dir = dirname($filePath);
 
@@ -272,20 +255,24 @@ class Uploader
         return $file;
     }
 
-    public function addWater($filePath, $targetFile, $saveToResult = true)
+    public function addWater($filePath, $targetFile, &$result)
     {
-        $this->getPicture()->water($filePath, $targetFile);
+        $waterImage = dirname($targetFile). '/thumb/' .basename($targetFile);
+        $this->getPicture()->water($filePath, $waterImage);
 
-        $saveToResult && ($this->result['waterImage'] = $targetFile);
+        $result['waterImage'] = $waterImage;
 
         return $this;
     }
 
-    public function cutThumb($filePath, $targetFile, $saveToResult = true)
+    public function cutThumb($filePath, $targetFile, &$result)
     {
-        $this->getPicture()->thumb($filePath, basename($targetFile), dirname($targetFile));
+        $path = dirname($targetFile). '/thumb';
+        $name = basename($targetFile);
 
-        $saveToResult && ($this->result['thumbImage'] = $targetFile);
+        $this->getPicture()->thumb($filePath, $name, $path);
+
+        $result['thumbImage'] = $path . '/' . $name;
 
         return $this;
     }
@@ -313,33 +300,6 @@ class Uploader
     protected function _makeDir($path)
     {
         return $path && (is_dir($path) || mkdir($path, 0664, true)) && is_writable($path);
-    }
-
-    /**
-     * 将上传文件整理为标准数组,二维转换为一位数组
-     * @param array $files
-     * @return array
-     */
-    private function _formatFiles(array $files)
-    {
-        if ( !$files ){
-            $this->error = '没有任何文件上传';
-            return false;
-        }
-
-        $info = [];
-
-        foreach( $files as $name => $v){
-            if ( is_array($v['name']) ){
-                $info[$name]  = $this->_formatFiles($v);
-            } else {
-                $info[$name]               = $v;
-                //添加一个单元，保存字段名
-                $info[$name]['fieldName']  = $name;
-            }
-        }
-
-        return $info;
     }
 
     /**
@@ -420,7 +380,9 @@ class Uploader
      */
     public function setConfig(array $config)
     {
-        $this->config = $config;
+        $this->config = array_merge($this->config, $config);
+
+        return $this;
     }
 
     /**
@@ -437,6 +399,8 @@ class Uploader
     public function setWaterConfig(array $waterConfig)
     {
         $this->waterConfig = $waterConfig;
+
+        return $this;
     }
 
     /**
@@ -453,6 +417,8 @@ class Uploader
     public function setThumbConfig(array $thumbConfig)
     {
         $this->thumbConfig = $thumbConfig;
+
+        return $this;
     }
 
     /**

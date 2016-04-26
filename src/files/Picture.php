@@ -425,7 +425,7 @@ class Picture
         $imgType        = image_type_to_extension($imgInfo [2]);
 
         //获得相关尺寸
-        $thumb_size = $this->thumbSize($imgWidth, $imgHeight, $thumbWidth, $thumbHeight, $thumbType);
+        $thumbSize = $this->calcThumbSize($imgWidth, $imgHeight, $thumbWidth, $thumbHeight, $thumbType);
 
         //原始图像资源
         $func       = 'imagecreatefrom' . substr($imgType, 1);
@@ -433,19 +433,19 @@ class Picture
 
         //缩略图的资源
         if ($imgType === '.gif') {
-            $res_thumb  = imagecreate($thumb_size [0], $thumb_size [1]);
+            $res_thumb  = imagecreate($thumbSize[0], $thumbSize[1]);
             $color      = imagecolorallocate($res_thumb, 255, 0, 0);
         } else {
-            $res_thumb  = imagecreatetruecolor($thumb_size [0], $thumb_size [1]);
+            $res_thumb  = imagecreatetruecolor($thumbSize[0], $thumbSize[1]);
             imagealphablending($res_thumb, false); //关闭混色
             imagesavealpha($res_thumb, true); //储存透明通道
         }
 
         //绘制缩略图X
         if (function_exists('imagecopyresampled')) {
-            imagecopyresampled($res_thumb, $resImg, 0, 0, 0, 0, $thumb_size [0], $thumb_size [1], $thumb_size [2], $thumb_size [3]);
+            imagecopyresampled($res_thumb, $resImg, 0, 0, 0, 0, $thumbSize[0], $thumbSize[1], $thumbSize[2], $thumbSize[3]);
         } else {
-            imagecopyresized($res_thumb, $resImg, 0, 0, 0, 0, $thumb_size [0], $thumb_size [1], $thumb_size [2], $thumb_size [3]);
+            imagecopyresized($res_thumb, $resImg, 0, 0, 0, 0, $thumbSize[0], $thumbSize[1], $thumbSize[2], $thumbSize[3]);
         }
 
         //处理透明色
@@ -494,7 +494,7 @@ class Picture
 
     /**
      *
-     * 获得缩略图的尺寸信息
+     * 计算获得缩略图的尺寸信息
      * @param string  $imgWidth         原图宽度
      * @param string  $imgHeight        原图高度
      * @param string  $thumbWidth       缩略图宽度
@@ -502,7 +502,7 @@ class Picture
      * @param string  $thumbType        处理方式
      * @return array
      */
-    private function thumbSize($imgWidth, $imgHeight, $thumbWidth, $thumbHeight, $thumbType)
+    private function calcThumbSize($imgWidth, $imgHeight, $thumbWidth, $thumbHeight, $thumbType)
     {
         //初始化缩略图尺寸
         $w = $thumbWidth;
@@ -552,12 +552,13 @@ class Picture
                     }
             }
         }
-        $arr [0] = $w;
-        $arr [1] = $h;
-        $arr [2] = $oldThumbWidth;
-        $arr [3] = $oldThumbHeight;
 
-        return $arr;
+        return [
+            $w,
+            $h,
+            $oldThumbWidth,
+            $oldThumbHeight,
+        ];
     }
 
     /*********************************************************************************

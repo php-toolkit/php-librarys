@@ -79,7 +79,7 @@ class Uploader
      */
     public $thumbConfig = [];
 
-    protected static $imageTypes = [ 'jpg','jpeg','gif','bmp','png' ];
+    protected static $imageTypes = [ 'jpg','jpeg','gif','bmp','png'];
 
     /**
      * @param array $config
@@ -184,12 +184,12 @@ class Uploader
             if ( in_array($file['ext'], static::$imageTypes) && getimagesize($result['targetFile']) ) {
                 //缩略图处理
                 if ($this->config['thumbOn']) {
-                    $this->cutThumb($result['targetFile'], $result['targetName'], false);
+                    $this->makeThumb($result['targetFile'], $result['targetName'], false);
                 }
 
                 //加水印
                 if ($this->config['waterOn']) {
-                    $this->addWater($result['targetFile'], $result['targetName'], false);
+                    $this->watermark($result['targetFile'], $result['targetName'], false);
                 }
             }
         }
@@ -255,17 +255,17 @@ class Uploader
         return $file;
     }
 
-    public function addWater($filePath, $targetFile, &$result)
+    public function watermark($filePath, $targetFile, &$result)
     {
         $waterImage = dirname($targetFile). '/thumb/' .basename($targetFile);
-        $this->getPicture()->water($filePath, $waterImage);
+        $this->getPicture()->watermark($filePath, $waterImage);
 
         $result['waterImage'] = $waterImage;
 
         return $this;
     }
 
-    public function cutThumb($filePath, $targetFile, &$result)
+    public function makeThumb($filePath, $targetFile, &$result)
     {
         $path = dirname($targetFile). '/thumb';
         $name = basename($targetFile);

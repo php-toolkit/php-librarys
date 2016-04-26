@@ -24,6 +24,14 @@ class Picture
     # 2 文字水印
     const WATER_TEXT  = 2;
 
+    // image types
+    const IMAGE_BMP  = 'bmp';
+    const IMAGE_EBP  = 'ebp';
+    const IMAGE_JPG  = 'jpg';
+    const IMAGE_JPEG = 'jpeg';
+    const IMAGE_GIF  = 'gif';
+    const IMAGE_PNG  = 'png';
+
     /**
      * 1  图片水印  2 文字水印
      * @var int
@@ -148,11 +156,6 @@ class Picture
     ];
 
     /**
-     * @var array
-     */
-    protected static $types = ['.jpg', '.jpeg', '.png', '.gif', '.bmp'];
-
-    /**
      * @param  array  $waterOptions
      * @param  array  $thumbOptions
      * @return static
@@ -253,24 +256,24 @@ class Picture
         $alpha      = $alpha    ? : $this->waterAlpha;
 
         $imgInfo    = getimagesize($img);
-        $imgWidth   = $imgInfo [0];
-        $imgHeight  = $imgInfo [1];
+        $imgWidth   = $imgInfo[0];
+        $imgHeight  = $imgInfo[1];
 
         //获得水印信息
         if ($waterImgOn) {
             $waterInfo      = getimagesize($waterImg);
-            $waterWidth     = $waterInfo [0];
-            $waterHeight    = $waterInfo [1];
+            $waterWidth     = $waterInfo[0];
+            $waterHeight    = $waterInfo[1];
 
-            switch ($waterInfo [2]) {
+            switch ($waterInfo[2]) {
                 case 1 :
-                    $w_img = imagecreatefromgif($waterImg);
+                    $wImg = imagecreatefromgif($waterImg);
                     break;
                 case 2 :
-                    $w_img = imagecreatefromjpeg($waterImg);
+                    $wImg = imagecreatefromjpeg($waterImg);
                     break;
                 case 3 :
-                    $w_img = imagecreatefrompng($waterImg);
+                    $wImg = imagecreatefrompng($waterImg);
                     break;
             }
         } else {
@@ -291,7 +294,7 @@ class Picture
         $resImg = '';
         switch ($imgInfo[2]) {
             case 1 :
-                $resImg = imagecreatefromgif ($img);
+                $resImg = imagecreatefromgif($img);
                 break;
             case 2 :
                 $resImg = imagecreatefromjpeg($img);
@@ -343,13 +346,13 @@ class Picture
                 $y = mt_rand(25, $imgHeight - $waterHeight);
         }
 
-        if ($waterImgOn && isset($resImg) && isset($w_img)) {
+        if ($waterImgOn && isset($resImg) && isset($wImg)) {
             $waterInfo = getimagesize($waterImg);
 
             if ($waterInfo[2] === 3) {
-                imagecopy($resImg, $w_img, $x, $y, 0, 0, $waterWidth, $waterHeight);
+                imagecopy($resImg, $wImg, $x, $y, 0, 0, $waterWidth, $waterHeight);
             } else {
-                imagecopymerge($resImg, $w_img, $x, $y, 0, 0, $waterWidth, $waterHeight, $alpha);
+                imagecopymerge($resImg, $wImg, $x, $y, 0, 0, $waterWidth, $waterHeight, $alpha);
             }
         } else {
             $r          = hexdec(substr($this->waterOptions['fontColor'], 1, 2));
@@ -380,8 +383,8 @@ class Picture
             imagedestroy($resImg);
         }
 
-        if (isset($res_thumb)) {
-            imagedestroy($res_thumb);
+        if (isset($resThumb)) {
+            imagedestroy($resThumb);
         }
 
         return true;
@@ -398,12 +401,12 @@ class Picture
 
     /**
      * 图片裁切处理(制作缩略图)
-     * @param string| $img   操作的图片文件路径(原图)
-     * @param string|  $outFile 另存文件名
-     * @param string|  $path 文件存放路径
-     * @param string|  $thumbWidth 缩略图宽度
-     * @param string| $thumbHeight 缩略图高度
-     * @param string| $thumbType 裁切图片的方式
+     * @param string $img         操作的图片文件路径(原图)
+     * @param string $outFile     另存文件名
+     * @param string $path        文件存放路径
+     * @param string $thumbWidth  缩略图宽度
+     * @param string $thumbHeight 缩略图高度
+     * @param string $thumbType   裁切图片的方式
      * @return bool|string
      */
     public function thumbnail($img, $outFile = '', $path = '', $thumbWidth = '', $thumbHeight = '', $thumbType = '')
@@ -419,58 +422,58 @@ class Picture
         $path        = $path        ? : $this->thumbOptions['path'];
 
         //获得图像信息
-        $imgInfo        = getimagesize($img);
-        $imgWidth       = $imgInfo [0];
-        $imgHeight      = $imgInfo [1];
-        $imgType        = image_type_to_extension($imgInfo [2]);
+        $imgInfo   = getimagesize($img);
+        $imgWidth  = $imgInfo[0];
+        $imgHeight = $imgInfo[1];
+        $imgType   = pathinfo($img, PATHINFO_EXTENSION);
+        $imgType   = $this->_handleImageType($imgType);
 
         //获得相关尺寸
         $thumbSize = $this->calcThumbSize($imgWidth, $imgHeight, $thumbWidth, $thumbHeight, $thumbType);
 
         //原始图像资源
-        $func       = 'imagecreatefrom' . substr($imgType, 1);
-        $resImg     = $func($img);
+        // imagecreatefromgif() imagecreatefrompng() imagecreatefromjpeg() imagecreatefromwbmp() imagecreatefromwebp()
+        $resImg   = call_user_func("imagecreatefrom{$imgType}" , $img);
 
         //缩略图的资源
-        if ($imgType === '.gif') {
-            $res_thumb  = imagecreate($thumbSize[0], $thumbSize[1]);
-            $color      = imagecolorallocate($res_thumb, 255, 0, 0);
+        if ($imgType === static::IMAGE_GIF) {
+            $resThumb  = imagecreate($thumbSize[0], $thumbSize[1]);
+            $color      = imagecolorallocate($resThumb, 255, 0, 0);
         } else {
-            $res_thumb  = imagecreatetruecolor($thumbSize[0], $thumbSize[1]);
-            imagealphablending($res_thumb, false); //关闭混色
-            imagesavealpha($res_thumb, true); //储存透明通道
+            $resThumb  = imagecreatetruecolor($thumbSize[0], $thumbSize[1]);
+            imagealphablending($resThumb, false); //关闭混色
+            imagesavealpha($resThumb, true); //储存透明通道
         }
 
         //绘制缩略图X
         if (function_exists('imagecopyresampled')) {
-            imagecopyresampled($res_thumb, $resImg, 0, 0, 0, 0, $thumbSize[0], $thumbSize[1], $thumbSize[2], $thumbSize[3]);
+            imagecopyresampled($resThumb, $resImg, 0, 0, 0, 0, $thumbSize[0], $thumbSize[1], $thumbSize[2], $thumbSize[3]);
         } else {
-            imagecopyresized($res_thumb, $resImg, 0, 0, 0, 0, $thumbSize[0], $thumbSize[1], $thumbSize[2], $thumbSize[3]);
+            imagecopyresized($resThumb, $resImg, 0, 0, 0, 0, $thumbSize[0], $thumbSize[1], $thumbSize[2], $thumbSize[3]);
         }
 
         //处理透明色
-        if ($imgType === '.gif') {
-            /** @var $color string */
-            imagecolortransparent($res_thumb, $color);
+        if ($imgType === static::IMAGE_GIF) {
+            imagecolortransparent($resThumb, $color);
         }
 
         //配置输出文件名
-        $imgInfo        = pathinfo($img);
-        $outFile        = $outFile ? : $this->thumbOptions['prefix'] . $imgInfo['filename'] . $this->thumbOptions['suffix'] . '.' . $imgInfo['extension'];
-        $upload_dir     = $path ? : dirname($img);
+        $imgInfo   = pathinfo($img);
+        $outFile   = $outFile ? : $this->thumbOptions['prefix'] . $imgInfo['filename'] . $this->thumbOptions['suffix'] . '.' . $imgInfo['extension'];
+        $uploadDir = $path ? : dirname($img);
+        $outFile = $uploadDir . DIRECTORY_SEPARATOR . $outFile;
 
-        Directory::create($upload_dir);
+        Directory::create($uploadDir);
 
-        $outFile        = $upload_dir . '/' . $outFile;
-        $func           = 'image' . substr($imgType, 1);
-        $func($res_thumb, $outFile);
+        // imagepng(), imagegif(), imagejpeg(), imagewbmp(), imagewebp()
+        call_user_func("image{$imgType}", $resThumb, $outFile);
 
         if (isset($resImg)) {
             imagedestroy($resImg);
         }
 
-        if (isset($res_thumb)) {
-            imagedestroy($res_thumb);
+        if (isset($resThumb)) {
+            imagedestroy($resThumb);
         }
 
         return $outFile;
@@ -487,9 +490,22 @@ class Picture
      */
     private function _checkImage($img)
     {
-        $imgType = strtolower(strrchr($img, '.'));
+        $imgType = pathinfo($img, PATHINFO_EXTENSION);
 
-        return file_exists($img) && in_array($imgType, static::$types);
+        return file_exists($img) && in_array($imgType, static::$getImageTypes());
+    }
+
+    private function _handleImageType($type)
+    {
+        if ( $type === IMAGE_JPG ) {
+            return IMAGE_JPEG;
+        } elseif ( $type === IMAGE_BMP ) {
+            return 'wbmp';
+        } elseif ( $type === IMAGE_EBP ) {
+            return 'webp';
+        }
+
+        return $type;
     }
 
     /**
@@ -564,6 +580,18 @@ class Picture
     /*********************************************************************************
     * getter/setter
     *********************************************************************************/
+
+    public static function getImageTypes()
+    {
+        return [
+            self::IMAGE_BMP,
+            self::IMAGE_EBP,
+            self::IMAGE_JPEG,
+            self::IMAGE_JPG,
+            self::IMAGE_GIF,
+            self::IMAGE_PNG,
+        ];
+    }
 
     /**
      * @param  string $name

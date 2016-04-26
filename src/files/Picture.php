@@ -26,7 +26,7 @@ class Picture
 
     // image types
     const IMAGE_BMP  = 'bmp';
-    const IMAGE_EBP  = 'ebp';
+    // const IMAGE_EBP  = 'ebp';
     const IMAGE_JPG  = 'jpg';
     const IMAGE_JPEG = 'jpeg';
     const IMAGE_GIF  = 'gif';
@@ -205,14 +205,6 @@ class Picture
         $this->waterAlpha       = $this->waterOptions['alpha'];
         $this->waterQuality     = $this->waterOptions['quality'];
 
-        if ($this->waterOptions['type'] === self::WATER_IMAGE && !is_file($this->waterOptions['img'])) {
-            throw new InvalidConfigException('请配置正确的水印图片资源路径');
-        }
-
-        if ($this->waterOptions['type'] === self::WATER_TEXT && !is_file($this->waterOptions['fontFile'])) {
-            throw new InvalidConfigException('请配置正确的水印文字资源路径');
-        }
-
         $this->thumbType        = $this->thumbOptions['type'];
         $this->thumbPath        = $this->thumbOptions['path'];
         $this->thumbWidth       = $this->thumbOptions['width'];
@@ -237,21 +229,18 @@ class Picture
      */
     public function watermark($img, $outImg = '', $pos = '', $waterImg = '', $alpha = '', $text = '')
     {
+        $imgType   = pathinfo($img, PATHINFO_EXTENSION);
+
         //验证原图像
-        if ( !$this->_checkImage($img) ) {
+        if ( !$this->_checkImage($img, $imgType) ) {
             return false;
         }
-
-        //验证水印图像
-        $waterImg   = $waterImg ? : $this->waterImg;
-        $waterImgOn = $this->_checkImage($waterImg) ? 1 : 0;
 
         //判断另存图像
         $outImg     = $outImg   ? : $img;
         //水印位置
         $pos        = $pos      ? : $this->waterPos;
-        //水印文字
-        $text       = $text     ? : $this->waterText;
+
         //水印透明度
         $alpha      = $alpha    ? : $this->waterAlpha;
 
@@ -259,24 +248,25 @@ class Picture
         $imgWidth   = $imgInfo[0];
         $imgHeight  = $imgInfo[1];
 
-        //获得水印信息
-        if ($waterImgOn) {
-            $waterInfo      = getimagesize($waterImg);
-            $waterWidth     = $waterInfo[0];
-            $waterHeight    = $waterInfo[1];
+        //验证水印图像
+        $waterImg   = $waterImg ? : $this->waterImg;
+        $waterImgType  = pathinfo($waterImg, PATHINFO_EXTENSION);
 
-            switch ($waterInfo[2]) {
-                case 1 :
-                    $wImg = imagecreatefromgif($waterImg);
-                    break;
-                case 2 :
-                    $wImg = imagecreatefromjpeg($waterImg);
-                    break;
-                case 3 :
-                    $wImg = imagecreatefrompng($waterImg);
-                    break;
-            }
+        //获得水印信息
+        if ( $waterImgOn = $this->_checkImage($waterImg, $waterImgType) ) {
+            $waterImgType = $this->_getImageType($imgType);
+            $waterInfo    = getimagesize($waterImg);
+            $waterWidth   = $waterInfo[0];
+            $waterHeight  = $waterInfo[1];
+            $wImg = call_user_func("imagecreatefrom{$waterImgType}", $waterImg);
         } else {
+            //水印文字
+            $text       = $text ?: $this->waterText;
+
+            if ( !is_file($this->waterOptions['fontFile']) ) {
+                throw new InvalidConfigException('请配置正确的水印文字资源路径');
+            }
+
             if (!$text || strlen($this->waterOptions['fontColor']) !== 7) {
                 return false;
             }
@@ -291,18 +281,7 @@ class Picture
             return false;
         }
 
-        $resImg = '';
-        switch ($imgInfo[2]) {
-            case 1 :
-                $resImg = imagecreatefromgif($img);
-                break;
-            case 2 :
-                $resImg = imagecreatefromjpeg($img);
-                break;
-            case 3 :
-                $resImg = imagecreatefrompng($img);
-                break;
-        }
+        $resImg = call_user_func("imagecreatefrom{$imgType}", $img);
 
         //水印位置处理方法
         switch ($pos) {
@@ -355,11 +334,11 @@ class Picture
                 imagecopymerge($resImg, $wImg, $x, $y, 0, 0, $waterWidth, $waterHeight, $alpha);
             }
         } else {
-            $r          = hexdec(substr($this->waterOptions['fontColor'], 1, 2));
-            $g          = hexdec(substr($this->waterOptions['fontColor'], 3, 2));
-            $b          = hexdec(substr($this->waterOptions['fontColor'], 5, 2));
-            $color      = imagecolorallocate($resImg, $r, $g, $b);
-            $charset    = 'UTF-8';
+            $r       = hexdec(substr($this->waterOptions['fontColor'], 1, 2));
+            $g       = hexdec(substr($this->waterOptions['fontColor'], 3, 2));
+            $b       = hexdec(substr($this->waterOptions['fontColor'], 5, 2));
+            $color   = imagecolorallocate($resImg, $r, $g, $b);
+            $charset = 'UTF-8';
 
             imagettftext(
                 $resImg, $this->waterOptions['fontSize'], 0, $x, $y,
@@ -367,16 +346,10 @@ class Picture
             );
         }
 
-        switch ($imgInfo [2]) {
-            case 1 :
-                imagegif ($resImg, $outImg);
-                break;
-            case 2 :
-                imagejpeg($resImg, $outImg, $this->waterQuality);
-                break;
-            case 3 :
-                imagepng($resImg, $outImg);
-                break;
+        if ( $imgType === IMAGE_JPEG ) {
+            imagejpeg($resImg, $outImg, $this->waterQuality);
+        } else {
+            call_user_func("image{$imgType}", $resThumb, $outFile);
         }
 
         if (isset($resImg)) {
@@ -411,7 +384,9 @@ class Picture
      */
     public function thumbnail($img, $outFile = '', $path = '', $thumbWidth = '', $thumbHeight = '', $thumbType = '')
     {
-        if (!$this->_checkImage($img)) {
+        $imgType   = pathinfo($img, PATHINFO_EXTENSION);
+
+        if (!$this->_checkImage($img, $imgType)) {
             return false;
         }
 
@@ -425,14 +400,13 @@ class Picture
         $imgInfo   = getimagesize($img);
         $imgWidth  = $imgInfo[0];
         $imgHeight = $imgInfo[1];
-        $imgType   = pathinfo($img, PATHINFO_EXTENSION);
-        $imgType   = $this->_handleImageType($imgType);
+        $imgType   = $this->_getImageType($imgType);
 
         //获得相关尺寸
         $thumbSize = $this->calcThumbSize($imgWidth, $imgHeight, $thumbWidth, $thumbHeight, $thumbType);
 
         //原始图像资源
-        // imagecreatefromgif() imagecreatefrompng() imagecreatefromjpeg() imagecreatefromwbmp() imagecreatefromwebp()
+        // imagecreatefromgif() imagecreatefrompng() imagecreatefromjpeg() imagecreatefromwbmp()
         $resImg   = call_user_func("imagecreatefrom{$imgType}" , $img);
 
         //缩略图的资源
@@ -465,7 +439,7 @@ class Picture
 
         Directory::create($uploadDir);
 
-        // imagepng(), imagegif(), imagejpeg(), imagewbmp(), imagewebp()
+        // imagepng(), imagegif(), imagejpeg(), imagewbmp()
         call_user_func("image{$imgType}", $resThumb, $outFile);
 
         if (isset($resImg)) {
@@ -486,23 +460,22 @@ class Picture
     /**
      * 环境验证
      * @param string $img  图像路径
+     * @param string $imgType  type of img e.g. jpg
      * @return bool
      */
-    private function _checkImage($img)
+    private function _checkImage($img, $imgType='')
     {
-        $imgType = pathinfo($img, PATHINFO_EXTENSION);
+        $imgType = $imgType ?: pathinfo($img, PATHINFO_EXTENSION);
 
         return file_exists($img) && in_array($imgType, static::$getImageTypes());
     }
 
-    private function _handleImageType($type)
+    private function _getImageType($imgType)
     {
         if ( $type === IMAGE_JPG ) {
             return IMAGE_JPEG;
         } elseif ( $type === IMAGE_BMP ) {
             return 'wbmp';
-        } elseif ( $type === IMAGE_EBP ) {
-            return 'webp';
         }
 
         return $type;
@@ -585,7 +558,6 @@ class Picture
     {
         return [
             self::IMAGE_BMP,
-            self::IMAGE_EBP,
             self::IMAGE_JPEG,
             self::IMAGE_JPG,
             self::IMAGE_GIF,

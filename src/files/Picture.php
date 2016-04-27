@@ -42,6 +42,8 @@ class Picture
         'fontFile'       => '',
         // 水印图像
         'img'            => '',
+        // 图像输出路径
+        'path'          => '',
         // 水印位置 1-9
         'pos'            => 1 ,
         // 水印透明度 transparency
@@ -78,6 +80,20 @@ class Picture
     ];
 
     private $_error = '';
+
+    /**
+     * 正在操作的原文件
+     * @var string
+     */
+    private $_workingRawFile = '';
+
+    /**
+     * 正在操作的输出文件
+     * @var string
+     */
+    private $_workingOutFile = '';
+
+    private $_result = [];
 
     /*********************************************************************************
      * build
@@ -125,36 +141,34 @@ class Picture
     /**
      * 水印处理
      * @param string $img      操作的图像
-     * @param string $outImg   另存的图像
+     * @param string $outPath   另存的图像
      * @param string $pos      水印位置
      * @param string $waterImg 水印图片
      * @param string $alpha    透明度
      * @param string $text     文字水印内容
      * @return bool
      */
-    public function watermark($img, $outImg = '', $pos = '', $waterImg = '', $alpha = '', $text = '')
+    public function watermark($img, $outPath = '', $pos = '', $waterImg = '', $alpha = '', $text = '')
     {
-        //验证原图像
-        if ( false === $this->_checkImage($img) ) {
-            return false;
+        // 验证原图像 和 是否已有错误
+        if ( false === $this->_checkImage($img) || $this->hasError()) {
+            return $this;
         }
 
-        $imgInfo   = pathinfo($img);
-        $imgType   = $this->_handleImageType($imgInfo['extension']);
-
-        $outImg = $outImg ?: $img;
-        $pos    = $pos    ?: $this->waterOptions['pos'];
-        $alpha  = $alpha  ?: $this->waterOptions['alpha'];
+        $imgInfo  = pathinfo($img);
+        $imgType  = $this->_handleImageType($imgInfo['extension']);
+        $outPath  = $outPath ?: ( $this->waterOptions['path'] ? : dirname($img) );
+        $pos      = $pos    ?: $this->waterOptions['pos'];
+        $alpha    = $alpha  ?: $this->waterOptions['alpha'];
+        $waterImg = $waterImg ?: $this->waterOptions['img'];
 
         list($imgWidth, $imgHeight) = getimagesize($img);
-
-        $waterImg = $waterImg ? : $this->waterOptions['img'];
 
         if ( $waterImg ) {
 
             // 验证水印图像
             if ( false === $this->_checkImage($waterImg) ) {
-                return false;
+                return $this;
             }
 
             $waterImgType = $this->_handleImageType( pathinfo($waterImg, PATHINFO_EXTENSION) );
@@ -163,7 +177,7 @@ class Picture
             if ($imgHeight < $waterHeight || $imgWidth < $waterWidth) {
                 $this->_error = 'The image is too small.';
 
-                return false;
+                return $this;
             }
 
             // create water image resource
@@ -177,19 +191,209 @@ class Picture
             }
 
             if (!$text || strlen($this->waterOptions['fontColor']) !== 6) {
-                $this->_error = 'The watermark font color length must equal to 6.';
-                return false;
+                throw new InvalidConfigException('The watermark font color length must equal to 6.');
             }
 
-            $textInfo       = imagettfbbox($this->waterOptions['fontSize'], 0, $this->waterOptions['fontFile'], $text);
-            $waterWidth     = $textInfo[2] - $textInfo[6];
-            $waterHeight    = $textInfo[3] - $textInfo[7];
+            $textInfo    = imagettfbbox($this->waterOptions['fontSize'], 0, $this->waterOptions['fontFile'], $text);
+            $waterWidth  = $textInfo[2] - $textInfo[6];
+            $waterHeight = $textInfo[3] - $textInfo[7];
         }
 
         // create image resource 建立原图资源
         $resImg = call_user_func("imagecreatefrom{$imgType}", $img);
 
-        //水印位置处理方法
+        //水印位置处理
+        list($x, $y) = $this->_calcWaterCoords($pos, $imgWidth, $waterWidth, $imgHeight, $waterHeight);
+
+        if ($waterImg && isset($waterImgType) && isset($resWaterImg)) {
+
+            // is png image. 'IMAGETYPE_PNG' === 3
+            if ($waterImgType === self::IMAGE_PNG) {
+                imagecopy($resImg     , $resWaterImg, $x, $y, 0, 0, $waterWidth, $waterHeight);
+            } else {
+                imagecopymerge($resImg, $resWaterImg, $x, $y, 0, 0, $waterWidth, $waterHeight, $alpha);
+            }
+        } else {
+            $r       = hexdec(substr($this->waterOptions['fontColor'], 0, 2));
+            $g       = hexdec(substr($this->waterOptions['fontColor'], 2, 2));
+            $b       = hexdec(substr($this->waterOptions['fontColor'], 4, 2));
+            $color   = imagecolorallocate($resImg, $r, $g, $b);
+            $charset = 'UTF-8';
+
+            imagettftext(
+                $resImg, $this->waterOptions['fontSize'], 0, $x, $y,
+                $color, $this->waterOptions['fontFile'], iconv($charset, 'utf-8', $text)
+            );
+        }
+
+        if ( ! Directory::create($outPath) ) {
+            $this->_error = 'Failed to create the output directory path!. OUT-PATH: ' . $outPath;
+            return $this;
+        }
+
+        $outFile = $outPath . '/' . $imgInfo['basename'];
+
+        if ( $imgType === self::IMAGE_JPEG ) {
+            imagejpeg($resImg, $outFile, $this->waterOptions['quality']);
+        } elseif ( $imgType === self::IMAGE_PNG ) {
+            imagepng($resImg, $outFile, ceil($this->waterOptions['quality']/10));
+        } else {
+            call_user_func("image{$imgType}", $resImg, $outFile);
+        }
+
+        if (isset($resImg)) {
+            imagedestroy($resImg);
+        }
+
+        if (isset($resThumb)) {
+            imagedestroy($resThumb);
+        }
+
+        $this->_workingRawFile = $img;
+        $this->_workingOutFile = $outFile;
+
+        $this->_result['rawFile'] = $img;
+        $this->_result['outFile'] = $outFile;
+
+        return $this;
+    }
+
+    /*********************************************************************************
+     * Image cutting processing
+     ********************************************************************************/
+
+    /**
+     * @param $img
+     * @param string $outFile
+     * @param string $path
+     * @param string $thumbWidth
+     * @param string $thumbHeight
+     * @param string $thumbType
+     * @return static
+     */
+    public function thumb($img, $outFile = '', $path = '', $thumbWidth = '', $thumbHeight = '', $thumbType = '')
+    {
+        return $this->thumbnail($img, $outFile, $path, $thumbWidth, $thumbHeight, $thumbType);
+    }
+
+    /**
+     * 图片裁切处理(制作缩略图)
+     * @param string $img         操作的图片文件路径(原图)
+     * @param string $outFilename 另存文件名
+     * @param string $outPath     文件存放路径
+     * @param string $thumbWidth  缩略图宽度
+     * @param string $thumbHeight 缩略图高度
+     * @param string $thumbType   裁切图片的方式
+     * @return static
+     */
+    public function thumbnail($img, $outFilename = '', $outPath = '', $thumbWidth = '', $thumbHeight = '', $thumbType = '')
+    {
+        if (!$this->_checkImage($img) || $this->hasError()) {
+            return $this;
+        }
+
+        $imgInfo   = pathinfo($img);
+        $imgType   = $imgInfo['extension'];
+
+        //基础配置
+        $thumbType   = $thumbType   ? : $this->thumbOptions['type'];
+        $thumbWidth  = $thumbWidth  ? : $this->thumbOptions['width'];
+        $thumbHeight = $thumbHeight ? : $this->thumbOptions['height'];
+        $outPath     = $outPath     ? : ( $this->thumbOptions['path'] ? : dirname($img) );
+
+        //获得图像信息
+        list($imgWidth, $imgHeight) = getimagesize($img);
+        $imgType   = $this->_handleImageType($imgType);
+
+        //获得相关尺寸
+        $thumbSize = $this->_calcThumbSize($imgWidth, $imgHeight, $thumbWidth, $thumbHeight, $thumbType);
+
+        //原始图像资源
+        // imagecreatefromgif() imagecreatefrompng() imagecreatefromjpeg() imagecreatefromwbmp()
+        $resImg   = call_user_func("imagecreatefrom{$imgType}" , $img);
+
+        //缩略图的资源
+        if ($imgType === static::IMAGE_GIF) {
+            $resThumb  = imagecreate($thumbSize[0], $thumbSize[1]);
+            $color     = imagecolorallocate($resThumb, 255, 0, 0);
+            imagecolortransparent($resThumb, $color); //处理透明色
+        } else {
+            $resThumb  = imagecreatetruecolor($thumbSize[0], $thumbSize[1]);
+            imagealphablending($resThumb, false); //关闭混色
+            imagesavealpha($resThumb, true);      //储存透明通道
+        }
+
+        // 绘制缩略图X
+        if (function_exists('imagecopyresampled')) {
+            imagecopyresampled($resThumb, $resImg, 0, 0, 0, 0, $thumbSize[0], $thumbSize[1], $thumbSize[2], $thumbSize[3]);
+        } else {
+            imagecopyresized($resThumb  , $resImg, 0, 0, 0, 0, $thumbSize[0], $thumbSize[1], $thumbSize[2], $thumbSize[3]);
+        }
+
+        //配置输出文件名
+        $outFilename   = $outFilename ?: $this->thumbOptions['prefix'] . $imgInfo['filename'] . $this->thumbOptions['suffix'] . '.' . $imgType;
+        $outFile = $outPath . DIRECTORY_SEPARATOR . $outFilename;
+
+        if ( ! Directory::create($outPath) ) {
+            $this->_error = 'Failed to create the output directory path!. OUT-PATH: ' . $outPath;
+            return $this;
+        }
+
+        // generate image to dst file. imagepng(), imagegif(), imagejpeg(), imagewbmp()
+        call_user_func("image{$imgType}", $resThumb, $outFile);
+
+        if (isset($resImg)) {
+            imagedestroy($resImg);
+        }
+
+        if (isset($resThumb)) {
+            imagedestroy($resThumb);
+        }
+
+        $this->_workingRawFile = $img;
+        $this->_workingOutFile = $outFile;
+
+        $this->_result['rawFile'] = $img;
+        $this->_result['outFile'] = $outFile;
+
+        return $this;
+    }
+
+    /*********************************************************************************
+    * helper method
+    *********************************************************************************/
+
+    /**
+     * 验证
+     * @param string $img  图像路径
+     * @return bool
+     */
+    private function _checkImage($img)
+    {
+        if ( !file_exists($img) ) {
+            $this->_error = 'Image file dom\'t exists! file: ' . $img;
+        } elseif ( !($type = pathinfo($img, PATHINFO_EXTENSION)) || !in_array($type ,static::getImageTypes()) ) {
+            $this->_error = "Image type [$type] is not supported.";
+        }
+
+        return !$this->hasError();
+    }
+
+    /**
+     * @param $type
+     * @return string
+     */
+    private function _handleImageType($type)
+    {
+        if ( $type === self::IMAGE_JPG ) {
+            return self::IMAGE_JPEG;
+        }
+
+        return $type;
+    }
+
+    protected function _calcWaterCoords($pos, $imgWidth, $waterWidth, $imgHeight, $waterHeight)
+    {
         switch ($pos) {
             case 1 :
                 $x = $y = 25;
@@ -231,170 +435,7 @@ class Picture
                 $y = mt_rand(25, $imgHeight - $waterHeight);
         }
 
-        if ($waterImg && isset($waterImgType) && isset($resWaterImg)) {
-
-            // is png image. 'IMAGETYPE_PNG' === 3
-            if ($waterImgType === self::IMAGE_PNG) {
-                imagecopy($resImg     , $resWaterImg, $x, $y, 0, 0, $waterWidth, $waterHeight);
-            } else {
-                imagecopymerge($resImg, $resWaterImg, $x, $y, 0, 0, $waterWidth, $waterHeight, $alpha);
-            }
-        } else {
-            $r       = hexdec(substr($this->waterOptions['fontColor'], 1, 2));
-            $g       = hexdec(substr($this->waterOptions['fontColor'], 3, 2));
-            $b       = hexdec(substr($this->waterOptions['fontColor'], 5, 2));
-            $color   = imagecolorallocate($resImg, $r, $g, $b);
-            $charset = 'UTF-8';
-
-            imagettftext(
-                $resImg, $this->waterOptions['fontSize'], 0, $x, $y,
-                $color, $this->waterOptions['fontFile'], iconv($charset, 'utf-8', $text)
-            );
-        }
-
-        if ( $imgType === self::IMAGE_JPEG ) {
-            imagejpeg($resImg, $outImg, $this->waterOptions['quality']);
-        } elseif ( $imgType === self::IMAGE_PNG ) {
-            imagepng($resImg, $outImg, ceil($this->waterOptions['quality']/10));
-        } else {
-            call_user_func("image{$imgType}", $resImg, $outImg);
-        }
-
-        if (isset($resImg)) {
-            imagedestroy($resImg);
-        }
-
-        if (isset($resThumb)) {
-            imagedestroy($resThumb);
-        }
-
-        return true;
-    }
-
-    /*********************************************************************************
-     * Image cutting processing
-     ********************************************************************************/
-
-    /**
-     * @param $img
-     * @param string $outFile
-     * @param string $path
-     * @param string $thumbWidth
-     * @param string $thumbHeight
-     * @param string $thumbType
-     * @return bool|string
-     */
-    public function thumb($img, $outFile = '', $path = '', $thumbWidth = '', $thumbHeight = '', $thumbType = '')
-    {
-        return $this->thumbnail($img, $outFile, $path, $thumbWidth, $thumbHeight, $thumbType);
-    }
-
-    /**
-     * 图片裁切处理(制作缩略图)
-     * @param string $img         操作的图片文件路径(原图)
-     * @param string $outFilename 另存文件名
-     * @param string $outPath     文件存放路径
-     * @param string $thumbWidth  缩略图宽度
-     * @param string $thumbHeight 缩略图高度
-     * @param string $thumbType   裁切图片的方式
-     * @return bool|string
-     */
-    public function thumbnail($img, $outFilename = '', $outPath = '', $thumbWidth = '', $thumbHeight = '', $thumbType = '')
-    {
-        if (!$this->_checkImage($img)) {
-            return false;
-        }
-
-        $imgInfo   = pathinfo($img);
-        $imgType   = $imgInfo['extension'];
-
-        //基础配置
-        $thumbType   = $thumbType   ? : $this->thumbOptions['type'];
-        $thumbWidth  = $thumbWidth  ? : $this->thumbOptions['width'];
-        $thumbHeight = $thumbHeight ? : $this->thumbOptions['height'];
-        $outPath     = $outPath     ? : $this->thumbOptions['path'];
-
-        //获得图像信息
-        list($imgWidth, $imgHeight) = getimagesize($img);
-        $imgType   = $this->_handleImageType($imgType);
-
-        //获得相关尺寸
-        $thumbSize = $this->_calcThumbSize($imgWidth, $imgHeight, $thumbWidth, $thumbHeight, $thumbType);
-
-        //原始图像资源
-        // imagecreatefromgif() imagecreatefrompng() imagecreatefromjpeg() imagecreatefromwbmp()
-        $resImg   = call_user_func("imagecreatefrom{$imgType}" , $img);
-
-        //缩略图的资源
-        if ($imgType === static::IMAGE_GIF) {
-            $resThumb  = imagecreate($thumbSize[0], $thumbSize[1]);
-            $color     = imagecolorallocate($resThumb, 255, 0, 0);
-            imagecolortransparent($resThumb, $color); //处理透明色
-        } else {
-            $resThumb  = imagecreatetruecolor($thumbSize[0], $thumbSize[1]);
-            imagealphablending($resThumb, false); //关闭混色
-            imagesavealpha($resThumb, true);      //储存透明通道
-        }
-
-        // 绘制缩略图X
-        if (function_exists('imagecopyresampled')) {
-            imagecopyresampled($resThumb, $resImg, 0, 0, 0, 0, $thumbSize[0], $thumbSize[1], $thumbSize[2], $thumbSize[3]);
-        } else {
-            imagecopyresized($resThumb  , $resImg, 0, 0, 0, 0, $thumbSize[0], $thumbSize[1], $thumbSize[2], $thumbSize[3]);
-        }
-
-        //配置输出文件名
-        $outFilename   = $outFilename ?: $this->thumbOptions['prefix'] . $imgInfo['filename'] . $this->thumbOptions['suffix'] . '.' . $imgType;
-        $uploadDir = $outPath ? : dirname($img);
-        $outFile = $uploadDir . DIRECTORY_SEPARATOR . $outFilename;
-
-        Directory::create($uploadDir);
-
-        // generate image to dst file. imagepng(), imagegif(), imagejpeg(), imagewbmp()
-        call_user_func("image{$imgType}", $resThumb, $outFile);
-
-        if (isset($resImg)) {
-            imagedestroy($resImg);
-        }
-
-        if (isset($resThumb)) {
-            imagedestroy($resThumb);
-        }
-
-        return $outFile;
-    }
-
-    /*********************************************************************************
-    * helper method
-    *********************************************************************************/
-
-    /**
-     * 验证
-     * @param string $img  图像路径
-     * @return bool
-     */
-    private function _checkImage($img)
-    {
-        if ( !file_exists($img) ) {
-            $this->_error = 'Image file dom\'t exists! file: ' . $img;
-        } elseif ( !($type = pathinfo($img, PATHINFO_EXTENSION)) || !in_array($type ,static::getImageTypes()) ) {
-            $this->_error = "Image type [$type] is not supported.";
-        }
-
-        return !$this->hasError();
-    }
-
-    /**
-     * @param $type
-     * @return string
-     */
-    private function _handleImageType($type)
-    {
-        if ( $type === self::IMAGE_JPG ) {
-            return self::IMAGE_JPEG;
-        }
-
-        return $type;
+        return [$x, $y];
     }
 
     /**
@@ -557,7 +598,7 @@ class Picture
      */
     public function hasError()
     {
-        return $this->_error !== '';
+        return $this->_error !== null;
     }
 
     /**
@@ -567,6 +608,15 @@ class Picture
     {
         return $this->_error;
     }
+
+    public function getResult()
+    {
+        return $this->_result;
+    }
+
+    /*********************************************************************************
+    * other
+    *********************************************************************************/
 
     public function png2gif($pngImg, $outPath = '')
     {

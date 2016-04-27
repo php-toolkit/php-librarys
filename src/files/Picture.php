@@ -26,117 +26,34 @@ class Picture
 
     // image types
     const IMAGE_BMP  = 'bmp';
-    // const IMAGE_EBP  = 'ebp';
     const IMAGE_JPG  = 'jpg';
     const IMAGE_JPEG = 'jpeg';
     const IMAGE_GIF  = 'gif';
     const IMAGE_PNG  = 'png';
 
     /**
-     * 1  图片水印  2 文字水印
-     * @var int
-     */
-    protected $waterType = 2;
-
-    /**
-     * 水印图片
-     * @var string
-     */
-    public $waterImg;
-
-    /**
-     * 水印的位置 in 1~9
-     * @var int
-     */
-    public $waterPos;
-
-    /**
-     * 水印的透明度
-     * @var boolean
-     */
-    public $waterAlpha;
-
-    /**
-     * 图像的压缩比
-     * @var boolean
-     */
-    public $waterQuality;
-
-    /**
-     * 水印文字内容
-     * @var string
-     */
-    public $waterText = 'THE WATER';
-
-    /**
-     * 水印文字大小
-     * @var int
-     */
-    public $waterFontSize = 12;
-
-    /**
-     * 水印文字的颜色
-     * @var string
-     */
-    public $waterFontColor;
-
-    /**
-     * 水印文字使用的字体文件
-     * @var string
-     */
-    public $waterFontFile = '';
-
-
-    /**
-     * 生成缩略图的方式 in (1~6)
-     * @var int
-     */
-    public $thumbType;
-
-    /**
-     * 缩略图的宽度
-     * @var int
-     */
-    public $thumbWidth = 150;
-
-    /**
-     * 缩略图的高度
-     * @var int
-     */
-    public $thumbHeight = 100;
-
-    /**
-     * 生成缩略图文件名后缀
-     * @var string
-     */
-    public $thumbSuffix = '_thumb';
-
-    /**
-     * 缩略图文件前缀
-     * @var string
-     */
-    public $thumbPrefix = 'thumb_';
-
-    /**
-     * 缩略图文件保存路径
-     * @var string
-     */
-    public $thumbPath;
-
-    /**
      * 图像水印设置
      * @var array
      */
     protected $waterOptions = [
-        'type'            => 1 #1 图片水印  2 文字水印
-        ,'fontFile'       => '' # 水印字体文件
-        ,'img'            => '' #水印图像
-        ,'pos'            => 1 # 水印位置 1-9
-        ,'alpha'          => 40 #水印透明度
-        ,'quality'        => 80 #水印压缩质量
-        ,'text'          => 'THE WATER' #水印文字
-        ,'fontColor'     => '#ededed' #水印字体颜色
-        ,'fontSize'      => 20 #水印字体大小
+        // 1 图片水印  2 文字水印
+        'type'           => 1,
+        // 水印字体文件
+        'fontFile'       => '',
+        // 水印图像
+        'img'            => '',
+        // 水印位置 1-9
+        'pos'            => 1 ,
+        // 水印透明度 transparency
+        'alpha'          => 40,
+        // 水印压缩质量
+        'quality'        => 80,
+        // 水印文字
+        'text'          => 'THE WATER',
+        // 水印字体颜色
+        'fontColor'     => 'ededed',
+        // 水印字体大小
+        'fontSize'      => 20
     ];
 
     /**
@@ -144,16 +61,27 @@ class Picture
      * @var array
      */
     protected $thumbOptions = [
-        'width'          => 150         # 缩略图宽度
-        ,'height'        => 100         # 缩略图高度
-        ,'prefix'        => 'thumb_'    # 缩略图文件名前缀
-        ,'suffix'        => ''          # 缩略图文件名后缀
-            # 生成缩略图方式,
-            # 1:固定宽度  高度自增      2:固定高度  宽度自增     3:固定宽度  高度裁切
-            # 4:固定高度  宽度裁切      5:缩放最大边 原图不裁切  6:缩略图尺寸不变，自动裁切图片
-        ,'type'          => 6
-        ,'path'          => ''     # 缩略图存放路径
+        // 缩略图宽度
+        'width'          => 150,
+        // 缩略图高度
+        'height'        => 100,
+        // 缩略图文件名前缀
+        'prefix'        => 'thumb_',
+        // 缩略图文件名后缀
+        'suffix'        => '',
+        // 生成缩略图方式,
+        // 1:固定宽度，高度自增    2:固定高度，宽度自增     3:固定宽度，高度裁切
+        // 4:固定高度，宽度裁切    5:缩放最大边，原图不裁切  6:按缩略图尺寸自动裁切图片
+        'type'          => 6,
+        // 缩略图存放路径
+        'path'          => ''
     ];
+
+    private $_error = '';
+
+    /*********************************************************************************
+     * build
+     *********************************************************************************/
 
     /**
      * @param  array  $waterOptions
@@ -166,8 +94,9 @@ class Picture
     }
 
     /**
-     * @param  array  $waterOptions
-     * @param  array  $thumbOptions
+     * @param  array $waterOptions
+     * @param  array $thumbOptions
+     * @throws ExtensionMissException
      */
     public function __construct(array $waterOptions=[], array $thumbOptions=[])
     {
@@ -177,40 +106,16 @@ class Picture
 
         $this->waterOptions['fontFile'] = dirname(__DIR__) . '/resources/fonts/Montserrat-Bold.ttf';
 
-        $this->setWaterOptions($waterOptions)->setCuttingOptions($thumbOptions);
+        $this->setWaterOptions($waterOptions)->setThumbOptions($thumbOptions);
 
         $this->init();
     }
 
-    /*********************************************************************************
-    * parse config
-    *********************************************************************************/
-
     /**
-     * [_parseConfig 解析传入配置]
-     * @param  array $config [构造函数传入配置]
      * @return array
      */
     protected function init()
     {
-        $this->waterType        = $this->waterOptions['type'];
-        $this->waterImg         = $this->waterOptions['img'];
-
-        $this->waterText        = $this->waterOptions['text'];
-        $this->waterOptions['fontColor']   = $this->waterOptions['fontColor'];
-        $this->waterOptions['fontSize']    = $this->waterOptions['fontSize'];
-        $this->waterOptions['fontFile']    = $this->waterOptions['fontFile'];
-
-        $this->waterPos         = $this->waterOptions['pos'];
-        $this->waterAlpha       = $this->waterOptions['alpha'];
-        $this->waterQuality     = $this->waterOptions['quality'];
-
-        $this->thumbType        = $this->thumbOptions['type'];
-        $this->thumbPath        = $this->thumbOptions['path'];
-        $this->thumbWidth       = $this->thumbOptions['width'];
-        $this->thumbHeight      = $this->thumbOptions['height'];
-        $this->thumbPrefix      = $this->thumbOptions['prefix'];
-        $this->thumbSuffix      = $this->thumbOptions['suffix'];
     }
 
     /*********************************************************************************
@@ -219,68 +124,69 @@ class Picture
 
     /**
      * 水印处理
-     * @param string $img         操作的图像
-     * @param string| $outImg 另存的图像
-     * @param string| $pos 水印位置
-     * @param string| $waterImg 水印图片
-     * @param string| $alpha 透明度
-     * @param string| $text 文字水印内容
+     * @param string $img      操作的图像
+     * @param string $outImg   另存的图像
+     * @param string $pos      水印位置
+     * @param string $waterImg 水印图片
+     * @param string $alpha    透明度
+     * @param string $text     文字水印内容
      * @return bool
      */
     public function watermark($img, $outImg = '', $pos = '', $waterImg = '', $alpha = '', $text = '')
     {
-        $imgType   = pathinfo($img, PATHINFO_EXTENSION);
-
         //验证原图像
-        if ( !$this->_checkImage($img, $imgType) ) {
+        if ( false === $this->_checkImage($img) ) {
             return false;
         }
 
-        //判断另存图像
-        $outImg     = $outImg   ? : $img;
-        //水印位置
-        $pos        = $pos      ? : $this->waterPos;
+        $imgInfo   = pathinfo($img);
+        $imgType   = $this->_handleImageType($imgInfo['extension']);
 
-        //水印透明度
-        $alpha      = $alpha    ? : $this->waterAlpha;
+        $outImg = $outImg ?: $img;
+        $pos    = $pos    ?: $this->waterOptions['pos'];
+        $alpha  = $alpha  ?: $this->waterOptions['alpha'];
 
-        $imgInfo    = getimagesize($img);
-        $imgWidth   = $imgInfo[0];
-        $imgHeight  = $imgInfo[1];
+        list($imgWidth, $imgHeight) = getimagesize($img);
 
-        //验证水印图像
-        $waterImg   = $waterImg ? : $this->waterImg;
-        $waterImgType  = pathinfo($waterImg, PATHINFO_EXTENSION);
+        $waterImg = $waterImg ? : $this->waterOptions['img'];
 
-        //获得水印信息
-        if ( $waterImgOn = $this->_checkImage($waterImg, $waterImgType) ) {
-            $waterImgType = $this->_getImageType($imgType);
-            $waterInfo    = getimagesize($waterImg);
-            $waterWidth   = $waterInfo[0];
-            $waterHeight  = $waterInfo[1];
-            $wImg = call_user_func("imagecreatefrom{$waterImgType}", $waterImg);
+        if ( $waterImg ) {
+
+            // 验证水印图像
+            if ( false === $this->_checkImage($waterImg) ) {
+                return false;
+            }
+
+            $waterImgType = $this->_handleImageType( pathinfo($waterImg, PATHINFO_EXTENSION) );
+            list($waterWidth, $waterHeight) = getimagesize($waterImg);
+
+            if ($imgHeight < $waterHeight || $imgWidth < $waterWidth) {
+                $this->_error = 'The image is too small.';
+
+                return false;
+            }
+
+            // create water image resource
+            $resWaterImg = call_user_func("imagecreatefrom{$waterImgType}", $waterImg);
         } else {
             //水印文字
-            $text       = $text ?: $this->waterText;
+            $text = $text ?: $this->waterOptions['text'];
 
             if ( !is_file($this->waterOptions['fontFile']) ) {
                 throw new InvalidConfigException('请配置正确的水印文字资源路径');
             }
 
-            if (!$text || strlen($this->waterOptions['fontColor']) !== 7) {
+            if (!$text || strlen($this->waterOptions['fontColor']) !== 6) {
+                $this->_error = 'The watermark font color length must equal to 6.';
                 return false;
             }
 
             $textInfo       = imagettfbbox($this->waterOptions['fontSize'], 0, $this->waterOptions['fontFile'], $text);
-            $waterWidth     = $textInfo [2] - $textInfo [6];
-            $waterHeight    = $textInfo [3] - $textInfo [7];
+            $waterWidth     = $textInfo[2] - $textInfo[6];
+            $waterHeight    = $textInfo[3] - $textInfo[7];
         }
 
-        //建立原图资源
-        if ($imgHeight < $waterHeight || $imgWidth < $waterWidth) {
-            return false;
-        }
-
+        // create image resource 建立原图资源
         $resImg = call_user_func("imagecreatefrom{$imgType}", $img);
 
         //水印位置处理方法
@@ -325,13 +231,13 @@ class Picture
                 $y = mt_rand(25, $imgHeight - $waterHeight);
         }
 
-        if ($waterImgOn && isset($resImg) && isset($wImg)) {
-            $waterInfo = getimagesize($waterImg);
+        if ($waterImg && isset($waterImgType) && isset($resWaterImg)) {
 
-            if ($waterInfo[2] === 3) {
-                imagecopy($resImg, $wImg, $x, $y, 0, 0, $waterWidth, $waterHeight);
+            // is png image. 'IMAGETYPE_PNG' === 3
+            if ($waterImgType === self::IMAGE_PNG) {
+                imagecopy($resImg     , $resWaterImg, $x, $y, 0, 0, $waterWidth, $waterHeight);
             } else {
-                imagecopymerge($resImg, $wImg, $x, $y, 0, 0, $waterWidth, $waterHeight, $alpha);
+                imagecopymerge($resImg, $resWaterImg, $x, $y, 0, 0, $waterWidth, $waterHeight, $alpha);
             }
         } else {
             $r       = hexdec(substr($this->waterOptions['fontColor'], 1, 2));
@@ -346,10 +252,12 @@ class Picture
             );
         }
 
-        if ( $imgType === IMAGE_JPEG ) {
-            imagejpeg($resImg, $outImg, $this->waterQuality);
+        if ( $imgType === self::IMAGE_JPEG ) {
+            imagejpeg($resImg, $outImg, $this->waterOptions['quality']);
+        } elseif ( $imgType === self::IMAGE_PNG ) {
+            imagepng($resImg, $outImg, ceil($this->waterOptions['quality']/10));
         } else {
-            call_user_func("image{$imgType}", $resThumb, $outFile);
+            call_user_func("image{$imgType}", $resImg, $outImg);
         }
 
         if (isset($resImg)) {
@@ -364,9 +272,18 @@ class Picture
     }
 
     /*********************************************************************************
-    * Image cutting processing
-    *********************************************************************************/
+     * Image cutting processing
+     ********************************************************************************/
 
+    /**
+     * @param $img
+     * @param string $outFile
+     * @param string $path
+     * @param string $thumbWidth
+     * @param string $thumbHeight
+     * @param string $thumbType
+     * @return bool|string
+     */
     public function thumb($img, $outFile = '', $path = '', $thumbWidth = '', $thumbHeight = '', $thumbType = '')
     {
         return $this->thumbnail($img, $outFile, $path, $thumbWidth, $thumbHeight, $thumbType);
@@ -375,35 +292,34 @@ class Picture
     /**
      * 图片裁切处理(制作缩略图)
      * @param string $img         操作的图片文件路径(原图)
-     * @param string $outFile     另存文件名
-     * @param string $path        文件存放路径
+     * @param string $outFilename 另存文件名
+     * @param string $outPath     文件存放路径
      * @param string $thumbWidth  缩略图宽度
      * @param string $thumbHeight 缩略图高度
      * @param string $thumbType   裁切图片的方式
      * @return bool|string
      */
-    public function thumbnail($img, $outFile = '', $path = '', $thumbWidth = '', $thumbHeight = '', $thumbType = '')
+    public function thumbnail($img, $outFilename = '', $outPath = '', $thumbWidth = '', $thumbHeight = '', $thumbType = '')
     {
-        $imgType   = pathinfo($img, PATHINFO_EXTENSION);
-
-        if (!$this->_checkImage($img, $imgType)) {
+        if (!$this->_checkImage($img)) {
             return false;
         }
+
+        $imgInfo   = pathinfo($img);
+        $imgType   = $imgInfo['extension'];
 
         //基础配置
         $thumbType   = $thumbType   ? : $this->thumbOptions['type'];
         $thumbWidth  = $thumbWidth  ? : $this->thumbOptions['width'];
         $thumbHeight = $thumbHeight ? : $this->thumbOptions['height'];
-        $path        = $path        ? : $this->thumbOptions['path'];
+        $outPath     = $outPath     ? : $this->thumbOptions['path'];
 
         //获得图像信息
-        $imgInfo   = getimagesize($img);
-        $imgWidth  = $imgInfo[0];
-        $imgHeight = $imgInfo[1];
-        $imgType   = $this->_getImageType($imgType);
+        list($imgWidth, $imgHeight) = getimagesize($img);
+        $imgType   = $this->_handleImageType($imgType);
 
         //获得相关尺寸
-        $thumbSize = $this->calcThumbSize($imgWidth, $imgHeight, $thumbWidth, $thumbHeight, $thumbType);
+        $thumbSize = $this->_calcThumbSize($imgWidth, $imgHeight, $thumbWidth, $thumbHeight, $thumbType);
 
         //原始图像资源
         // imagecreatefromgif() imagecreatefrompng() imagecreatefromjpeg() imagecreatefromwbmp()
@@ -412,34 +328,29 @@ class Picture
         //缩略图的资源
         if ($imgType === static::IMAGE_GIF) {
             $resThumb  = imagecreate($thumbSize[0], $thumbSize[1]);
-            $color      = imagecolorallocate($resThumb, 255, 0, 0);
+            $color     = imagecolorallocate($resThumb, 255, 0, 0);
+            imagecolortransparent($resThumb, $color); //处理透明色
         } else {
             $resThumb  = imagecreatetruecolor($thumbSize[0], $thumbSize[1]);
             imagealphablending($resThumb, false); //关闭混色
-            imagesavealpha($resThumb, true); //储存透明通道
+            imagesavealpha($resThumb, true);      //储存透明通道
         }
 
-        //绘制缩略图X
+        // 绘制缩略图X
         if (function_exists('imagecopyresampled')) {
             imagecopyresampled($resThumb, $resImg, 0, 0, 0, 0, $thumbSize[0], $thumbSize[1], $thumbSize[2], $thumbSize[3]);
         } else {
-            imagecopyresized($resThumb, $resImg, 0, 0, 0, 0, $thumbSize[0], $thumbSize[1], $thumbSize[2], $thumbSize[3]);
-        }
-
-        //处理透明色
-        if ($imgType === static::IMAGE_GIF) {
-            imagecolortransparent($resThumb, $color);
+            imagecopyresized($resThumb  , $resImg, 0, 0, 0, 0, $thumbSize[0], $thumbSize[1], $thumbSize[2], $thumbSize[3]);
         }
 
         //配置输出文件名
-        $imgInfo   = pathinfo($img);
-        $outFile   = $outFile ? : $this->thumbOptions['prefix'] . $imgInfo['filename'] . $this->thumbOptions['suffix'] . '.' . $imgInfo['extension'];
-        $uploadDir = $path ? : dirname($img);
-        $outFile = $uploadDir . DIRECTORY_SEPARATOR . $outFile;
+        $outFilename   = $outFilename ?: $this->thumbOptions['prefix'] . $imgInfo['filename'] . $this->thumbOptions['suffix'] . '.' . $imgType;
+        $uploadDir = $outPath ? : dirname($img);
+        $outFile = $uploadDir . DIRECTORY_SEPARATOR . $outFilename;
 
         Directory::create($uploadDir);
 
-        // imagepng(), imagegif(), imagejpeg(), imagewbmp()
+        // generate image to dst file. imagepng(), imagegif(), imagejpeg(), imagewbmp()
         call_user_func("image{$imgType}", $resThumb, $outFile);
 
         if (isset($resImg)) {
@@ -458,24 +369,29 @@ class Picture
     *********************************************************************************/
 
     /**
-     * 环境验证
+     * 验证
      * @param string $img  图像路径
-     * @param string $imgType  type of img e.g. jpg
      * @return bool
      */
-    private function _checkImage($img, $imgType='')
+    private function _checkImage($img)
     {
-        $imgType = $imgType ?: pathinfo($img, PATHINFO_EXTENSION);
+        if ( !file_exists($img) ) {
+            $this->_error = 'Image file dom\'t exists! file: ' . $img;
+        } elseif ( !($type = pathinfo($img, PATHINFO_EXTENSION)) || !in_array($type ,static::getImageTypes()) ) {
+            $this->_error = "Image type [$type] is not supported.";
+        }
 
-        return file_exists($img) && in_array($imgType, static::$getImageTypes());
+        return !$this->hasError();
     }
 
-    private function _getImageType($imgType)
+    /**
+     * @param $type
+     * @return string
+     */
+    private function _handleImageType($type)
     {
-        if ( $type === IMAGE_JPG ) {
-            return IMAGE_JPEG;
-        } elseif ( $type === IMAGE_BMP ) {
-            return 'wbmp';
+        if ( $type === self::IMAGE_JPG ) {
+            return self::IMAGE_JPEG;
         }
 
         return $type;
@@ -491,63 +407,59 @@ class Picture
      * @param string  $thumbType        处理方式
      * @return array
      */
-    private function calcThumbSize($imgWidth, $imgHeight, $thumbWidth, $thumbHeight, $thumbType)
+    private function _calcThumbSize($imgWidth, $imgHeight, $thumbWidth, $thumbHeight, $thumbType)
     {
         //初始化缩略图尺寸
         $w = $thumbWidth;
         $h = $thumbHeight;
+
         //初始化原图尺寸
         $oldThumbWidth  = $imgWidth;
         $oldThumbHeight = $imgHeight;
 
+        // 原图比需要的缩略图还小
         if ($imgWidth <= $thumbWidth && $imgHeight <= $thumbHeight) {
-            $w = $imgWidth;
-            $h = $imgHeight;
-        } else {
-            switch ($thumbType) {
-                case 1 :
-                    //固定宽度  高度自增
-                    $h = $thumbWidth / $imgWidth * $imgHeight;
-                    break;
-                case 2 :
-                    //固定高度  宽度自增
-                    $w = $thumbHeight / $imgHeight * $imgWidth;
-                    break;
-                case 3 :
-                    //固定宽度  高度裁切
-                    $oldThumbHeight = $imgWidth / $thumbWidth * $thumbHeight;
-                    break;
-                case 4 :
-                    //固定高度  宽度裁切
-                    $oldThumbWidth = $imgHeight / $thumbHeight * $thumbWidth;
-                    break;
-                case 5 :
-                    //缩放最大边 原图不裁切
-                    if (($imgWidth / $thumbWidth) > ($imgHeight / $thumbHeight)) {
-                        $h = $thumbWidth / $imgWidth * $imgHeight;
-                    } else if (($imgWidth / $thumbWidth) < ($imgHeight / $thumbHeight)) {
-                        $w = $thumbHeight / $imgHeight * $imgWidth;
-                    } else {
-                        $w = $thumbWidth;
-                        $h = $thumbHeight;
-                    }
-                    break;
-                default:
-                    //缩略图尺寸不变，自动裁切图片
-                    if (($imgHeight / $thumbHeight) < ($imgWidth / $thumbWidth)) {
-                        $oldThumbWidth = $imgHeight / $thumbHeight * $thumbWidth;
-                    } else if (($imgHeight / $thumbHeight) > ($imgWidth / $thumbWidth)) {
-                        $oldThumbHeight = $imgWidth / $thumbWidth * $thumbHeight;
-                    }
-            }
+            return [$imgWidth, $imgHeight, $oldThumbWidth, $oldThumbHeight];
         }
 
-        return [
-            $w,
-            $h,
-            $oldThumbWidth,
-            $oldThumbHeight,
-        ];
+        switch ($thumbType) {
+            case 1 :
+                //固定宽度  高度自增
+                $h = $thumbWidth / $imgWidth * $imgHeight;
+                break;
+            case 2 :
+                //固定高度  宽度自增
+                $w = $thumbHeight / $imgHeight * $imgWidth;
+                break;
+            case 3 :
+                //固定宽度  高度裁切
+                $oldThumbHeight = $imgWidth / $thumbWidth * $thumbHeight;
+                break;
+            case 4 :
+                //固定高度  宽度裁切
+                $oldThumbWidth = $imgHeight / $thumbHeight * $thumbWidth;
+                break;
+            case 5 :
+                //缩放最大边 原图不裁切
+                if (($imgWidth / $thumbWidth) > ($imgHeight / $thumbHeight)) {
+                    $h = $thumbWidth / $imgWidth * $imgHeight;
+                } else if (($imgWidth / $thumbWidth) < ($imgHeight / $thumbHeight)) {
+                    $w = $thumbHeight / $imgHeight * $imgWidth;
+                } else {
+                    $w = $thumbWidth;
+                    $h = $thumbHeight;
+                }
+                break;
+            default:
+                //缩略图尺寸不变，自动裁切图片
+                if (($imgHeight / $thumbHeight) < ($imgWidth / $thumbWidth)) {
+                    $oldThumbWidth = $imgHeight / $thumbHeight * $thumbWidth;
+                } else if (($imgHeight / $thumbHeight) > ($imgWidth / $thumbWidth)) {
+                    $oldThumbHeight = $imgWidth / $thumbWidth * $thumbHeight;
+                }
+        }
+
+        return [$w, $h, $oldThumbWidth, $oldThumbHeight];
     }
 
     /*********************************************************************************
@@ -557,12 +469,21 @@ class Picture
     public static function getImageTypes()
     {
         return [
-            self::IMAGE_BMP,
+//            self::IMAGE_BMP,
             self::IMAGE_JPEG,
             self::IMAGE_JPG,
             self::IMAGE_GIF,
             self::IMAGE_PNG,
         ];
+    }
+
+    /**
+     * @param string $type e.g. jpg
+     * @return bool
+     */
+    public static function isSupportedType($type)
+    {
+        return in_array($type, static::getImageTypes());
     }
 
     /**
@@ -572,12 +493,13 @@ class Picture
      */
     public function getOption($name, $type = 'water')
     {
-        return $type === 'water' ? $this->getWaterOption($name) : $this->getCuttingOption($name);
+        return $type === 'water' ? $this->getWaterOption($name) : $this->getThumbOption($name);
     }
 
     /**
      * set waterOptions
      * @param array $options
+     * @return $this
      */
     public function setWaterOptions(array $options)
     {
@@ -605,27 +527,60 @@ class Picture
     /**
      * set thumbOptions
      * @param array $options
+     * @return $this
      */
-    public function setCuttingOptions(array $options)
+    public function setThumbOptions(array $options)
     {
         $this->thumbOptions = array_merge($this->thumbOptions, $options);
 
         return $this;
     }
 
-    public function getCuttingOptions()
+    public function getThumbOptions()
     {
         return $this->thumbOptions;
     }
 
     /**
-     * getCuttingOption
+     * getThumbOption
      * @param  string $name
      * @param  string|null $default
      * @return string
      */
-    public function getCuttingOption($name, $default = null)
+    public function getThumbOption($name, $default = null)
     {
         return array_key_exists($name, $this->thumbOptions) ? $this->thumbOptions[$name] : $default;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasError()
+    {
+        return $this->_error !== '';
+    }
+
+    /**
+     * @return string
+     */
+    public function getError()
+    {
+        return $this->_error;
+    }
+
+    public function png2gif($pngImg, $outPath = '')
+    {
+        // Load the PNG
+        $png = imagecreatefrompng($pngImg);
+
+        $info = pathinfo($pngImg);
+        $outPath = $outPath ?: $info['dirname'];
+        $filename = $info['filename'];
+
+        // Save the image as a GIF
+        imagegif($png, "{$outPath}/{$filename}.gif");
+
+        // Free from memory
+        imagedestroy($png);
     }
 }

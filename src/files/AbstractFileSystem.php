@@ -13,6 +13,10 @@ namespace inhere\tools\files;
 use inhere\tools\exceptions\NotFoundException;
 use inhere\tools\helpers\StrHelper;
 
+/**
+ * Class AbstractFileSystem
+ * @package inhere\tools\files
+ */
 abstract class AbstractFileSystem
 {
     /**

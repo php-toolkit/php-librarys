@@ -11,6 +11,10 @@ namespace inhere\tools\env;
 
 use inhere\tools\collections\SimpleCollection;
 
+/**
+ * Class AbstractEnv
+ * @package inhere\tools\env
+ */
 abstract class AbstractEnv extends SimpleCollection
 {
     /**
@@ -20,6 +24,7 @@ abstract class AbstractEnv extends SimpleCollection
 
     /**
      * 初始化信息
+     * @param array $data
      */
     public function __construct(array $data=[])
     {
@@ -31,4 +36,7 @@ abstract class AbstractEnv extends SimpleCollection
 
         $this->init();
     }
+
+    public function init()
+    {}
 }

@@ -20,10 +20,19 @@ class SimpleCollection implements CollectionInterface
     protected $data = [];
 
     /**
-     * Create new collection
-         * @param array $items Pre-populate collection with this key-value array
+     * @param array $items
+     * @return static
      */
-    public function __construct(array $items = [])
+    public static function make($items = [])
+    {
+        return new static($items);
+    }
+
+    /**
+     * Create new collection
+     * @param array $items Pre-populate collection with this key-value array
+     */
+    public function __construct($items = [])
     {
         foreach ($items as $key => $value) {
             $this->set($key, $value);

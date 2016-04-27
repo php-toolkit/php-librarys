@@ -23,6 +23,11 @@ class Environment extends StdBase
      */
     protected $client;
 
+    public static function make(Server $server=null, Client $client=null)
+    {
+        return static($server, $client);
+    }
+
     public function __construct(Server $server=null, Client $client=null)
     {
         $this->server = $server ? : new Server;

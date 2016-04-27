@@ -75,7 +75,7 @@ class DataCollector extends SimpleCollection
      * @param string $format
      * @param string $name
      */
-    public function __construct($data, $format = 'php', $name = 'box1')
+    public function __construct($data = [], $format = 'php', $name = 'box1')
     {
         // Optionally load supplied data.
         if (is_array($data) || is_object($data)) {
@@ -90,12 +90,12 @@ class DataCollector extends SimpleCollection
     }
 
     /**
-     * @param $data
+     * @param mixed $data
      * @param string $format
      * @param string $name
      * @return static
      */
-    public static function make($data, $format = 'php', $name = 'box1')
+    public static function make($data = [], $format = 'php', $name = 'box1')
     {
         return new static($data, $format, $name);
     }
@@ -162,19 +162,6 @@ class DataCollector extends SimpleCollection
     }
 
     /**
-     * get all Data
-     * @return array
-     */
-    public function all()
-    {
-        return $this->data;
-    }
-    public function toArray()
-    {
-        return $this->all();
-    }
-
-    /**
      * @return string
      */
     public function getSeparator()
@@ -216,8 +203,6 @@ class DataCollector extends SimpleCollection
     {
         return $this->name;
     }
-
-// @method -v public -p {string|array:file, string:format='php'} -r bool load
 
     /**
      * load
@@ -370,24 +355,9 @@ class DataCollector extends SimpleCollection
         return array_keys($this->data);
     }
 
-    public function jsonSerialize()
-    {
-        return $this->data;
-    }
-
     public function getIterator()
     {
         return new \RecursiveArrayIterator($this->data);
-    }
-
-    /**
-     * Count elements of the data object
-     * @return  integer  The custom count as an integer.
-     * @link    http://php.net/manual/en/countable.count.php
-     */
-    public function count()
-    {
-        return count($this->data);
     }
 
     /**

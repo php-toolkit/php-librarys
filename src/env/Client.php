@@ -11,7 +11,34 @@ namespace inhere\tools\env;
 
 
 /**
- * 客户端信息 Client
+ * 客户端信息(e.g. 浏览器)
+ * Class Client
+ * @package inhere\tools\env
+ *
+ * @property string uri
+ * @property string method
+ * @property string conn
+ * @property string accept
+ * @property string acceptEncoding
+ * @property string acceptLang
+ * @property string userAgent
+ *
+ * @property bool   isPc
+ * @property bool   isMobile
+ * @property string os
+ * @property string browser
+ * @property bool   isUnix
+ * @property bool   isLinux
+ * @property bool   isWin
+ * @property bool   isMac
+ * @property bool   isAndroid
+ * @property string addr
+ * @property string ip
+ * @property int    port
+ *
+ * @property array  accepts
+ * @property array  encodings
+ * @property array  langs
  */
 class Client extends AbstractEnv
 {
@@ -21,8 +48,11 @@ class Client extends AbstractEnv
      */
     static public $config = [
 
-        // $_SERVER['REMOTE_PORT']
-        'port'      => 'REMOTE_PORT',
+        // $_SERVER['REQUEST_URI']
+        'uri'      => 'REQUEST_URI',
+
+        // $_SERVER['REQUEST_METHOD']
+        'method'      => 'REQUEST_METHOD',
 
         /**
          * 客户端(与服务端)连接
@@ -30,38 +60,6 @@ class Client extends AbstractEnv
          * @var string
          */
         'conn'      => 'HTTP_CONNECTION',
-
-        /**
-         * 可接受资源类型
-         * $_SERVER['HTTP_ACCEPT']
-         * @var string
-         */
-         // e.g. text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
-        'accept'    => 'HTTP_ACCEPT',
-
-        /**
-         * 客户端可接受的资源（压缩）编码
-         * $_SERVER['HTTP_ACCEPT_ENCODING'];
-         * e.g. gzip, deflate, sdch
-         * @var string
-         */
-        'acceptEncoding'  => 'HTTP_ACCEPT_ENCODING',
-
-        /**
-         * 客户端默认接受的语言
-         * $_SERVER['HTTP_ACCEPT_LANGUAGE'];
-         * e.g. zh-CN,zh;q=0.8
-         * @var string
-         */
-        'acceptLang'      => 'HTTP_ACCEPT_LANGUAGE',
-
-        /**
-         * 用户代理 (通常是浏览器)
-         * $_SERVER['HTTP_USER_AGENT']
-         * e.g. Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.99 Safari/537.36
-         * @var string
-         */
-        'userAgent' => 'HTTP_USER_AGENT',
     ];
 
     // 是移动端
@@ -70,7 +68,7 @@ class Client extends AbstractEnv
 
     public function init()
     {
-        $this->setData([
+        $this->sets([
             'isPc'      => false,
             'isMobile'  => false,
 
@@ -83,18 +81,20 @@ class Client extends AbstractEnv
             'isMac'     => false,
             'isAndroid' => false,
 
-            'addr'      => $_SERVER['REMOTE_ADDR'],
-            'port'      => $_SERVER['REMOTE_PORT'],
-
+            'ip'        => 0,
+            'addr'      => Server::value('REMOTE_ADDR'),
+            'port'      => Server::value('REMOTE_PORT'),
         ]);
 
+        $this->getHeaders();
+
         // Parse the HTTP_ACCEPT.
-        if ( $accept = $this->get('accept') ) {
+        if ( $accept = $this->getHeader('accept') ) {
             $this->set('accepts', $this->_handleInfo($accept) );
         }
 
         // Parse the accepted encodings.
-        if ($acceptEncoding = $this->get('acceptEncoding') ) {
+        if ($acceptEncoding = $this->getHeader('acceptEncoding') ) {
             $this->set('encodings', $this->_handleInfo($acceptEncoding) );
         }
 
@@ -121,9 +121,28 @@ class Client extends AbstractEnv
     /**
      * 响应头信息
      * @var array
+     *
+     * @example [
+     *
+     *  可接受资源类型 $_SERVER['HTTP_ACCEPT']
+     *  'accept'    => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp;q=0.8',
+     *
+     *  客户端可接受的资源（压缩）编码  $_SERVER['HTTP_ACCEPT_ENCODING'];
+     * 'acceptEncoding'  => 'gzip, deflate, sdch',
+     *
+     *  客户端默认接受的语言  $_SERVER['HTTP_ACCEPT_LANGUAGE'];
+     *  'acceptLang'      => 'zh-CN,zh;q=0.8',
+     *
+     *  用户代理 (通常是浏览器) $_SERVER['HTTP_USER_AGENT']
+     * 'userAgent' => 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2171.99 Safari/537.36',
+     *
+     * ]
      */
     private $_headers = null;
 
+    /**
+     * @return array|false|null
+     */
     public function getHeaders()
     {
         if ($this->_headers === null) {
@@ -143,9 +162,25 @@ class Client extends AbstractEnv
         return $this->_headers;
     }
 
+    /**
+     * @param array $headers
+     * @return $this
+     */
     public function setHeaders(array $headers)
     {
         $this->_headers = $headers;
+
+        return $this;
+    }
+
+    /**
+     * @param $name
+     * @param null $default
+     * @return null
+     */
+    public function getHeader($name, $default = null)
+    {
+        return isset($this->_headers[$name]) ? $this->_headers[$name] : $default;
     }
 
     // HTTP_X_TOKEN => xToken
@@ -202,7 +237,7 @@ class Client extends AbstractEnv
         }
 
         //// system check
-        $isUnix = $isLinux = $isMac = $isAndroid = false;
+//        $isLinux = $isMac = $isAndroid = false;
 
         if (preg_match('/win/i', $agent)) {
 
@@ -212,7 +247,7 @@ class Client extends AbstractEnv
                 $os = 'Windows Vista';
             } else if (preg_match('/nt 6.2/i', $agent)) {
                 $os = 'Windows 8';
-            } else if (preg_match('/nt 6.3/i', $agent)) {
+            } else if (preg_match('/nt 10/i', $agent)) {
                 $os = 'Windows 10';
             } else if (preg_match('/nt 6.1/i', $agent)) {
                 $os = 'Windows 7';
@@ -224,7 +259,7 @@ class Client extends AbstractEnv
                 $os = 'Windows other';
             }
 
-        } else if (strpos('linux', $agent)) {
+        } elseif (strpos('linux', $agent)) {
 
             if (strpos('android', $agent)) {
                 $os                      = 'Android';
@@ -234,24 +269,24 @@ class Client extends AbstractEnv
                 $this->set('isLinux', true);
             }
 
-        } else if (strpos('android', $agent)) {
+        } elseif (strpos('android', $agent)) {
             $os   = 'Android';
             $this->set('isAndroid', true);
-        } else if ( strpos($agent,"iphone") ) {
+        } elseif ( strpos($agent,"iphone") ) {
             $os   = 'Ios';
             $this->set('isIos', true);
-        } else if (strpos('ubuntu', $agent)) {
+        } elseif (strpos('ubuntu', $agent)) {
             $os   = 'Ubuntu';
             $this->set('isLinux', true);
-        } else if (strpos('mac', $agent)) {
+        } elseif (strpos('mac', $agent)) {
             $os   = 'Mac OS X';
             $this->set('isMac', true);
-        } else if (strpos('unix', $agent)) {
+        } elseif (strpos('unix', $agent)) {
             $os   = 'Unix';
             $this->set('isUnix', true);
-        } else if (strpos('bsd', $agent)) {
+        } elseif (strpos('bsd', $agent)) {
             $os = 'BSD';
-        } else if (strpos('symbian', $agent)) {
+        } elseif (strpos('symbian', $agent)) {
             $os = 'SymbianOS';
         } else {
             $os = 'Unknown';

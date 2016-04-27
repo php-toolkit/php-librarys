@@ -4,10 +4,11 @@
 */
 namespace inhere\tools\helpers;
 
-
+/**
+ *
+ */
 class PhpHelper
 {
-
     /**
      * 检查扩展是否加载
      * @param array $extensions
@@ -18,8 +19,7 @@ class PhpHelper
     {
         $allTotal = [];
 
-        foreach ((array)$extensions as $extension)
-        {
+        foreach ((array)$extensions as $extension) {
             $bool = extension_loaded($extension);
 
             if (!$totalReport && !$bool){
@@ -59,10 +59,11 @@ class PhpHelper
         $post_max_size = StrHelper::convertBytes(ini_get('post_max_size'));
         $upload_max_filesize = StrHelper::convertBytes(ini_get('upload_max_filesize'));
 
-        if ($max_size > 0)
+        if ($max_size > 0) {
             $result = min($post_max_size, $upload_max_filesize, $max_size);
-        else
+        } else {
             $result = min($post_max_size, $upload_max_filesize);
+        }
 
         return $result;
     }
@@ -73,12 +74,9 @@ class PhpHelper
      */
     public static function getVersion()
     {
-        if ( defined('HHVM_VERSION') )
-        {
+        if ( defined('HHVM_VERSION') ) {
             return HHVM_VERSION;
-        }
-        else
-        {
+        } else {
             return PHP_VERSION;
         }
     }
@@ -103,6 +101,24 @@ class PhpHelper
 
 ///////////////////////////////////// system info /////////////////////////////////////
 ///
+
+    /**
+     * @return bool
+     */
+    public static function isUnix()
+    {
+        $unames = array('CYG', 'DAR', 'FRE', 'HP-', 'IRI', 'LIN', 'NET', 'OPE', 'SUN', 'UNI');
+
+        return in_array( strtoupper(substr(PHP_OS, 0, 3)) , $unames);
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isLinux()
+    {
+        return strstr(PHP_OS, 'LIN') ? true : false;
+    }
 
     /**
      * @return bool

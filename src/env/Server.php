@@ -9,10 +9,35 @@
 
 namespace inhere\tools\env;
 
-use ulue\libs\helpers\PhpHelper;
+use inhere\tools\helpers\PhpHelper;
 
 /**
  * 服务端信息 Server
+ * Class Server
+ * @package inhere\tools\env
+ *
+ * @property string path
+ * @property string protocol
+ * @property string signature
+ * @property string addr
+ * @property int    port
+ * @property string name
+ * @property string software
+ * @property string documentRoot
+ * @property string scriptFilename
+ * @property string scriptName
+ * @property string phpSelf
+ *
+ * @property string workDir
+ * @property string entry
+ * @property string root
+ * @property int    isCli
+ * @property int    isWeb
+ * @property string uname
+ * @property string os
+ * @property int    isWin
+ * @property int    isLinux
+ * @property int    isUnix
  */
 class Server extends AbstractEnv
 {
@@ -26,28 +51,28 @@ class Server extends AbstractEnv
         // 'scheme' => 'REQUEST_SCHEME',
 
         // $_SERVER['PATH']
-        'path'     => 'PATH',
+        'path'           => 'PATH',
 
         // $_SERVER['SERVER_PROTOCOL'] 协议 e.g. HTTP/1.1
-        'protocol' => 'SERVER_PROTOCOL',
+        'protocol'       => 'SERVER_PROTOCOL',
 
         // $_SERVER['SERVER_SIGNATURE'] 签名
-        'signature' => 'SERVER_SIGNATURE',
+        'signature'      => 'SERVER_SIGNATURE',
 
         // $_SERVER['SERVER_ADDR']
-        'addr'     => 'SERVER_ADDR',
+        'addr'           => 'SERVER_ADDR',
 
         // $_SERVER['SERVER_PORT']
-        'port'     => 'SERVER_PORT',
+        'port'           => 'SERVER_PORT',
 
         // $_SERVER['SERVER_NAME']
-        'name'     => 'SERVER_NAME',
+        'name'           => 'SERVER_NAME',
 
         // $_SERVER['SERVER_SOFTWARE']
-        'software' => 'SERVER_SOFTWARE',
+        'software'       => 'SERVER_SOFTWARE',
 
         // $_SERVER['DOCUMENT_ROOT']
-        'documentRoot'     => 'DOCUMENT_ROOT',
+        'documentRoot'   => 'DOCUMENT_ROOT',
 
         // $_SERVER['SCRIPT_FILENAME']
         'scriptFilename' => 'SCRIPT_FILENAME',
@@ -56,7 +81,7 @@ class Server extends AbstractEnv
         'scriptName'     => 'SCRIPT_NAME',
 
         // $_SERVER['PHP_SELF']
-        'phpSelf'     => 'PHP_SELF',
+        'phpSelf'        => 'PHP_SELF',
     ];
 
     public function init()
@@ -67,22 +92,20 @@ class Server extends AbstractEnv
         // $this->data['entryUrl']    = $this->rootUrl . $this->script;
         // $this->data['currentUrl']  = $this->isUrl($this->uri) ? $this->uri : $this->rootUrl . $this->uri;
 
-        $this->setData([
-                'workDir' => getcwd(),
-                'entry'   => $this->getEntry(),
-                'root'    => $this->getRoot(),
+        $this->sets([
+            'workDir' => getcwd(),
+            'entry'   => $this->getEntry(),
+            'root'    => $this->getRoot(),
 
-                'isCli'   => PhpHelper::isCli(),
-                'isWeb'   => PhpHelper::isWeb(),
+            'isCli'   => PhpHelper::isCli(),
+            'isWeb'   => PhpHelper::isWeb(),
 
-                 // operate system
-                'uname'   => PHP_OS,
-                'os'      => strtoupper(substr($this->get('uname'), 0, 3)),
-                'isWin'   => ($this->get('os') == 'WIN'),
-                'isLinux' => ($this->get('os') == 'LIN'),
-                'isUnix'  => $this->isUnix(),
-            ]);
-
+             // operate system
+            'uname'   => PHP_OS,
+            'os'      => strtoupper(substr(PHP_OS, 0, 3)),
+            'isUnix'  => $this->isUnix(),
+        ])->set('isWin',   $this->get('os') == 'WIN')
+          ->set('isLinux', $this->get('os') == 'LIN');
     }
 
     /**
@@ -117,6 +140,13 @@ class Server extends AbstractEnv
     public function getRoot($full = true)
     {
         return dirname($this->getEntry($full));
+    }
+
+    public static function value($name, $default = '')
+    {
+        $name = strtoupper($name);
+
+        return isset($_SERVER[$name]) ? trim($_SERVER[$name]) : $default;
     }
 
     /**

@@ -212,6 +212,7 @@ class Captcha
     public function create()
     {
         if ($this->bgImage && is_file($this->bgImage)) {
+            // 从背景图片建立背景画布
             $this->img = imagecreatefrompng($this->bgImage);
         } else {
             // 手动建立背景画布,图像资源

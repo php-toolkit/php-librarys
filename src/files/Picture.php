@@ -126,12 +126,7 @@ class Picture
         $this->init();
     }
 
-    /**
-     * @return array
-     */
-    protected function init()
-    {
-    }
+    protected function init() {}
 
     /*********************************************************************************
     * add watermark

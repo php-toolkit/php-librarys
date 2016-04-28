@@ -270,7 +270,7 @@ class Uploader
         $path = dirname($targetFile). '/thumb';
         $name = basename($targetFile);
 
-        $this->getPicture()->thumb($filePath, $name, $path);
+        $this->getPicture()->thumb($filePath, $path, $name);
 
         $result['thumbImage'] = $path . '/' . $name;
 

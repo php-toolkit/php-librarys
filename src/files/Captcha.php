@@ -11,6 +11,7 @@
 namespace inhere\tools\files;
 
 use inhere\tools\exceptions\NotFoundException;
+use inhere\tools\exceptions\ExtensionMissException;
 
 /**
  * Class Captcha
@@ -22,6 +23,7 @@ class Captcha
     public $width;              // 画布宽
     public $height;             // 画布高
     public $bgColor;            // 背景色
+    public $bgImage;            // 背景图 $bgColor $bgImage 二选一
     public $font;               // 字体
 
     public $pixelNum;           // 干扰点数量
@@ -56,13 +58,12 @@ class Captcha
      */
     public function __construct(array $config=[])
     {
-        $defaultConfig  = $this->defaultConfig();
-
-        if ($config) {
-            $config = array_merge( $defaultConfig, $config);
-        } else {
-            $config = $this->defaultConfig();
+        if ( !$this->checkGd() ) {
+            throw new ExtensionMissException('This tool required extension [gd].');
         }
+
+        $defaultConfig  = $this->defaultConfig();
+        $config = $config ? array_merge( $defaultConfig, $config) : $defaultConfig;
 
         $this->config = $config;
         $this->font   = $config['font'];
@@ -75,30 +76,35 @@ class Captcha
             static::$sessionKey = $config['sessionKey'];
         }
 
-        $this->codeStr = $config['rand_str'];
-
-        $this->fontSize = isset($config['font_size'])   ? $config['font_size']  : $defaultConfig['font_size'];
-        $this->charNum  = isset($config['length'])      ? $config['length']     : $defaultConfig['length'];
-        $this->width    = isset($config['width'])       ? $config['width']      : $defaultConfig['width'];
-        $this->height   = isset($config['height'])      ? $config['height']     : $defaultConfig['height'];
-        $this->bgColor  = isset($config['bg_color'])    ? $config['bg_color']   : $defaultConfig['bg_color'];
-        $this->pixelNum = isset($config['pixel_num'])   ? $config['pixel_num']  : $defaultConfig['pixel_num'];
-        $this->fontNum  = isset($config['font_num'])    ? $config['font_num']   : $defaultConfig['font_num'];
+        $this->codeStr = $config['randStr'];
+        $this->fontSize = $config['fontSize'];
+        $this->charNum  = $config['length'];
+        $this->width    = $config['width'];
+        $this->height   = $config['height'];
+        $this->bgColor  = $config['bgColor'];
+        $this->bgImage  = $config['bgImage'];
+        $this->pixelNum = $config['pixelNum'];
+        $this->fontNum  = $config['fontNum'];
     }
 
     public function defaultConfig()
     {
        return [
-            'font'         => dirname(__DIR__) . '/resources/fonts/Montserrat-Bold.ttf'#字体文件
-           ,'rand_str'     => '23456789abcdefghigkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
-           ,'width'        => '120'
-           ,'height'       => '45'
-           ,'bg_color'     => '#eeeeee'
-           ,'length'       => '4'
-           ,'font_color'   => ''
-           ,'font_size'    => '24'   #验证码字体大小
-           ,'pixel_num'    => '10'   #干扰点数量
-           ,'font_num'     => '50'    #干扰字符数量
+            // 字体文件
+            'font'         => dirname(__DIR__) . '/resources/fonts/Montserrat-Bold.ttf',
+            'randStr'     => '23456789abcdefghigkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ',
+            'width'        => '120',
+            'height'       => '45',
+            'bgColor'      => '#eeeeee',
+            'bgImage'      => dirname(__DIR__) . '/resources/images/backgrounds/06.png',
+            'length'       => '4',
+            'fontColor'    => '',
+            //  验证码字体大小
+            'fontSize'    => '24',
+            // 干扰点数量
+            'pixelNum'    => '10',
+            // 干扰字符数量
+            'fontNum'     => '50',
        ];
     }
 
@@ -205,23 +211,23 @@ class Captcha
     // 生成图像资源，Captcha-验证码
     public function create()
     {
-        if (!$this->checkGd() ) {
-            return false;
+        if ($this->bgImage && is_file($this->bgImage)) {
+            $this->img = imagecreatefrompng($this->bgImage);
+        } else {
+            // 手动建立背景画布,图像资源
+            $this->img = imagecreatetruecolor($this->width,$this->height);
+
+            //给画布填充矩形的背景色rgb(230, 255, 230);
+            $bgColor = $this->bgColor;
+
+            //背景色
+            $bgColor=imagecolorallocate(
+                 $this->img,                    hexdec(substr($bgColor, 1,2)),
+                 hexdec(substr($bgColor, 3,2)), hexdec(substr($bgColor, 5,2))
+            );
+
+            imagefilledrectangle($this->img,0,0,$this->width,$this->height,$bgColor);
         }
-
-        //建立背景画布,图像资源
-        $this->img = imagecreatetruecolor($this->width,$this->height);
-        //给画布填充矩形的背景色rgb(230, 255, 230);
-        $bgColor = $this->bgColor;
-        //$bgColor=imagecolorallocate($this->img,230, 255, 230); //背景色
-
-        //背景色
-        $bgColor=imagecolorallocate(
-             $this->img,                    hexdec(substr($bgColor, 1,2)),
-             hexdec(substr($bgColor, 3,2)), hexdec(substr($bgColor, 5,2))
-        );
-
-        imagefilledrectangle($this->img,0,0,$this->width,$this->height,$bgColor);
 
         //给资源画上边框-可选 rgb(153, 153, 255)
 //        $borderColor = imagecolorallocate($this->img, 153, 153, 255); // 0-255

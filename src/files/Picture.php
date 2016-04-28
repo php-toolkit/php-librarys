@@ -9,8 +9,10 @@
 
 namespace inhere\tools\files;
 
+use inhere\tools\exceptions\InvalidArgumentException;
 use inhere\tools\exceptions\InvalidConfigException;
 use inhere\tools\exceptions\ExtensionMissException;
+use inhere\tools\exceptions\FileSystemException;
 
 /**
  * Class Picture
@@ -67,8 +69,8 @@ class Picture
         'width'          => 150,
         // 缩略图高度
         'height'        => 100,
-        // 缩略图文件名前缀
-        'prefix'        => 'thumb_',
+        // 缩略图文件名前缀 thumb_
+        'prefix'        => '',
         // 缩略图文件名后缀
         'suffix'        => '',
         // 生成缩略图方式,
@@ -79,19 +81,16 @@ class Picture
         'path'          => ''
     ];
 
-    private $_error = '';
+    private $_error = null;
 
     /**
-     * 正在操作的原文件
+     * 正在操作的文件记录
      * @var string
      */
-    private $_workingRawFile = '';
-
-    /**
-     * 正在操作的输出文件
-     * @var string
-     */
-    private $_workingOutFile = '';
+    public $working = [
+        'raw' => '', // 正在操作的原文件
+        'out' => '', // 正在操作的输出文件
+    ];
 
     private $_result = [];
 
@@ -249,11 +248,13 @@ class Picture
             imagedestroy($resThumb);
         }
 
-        $this->_workingRawFile = $img;
-        $this->_workingOutFile = $outFile;
+        $this->working = [
+            'raw' => $img,
+            'out' => $outFile,
+        ];
 
-        $this->_result['rawFile'] = $img;
-        $this->_result['outFile'] = $outFile;
+        $this->_result['workWater']['rawFile'] = $img;
+        $this->_result['workWater']['outFile'] = $outFile;
 
         return $this;
     }
@@ -279,21 +280,21 @@ class Picture
     /**
      * 图片裁切处理(制作缩略图)
      * @param string $img         操作的图片文件路径(原图)
-     * @param string $outFilename 另存文件名
      * @param string $outPath     文件存放路径
+     * @param string $outFilename 另存文件名
      * @param string $thumbWidth  缩略图宽度
      * @param string $thumbHeight 缩略图高度
      * @param string $thumbType   裁切图片的方式
      * @return static
      */
-    public function thumbnail($img, $outFilename = '', $outPath = '', $thumbWidth = '', $thumbHeight = '', $thumbType = '')
+    public function thumbnail($img, $outPath = '', $outFilename = '', $thumbWidth = '', $thumbHeight = '', $thumbType = '')
     {
         if (!$this->_checkImage($img) || $this->hasError()) {
             return $this;
         }
 
         $imgInfo   = pathinfo($img);
-        $imgType   = $imgInfo['extension'];
+        $rawImgType   = $imgInfo['extension'];
 
         //基础配置
         $thumbType   = $thumbType   ? : $this->thumbOptions['type'];
@@ -303,7 +304,7 @@ class Picture
 
         //获得图像信息
         list($imgWidth, $imgHeight) = getimagesize($img);
-        $imgType   = $this->_handleImageType($imgType);
+        $imgType   = $this->_handleImageType($rawImgType);
 
         //获得相关尺寸
         $thumbSize = $this->_calcThumbSize($imgWidth, $imgHeight, $thumbWidth, $thumbHeight, $thumbType);
@@ -331,7 +332,7 @@ class Picture
         }
 
         //配置输出文件名
-        $outFilename   = $outFilename ?: $this->thumbOptions['prefix'] . $imgInfo['filename'] . $this->thumbOptions['suffix'] . '.' . $imgType;
+        $outFilename   = $outFilename ?: $this->thumbOptions['prefix'] . $imgInfo['filename'] . $this->thumbOptions['suffix'] . '.' . $rawImgType;
         $outFile = $outPath . DIRECTORY_SEPARATOR . $outFilename;
 
         if ( ! Directory::create($outPath) ) {
@@ -350,13 +351,57 @@ class Picture
             imagedestroy($resThumb);
         }
 
-        $this->_workingRawFile = $img;
-        $this->_workingOutFile = $outFile;
+        $this->working = [
+            'raw' => $img,
+            'out' => $outFile,
+        ];
 
-        $this->_result['rawFile'] = $img;
-        $this->_result['outFile'] = $outFile;
+        $this->_result['workThumb']['rawFile'] = $img;
+        $this->_result['workThumb']['outFile'] = $outFile;
 
         return $this;
+    }
+
+    /**
+     * 显示 image file 到浏览器
+     * @param string $img 图片文件
+     * @param string $type 图片格式 jpeg|png|gif
+     * @return bool
+     */
+    public static function show($img)
+    {
+        if ( !is_file($img) || !is_readable($img)) {
+            throw new FileSystemException('image file don\'t exists or file is not readable!');
+        }
+
+        $type = pathinfo($img, PATHINFO_EXTENSION);
+        $type = $type === self::IMAGE_JPG ? self::IMAGE_JPEG : $type;
+
+        if ( !static::isSupportedType($type) ) {
+            throw new InvalidArgumentException("image type [$type] is not supported!", 1);
+        }
+
+        /** @var resource $resImg */
+        $resImg = call_user_func("imagecreatefrom{$type}" , $img);
+
+        // 保持png图片的透明度
+        if ( $type === self::IMAGE_PNG ) {
+            // 设置标记以在保存 PNG 图像时保存完整的 alpha 通道信息。
+            imagesavealpha($resImg, true);
+        }
+
+        header('Cache-Control: max-age=1, s-maxage=1, no-cache, must-revalidate');
+        header('Content-type: image/'.$type.';charset=utf8'); // 生成图片格式 png jpeg 。。。
+
+        ob_clean();
+        //生成图片,在浏览器中进行显示-格式 $type ，与上面的header声明对应
+        // e.g. imagepng($resImg);
+        $success   = call_user_func("image{$type}" , $resImg);
+
+        // 已经显示图片后，可销毁，释放内存（可选）
+        imagedestroy($resImg);
+
+        return $success;
     }
 
     /*********************************************************************************

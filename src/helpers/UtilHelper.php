@@ -37,4 +37,24 @@ abstract class UtilHelper
         // var_dump($c,$result, $data);
         return ( $result === 1 ) ? $data : null;
     }
+
+    /**
+    * Display a var dump in firebug console
+    *
+    * @param object $object Object to display
+    */
+    static public function fd($object, $type = 'log')
+    {
+        $types = array('log', 'debug', 'info', 'warn', 'error', 'assert');
+
+        if (!in_array($type, $types))
+            $type = 'log';
+
+        echo '
+            <script type="text/javascript">
+                console.'.$type.'('. json_encode($object).');
+            </script>
+        ';
+    }
+
 }

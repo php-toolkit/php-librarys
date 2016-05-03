@@ -69,7 +69,7 @@ class PagingBase
         'btnNum'   => 5,    // 显示数字按钮个数
         'ext'      => 'html',// url地址后缀
         'pageKey'  => 'page', // 分页的url参数变量,page @example /post/index?page=6
-        'pageUrl'  => '',  // 需要分页的页面url地址
+        'pageUrl'  => '/',  // 需要分页的页面url地址
     ];
 
     /**
@@ -98,7 +98,7 @@ class PagingBase
     //     'jumpTo'                  => 'Jump to'                   // 跳转到
     // ];
 
-
+    private $separator = '?';
 
     public static function make(array $options=[], array $text=[])
     {
@@ -136,44 +136,25 @@ class PagingBase
             $this->text  = array_merge($this->text, $text);
         }
 
+        if ( !$this->options['pageUrl'] ) {
+            $url = trim($_SERVER['REQUEST_URI'],'/&?');
+            $pos = strpos($url,'?');
+
+            // 页面URL有无 ? (问号)
+            $this->separator = $pos === false ? '?' : '&';
+            $this->options['pageUrl'] = substr($url, 0 , $pos-1);
+        }
+
         return $this;
     }
 
-    // 处理当前页面URL
-    private function getCurrentPageUrl()
+    /**
+     * @param int $page
+     * @return string
+     */
+    public function getUrl($page = 1)
     {
-        $url = trim($_SERVER['REQUEST_URI'],'/&?');
-        $pos = strpos($url,'?');
-
-        // 页面URL有无 ? (问号)
-        $hasMark = $pos !== false;
-
-        $var = $this->getOption('pageKey');
-
-        // todo 暂不处理添加 扩展名
-        if (strpos($url,'&')===false) {
-            $this->pageKey       = "/{$var}/";
-            $url = preg_replace("/($var\/\d+)[\/]?/i", '', $url);
-            $url = rtrim($url,'/');
-        } else {
-            $url = preg_replace("/($var=\d+)[\&]?/i", '', $url);
-
-            if ($hasMark == true) {
-                $this->pageKey  = substr($url, -1)=='?' ? "?{$var}=" : "&{$var}=";
-            } else {
-                $this->pageKey  = "?{$var}=";
-            }
-
-            $url = trim($url,'&?');
-        }
-
-        $this->options['pageUrl'] = $url;  //$url str_replace('search', replace, $url);
-
-    }
-
-    public function getUrl($pageNum='')
-    {
-        return $this->options['pageUrl'].$this->options['pageKey'].$pageNum;
+        return $this->options['pageUrl']. $this->separator .$this->options['pageKey'].'='.$page;
     }
 
     /*********************************************************************************
@@ -183,7 +164,7 @@ class PagingBase
     //处理中间数字分页按钮的逻辑
     protected function handleLogic()
     {
-        $page = $this->getOption('page', 1);
+        $page   = $this->getOption('page', 1);
         $btnNum = $this->getOption('btnNum', 5);
 
         // 计算

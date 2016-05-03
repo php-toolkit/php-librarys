@@ -5,18 +5,16 @@
  * Date: 14-5-19
  * Time: 上午11:00
  * 新闻、文章处理分页类
- * $curPage    = \Ioc::getRequest()->getParam('page','1');
- * $pageSize   = \Ioc::getRequest()->getParam('pageSize','3');
- * $start      = ($curPage-1)*$pageSize;
- * $arrBill    = $this->model('bill')->limit($start,$pageSize)->getAll();
- * $pageParam  = [
- *     'pageNum'   =>$curPage,
- *     'pageSize'  =>$pageSize,
- *     'count'     =>$total
+ * $curPage    = isset($_GET['page']) ? $_GET['page'] : 1;
+ * $pageSize   = 10;
+ * $params  = [
+ *     'page'      => $curPage,
+ *     'pageSize'  => $pageSize,
+ *     'total'     => $total
  * ];
- * $objPage    = new \inhere\tools\html\Paging($pageParam);
+ * $paging    = new \inhere\tools\html\Paging($params);
  *
- *
+ * $pagingString = $paging->useStyle()->toString();
  *
  *
  */
@@ -28,7 +26,9 @@ namespace inhere\tools\html;
  */
 class Paging extends PagingBase
 {
-
+    /**
+     * @var array
+     */
     public $elements = [
         'box'               => [
             'tag'             => 'ul', //'div>ul',
@@ -111,17 +111,16 @@ class Paging extends PagingBase
         $numBtnPage='';
         $page = (int)$this->getOption('page', 1);
 
-        for($i=$this->firstNumBtn;$i<=$this->lastNumBtn;$i++) {
-
+        for($i=$this->firstNumBtn; $i<=$this->lastNumBtn;$i++) {
             if ($i === $page) {
                 //给当前页按钮设置额外样式
                 // $numBtnPage .='<a href="'.$this->getUrl($i).'" class="number current" title="'.$i.'">'.$i.'</a>';
-                $numBtnPage = Html::a($i,'javascript:;',['title'=>$i]);
-                $numBtnPage .= $this->hasListElement($numBtnPage,['class'=>$this->elements['list']['currentClass']]);
+                $a = Html::a($i,'',['title'=>$i]);
+                $numBtnPage .= $this->hasListElement($a,['class'=>$this->elements['list']['currentClass']]);
             } else {
                 // $numBtnPage .='<a href="'.$this->getUrl($i).'" class="number" title="'.$i.'">'.$i.'</a>';
-                $numBtnPage = Html::a($i,$this->getUrl($i),['title'=>$i]);
-                $numBtnPage .= $this->hasListElement($numBtnPage);
+                $a = Html::a($i,$this->getUrl($i),['title'=>$i]);
+                $numBtnPage .= $this->hasListElement($a);
             }
         }
 
@@ -249,7 +248,7 @@ class Paging extends PagingBase
 ////////////////////////////////////////// get paging string ///////////////////////////////////////
 
     //得到组装后的分页字符串
-    public function pagingStyle($type='full')
+    public function useStyle($type='full')
     {
         switch(trim($type)) {
             case 'mini'://最简单
@@ -302,9 +301,9 @@ class Paging extends PagingBase
 
         if ($this->elements['box']['tag']) {
             $box      = $this->elements['box'];
-            $tag      = $box['tag'];
-            $class    = isset($box['class']) ? $box['class'] : '';
-            $string  = Html::tag($tag,$string,['class'=>$class]);
+            $string  = Html::tag($box['tag'], $string, [
+                'class'=>isset($box['class']) ? $box['class'] : ''
+            ]);
         }
 
         return $string;

@@ -8,7 +8,7 @@
  * file: Element.php
  */
 
-namespace inhere\tools\front;
+namespace inhere\tools\html;
 
 use inhere\tools\StdBase;
 use inhere\tools\exceptions\InvalidConfigException;
@@ -134,7 +134,6 @@ class Element extends StdBase
 
         // 替换 直接占有 内容的位置
         if ( isset($childs[self::REPLACE_TEXT]) ) {
-
             $string = '';
             foreach ($childs[self::REPLACE_TEXT] as $child) {
                 $string .= rtrim( (string)$child );
@@ -143,8 +142,8 @@ class Element extends StdBase
             $content = $string . "\n";
 // vd($content,-4);
         }
-        if ( isset($childs[self::BEFORE_TEXT]) ) {
 
+        if ( isset($childs[self::BEFORE_TEXT]) ) {
             $string = '';
             foreach ($childs[self::BEFORE_TEXT] as $child) {
                 $string .= rtrim( (string)$child );
@@ -154,7 +153,6 @@ class Element extends StdBase
         }
 
         if ( isset($childs[self::AFTER_TEXT]) ) {
-
             $string = '';
             foreach ($childs[self::AFTER_TEXT] as $child) {
                 $string .= rtrim( (string)$child );
@@ -172,9 +170,7 @@ class Element extends StdBase
      */
     public function isAloneTag($name)
     {
-        $aloneTags = ['area','br','base','col','frame','hr','img','input','link','mate','option','param' ];
-
-        return in_array($name, $aloneTags);
+        return Html::isAloneTag($name);
     }
 
 

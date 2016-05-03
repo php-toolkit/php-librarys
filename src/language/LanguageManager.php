@@ -287,6 +287,7 @@ class LanguageManager extends DataCollector
 
         // no separator, get value form default file.
         if ( ($pos = strpos($key, $this->fileSeparator)) === false ) {
+            return $fallbackData[0]->get($key, $default);
         }
 
         // Will try to get the value from the other config file
@@ -294,7 +295,7 @@ class LanguageManager extends DataCollector
         $realKey  = substr($key, $pos+1);
 
         // check exists
-        if ( $collector = $this->fallbackData[$filename] ) {
+        if ( $collector = $this->loadFallbackOtherFile($filename) ) {
             return $collector->get($realKey, $default);
         }
 

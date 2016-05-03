@@ -60,7 +60,7 @@ abstract class StdBase
 
         if ( method_exists($this, $method) ) {
             $this->$method($value);
-        } else if ( method_exists($this, 'get'.ucfirst( $name )) ) {
+        } elseif ( method_exists($this, 'get'.ucfirst( $name )) ) {
             throw new \SetPropertyException("Setting a Read-only property! ".get_class($this)."::{$name}");
         } else {
             throw new \SetPropertyException("Setting a Unknown property! ".get_class($this)."::{$name}");
@@ -126,10 +126,10 @@ abstract class StdBase
      */
     public function __call($method, $args)
     {
-        if (method_exists($this, $method) && $this->isAllowCall($method) ) {
+        // if (method_exists($this, $method) && $this->isAllowCall($method) ) {
 
-            return call_user_func_array( array($this, $method), (array) $args);
-        }
+        //     return call_user_func_array( array($this, $method), (array) $args);
+        // }
 
         throw new \UnknownCalledException("Called a Unknown method! ".get_class($this)."->{$method}()");
     }

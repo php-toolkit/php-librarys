@@ -26,13 +26,13 @@ class PagingBase
      * 第一个数字按钮,当前页数减去偏移页数
      * @var int
      */
-    protected $firstNumBtn = 0;
+    protected $firstPage = 0;
 
     /**
      * 最后一个数字按钮
      * @var int
      */
-    protected $lastNumBtn = 0;
+    protected $lastPage = 0;
 
     /**
      * 偏移页数 floor($this->btnNum/2)
@@ -125,12 +125,6 @@ class PagingBase
 
         $this->options = array_merge($this->options,$options);
 
-        // foreach ($this->options as $key => $value) {
-        //     if (property_exists($this, $key)) {
-        //         $this->$key = $value;
-        //     }
-        // }
-
         //文本配置
         if ( $text ) {
             $this->text  = array_merge($this->text, $text);
@@ -168,29 +162,29 @@ class PagingBase
         $btnNum = $this->getOption('btnNum', 5);
 
         // 计算
-        $this->pageTotal   = ceil($this->getOption('total')/$this->getOption('pageSize'));
-        $this->offsetPage  = floor($btnNum/2);//偏移页数
-        $this->prevPage    = $page - 1; // 上一页
-        $this->nextPage    = $page + 1; // 下一页
-        $this->firstNumBtn = $page - $this->offsetPage; //第一个数字按钮,当前页数减去偏移页数;
-        $this->lastNumBtn  = $page + $this->offsetPage; //最后一个数字按钮
+        $this->pageTotal  = ceil($this->getOption('total')/$this->getOption('pageSize'));
+        $this->offsetPage = floor($btnNum/2);//偏移页数
+        $this->prevPage   = $page - 1; // 上一页
+        $this->nextPage   = $page + 1; // 下一页
+        $this->firstPage  = $page - $this->offsetPage; //第一个数字按钮,当前页数减去偏移页数;
+        $this->lastPage   = $page + $this->offsetPage; //最后一个数字按钮
 
         //当第一个数字按钮小于1时；
-        if ($this->firstNumBtn < 1) {
-            $this->firstNumBtn = 1;
-            $this->lastNumBtn  = $btnNum;
+        if ($this->firstPage < 1) {
+            $this->firstPage = 1;
+            $this->lastPage  = $btnNum;
         }
 
         //当最后一个数字按钮大于总页数时；通常情况下
-        if ($this->lastNumBtn > $this->pageTotal) {
-            $this->lastNumBtn  = $this->pageTotal;
-            $this->firstNumBtn = $this->pageTotal - $btnNum + 1;
+        if ($this->lastPage > $this->pageTotal) {
+            $this->lastPage  = $this->pageTotal;
+            $this->firstPage = $this->pageTotal - $btnNum + 1;
         }
 
         //当总页数小于翻页的数字按钮个数时；
         if ($btnNum > $this->pageTotal) {
-            $this->lastNumBtn  = $this->pageTotal;
-            $this->firstNumBtn = 1;
+            $this->lastPage  = $this->pageTotal;
+            $this->firstPage = 1;
         }
     }
 
@@ -247,12 +241,12 @@ class PagingBase
     public function getData()
     {
         return [
-            'pageTotal'   => $this->pageTotal,
-            'offsetPage'  => $this->offsetPage,
-            'prevPage'    => $this->prevPage,
-            'nextPage'    => $this->nextPage,
-            'firstNumBtn' => $this->firstNumBtn,
-            'lastNumBtn'  => $this->lastNumBtn,
+            'pageTotal'  => $this->pageTotal,
+            'offsetPage' => $this->offsetPage,
+            'prevPage'   => $this->prevPage,
+            'nextPage'   => $this->nextPage,
+            'firstPage'  => $this->firstPage,
+            'lastPage'   => $this->lastPage,
         ];
     }
 
@@ -268,4 +262,8 @@ class PagingBase
         // return isset($this->data[$key]) ? $this->data[$key] : $default;
     }
 
+    public function __get($name)
+    {
+        return $this->get($name);
+    }
 }

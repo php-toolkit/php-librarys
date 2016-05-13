@@ -3,7 +3,7 @@
 namespace inhere\tools\collections;
 
 use ArrayIterator;
-use inhere\tools\Interfaces\CollectionInterface;
+use inhere\tools\interfaces\CollectionInterface;
 
 /**
  * Collection

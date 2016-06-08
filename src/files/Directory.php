@@ -147,11 +147,12 @@ class Directory extends AbstractFileSystem
      * 支持层级目录的创建
      * @param $path
      * @param int|string $mode
+     * @param bool $recursive
      * @return bool
      */
-    static public function create($path, $mode=0664)
+    static public function create($path, $mode=0664, $recursive = true)
     {
-        return is_dir($path) || mkdir($path, $mode, true);
+        return is_dir($path) || mkdir($path, $mode, $recursive);
     }
 
     /**
@@ -200,7 +201,7 @@ class Directory extends AbstractFileSystem
      * 删除目录及里面的文件
      * @param $dirName
      * @param  boolean $type [description]
-     * @return bool [type]           [description]
+     * @return bool
      */
     static public function delete($dirName,$type=true)
     {

@@ -69,8 +69,7 @@ class StrHelper
 
         if (function_exists('mb_strlen')){
             return mb_strlen($str,'utf-8');
-        }
-        else {
+        } else {
             preg_match_all("/./u", $str, $arr);
 
             return count($arr[0]);
@@ -94,8 +93,7 @@ class StrHelper
             return mb_strwidth($str,'utf-8');
         } else if (function_exists('mb_strlen')){
             return mb_strlen($str,'utf-8');
-        }
-        else {
+        } else {
             preg_match_all("/./u", $str, $ar);
             return count($ar[0]);
         }
@@ -151,7 +149,7 @@ class StrHelper
      * @param bool $suffix 是否加尾缀
      * @return string
      */
-    static public function zh_substr($str, $start=0, $length, $charset="utf-8", $suffix=true)
+    static public function zhSubstr($str, $start=0, $length, $charset="utf-8", $suffix=true)
     {
         if (function_exists("mb_substr"))
         {

@@ -11,6 +11,7 @@
 namespace inhere\tools\files;
 
 use inhere\tools\helpers\StrHelper;
+use inhere\tools\exceptions\FileSystemException;
 
 /**
  * Class File
@@ -53,7 +54,6 @@ class File extends AbstractFileSystem
             'update_time'     => filectime($filename), //修改时间
             'last_visit_time' => fileatime($filename), //文件的上次访问时间
         ];
-
     }
 
     /**
@@ -93,8 +93,7 @@ class File extends AbstractFileSystem
      **/
     public static function createAndWrite(array $fileData = [],$append=false,$mode=0664)
     {
-        foreach($fileData as $file=>$content)
-        {
+        foreach($fileData as $file=>$content) {
             $dir = dirname($file);                     //文件所在目录
 
             //检查目录是否存在，不存在就先创建（多级）目录
@@ -113,7 +112,7 @@ class File extends AbstractFileSystem
                     file_put_contents($file,$content,FILE_APPEND | LOCK_EX);
                     @chmod($file,$mode);
                 } else {
-                    \Trigger::notice('目录'.$dir.'下：'.$fileName." 文件已存在！将跳过".$fileName."的创建") ;
+                    // \Trigger::notice('目录'.$dir.'下：'.$fileName." 文件已存在！将跳过".$fileName."的创建") ;
                     continue;
                 }
 
@@ -125,60 +124,78 @@ class File extends AbstractFileSystem
     /**
      * @param $url
      * @param bool|false $use_include_path
-     * @param null $stream_context
+     * @param null $streamContext
      * @param int $curl_timeout
      * @return bool|mixed|string
      */
-    public static function file_get_contents($url, $use_include_path = false, $stream_context = null, $curl_timeout = 5)
+    public static function get($url, $use_include_path = false, $streamContext = null, $curl_timeout = 5)
     {
-        if ($stream_context == null && preg_match('/^https?:\/\//', $url))
-            $stream_context = @stream_context_create(array('http' => array('timeout' => $curl_timeout)));
-        if (in_array(ini_get('allow_url_fopen'), array('On', 'on', '1')) || !preg_match('/^https?:\/\//', $url))
-            return @file_get_contents($url, $use_include_path, $stream_context);
-        elseif (function_exists('curl_init'))
-        {
+        return static::file_get_contents($url, $use_include_path , $streamContext , $curl_timeout);
+    }
+    public static function file_get_contents($url, $use_include_path = false, $streamContext = null, $curl_timeout = 5)
+    {
+        if ($streamContext == null && preg_match('/^https?:\/\//', $url)) {
+            $streamContext = @stream_context_create(array('http' => array('timeout' => $curl_timeout)));
+        }
+
+        if (in_array(ini_get('allow_url_fopen'), array('On', 'on', '1')) || !preg_match('/^https?:\/\//', $url)) {
+            return @file_get_contents($url, $use_include_path, $streamContext);
+        } elseif (function_exists('curl_init')) {
             $curl = curl_init();
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
             curl_setopt($curl, CURLOPT_URL, $url);
             curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5);
             curl_setopt($curl, CURLOPT_TIMEOUT, $curl_timeout);
             curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-            if ($stream_context != null)
-            {
-                $opts = stream_context_get_options($stream_context);
-                if (isset($opts['http']['method']) && StrHelper::strtolower($opts['http']['method']) == 'post')
-                {
+
+            if ($streamContext != null) {
+                $opts = stream_context_get_options($streamContext);
+
+                if (isset($opts['http']['method']) && StrHelper::strtolower($opts['http']['method']) == 'post') {
                     curl_setopt($curl, CURLOPT_POST, true);
-                    if (isset($opts['http']['content']))
-                    {
+
+                    if (isset($opts['http']['content'])) {
                         parse_str($opts['http']['content'], $post_data);
                         curl_setopt($curl, CURLOPT_POSTFIELDS, $post_data);
                     }
                 }
             }
+
             $content = curl_exec($curl);
             curl_close($curl);
+
             return $content;
         }
-        else
-            return false;
+
+        return false;
     }
 
-    public static function move()
-    {}
+    public static function move($file, $target)
+    {
+        Directory::create(dirname($target));
+
+        if ( static::copy($file, $target) ) {
+            unlink($file);
+        }
+    }
 
     /**
      * @param $source
      * @param $destination
-     * @param null $stream_context
+     * @param null $streamContext
      * @return bool|int
      */
-    public static function copy($source, $destination, $stream_context = null)
+    public static function copy($source, $destination, $streamContext = null)
     {
-        if (is_null($stream_context) && !preg_match('/^https?:\/\//', $source))
-            return @copy($source, $destination);
+        if (is_null($streamContext) && !preg_match('/^https?:\/\//', $source)) {
+            if (!is_file($source)) {
+                throw new FileSystemException("file don't exists. File: $source");
+            }
 
-        return @file_put_contents($destination, self::file_get_contents($source, false, $stream_context));
+            return copy($source, $destination);
+        }
+
+        return @file_put_contents($destination, self::file_get_contents($source, false, $streamContext));
     }
 
     public static function combine($inFile, $outFile)

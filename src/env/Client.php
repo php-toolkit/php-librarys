@@ -262,10 +262,10 @@ class Client extends AbstractEnv
         } elseif (strpos('linux', $agent)) {
 
             if (strpos('android', $agent)) {
-                $os                      = 'Android';
+                $os = 'Android';
                 $this->set('isAndroid', true);
             } else {
-                $os                    = 'Linux';
+                $os = 'Linux';
                 $this->set('isLinux', true);
             }
 

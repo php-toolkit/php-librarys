@@ -19,9 +19,17 @@ use inhere\tools\exceptions\FileSystemException;
  */
 class File extends AbstractFileSystem
 {
-    public static function getName($file, $ext=null)
+    /**
+     * 获得文件名称
+     * @param string $file
+     * @param bool $clearExt 是否去掉文件名中的后缀，仅保留名字
+     * @return string
+     */
+    public static function getName($file, $clearExt=false)
     {
-        return basename( trim($file), $ext);
+        $filename = basename( trim($file) );
+
+        return $clearExt ? strstr($filename,'.', true) : $filename;
     }
 
     /**
@@ -36,6 +44,11 @@ class File extends AbstractFileSystem
         return (bool)$clearPoint ? trim($suffix,'.') : $suffix;
     }
 
+    /**
+     * 获得文件扩展名、后缀名,没有带点 jpg
+     * @param $path
+     * @return string
+     */
     public static function getExtension($path)
     {
         return pathinfo($path,PATHINFO_EXTENSION);

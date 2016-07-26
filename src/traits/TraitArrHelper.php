@@ -7,7 +7,7 @@
  * File: TraitArrHelper.php
  */
 
-namespace inhere\tools\traits;
+namespace inhere\library\traits;
 
 
 trait TraitArrHelper

@@ -6,7 +6,7 @@
  * ContainerManager.php
  * Date : 2014-7-10
  */
-namespace inhere\tools\di;
+namespace inhere\library\di;
 
 
 abstract class ContainerManager

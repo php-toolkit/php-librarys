@@ -4,19 +4,34 @@
  * User: Inhere
  * Date: 14-4-2
  * Time: 下午2:13
- * 图像处理 todo 有待完善
+ * 图像处理
+ * USE:
+ *  $img = "/www/uploads/test.jpg"
+ *  $pic = Picture::make([], [
+ *       'path'   => dirname($img) . '/thumbs',
+ *       'width'  => 120,
+ *       'height' => 60,
+ *       'suffix' => '_120x60',
+ *  ])->thumbnail($img);
+ *
+ *  if ($pic->hasError()) {
+ *      return $res->write($pic->getError());
+ *  }
+ *
+ *  $data = $pic->getResult();
+ *
  */
 
-namespace inhere\tools\files;
+namespace inhere\library\files;
 
-use inhere\tools\exceptions\InvalidArgumentException;
-use inhere\tools\exceptions\InvalidConfigException;
-use inhere\tools\exceptions\ExtensionMissException;
-use inhere\tools\exceptions\FileSystemException;
+use inhere\library\exceptions\InvalidArgumentException;
+use inhere\library\exceptions\InvalidConfigException;
+use inhere\library\exceptions\ExtensionMissException;
+use inhere\library\exceptions\FileSystemException;
 
 /**
  * Class Picture
- * @package inhere\tools\files
+ * @package inhere\library\files
  */
 class Picture
 {

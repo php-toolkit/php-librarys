@@ -10,12 +10,12 @@
  *     仅允许通过实例化时 或 调用load() 载入数据
  * File: FixedData.php StrictData.php
  */
-namespace inhere\tools\collections;
-use inhere\tools\exceptions\UnknownCalledException;
+namespace inhere\library\collections;
+use inhere\library\exceptions\UnknownCalledException;
 
 /**
  * Class FixedData
- * @package inhere\tools\collections
+ * @package inhere\library\collections
  */
 class FixedData extends ActiveData
 {

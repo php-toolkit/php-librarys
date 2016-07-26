@@ -8,10 +8,10 @@
  * file: Element.php
  */
 
-namespace inhere\tools\html;
+namespace inhere\library\html;
 
-use inhere\tools\StdBase;
-use inhere\tools\exceptions\InvalidConfigException;
+use inhere\library\StdBase;
+use inhere\library\exceptions\InvalidConfigException;
 
 /*
 

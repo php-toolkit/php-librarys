@@ -7,7 +7,7 @@
  * File: TraitDateHelper.php
  */
 
-namespace inhere\tools\traits;
+namespace inhere\library\traits;
 
 
 trait TraitDateHelper

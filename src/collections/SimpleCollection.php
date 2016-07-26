@@ -1,14 +1,14 @@
 <?php
 
-namespace inhere\tools\collections;
+namespace inhere\library\collections;
 
 use ArrayIterator;
-use inhere\tools\interfaces\CollectionInterface;
+use inhere\library\interfaces\CollectionInterface;
 
 /**
  * Collection
  * This class provides a common interface used by many other
- * classes in a inhere\tools application that manage "collections"
+ * classes in a inhere\library application that manage "collections"
  * of data that must be inspected and/or manipulated
  */
 class SimpleCollection implements CollectionInterface

@@ -6,9 +6,9 @@
  * Time: 10:35
  * Uesd: 主要功能是 hi
  */
-namespace inhere\tools\helpers;
+namespace inhere\library\helpers;
 
-use inhere\tools\traits\TraitObjectHelper;
+use inhere\library\traits\TraitObjectHelper;
 
 class ObjectHelper
 {

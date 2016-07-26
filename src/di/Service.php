@@ -8,7 +8,7 @@
  * Service.php
  */
 
-namespace inhere\tools\di;
+namespace inhere\library\di;
 
 class Service
 {

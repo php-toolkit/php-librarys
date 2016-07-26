@@ -6,14 +6,14 @@
  * Time: 15:04
  */
 
-namespace inhere\tools\language;
+namespace inhere\library\language;
 
-use inhere\tools\collections\DataCollector;
-use inhere\tools\exceptions\NotFoundException;
+use inhere\library\collections\DataCollector;
+use inhere\library\exceptions\NotFoundException;
 
 /**
  * Class LanguageManager
- * @package inhere\tools\base
+ * @package inhere\library\base
  *
  * property $type
  *  if type equal to 1, use monofile. this is default.

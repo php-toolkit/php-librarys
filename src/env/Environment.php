@@ -7,9 +7,9 @@
  * File: Environment.php
  */
 
-namespace inhere\tools\env;
+namespace inhere\library\env;
 
-use inhere\tools\StdBase;
+use inhere\library\StdBase;
 
 class Environment extends StdBase
 {

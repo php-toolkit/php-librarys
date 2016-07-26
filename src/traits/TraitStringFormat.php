@@ -7,11 +7,11 @@
  * File: TraitStringFormat.php
  */
 
-namespace inhere\tools\traits;
+namespace inhere\library\traits;
 
 /**
  * Class TraitStringFormat
- * @package inhere\tools\traits
+ * @package inhere\library\traits
  */
 trait TraitStringFormat
 {

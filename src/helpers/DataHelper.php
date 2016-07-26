@@ -6,7 +6,7 @@
  * Time: 下午11:39
  *  数据操作 转码 序列化
  */
-namespace inhere\tools\helpers;
+namespace inhere\library\helpers;
 
 abstract class DataHelper
 {

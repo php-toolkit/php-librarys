@@ -6,9 +6,9 @@
  * Time: 10:35
  * Uesd: 主要功能是 数组处理
  */
-namespace inhere\tools\helpers;
+namespace inhere\library\helpers;
 
-use inhere\tools\traits\TraitArrHelper;
+use inhere\library\traits\TraitArrHelper;
 
 class ArrHelper
 {

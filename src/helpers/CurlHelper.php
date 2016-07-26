@@ -6,9 +6,9 @@
  * Time: 10:35
  */
 
-namespace inhere\tools\helpers;
+namespace inhere\library\helpers;
 
-use inhere\tools\files\File;
+use inhere\library\files\File;
 
 /**
  *

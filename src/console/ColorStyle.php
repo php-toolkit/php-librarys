@@ -6,7 +6,7 @@
  * @todo  unused
  */
 
-namespace inhere\tools\console;
+namespace inhere\library\console;
 
 /**
  *@link https://github.com/ventoviro/windwalker-IO

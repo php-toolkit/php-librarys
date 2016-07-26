@@ -11,11 +11,11 @@
  * File: ActiveData.php
  */
 
-namespace inhere\tools\collections;
+namespace inhere\library\collections;
 
 /**
  * Class ActiveData
- * @package inhere\tools\collections
+ * @package inhere\library\collections
  */
 class ActiveData implements \ArrayAccess, \IteratorAggregate
 {

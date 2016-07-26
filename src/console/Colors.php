@@ -8,13 +8,13 @@
  * file: Color.php
  */
 
-namespace inhere\tools\console;
+namespace inhere\library\console;
 
-use inhere\tools\StdBase;
+use inhere\library\StdBase;
 
 /**
  * Class Colors
- * @package inhere\tools\console
+ * @package inhere\library\console
  * @link https://github.com/ventoviro/windwalker-IO
  */
 class Colors extends StdBase

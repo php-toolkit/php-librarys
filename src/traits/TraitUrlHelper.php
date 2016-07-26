@@ -7,11 +7,11 @@
  * File: TraitUrlHelper.php
  */
 
-namespace inhere\tools\traits;
+namespace inhere\library\traits;
 
 /**
  * Class TraitUrlHelper
- * @package inhere\tools\traits
+ * @package inhere\library\traits
  */
 trait TraitUrlHelper
 {

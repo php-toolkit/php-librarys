@@ -2,9 +2,9 @@
 /**
  *
  */
-namespace inhere\tools\helpers;
+namespace inhere\library\helpers;
 
-use inhere\tools\traits\TraitStringFormat;
+use inhere\library\traits\TraitStringFormat;
 
 class StrHelper
 {

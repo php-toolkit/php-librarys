@@ -7,10 +7,10 @@
  * Uesd: 主要功能是 hi
  */
 
-namespace inhere\tools\files;
+namespace inhere\library\files;
 
 use DirectoryIterator;
-use inhere\tools\exceptions\NotFoundException;
+use inhere\library\exceptions\NotFoundException;
 
 class Directory extends AbstractFileSystem
 {

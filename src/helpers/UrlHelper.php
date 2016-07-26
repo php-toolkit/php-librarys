@@ -6,9 +6,9 @@
  * Use : ...
  */
 
-namespace inhere\library\helpers;
+namespace inhere\librarys\helpers;
 
-use inhere\library\traits\TraitUrlHelper;
+use inhere\librarys\traits\TraitUrlHelper;
 
 class UrlHelper
 {

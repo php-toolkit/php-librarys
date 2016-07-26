@@ -19,7 +19,7 @@
   },
   "autoload": {
     "psr-4": {
-      "inhere\\library\\" : "src/"
+      "inhere\\librarys\\" : "src/"
     },
     "files" : [
       "src/functions.php",

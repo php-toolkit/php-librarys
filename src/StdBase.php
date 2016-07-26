@@ -6,12 +6,12 @@
  * Time: 10:35
  */
 
-namespace inhere\library;
+namespace inhere\librarys;
 
-use inhere\library\exceptions\SetPropertyException;
-use inhere\library\exceptions\GetPropertyException;
-use inhere\library\exceptions\NotFoundException;
-use inhere\library\exceptions\UnknownCalledException;
+use inhere\librarys\exceptions\SetPropertyException;
+use inhere\librarys\exceptions\GetPropertyException;
+use inhere\librarys\exceptions\NotFoundException;
+use inhere\librarys\exceptions\UnknownCalledException;
 
 abstract class StdBase
 {

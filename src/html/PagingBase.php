@@ -6,13 +6,13 @@
  * Time: 13:11
  */
 
-namespace inhere\library\html;
+namespace inhere\librarys\html;
 
-use inhere\library\exceptions\InvalidConfigException;
+use inhere\librarys\exceptions\InvalidConfigException;
 
 /**
  * Class PagingBase
- * @package inhere\library\html
+ * @package inhere\librarys\html
  */
 class PagingBase
 {

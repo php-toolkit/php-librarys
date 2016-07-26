@@ -6,13 +6,13 @@
  * Time: 下午12:39
  */
 
-namespace inhere\library\traits;
+namespace inhere\librarys\traits;
 
-use inhere\library\exceptions\InvalidArgumentException;
+use inhere\librarys\exceptions\InvalidArgumentException;
 
 /**
  * Class TraitObjectHelper
- * @package inhere\library\traits
+ * @package inhere\librarys\traits
  */
 trait TraitObjectHelper
 {

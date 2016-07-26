@@ -6,10 +6,10 @@
  * Time: 10:35
  * Uesd: 主要功能是 html 标签元素创建
  */
-namespace inhere\library\html;
+namespace inhere\librarys\html;
 
 
-use inhere\library\helpers\ArrHelper;
+use inhere\librarys\helpers\ArrHelper;
 
 class Html
 {

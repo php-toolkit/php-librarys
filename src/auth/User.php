@@ -6,14 +6,14 @@
  * Time: 21:57
  */
 
-namespace inhere\library\auth;
+namespace inhere\librarys\auth;
 
-use inhere\library\interfaces\CollectionInterface;
-use inhere\library\collections\SimpleCollection;
+use inhere\librarys\interfaces\CollectionInterface;
+use inhere\librarys\collections\SimpleCollection;
 
 /**
  * Class User
- * @package inhere\library\auth
+ * @package inhere\librarys\auth
  *
  * @property int id
  */

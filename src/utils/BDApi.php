@@ -7,9 +7,9 @@
  * BDApi.php baidu public api
  */
 
-namespace inhere\library\utils;
+namespace inhere\librarys\utils;
 
-use inhere\library\helpers\CurlHelper;
+use inhere\librarys\helpers\CurlHelper;
 
 /**
  * Baidu 提供的免费api,查询一些公共信息(ip, 天气...)

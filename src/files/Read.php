@@ -8,15 +8,15 @@
  * Uesd: 主要功能是 文件相关信息获取
  */
 
-namespace inhere\library\files;
+namespace inhere\librarys\files;
 
 use app\extensions\exceptions\FileReadException;
 use app\extensions\exceptions\FileSystemException;
-use inhere\library\exceptions\NotFoundException;
+use inhere\librarys\exceptions\NotFoundException;
 
 /**
  * Class Read
- * @package inhere\library\files
+ * @package inhere\librarys\files
  */
 abstract class Read extends File
 {

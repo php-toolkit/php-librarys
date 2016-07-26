@@ -3,18 +3,18 @@
  * Created by PhpStorm.
  * User: Inhere
  * Date: 2015/1/30
- * Use : use inhere\library\traits\TraitJsonFormat
+ * Use : use inhere\librarys\traits\TraitJsonFormat
  * File: TraitJsonFormat.php
  */
 
-namespace inhere\library\traits;
+namespace inhere\librarys\traits;
 
 
-use inhere\library\exceptions\NotFoundException;
+use inhere\librarys\exceptions\NotFoundException;
 
 /**
  * Class TraitJsonFormat
- * @package inhere\library\traits
+ * @package inhere\librarys\traits
  */
 trait TraitJsonFormat
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace inhere\library\exceptions;
+namespace inhere\librarys\exceptions;
 
 class InvalidArgumentException extends \LogicException {}
 

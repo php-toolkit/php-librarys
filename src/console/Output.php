@@ -6,14 +6,14 @@
  * Time: 10:22
  */
 
-namespace inhere\library\console;
+namespace inhere\librarys\console;
 
 
-use inhere\library\StdBase;
+use inhere\librarys\StdBase;
 
 /**
  * Class Output
- * @package inhere\library\console
+ * @package inhere\librarys\console
  */
 class Output extends StdBase
 {

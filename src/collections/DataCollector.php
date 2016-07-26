@@ -3,14 +3,14 @@
  * @referee  windwalker-registry {@link https://github.com/ventoviro/windwalker-registry}
  */
 
-namespace inhere\library\collections;
+namespace inhere\librarys\collections;
 
 use RuntimeException;
-use inhere\library\exceptions\DataParseException;
+use inhere\librarys\exceptions\DataParseException;
 
 /**
  * Class DataCollector - 数据收集器 (数据存储器 - DataStorage)
- * @package inhere\library\collections
+ * @package inhere\librarys\collections
  *
  * 支持 链式的子节点 设置 和 值获取
  * e.g:

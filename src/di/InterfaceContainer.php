@@ -4,7 +4,7 @@
  * Date : 2015-1-10
  * InterfaceContainer.php
  */
-namespace inhere\library\di;
+namespace inhere\librarys\di;
 
 interface InterfaceContainer
 {

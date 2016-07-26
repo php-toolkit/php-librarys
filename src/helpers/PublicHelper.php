@@ -3,7 +3,7 @@
  *
  * PublicHelper.php
  */
-namespace inhere\library\helpers;
+namespace inhere\librarys\helpers;
 
 class PublicHelper
 {

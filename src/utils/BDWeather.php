@@ -7,9 +7,9 @@
  * BDWeather.php
  */
 
-namespace inhere\library\utils;
+namespace inhere\librarys\utils;
 
-use inhere\library\helpers\CurlHelper;
+use inhere\librarys\helpers\CurlHelper;
 
 /**
  * Baidu 天气/空气质量查询

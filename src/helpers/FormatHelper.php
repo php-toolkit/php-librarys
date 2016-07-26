@@ -7,10 +7,10 @@
  * File: FormatHelper.php
  */
 
-namespace inhere\library\helpers;
+namespace inhere\librarys\helpers;
 
 
-use inhere\library\traits\TraitJsonFormat;
+use inhere\librarys\traits\TraitJsonFormat;
 
 class FormatHelper
 {

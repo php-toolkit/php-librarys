@@ -2,7 +2,7 @@
 /**
 *
 */
-namespace inhere\library\helpers;
+namespace inhere\librarys\helpers;
 
 /**
  *

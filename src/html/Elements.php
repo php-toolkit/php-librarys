@@ -8,9 +8,9 @@
  * file: Element.php
  */
 
-namespace inhere\library\html;
+namespace inhere\librarys\html;
 
-use inhere\library\StdBase;
+use inhere\librarys\StdBase;
 
 class Elements extends StdBase implements \IteratorAggregate
 {

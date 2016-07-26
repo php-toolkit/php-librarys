@@ -7,8 +7,8 @@
  * Uesd: 主要功能是 hi
  */
 
-namespace inhere\library\helpers;
-use \inhere\library\traits\TraitDateHelper;
+namespace inhere\librarys\helpers;
+use \inhere\librarys\traits\TraitDateHelper;
 
 class DateHelper
 {

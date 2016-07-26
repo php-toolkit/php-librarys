@@ -11,11 +11,11 @@
  * $down = new Download();
  *
  */
-namespace inhere\library\files;
+namespace inhere\librarys\files;
 
 /**
  * Class Download
- * @package inhere\library\files
+ * @package inhere\librarys\files
  */
 class Download
 {

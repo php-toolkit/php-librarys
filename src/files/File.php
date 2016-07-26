@@ -8,14 +8,14 @@
  * Uesd: 主要功能是 文件相关信息获取
  */
 
-namespace inhere\library\files;
+namespace inhere\librarys\files;
 
-use inhere\library\helpers\StrHelper;
-use inhere\library\exceptions\FileSystemException;
+use inhere\librarys\helpers\StrHelper;
+use inhere\librarys\exceptions\FileSystemException;
 
 /**
  * Class File
- * @package inhere\library\files
+ * @package inhere\librarys\files
  */
 class File extends AbstractFileSystem
 {

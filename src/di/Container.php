@@ -10,7 +10,7 @@
  * File: Container.php
  */
 
-namespace inhere\library\di;
+namespace inhere\librarys\di;
 
 class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
 {

@@ -8,11 +8,11 @@
  * file: CliInteract.php
  */
 
-namespace inhere\library\console;
+namespace inhere\librarys\console;
 
 /**
  * Class Interact
- * @package inhere\library\console
+ * @package inhere\librarys\console
  */
 class Interact
 {

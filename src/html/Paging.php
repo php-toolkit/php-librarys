@@ -12,17 +12,17 @@
  *     'pageSize'  => $pageSize,
  *     'total'     => $total
  * ];
- * $paging    = new \inhere\library\html\Paging($params);
+ * $paging    = new \inhere\librarys\html\Paging($params);
  *
  * $pagingString = $paging->useStyle()->toString();
  *
  *
  */
-namespace inhere\library\html;
+namespace inhere\librarys\html;
 
 /**
  * Class Paging
- * @package inhere\library\html
+ * @package inhere\librarys\html
  */
 class Paging extends PagingBase
 {

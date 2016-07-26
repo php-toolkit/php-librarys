@@ -7,11 +7,11 @@
  * 文件上传
  */
 
-namespace inhere\library\files;
+namespace inhere\librarys\files;
 
 /**
  * Class Uploader
- * @package inhere\library\files
+ * @package inhere\librarys\files
  */
 class Uploader
 {

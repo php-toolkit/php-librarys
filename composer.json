@@ -1,9 +1,9 @@
 {
-  "name": "inhere/php-tools",
+  "name": "inhere/php-librarys",
   "type": "library",
   "description": "some useful library of the php",
-  "keywords": ["library","php"],
-  "homepage": "http://github.com/inhere/php-tools",
+  "keywords": ["library","tool","php"],
+  "homepage": "http://github.com/inhere/php-librarys",
   "license": "MIT",
   "authors": [
     {

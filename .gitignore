@@ -4,3 +4,4 @@
 !.gitkeep
 composer.lock
 *.swp
+*.patch

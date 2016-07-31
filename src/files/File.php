@@ -81,16 +81,12 @@ class File extends AbstractFileSystem
     /**
      * [save description]
      * @param  mixed $data string array(仅一维数组) 或者是 stream  资源
-     * @param  string $filename [description]
-     * @throws \InvalidArgumentException
-     * @throws \NotFoundException
-     * @return bool [type]           [description]
+     * @param  string $filename [description], LOCK_EX
+     * @return bool
      */
-    public static function save($data, $filename )
+    public static function save($filename, $data )
     {
-        self::exists($filename);
-
-        return file_put_contents($filename, $data, LOCK_EX )!==false;
+        return file_put_contents($filename, $data)!==false;
     }
 
     /**

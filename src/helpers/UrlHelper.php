@@ -8,6 +8,10 @@
 
 namespace inhere\librarys\helpers;
 
+/**
+ * Class UrlHelper
+ * @package inhere\librarys\helpers
+ */
 class UrlHelper
 {
     public static function isUrl($str)
@@ -17,6 +21,10 @@ class UrlHelper
         return preg_match($rule,$str)===1;
     }
 
+    /**
+     * @param $url
+     * @return bool
+     */
     public static function canAccessed($url)
     {
         $url = trim($url);

@@ -2,26 +2,28 @@
 /**
  * Created by PhpStorm.
  * User: Inhere
- * Date: 2015/1/30
- * Use : use inhere\librarys\traits\TraitJsonFormat
- * File: TraitJsonFormat.php
+ * Date: 2016/8/10 0010
+ * Time: 00:41
  */
 
-namespace inhere\librarys\traits;
-
-
+namespace inhere\librarys\helpers;
 use inhere\librarys\exceptions\NotFoundException;
 
 /**
- * Class TraitJsonFormat
- * @package inhere\librarys\traits
+ * Class JsonHelper
+ * @package inhere\librarys\helpers
  */
-trait TraitJsonFormat
+class JsonHelper
 {
-    static public function loadFile($file, $toArray=true)
+    /**
+     * @param $file
+     * @param bool|true $toArray
+     * @return mixed|null|string
+     */
+    public static function loadFile($file, $toArray=true)
     {
         if (!file_exists($file)) {
-            throw new NotFoundException("æ²¡æœ‰æ‰¾åˆ°æˆ–ä¸å­˜åœ¨èµ„æºæ–‡ä»¶{$file}");
+            throw new NotFoundException("Ã»ÓĞÕÒµ½»ò²»´æÔÚ×ÊÔ´ÎÄ¼ş{$file}");
         }
 
         $data = file_get_contents($file);
@@ -32,13 +34,13 @@ trait TraitJsonFormat
 
         $data = preg_replace(array(
 
-            // å»æ‰æ‰€æœ‰å¤šè¡Œæ³¨é‡Š/* .... */
+            // È¥µôËùÓĞ¶àĞĞ×¢ÊÍ/* .... */
             '/\/\*.*?\*\/\s*/is',
 
-            // å»æ‰æ‰€æœ‰å•è¡Œæ³¨é‡Š//....
+            // È¥µôËùÓĞµ¥ĞĞ×¢ÊÍ//....
             '/\/\/.*?[\r\n]/is',
 
-            // å»æ‰ç©ºç™½
+            // È¥µô¿Õ°×
             '/(?!\w)\s*?(?!\w)/is'
 
         ),  array('','',' '), $data);
@@ -51,16 +53,16 @@ trait TraitJsonFormat
     }
 
     /**
-     * @param string $input æ–‡ä»¶ æˆ– æ•°æ®
-     * @param bool $output æ˜¯å¦è¾“å‡ºåˆ°æ–‡ä»¶ï¼Œ é»˜è®¤è¿”å›æ ¼å¼åŒ–çš„æ•°æ®
-     * @param array $options å½“ $output=true,æ­¤é€‰é¡¹æœ‰æ•ˆ
+     * @param string $input ÎÄ¼ş »ò Êı¾İ
+     * @param bool $output ÊÇ·ñÊä³öµ½ÎÄ¼ş£¬ Ä¬ÈÏ·µ»Ø¸ñÊ½»¯µÄÊı¾İ
+     * @param array $options µ± $output=true,´ËÑ¡ÏîÓĞĞ§
      * $options = [
-     *      'type'      => 'min' // è¾“å‡ºæ•°æ®ç±»å‹ min å‹ç¼©è¿‡çš„ raw æ­£å¸¸çš„
-     *      'file'      => 'xx.json' // è¾“å‡ºæ–‡ä»¶è·¯å¾„;ä»…æ˜¯æ–‡ä»¶åï¼Œåˆ™ä¼šå–è¾“å…¥è·¯å¾„
+     *      'type'      => 'min' // Êä³öÊı¾İÀàĞÍ min Ñ¹Ëõ¹ıµÄ raw Õı³£µÄ
+     *      'file'      => 'xx.json' // Êä³öÎÄ¼şÂ·¾¶;½öÊÇÎÄ¼şÃû£¬Ôò»áÈ¡ÊäÈëÂ·¾¶
      * ]
      * @return string | bool
      */
-    static public function json($input, $output=false, array $options=[])
+    public static function json($input, $output=false, array $options=[])
     {
         if (!is_string($input)) {
             return false;
@@ -78,13 +80,13 @@ trait TraitJsonFormat
 
         $data = preg_replace(array(
 
-            // å»æ‰æ‰€æœ‰å¤šè¡Œæ³¨é‡Š/* .... */
+            // È¥µôËùÓĞ¶àĞĞ×¢ÊÍ/* .... */
             '/\/\*.*?\*\/\s*/is',
 
-            // å»æ‰æ‰€æœ‰å•è¡Œæ³¨é‡Š//....
+            // È¥µôËùÓĞµ¥ĞĞ×¢ÊÍ//....
             '/\/\/.*?[\r\n]/is',
 
-            // å»æ‰ç©ºç™½è¡Œ
+            // È¥µô¿Õ°×ĞĞ
             "/(\n[\r])+/is"
 
         ),  array('','',"\n"), $data);
@@ -109,7 +111,12 @@ trait TraitJsonFormat
         return $data;
     }
 
-    static public function saveAs($data, $output, $type='min')
+    /**
+     * @param $data
+     * @param $output
+     * @param array $options
+     */
+    public static function saveAs($data, $output, array $options = [])
     {
         $default = [ 'type' => 'min',  'file' => '' ];
         $options = array_merge($default, $options);
@@ -117,21 +124,18 @@ trait TraitJsonFormat
         $dir   = dirname($output);
 
         if ( !file_exists($dir) ) {
-            trigger_error('è®¾ç½®çš„jsonæ–‡ä»¶è¾“å‡º'.$dir.'ç›®å½•ä¸å­˜åœ¨ï¼');
+            trigger_error('ÉèÖÃµÄjsonÎÄ¼şÊä³ö'.$dir.'Ä¿Â¼²»´æÔÚ£¡');
         }
 
         $name  = basename($output, '.json');
         $file  = $dir . '/' . $name . '.' . $options['type'].'.json';
 
-        if ( $type === 'min' )
-        {
-            // å»æ‰ç©ºç™½
+        if ( $options['type '] === 'min' ) {
+            // È¥µô¿Õ°×
             $data = preg_replace('/(?!\w)\s*?(?!\w)/i', '',$data);
         }
-
 
         @file_put_contents($file, $data);
 
     }
-
-}// end class TraitJsonFormat
+}

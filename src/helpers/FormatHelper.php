@@ -9,14 +9,12 @@
 
 namespace inhere\librarys\helpers;
 
-
-use inhere\librarys\traits\TraitJsonFormat;
-
+/**
+ * Class FormatHelper
+ * @package inhere\librarys\helpers
+ */
 class FormatHelper
 {
-    use TraitJsonFormat;
-
-
     /**
      * Replaces &amp; with & for XHTML compliance
      *
@@ -56,53 +54,5 @@ class FormatHelper
         $text = htmlspecialchars($text, ENT_COMPAT, 'UTF-8');
 
         return $text;
-    }
-
-    /**
-     * Strip img-tags from string
-     *
-     * @param   string  $string  Sting to be cleaned.
-     *
-     * @return  string  Cleaned string
-     */
-    static public function stripImages($string)
-    {
-        return preg_replace('#(<[/]?img.*>)#U', '', $string);
-    }
-
-    /**
-     * Strip iframe-tags from string
-     *
-     * @param   string  $string  Sting to be cleaned.
-     *
-     * @return  string  Cleaned string
-     */
-    static public function stripIframes($string)
-    {
-        return preg_replace('#(<[/]?iframe.*>)#U', '', $string);
-    }
-
-    /**
-     * stripScript
-     *
-     * @param string $string
-     *
-     * @return  mixed
-     */
-    static public function stripScript($string)
-    {
-        return preg_replace("'<script[^>]*>.*?</script>'si", '', $string);
-    }
-
-    /**
-     * stripStyle
-     *
-     * @param string $string
-     *
-     * @return  mixed
-     */
-    static public function stripStyle($string)
-    {
-        return preg_replace("'<style[^>]*>.*?</style>'si", '', $string);
     }
 }// end class FormatHelper

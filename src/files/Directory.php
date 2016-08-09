@@ -152,18 +152,19 @@ class Directory extends AbstractFileSystem
      */
     static public function create($path, $mode=0664, $recursive = true)
     {
-        return is_dir($path) || mkdir($path, $mode, $recursive);
+        return self::make($path, $mode, $recursive);
     }
 
     /**
      * ********************** 创建多级目录 **********************
      * @param $path - 目录字符串
      * @param int $mode =0664 - 权限，默认 0664
+     * @param bool $recursive
      * @return bool
      */
-    static public function make($path, $mode=0664)
+    static public function make($path, $mode=0664, $recursive = true)
     {
-        return (is_dir($path) || mkdir($path, $mode, true)) && is_writable($path);
+        return (is_dir($path) || mkdir($path, $mode, $recursive)) && is_writable($path);
     }
 
     //复制目录内容

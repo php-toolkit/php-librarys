@@ -101,8 +101,8 @@ class Server extends AbstractEnv
             'isWeb'   => PhpHelper::isWeb(),
 
              // operate system
-            'uname'   => PHP_OS,
-            'os'      => strtoupper(substr(PHP_OS, 0, 3)),
+            'os'   => PHP_OS,
+            'osShort'      => strtoupper(substr(PHP_OS, 0, 3)),
             'isUnix'  => $this->isUnix(),
         ])->set('isWin',   $this->get('os') == 'WIN')
           ->set('isLinux', $this->get('os') == 'LIN');
@@ -124,7 +124,7 @@ class Server extends AbstractEnv
             $file = substr($file, strlen($wDir));
         }
 
-        $file = trim($file, '.' . DIRECTORY_SEPARATOR);
+        $file = rtrim($file, '.' . DIRECTORY_SEPARATOR);
 
         if ($full && $this->get('isCli') ) {
             $file = $wDir . DIRECTORY_SEPARATOR . $file;

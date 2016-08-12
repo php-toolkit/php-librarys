@@ -11,6 +11,11 @@ namespace inhere\librarys\env;
 
 use inhere\librarys\StdBase;
 
+/**
+ * 环境信息
+ * Class Environment
+ * @package inhere\librarys\env
+ */
 class Environment extends StdBase
 {
     /**

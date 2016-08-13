@@ -104,8 +104,8 @@ class Server extends AbstractEnv
             'os'   => PHP_OS,
             'osShort'      => strtoupper(substr(PHP_OS, 0, 3)),
             'isUnix'  => $this->isUnix(),
-        ])->set('isWin',   $this->get('os') == 'WIN')
-          ->set('isLinux', $this->get('os') == 'LIN');
+        ])->set('isWin',   $this->get('osShort') == 'WIN')
+          ->set('isLinux', $this->get('osShort') == 'LIN');
     }
 
     /**
@@ -158,7 +158,7 @@ class Server extends AbstractEnv
     {
         $unames = array('CYG', 'DAR', 'FRE', 'HP-', 'IRI', 'LIN', 'NET', 'OPE', 'SUN', 'UNI');
 
-        return in_array($this->get('os'), $unames);
+        return in_array($this->get('osShort'), $unames);
     }
 
     /**

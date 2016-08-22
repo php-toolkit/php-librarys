@@ -107,14 +107,15 @@ class Uploader
 
     /**
      * @param string $name key of the $_FILES
-     * @param string $targetFile save to the path
-     * @return $this
+     * @param string $targetPath save to the path
+     * @return $this|false
      */
     public function uploadOne($name, $targetPath)
     {
         if (!$name || !isset($this->_data[$name])) {
-            $this->error = "name [$name] don't exists of the _FILES";
-            return $this;
+            // $this->error = "name [$name] don't exists of the _FILES";
+
+            return false;
         }
 
         !$targetPath && ($targetPath = $this->config['path']);
@@ -184,12 +185,12 @@ class Uploader
             if ( in_array($file['ext'], static::$imageTypes) && getimagesize($result['targetFile']) ) {
                 //缩略图处理
                 if ($this->config['thumbOn']) {
-                    $this->makeThumb($result['targetFile'], $result['targetName'], false);
+                    $this->makeThumb($result['targetFile'], $result['targetName'], $result);
                 }
 
                 //加水印
                 if ($this->config['waterOn']) {
-                    $this->watermark($result['targetFile'], $result['targetName'], false);
+                    $this->watermark($result['targetFile'], $result['targetName'], $result);
                 }
             }
         }
@@ -292,6 +293,11 @@ class Uploader
         return $this->picture;
     }
 
+    public function hasFile($name)
+    {
+        return isset($this->_data[$name]);
+    }
+
     /**
      * 目录创建 目录验证
      * @param $path
@@ -377,6 +383,7 @@ class Uploader
 
     /**
      * @param array $config
+     * @return $this
      */
     public function setConfig(array $config)
     {
@@ -395,6 +402,7 @@ class Uploader
 
     /**
      * @param array $waterConfig
+     * @return $this
      */
     public function setWaterConfig(array $waterConfig)
     {
@@ -413,6 +421,7 @@ class Uploader
 
     /**
      * @param array $thumbConfig
+     * @return $this
      */
     public function setThumbConfig(array $thumbConfig)
     {

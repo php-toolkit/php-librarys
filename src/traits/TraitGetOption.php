@@ -53,7 +53,7 @@ trait TraitGetOption
             $value = $default;
         }
 
-        if (is_callable($value) && $value instanceof \Closure)
+        if (is_callable($value) && ($value instanceof \Closure))
         {
             $value = $value();
         }

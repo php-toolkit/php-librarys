@@ -35,6 +35,7 @@ class File extends AbstractFileSystem
     /**
      * 获得文件扩展名、后缀名,带点 .jpg
      * @param $filename
+     * @param bool $clearPoint
      * @return string
      */
     public static function getSuffix($filename, $clearPoint=false)
@@ -47,11 +48,14 @@ class File extends AbstractFileSystem
     /**
      * 获得文件扩展名、后缀名,没有带点 jpg
      * @param $path
+     * @param bool $clearPoint
      * @return string
      */
-    public static function getExtension($path)
+    public static function getExtension($path, $clearPoint=false)
     {
-        return pathinfo($path,PATHINFO_EXTENSION);
+        $ext = pathinfo($path,PATHINFO_EXTENSION);
+
+        return $clearPoint ? $ext : '.' . $ext;
     }
 
     public static function getInfo($filename, $check=true)

@@ -5,3 +5,4 @@
 composer.lock
 *.swp
 *.patch
+.DS_Store

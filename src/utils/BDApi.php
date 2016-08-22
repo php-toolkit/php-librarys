@@ -20,8 +20,8 @@ class BDApi
 
     /**
      * ip地址信息查询
-     * @param stirng $ip ip address
-     * @param stirng $apikey 百度apikey
+     * @param string $ip ip address
+     * @param string $apikey 百度apikey
      * @return array
      */
     public static function ipInfo($ip, $apikey)
@@ -44,8 +44,8 @@ class BDApi
      *          carrier: "黑龙江移动"  // 运营商
      *       }
      *   }
-     * @param stirng $mobilephone mobile phone number
-     * @param stirng $apikey 百度apikey
+     * @param string $mobilephone mobile phone number
+     * @param string $apikey 百度apikey
      * @return array
      */
     public static function mobilePhoneInfo($mobilephone, $apikey)
@@ -71,26 +71,26 @@ class BDApi
      *           "suit": "152卡" // 152卡
      *       }
      *   }
-     * @param stirng $mobilenumber mobile phone number
-     * @param stirng $apikey 百度apikey
+     * @param string $mobilenumber mobile phone number
+     * @param string $apikey 百度apikey
      * @return array
      */
     public static function mobileNumberInfo($mobilenumber, $apikey)
     {
         $url = self::OPEN_API. '/mobilenumber/mobilenumber';
 
-        return self::send($url, ['tel' => $mobilephone], ["apikey: $apikey"]);
+        return self::send($url, ['tel' => $mobilenumber], ["apikey: $apikey"]);
     }
 
     /**
      * 彩票种类查询
-     * @param stirng $lotteryType 彩票类型，
+     * @param string $lotteryType 彩票类型，
      *                            1 表示全国彩 e.g. 双色球,七星彩,超级大乐透，
      *                            2 表示高频彩票，
      *                            3 表示低频彩票，
      *                            4 标识境外高频彩票，
      *                            5 标识境外低频彩票
-     * @param stirng $apikey 百度apikey
+     * @param string $apikey 百度apikey
      * @return array
      */
     public static function lotteryList($lotteryType, $apikey)
@@ -103,8 +103,8 @@ class BDApi
     /**
      * 提供彩票最新开奖、历史开奖结果查询
      *
-     * @param stirng $lotteryCode 彩票编号，通过彩票种类查询接口可获得
-     * @param stirng $apikey 百度apikey
+     * @param string $lotteryCode 彩票编号，通过彩票种类查询接口可获得
+     * @param string $apikey 百度apikey
      * @param int $recordcnt 记录条数，范围为1~20
      * @return array
      */

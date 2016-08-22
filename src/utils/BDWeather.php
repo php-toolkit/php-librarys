@@ -21,7 +21,8 @@ class BDWeather
 
     /**
      * 查询可用城市列表
-     * @param stirng $apikey 百度apikey
+     * @param string $apikey 百度apikey
+     * @param $cityName
      * @return array
      */
     public static function cityList($apikey, $cityName)
@@ -33,8 +34,8 @@ class BDWeather
 
     /**
      * 天气查询_根据城市拼音
-     * @param stirng $cityPinyin 城市拼音 e.g. beijing
-     * @param stirng $apikey 百度apikey
+     * @param string $cityPinyin 城市拼音 e.g. beijing
+     * @param string $apikey 百度apikey
      * @return array
      */
     public static function byCityPinyin($cityPinyin, $apikey)
@@ -46,8 +47,8 @@ class BDWeather
 
     /**
      * 天气查询_根据城市名称(中文)
-     * @param stirng $cityName 城市名(中文)  e.g. 北京
-     * @param stirng $apikey 百度apikey
+     * @param string $cityName 城市名(中文)  e.g. 北京
+     * @param string $apikey 百度apikey
      * @return array
      */
     public static function byCityName($cityName, $apikey)
@@ -60,9 +61,9 @@ class BDWeather
     /**
      * 天气查询_带历史7天和未来4天
      *
-     * @param stirng $cityName 城市名(中文) e.g. 北京
-     * @param stirng $cityCode 天气预报城市代码(可通过cityInfo获取到) e.g. 101010100
-     * @param stirng $apikey 百度apikey
+     * @param string $cityName 城市名(中文) e.g. 北京
+     * @param string $cityCode 天气预报城市代码(可通过cityInfo获取到) e.g. 101010100
+     * @param string $apikey 百度apikey
      * @return array
      */
     public static function recentWeathers($cityName, $cityCode, $apikey)
@@ -90,8 +91,8 @@ class BDWeather
      *       }
      *   }
      *
-     * @param stirng $cityName 城市名(中文)  e.g. 北京
-     * @param stirng $apikey 百度apikey
+     * @param string $cityName 城市名(中文)  e.g. 北京
+     * @param string $apikey 百度apikey
      * @return array
      */
     public static function cityInfo($cityName, $apikey)
@@ -103,7 +104,7 @@ class BDWeather
 
     /**
      * 空气质量指数可用城市列表
-     * @param stirng $apikey 百度apikey
+     * @param string $apikey 百度apikey
      * @return array
      */
     public static function aqiCityList($apikey)
@@ -115,8 +116,8 @@ class BDWeather
 
     /**
      * 空气质量指数
-     * @param stirng $cityName 城市名(中文)  e.g. 北京
-     * @param stirng $apikey 百度apikey
+     * @param string $cityName 城市名(中文)  e.g. 北京
+     * @param string $apikey 百度apikey
      * @return array
      */
     public static function aqi($cityName, $apikey)

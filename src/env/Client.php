@@ -259,9 +259,9 @@ class Client extends AbstractEnv
                 $os = 'Windows other';
             }
 
-        } elseif (strpos('linux', $agent)) {
+        } elseif (strpos($agent, 'linux')) {
 
-            if (strpos('android', $agent)) {
+            if (strpos($agent, 'android')) {
                 $os = 'Android';
                 $this->set('isAndroid', true);
             } else {
@@ -269,24 +269,24 @@ class Client extends AbstractEnv
                 $this->set('isLinux', true);
             }
 
-        } elseif (strpos('android', $agent)) {
+        } elseif (strpos($agent, 'android')) {
             $os   = 'Android';
             $this->set('isAndroid', true);
-        } elseif ( strpos($agent,"iphone") ) {
+        } elseif ( strpos($agent,'iphone') ) {
             $os   = 'Ios';
             $this->set('isIos', true);
-        } elseif (strpos('ubuntu', $agent)) {
+        } elseif (strpos($agent, 'ubuntu')) {
             $os   = 'Ubuntu';
             $this->set('isLinux', true);
-        } elseif (strpos('mac', $agent)) {
+        } elseif (strpos($agent, 'mac')) {
             $os   = 'Mac OS X';
             $this->set('isMac', true);
-        } elseif (strpos('unix', $agent)) {
+        } elseif (strpos($agent, 'unix')) {
             $os   = 'Unix';
             $this->set('isUnix', true);
-        } elseif (strpos('bsd', $agent)) {
+        } elseif (strpos($agent, 'bsd')) {
             $os = 'BSD';
-        } elseif (strpos('symbian', $agent)) {
+        } elseif (strpos($agent, 'symbian')) {
             $os = 'SymbianOS';
         } else {
             $os = 'Unknown';

@@ -8,6 +8,7 @@
 
 namespace inhere\librarys\helpers;
 
+use inhere\librarys\files\Directory;
 use inhere\librarys\files\File;
 
 /**
@@ -28,20 +29,11 @@ class CurlHelper
     /**
      * @param string $imgUrl image url e.g. http://static.oschina.net/uploads/user/277/554046_50.jpg
      * @param string $savePath 图片保存路径
-     * @param string $rename   图片重命名(只写名称，不用后缀) 为空则使用原名称
+     * @param string $rename 图片重命名(只写名称，不用后缀) 为空则使用原名称
+     * @return string
      */
     public static function fetchImg($imgUrl, $savePath, $rename = '')
     {
-        $ch = curl_init();
-
-        curl_setopt($ch, CURLOPT_URL, UrlHelper::encode2($imgUrl));
-        // curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        // 伪造网页来源地址,伪造来自百度的表单提交
-        curl_setopt($ch, CURLOPT_REFERER, "http://www.baidu.com");
-
-        $imgData = self::execute($ch);
-
         // e.g. http://static.oschina.net/uploads/user/277/554046_50.jpg?t=34512323
         if ( strpos($imgUrl, '?')) {
             list($real,) = explode('?', $imgUrl, 2);
@@ -49,9 +41,33 @@ class CurlHelper
             $real = $imgUrl;
         }
 
-        $suffix = File::getSuffix($real);
-        $name   = $rename ? : File::getName($real, 1);
+        $last = trim(strrchr($real, '/'), '/');
+
+        // special url e.g http://img.blog.csdn.net/20150929103749499
+        if ( false === strpos($last, '.')) {
+            $suffix = '.jpg';
+            $name   = $rename ? : $last;
+        } else {
+            $suffix = File::getSuffix($real) ?: '.jpg';
+            $name   = $rename ? : File::getName($real, 1);
+        }
+
         $imgFile = $savePath . '/' . $name .$suffix;
+
+        if ( file_exists($imgFile) ) {
+            return $imgFile;
+        }
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, UrlHelper::encode2($imgUrl));
+        // curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        // 伪造网页来源地址,伪造来自百度的表单提交
+        curl_setopt($ch, CURLOPT_REFERER, 'http://www.baidu.com');
+
+        $imgData = self::execute($ch);
+
+        Directory::make($savePath);
 
         file_put_contents($imgFile, $imgData);
 
@@ -88,7 +104,7 @@ class CurlHelper
      * send POST request
      *
      * @param string $url url
-     * @param array $params url params
+     * @param array $data url params
      * @param array $headers HEADER info
      * @return string
      */
@@ -118,6 +134,7 @@ class CurlHelper
      */
     public static function execute($ch, $retries = 3, $closeAfterDone = true)
     {
+        $ret = '';
         while ($retries--) {
             if ( ($ret = curl_exec($ch)) === false) {
                 $curlErrno = curl_errno($ch);

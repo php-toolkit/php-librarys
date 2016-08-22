@@ -11,6 +11,11 @@ namespace inhere\librarys\env;
 
 use inhere\librarys\StdBase;
 
+/**
+ * 环境信息
+ * Class Environment
+ * @package inhere\librarys\env
+ */
 class Environment extends StdBase
 {
     /**
@@ -25,7 +30,7 @@ class Environment extends StdBase
 
     public static function make(Server $server=null, Client $client=null)
     {
-        return static($server, $client);
+        return new static($server, $client);
     }
 
     public function __construct(Server $server=null, Client $client=null)

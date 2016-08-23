@@ -2,9 +2,11 @@
 
 namespace inhere\librarys\exceptions;
 
+
 class InvalidArgumentException extends \LogicException {}
 
 //////////////////////////////////// Http exception ////////////////////////////////////
+
 
 class HttpException extends \Exception{}
 
@@ -26,14 +28,20 @@ class HttpQueryStringException extends HttpException{}
 
 class ExtensionMissException extends \Exception{}
 class ConnectException extends \LogicException{}
-class DataTypeException extends \LogicException{}
+
 class NotFoundException extends \LogicException{}
 class FileSystemException extends \LogicException{}
+
 class InvalidConfigException extends \LogicException{}
+class DataTypeException extends \LogicException{}
+class DataParseException extends \RuntimeException{}
+
 class GetPropertyException extends \LogicException{}
 class SetPropertyException extends \LogicException{}
+
 class UnknownCalledException extends \LogicException{}
-class DependencyResolutionException extends \LogicException{}
 class RequestException extends \RuntimeException{}
 class ResponseException extends \RuntimeException{}
-class DataParseException extends \RuntimeException{}
+
+class ContainerException extends \LogicException{}
+class DependencyResolutionException extends ContainerException{}

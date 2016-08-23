@@ -6,6 +6,9 @@
  */
 namespace inhere\librarys\di;
 
+use inhere\librarys\exceptions\NotFoundException;
+use inhere\librarys\exceptions\ContainerException;
+
 interface InterfaceContainer
 {
     /**
@@ -13,7 +16,7 @@ interface InterfaceContainer
      *
      * @param string $id Identifier of the entry to look for.
      *
-     * @throws \NotFoundException  No entry was found for this identifier.
+     * @throws NotFoundException  No entry was found for this identifier.
      * @throws ContainerException Error while retrieving the entry.
      *
      * @return mixed Entry.
@@ -21,7 +24,8 @@ interface InterfaceContainer
     public function get($id);
 
     /**
-     * @return boolean
+     * @param string $id
+     * @return bool
      */
     public function has($id);
 }

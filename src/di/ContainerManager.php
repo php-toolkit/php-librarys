@@ -8,22 +8,24 @@
  */
 namespace inhere\librarys\di;
 
-
+/**
+ * Class ContainerManager
+ * @package inhere\librarys\di
+ */
 abstract class ContainerManager
 {
-
     /**
      * 一组容器的扼要描述，标记不同的容器(这里一组含有一个基础容器和其他的属于这组[$profile]的其它子容器)
      * @var string $profile
      */
-    static protected $profile = 'ulue';
+    static protected $profile = 'di';
 
     /**
      * $containers 容器列表
      * @var array
      */
     static protected $containers = [
-        'ulue' =>    [
+        'di' =>    [
                 'base'      => null,// 'container name'=> a base Container instance
                 'children'  => []
             ]
@@ -71,7 +73,7 @@ abstract class ContainerManager
             {
                 $container = new Container;
 
-                $container->name = 'ulue.base';
+                $container->name = 'di.base';
 
                 self::$containers[$profile]['base'] = $container;
             }
@@ -96,7 +98,7 @@ abstract class ContainerManager
      * @param string $profile
      * @return  void
      */
-    public static function setProfile($profile = 'ulue')
+    public static function setProfile($profile = 'di')
     {
         $profile = strtolower(trim($profile));
 

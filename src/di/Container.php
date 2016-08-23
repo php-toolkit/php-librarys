@@ -12,6 +12,13 @@
 
 namespace inhere\librarys\di;
 
+use inhere\librarys\exceptions\NotFoundException;
+use inhere\librarys\exceptions\DependencyResolutionException;
+
+/**
+ * Class Container
+ * @package inhere\librarys\di
+ */
 class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
 {
     /**
@@ -124,7 +131,7 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
      * @param bool $shared 是否共享
      * @param bool $locked 是否锁定服务
      * @return object
-     * @throws \NotFoundException
+     * @throws NotFoundException
      * @throws \InvalidArgumentException
      * @throws \InvalidArgumentException
      */
@@ -326,7 +333,7 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
      * @from windWalker https://github.com/ventoviro/windwalker
      * @param string $id a className
      * @param  boolean $shared [description]
-     * @throws \DependencyResolutionException
+     * @throws DependencyResolutionException
      * @return object
      */
     public function createObject($id, $shared = false)
@@ -363,8 +370,8 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
      * @param $target
      * @param array $arguments
      * @return callable
-     * @throws \DependencyResolutionException
-     * @throws \NotFoundException
+     * @throws DependencyResolutionException
+     * @throws NotFoundException
      */
     public function createCallback($target, array $arguments=[])
     {
@@ -416,7 +423,7 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
             try {
                 $reflection = new \ReflectionClass($class);
             } catch (\ReflectionException $e) {
-                throw new \NotFoundException($e->getMessage());
+                throw new NotFoundException($e->getMessage());
             }
 
             /**
@@ -454,7 +461,7 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
      * @from windwalker https://github.com/ventoviro/windwalker
      * Build an array of constructor parameters.
      * @param   \ReflectionMethod $method Method for which to build the argument array.
-     * @throws \DependencyResolutionException
+     * @throws DependencyResolutionException
      * @return  array  Array of arguments to pass to the method.
      */
     protected function getMethodArgs(\ReflectionMethod $method)
@@ -491,7 +498,7 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
             }
 
             // Couldn't resolve dependency, and no default was provided.
-            throw new \DependencyResolutionException(sprintf('Could not resolve dependency: %s', $dependencyVarName));
+            throw new DependencyResolutionException(sprintf('Could not resolve dependency: %s', $dependencyVarName));
         }
 
         return $methodArgs;
@@ -506,7 +513,7 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
      * @param  string $id 要获取的服务组件id
      * @param  array $params 如果参数为空，则会默认将 容器($this) 传入回调，可以在回调中直接接收
      * @param int $bindType @see $this->setArgument()
-     * @throws \NotFoundException
+     * @throws NotFoundException
      * @return object | null
      */
     public function get($id, array $params= [], $bindType=self::OVERLOAD_PARAM)
@@ -522,7 +529,7 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
         $this->setArgument($id, $params, $bindType);
 
         if ( !($config = $this->getService($id,false)) ) {
-            throw new \NotFoundException(sprintf('服务id: %s不存在，还没有注册！',$id));
+            throw new NotFoundException(sprintf('服务id: %s不存在，还没有注册！',$id));
         }
 
         $callback = $config['callback'];
@@ -545,7 +552,7 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
     /**
      * getShared 总是获取同一个实例
      * @param $id
-     * @throws \NotFoundException
+     * @throws NotFoundException
      * @return mixed
      */
     public function getShared($id)
@@ -705,15 +712,15 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
         return $this->aliases;
     }
 
-    public function getTempId()
-    {
-        return $this->tempId;
-    }
-
-    public function clearTempId()
-    {
-        $this->tempId = null;
-    }
+//    public function getTempId()
+//    {
+//        return $this->tempId;
+//    }
+//
+//    public function clearTempId()
+//    {
+//        $this->tempId = null;
+//    }
 
 //////////////////////////////////// Service Info ////////////////////////////////////
 
@@ -730,7 +737,6 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
         if ( isset($this->services[$id]) ) {
             unset($this->services[$id]);
         }
-
     }
 
     public function clear()
@@ -803,14 +809,17 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
         return !empty( $this->services[$id] ) ? true : false;
     }
 
+    /**
+     * @param string $id
+     * @return bool
+     */
     public function has($id)
     {
         return $this->isService($id);
     }
-
     public function exists($id)
     {
-        return $this->isService($id);
+        return $this->has($id);
     }
 
 //////////////////////////////////////// Helper ////////////////////////////////////////
@@ -881,7 +890,7 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
             return $this->$method();
         }
 
-        throw new \NotFoundException("Getting a Unknown property! ".get_class($this)."::{$name}", 'get');
+        throw new NotFoundException("Getting a Unknown property! ".get_class($this)."::{$name}", 'get');
     }
 
     /**

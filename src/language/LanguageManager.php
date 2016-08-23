@@ -134,7 +134,24 @@ class LanguageManager extends DataCollector
         $this->load($this->mainFile, $fileType);
     }
 
-    /**SE_MULTIFILE`)
+    /**
+     *
+     * how to use language translate ?
+     *
+     * 1. allow multi arguments. `tran(string $key , array [$arg1 , $arg2], string $default)`
+     *
+     * @example
+     * ```
+     *  // on language config file
+     * userNotFound: user [%s] don't exists!
+     *
+     *  // on code
+     * $msg = $language->tran('userNotFound', 'demo');
+     * // can also, tl() is alias method of thr tran()
+     * // $msg = $language->tl('userNotFound', 'demo');
+     * ```
+     *
+     * 2. allow fetch other config file data, when use multifile. (`static::$type === static::USE_MULTIFILE`)
      *
      * @example
      * ```
@@ -146,12 +163,12 @@ class LanguageManager extends DataCollector
      *
      * // on code
      * // will fetch value at `en/default.yml`
-     * //output: user [demo] don't exists!
      * $msg = $language->tran('userNotFound', 'demo');
+     * //output $msg: user [demo] don't exists!
      *
      * // will fetch value at `en/app.yml`
-     * //output: the app user [demo] don't exists!
      * $msg = $language->tran('app:userNotFound', 'demo');
+     * //output $msg: the app user [demo] don't exists!
      *
      * ```
      *
@@ -271,6 +288,11 @@ class LanguageManager extends DataCollector
         return $this->fallbackData;
     }
 
+    /**
+     * @param $key
+     * @param string $default
+     * @return mixed|string
+     */
     protected function tranByFallbackLang($key, $default='')
     {
         $fallbackData = $this->getFallbackData();
@@ -281,7 +303,7 @@ class LanguageManager extends DataCollector
         }
 
         // if use multifile.
-        $value = $this->handleMultiFile($key, $default);
+        // $value = $this->handleMultiFile($key, $default);
 
         $key = trim($key, $this->fileSeparator);
 
@@ -331,6 +353,7 @@ class LanguageManager extends DataCollector
 
     /**
      * @param $filename
+     * @param string $lang
      * @return string
      */
     protected function spliceLangFilePath($filename, $lang = '')

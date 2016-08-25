@@ -33,6 +33,7 @@ class NotFoundException extends \LogicException{}
 class FileSystemException extends \LogicException{}
 
 class InvalidConfigException extends \LogicException{}
+class InvalidOptionException extends \RuntimeException{}
 class DataTypeException extends \LogicException{}
 class DataParseException extends \RuntimeException{}
 

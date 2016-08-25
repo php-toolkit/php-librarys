@@ -135,6 +135,10 @@ class DataCollector extends SimpleCollection
         return $this->get($path) !== null;
     }
 
+    /**
+     * @param string $path
+     * @return bool
+     */
     public function has($path)
     {
         return $this->exists($path);
@@ -355,6 +359,9 @@ class DataCollector extends SimpleCollection
         return array_keys($this->data);
     }
 
+    /**
+     * @return \RecursiveArrayIterator
+     */
     public function getIterator()
     {
         return new \RecursiveArrayIterator($this->data);
@@ -551,7 +558,7 @@ class DataCollector extends SimpleCollection
     const IMPORT_KEY = 'import';
 
     /**
-     * parse Yaml
+     * parse YAML
      * @param string $data              Waiting for the parse data
      * @param bool $supportImport       Simple support import other config by tag 'import'. must is bool.
      * @param callable $pathHandler     When the second param is true, this param is valid.

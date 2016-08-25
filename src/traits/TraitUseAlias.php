@@ -13,42 +13,42 @@ namespace inhere\librarys\traits;
 /**
  * Class TraitUseAlias
  * @package inhere\librarys\traits
+ * 
+ * @property $aliases
  */
 trait TraitUseAlias
 {
-    private $_aliases       = [];
+    // protected $aliases      = [];
     private $lockedAliases = [];
 
     /**
-     * 将别名对应的值动态存下来，便于同时设置多个别名
-     * e.g.
-     *     $alias = (new self)->alias($name, $value)->alias($name1)->alias($name2)
-     * @var string
-     */
-    protected $tempValue;
-
-    /**
-     * 设置别名
+     * 设置/获取别名
      * @param string $alias 别名
-     * @param string $value 真实的值
+     * @param string $value 真实的值. 为空用于获取
      * @throws \RuntimeException
-     * @return $this
+     * @return mixed
      */
     public function alias($alias, $value='')
     {
-        $this->aliasAndIdCheck($alias, $value);
+        // set
+        if ($alias && $value) {
+            $this->aliasAndValueCheck($alias, $value);
+            $this->aliases[$alias] = trim($value);
 
-        $this->_aliases[$alias] = trim($value);
+        // get
+        } else {
+            return $this->resolveAlias($alias);
+        }
 
         return $this;
     }
 
-    public function addAlias($alias, $value='')
+    public function addAlias($alias, $value)
     {
-        $this->aliasAndIdCheck($alias, $value);
+        $this->aliasAndValueCheck($alias, $value);
 
-        if ( !isset($this->_aliases[$alias]) ) {
-            $this->_aliases[$alias] = trim($value);
+        if ( !isset($this->aliases[$alias]) ) {
+            $this->aliases[$alias] = trim($value);
         }
 
         return $this;
@@ -65,13 +65,15 @@ trait TraitUseAlias
     {
         $default === null && $default = $alias;
 
-        return isset($this->_aliases[$alias]) ? $this->_aliases[$alias] : $default;
+        return isset($this->aliases[$alias]) ? $this->aliases[$alias] : $default;
     }
 
-    protected function aliasAndIdCheck(& $alias, & $value)
+    /**
+     * @param $alias
+     * @param $value
+     */
+    protected function aliasAndValueCheck(& $alias, & $value)
     {
-        !$value && $value = $this->tempValue;
-
         if ( !$value || !is_string($value) ) {
             throw new \InvalidArgumentException(sprintf(
                 'The 2th parameter must be of type string is not empty, %s given',
@@ -82,7 +84,7 @@ trait TraitUseAlias
         $alias = trim($alias);
 
         if ( in_array($alias, $this->lockedAliases)) {
-            throw new \RuntimeException(sprintf('别名：%s , 已被强制锁定。请设置其他名称。',$alias));
+            throw new \RuntimeException(sprintf('别名：%s , 已被锁定。请设置其他名称。',$alias));
         }
     }
 
@@ -106,7 +108,7 @@ trait TraitUseAlias
      */
     public function isAlias($alias)
     {
-        return isset($this->_aliases[$alias]);
+        return isset($this->aliases[$alias]);
     }
 
     /**
@@ -152,11 +154,11 @@ trait TraitUseAlias
     }
 
     /**
-     * @return array $_aliases
+     * @return array $aliases
      */
     public function getAliases()
     {
-        return $this->_aliases;
+        return $this->aliases;
     }
 
     public function getLockedAliases()

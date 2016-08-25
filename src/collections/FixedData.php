@@ -11,6 +11,7 @@
  * File: FixedData.php StrictData.php
  */
 namespace inhere\librarys\collections;
+
 use inhere\librarys\exceptions\UnknownCalledException;
 
 /**

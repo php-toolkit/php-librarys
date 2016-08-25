@@ -247,6 +247,9 @@ class SimpleCollection implements CollectionInterface
         return serialize($this->data);
     }
 
+    /**
+     * @param string $serialized
+     */
     public function unserialize($serialized)
     {
         $this->data = unserialize($serialized);
@@ -267,8 +270,12 @@ class SimpleCollection implements CollectionInterface
 
     /********************************************************************************
      * Magic method
-     *******************************************************************************/
+     ******************************************************************************/
 
+    /**
+     * @param $name
+     * @return mixed
+     */
     public function __get($name)
     {
         return $this->get($name);

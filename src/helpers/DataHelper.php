@@ -8,6 +8,10 @@
  */
 namespace inhere\librarys\helpers;
 
+/**
+ * Class DataHelper
+ * @package inhere\librarys\helpers
+ */
 abstract class DataHelper
 {
     /**
@@ -57,16 +61,18 @@ abstract class DataHelper
     }
 
     /**
-    * Sanitize a string
-    *
-    * @param string $string String to sanitize
-    * @param bool $full String contains HTML or not (optional)
-    * @return string Sanitized string
-    */
-    public static function safeOutput($string, $html = false)
+     * Sanitize a string
+     *
+     * @param string $string String to sanitize
+     * @param bool $clearTag clear html tag
+     * @return string Sanitized string
+     */
+    public static function safeOutput($string, $clearTag = false)
     {
-        if (!$html)
+        if (!$clearTag) {
             $string = strip_tags($string);
+        }
+
         return @self::htmlentitiesUTF8($string, ENT_QUOTES);
     }
 
@@ -92,7 +98,7 @@ abstract class DataHelper
     /**
      * Convert \n and \r\n and \r to <br />
      *
-     * @param string $string String to transform
+     * @param string $str String to transform
      * @return string New string
      */
     public static function nl2br($str)
@@ -265,15 +271,7 @@ abstract class DataHelper
             return stripslashes($data);
         }
 
-        if (get_magic_quotes_gpc()){
-            @set_magic_quotes_runtime(0);
-        }
-
-        if (function_exists('addslashes')){
-            $data = addslashes($data);
-        } else {
-            $data = mysql_real_escape_string($data);
-        }
+        $data = addslashes($data);
 
         if ($level) {
             // 两个str_replace替换转义目的是防止黑客转换SQL编码进行攻击。

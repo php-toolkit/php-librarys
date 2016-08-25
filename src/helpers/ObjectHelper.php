@@ -17,11 +17,23 @@ use inhere\librarys\exceptions\InvalidArgumentException;
 class ObjectHelper
 {
     /**
+     * 给对象设置属性值
+     * @param $object
+     * @param array $options
+     */
+    public static function loadAttrs($object, array $options)
+    {
+        foreach ($options as $property => $value) {
+            $object->$property = $value;
+        }
+    }
+    
+    /**
      * php对象转换成为数组
      * @param mixed $object
      * @return array|bool
      */
-    static public function toArray($object)
+    public static function toArray($object)
     {
         if ( ! is_object($object) ) {
             throw new InvalidArgumentException('参数必须是个对象！');
@@ -42,13 +54,13 @@ class ObjectHelper
     }
 
     //定义一个用来序列化对象的函数
-    static public function encode( $obj )
+    public static function encode( $obj )
     {
         return base64_encode(gzcompress(serialize($obj)));
     }
 
     //反序列化
-    static public function decode($txt)
+    public static function decode($txt)
     {
         return unserialize(gzuncompress(base64_decode($txt)));
     }

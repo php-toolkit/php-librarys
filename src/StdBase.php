@@ -13,6 +13,10 @@ use inhere\librarys\exceptions\GetPropertyException;
 use inhere\librarys\exceptions\NotFoundException;
 use inhere\librarys\exceptions\UnknownCalledException;
 
+/**
+ * Class StdBase
+ * @package inhere\librarys
+ */
 abstract class StdBase
 {
     /**
@@ -52,7 +56,7 @@ abstract class StdBase
      * @reference yii2 yii\base\Object::__set()
      * @param $name
      * @param $value
-     * @throws \SetPropertyException
+     * @throws SetPropertyException
      */
     public function __set($name,$value)
     {
@@ -61,16 +65,16 @@ abstract class StdBase
         if ( method_exists($this, $method) ) {
             $this->$method($value);
         } elseif ( method_exists($this, 'get'.ucfirst( $name )) ) {
-            throw new \SetPropertyException("Setting a Read-only property! ".get_class($this)."::{$name}");
+            throw new SetPropertyException("Setting a Read-only property! ".get_class($this)."::{$name}");
         } else {
-            throw new \SetPropertyException("Setting a Unknown property! ".get_class($this)."::{$name}");
+            throw new SetPropertyException("Setting a Unknown property! ".get_class($this)."::{$name}");
         }
     }
 
     /**
      * @reference yii2 yii\base\Object::__set()
      * @param $name
-     * @throws \GetPropertyException
+     * @throws GetPropertyException
      * @return mixed
      */
     public function __get($name)
@@ -82,10 +86,10 @@ abstract class StdBase
         }
 
         if (method_exists($this, 'set'.ucfirst( $name ))) {
-            throw new \GetPropertyException("Getting a Write-only property! ".get_class($this)."::{$name}");
+            throw new GetPropertyException("Getting a Write-only property! ".get_class($this)."::{$name}");
         }
 
-        throw new \GetPropertyException("Getting a Unknown property! ".get_class($this)."::{$name}");
+        throw new GetPropertyException("Getting a Unknown property! ".get_class($this)."::{$name}");
     }
 
     /**
@@ -115,13 +119,13 @@ abstract class StdBase
             return;
         }
 
-        throw new \NotFoundException('Unset an unknown or read-only property: ' . get_class($this) . '::' . $name);
+        throw new NotFoundException('Unset an unknown or read-only property: ' . get_class($this) . '::' . $name);
     }
 
     /**
      * @param $method
      * @param $args
-     * @throws \UnknownCalledException
+     * @throws UnknownCalledException
      * @return mixed
      */
     public function __call($method, $args)
@@ -131,7 +135,7 @@ abstract class StdBase
         //     return call_user_func_array( array($this, $method), (array) $args);
         // }
 
-        throw new \UnknownCalledException("Called a Unknown method! ".get_class($this)."->{$method}()");
+        throw new UnknownCalledException("Called a Unknown method! ".get_class($this)."->{$method}()");
     }
 
     /**
@@ -146,7 +150,7 @@ abstract class StdBase
             return call_user_func_array( array( get_called_class() , $method), (array) $args);
         }
 
-        throw new \UnknownCalledException("Called a Unknown static method! [ ".get_called_class()."::{$method}()]");
+        throw new UnknownCalledException("Called a Unknown static method! [ ".get_called_class()."::{$method}()]");
     }
 
 }

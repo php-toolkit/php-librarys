@@ -16,6 +16,9 @@ use inhere\librarys\StdBase;
 
 /**
  * 前端资源加载管理
+ * - 允许设定加载位置
+ * - 自动注入到HTML中指定位置
+ *
  * Class AssetManager
  * @package inhere\librarys\asset
  */
@@ -24,6 +27,17 @@ class AssetManager extends StdBase
     /**
      * css or js file link tag
      * @var array
+     *
+     * e.g:
+     *
+     * $assets  = [
+     *  self::POS_BODY => [
+     *
+     *  ],
+     *  self::POS_END => [
+     *      ''
+     *  ],
+     * ]
      */
     protected $assets  = []; //static
 
@@ -33,10 +47,20 @@ class AssetManager extends StdBase
      */
     protected $codes   = []; //
 
+    /**
+     * @var bool
+     */
+    protected $mergeCssCode = true;
+
+    /**
+     * @var bool
+     */
+    protected $mergeJsCode  = true;
+
     // todo unused ...
-    protected  $locked  = [
-        ''
-    ];
+//    protected  $locked  = [
+//        ''
+//    ];
 
     /**
      * 资源基础URL
@@ -55,12 +79,8 @@ class AssetManager extends StdBase
      */
     protected $basePath = '';
 
-    protected $mergeCssCode = false;
-
-    protected $mergeJsCode  = false;
-
     public $cdn = [
-        'jquery'       => 'http://libs.useso.com/js/jquery/2.1.0/jquery.min.js'
+        'jquery'    => 'http://libs.useso.com/js/jquery/2.1.0/jquery.min.js'
     ];
 
     public $local = [
@@ -103,31 +123,37 @@ class AssetManager extends StdBase
 //////////////////////////////////// register ////////////////////////////////////
 
     /**
-     * register asset
+     * register named asset
+     *
      * e.g.
      *
      * $manager->loadAsset('home-page',[
      *  'css' => [
+     *          'xx/zz.css',
      *      ],
      *  'js' => [
+     *          'xx/zz.css',
      *      ],
-     * ], [
-     *      ''
+     *  'depends' => [''] // 当前资源的依赖. 依赖资源会在当前资源之前加载
+     * ],
+     * [
+     *      'cssOptions' => [],
+     *      'jsOptions'  => [],
      * ]);
      *
-     * @param string $name define zhe asset name
-     * @param array $assets
-     * @param array $options
+     * @param string $name define zhe asset name. 当前注册资源添加命名标记
+     * @param array|NamedAsset $assets 要添加的资源
+     * @param array $options 选项
      * @return $this
      */
-    public function loadAsset($name, $assets, $options = [])
+    public function loadAsset($name, array $assets = [], array $options = [])
     {
         return $this;
     }
 
     /**
      * [addJsFile 注册添加 javascript 文件, 引入相关标签]
-     * @param $asset
+     * @param string|array $asset
      * @param string $position
      * @return mixed
      */
@@ -138,7 +164,7 @@ class AssetManager extends StdBase
 
     /**
      * [addCssFile 注册添加 css style 文件, 引入相关标签]
-     * @param $asset
+     * @param string|array $asset
      * @param string $position
      * @return mixed
      */
@@ -149,7 +175,7 @@ class AssetManager extends StdBase
 
     /**
      * [addJs 注册添加 javascript 内容到视图数据]
-     * @param $scriptCode
+     * @param string $scriptCode
      * @param string $position
      * @internal param $ [type] $scriptCode
      * @internal param $ [type] $position
@@ -173,12 +199,13 @@ class AssetManager extends StdBase
 
     /**
      * [_loggingAsset description]
-     * @param  mixed     $assets
-     * @param  string     $type
-     * @param  string     $pos
-     * @return self
+     * @param  mixed $assets
+     * @param  string $type
+     * @param  string $pos
+     * @param array $options
+     * @return AssetManager
      */
-    protected function _loggingAsset($assets, $type=self::ASSET_CSS_FILE, $pos=self::POS_HEAD)
+    protected function _loggingAsset($assets, $type=self::ASSET_CSS_FILE, $pos=self::POS_HEAD, array $options = [])
     {
         if (!$assets) {
             throw new InvalidArgumentException('The 1th param [$assets] is can\'t empty.');
@@ -240,7 +267,7 @@ class AssetManager extends StdBase
                 return Html::scriptCode($asset, $attrs);
                 break;
             case self::ASSET_CSS_FILE:
-                return Html::link($asset, $attrs);
+                return Html::css($asset, $attrs);
                 break;
             case self::ASSET_CSS:
                 return Html::style($asset, $attrs);
@@ -248,29 +275,6 @@ class AssetManager extends StdBase
         }
 
         return '';
-    }
-
-    /**
-     * 给当前注册资源添加标记， 可用于唯一性资源检查 避免重复注册，
-     * e.g.
-     * 未添加标记，不论是否已加载，都会往后面追加
-     * $this->assets['position'][] => 'xx/jquery.js'
-     * 给jquery资源标记名称‘jquery’
-     * $this->assets['position']['jquery'] => 'xx/jquery.js'
-     * @param $link
-     */
-    public function lockedCheck($link)
-    {
-        foreach ($this->locked as $rule) {
-            if (preg_match($rule, $link)) {
-                //Trigger::error('xxxxxx');
-            }
-        }
-    }
-
-    public function addLock()
-    {
-        # code...
     }
 
     /**
@@ -319,40 +323,44 @@ class AssetManager extends StdBase
         ];
     }
 
-////////////////////////////// inject Assets to data //////////////////////////////
+////////////////////////////// inject Assets to HTML //////////////////////////////
 
     /**
      * 自动注入资源到指定的位置
-     * @param string $data html document string
+     *
+     * - 在渲染好html后,输出html字符之前调用此方法
+     * `$html = $manager->injectAssets($html);`
+     *
+     * @param string $html html document string
      * @return mixed|string [type]
      */
-    public function autoInject($data)
+    public function injectAssets($html)
     {
-        $data = trim($data);
+        $html = trim($html);
 
         if ( !($assets = $this->assets) ) {
-            return $data;
+            return $html;
         }
 
         if (!empty($assets[self::POS_BODY])) {
 
             $assetBody  = $this->bodyNode . implode('', $assets[self::POS_BODY]);
             $bodyNode   = str_replace('/', '\/', $this->bodyNode);
-            $data       = preg_replace( "/$bodyNode/i", $assetBody, $data, 1 , $count);
+            $html       = preg_replace( "/$bodyNode/i", $assetBody, $html, 1 , $count);
 
             // 没找到节点，注入失败时，直接加入开始位置
             if ($count==0) {
-                $data = $assetBody.$data;
+                $html = $assetBody.$html;
             }
         }
 
         if (!empty($assets[self::POS_HEAD])) {
             $assetHead= implode('', $assets[self::POS_HEAD]) . $this->headNode;
             $headNode = str_replace('/', '\/', $this->headNode);
-            $data     = preg_replace( "/$headNode/i", $assetHead, $data, 1 , $count);
+            $html     = preg_replace( "/$headNode/i", $assetHead, $html, 1 , $count);
 
             if ($count==0) {
-                $data = $assetHead.$data;
+                $html = $assetHead.$html;
             }
         }
 
@@ -360,17 +368,17 @@ class AssetManager extends StdBase
 
             $assetEnd   = implode('', $assets[self::POS_END]) . $this->endNode;
             $endNode    = str_replace('/', '\/', $this->endNode);
-            $data       = preg_replace( "/$endNode/i", $assetEnd, $data, 1 , $count);
+            $html       = preg_replace( "/$endNode/i", $assetEnd, $html, 1 , $count);
 
             // 没找到节点，注入失败时，直接加入末尾位置
             if ($count==0) {
-                $data = $data.$assetEnd;
+                $html = $html.$assetEnd;
             }
         }
 
         unset($bodyNode,$headNode,$endNode,$assetHead,$assetBody,$assetEnd,$count);
 
-        return $data;
+        return $html;
     }
 
 ////////////////////////////// The output asset link //////////////////////////////

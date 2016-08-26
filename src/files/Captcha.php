@@ -52,9 +52,8 @@ class Captcha
     }
 
     /**
-     * 构造函数
-     * 配置优先级 __construct > $this->config() > $fileConfig > $this->defaultConfig()
      * @param array $config
+     * @throws ExtensionMissException
      */
     public function __construct(array $config=[])
     {
@@ -112,7 +111,7 @@ class Captcha
     /**
      * @return $this
      */
-    private function drawPixel()
+    public function drawPixel()
     {
         for($i=1; $i<=$this->pixelNum;$i++)
         {
@@ -134,7 +133,7 @@ class Captcha
      * 画干扰直线-可选
      * @return $this
      */
-    private function drawLine()
+    public function drawLine()
     {
         for($i=1;$i<=$this->lineNum;$i++)
         {
@@ -153,7 +152,7 @@ class Captcha
      * 画干扰弧线-可选
      * @return $this
      */
-    private function drawAec()
+    public function drawAec()
     {
         for($i=1;$i<=$this->aecNum;$i++)
         {
@@ -168,7 +167,7 @@ class Captcha
     }
 
     // 产生随机字符,验证码,并写入图像
-    private function drawChar()
+    public function drawChar()
     {
         $x          = ($this->width - 10) / $this->charNum;
         $captchaStr = '';//保存产生的字符串
@@ -195,7 +194,7 @@ class Captcha
     }
 
     //填充干扰字符-可选
-    private function drawChars()
+    public function drawChars()
     {
        for($i=0;$i<$this->fontNum;$i++)
        {

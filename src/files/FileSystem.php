@@ -14,17 +14,34 @@ use inhere\librarys\exceptions\NotFoundException;
 use inhere\librarys\helpers\StrHelper;
 
 /**
- * Class AbstractFileSystem
+ * Class FileSystem
  * @package inhere\librarys\files
  */
-abstract class AbstractFileSystem
+abstract class FileSystem
 {
+    /**
+     * @param $path
+     * @return bool
+     */
+    public static function isAbsPath($path)
+    {
+        if ( !$path || !is_string($path)) {
+            return false;
+        } elseif ( $path{0} === '/' ) {
+            return true;
+        } elseif ( 1 === preg_match('/^[a-z]:[\/|\\\]{1}.+/i', $path)) {
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * 转换为标准的路径结构
      * @param  [type] $dirName [description]
      * @return mixed|string [type]          [description]
      */
-    static public function pathFormat($dirName)
+    public static function pathFormat($dirName)
     {
         $dirName = str_ireplace('\\','/', trim($dirName));
         return substr($dirName,-1) === '/' ? $dirName: $dirName.'/';
@@ -38,7 +55,7 @@ abstract class AbstractFileSystem
      * @throws NotFoundException
      * @return array|string [type]        [description]
      */
-    static public function exists($files, $ext=null)
+    public static function exists($files, $ext=null)
     {
         $ext    = $ext ? trim($ext,'. ') : null;
         $files  = StrHelper::toArray($files);
@@ -65,7 +82,7 @@ abstract class AbstractFileSystem
      * @param int $mode
      * @return bool
      */
-    static public function chmodr($path, $mode = 0664)
+    public static function chmodr($path, $mode = 0664)
     {
         if (!is_dir($path)) {
             return @chmod($path, $mode);
@@ -98,7 +115,7 @@ abstract class AbstractFileSystem
      *                  返回值在二进制计数法中，四位由高到低分别代表
      *                  可执行rename()函数权限 |可对文件追加内容权限 |可写入文件权限|可读取文件权限。
      */
-    static public function file_mode_info($file_path)
+    public static function file_mode_info($file_path)
     {
         /* 如果不存在，则不可读、不可写、不可改 */
         if (!file_exists($file_path)) {

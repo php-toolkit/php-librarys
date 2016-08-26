@@ -107,19 +107,18 @@ class Uploader
 
     /**
      * @param string $name key of the $_FILES
-     * @param string $targetPath save to the path
+     * @param string $targetFile save to the file path
      * @return $this|false
      */
-    public function uploadOne($name, $targetPath)
+    public function uploadOne($name, $targetFile)
     {
         if (!$name || !isset($this->_data[$name])) {
-            // $this->error = "name [$name] don't exists of the _FILES";
+            $this->error = "name [$name] don't exists of the _FILES";
 
-            return false;
+            return $this;
         }
 
-        !$targetPath && ($targetPath = $this->config['path']);
-        $result = $this->_uploadHandle($this->_data[$name], $targetPath);
+        $result = $this->_uploadHandle($this->_data[$name], $targetFile, false);
 
         $this->result = $result;
 
@@ -130,7 +129,7 @@ class Uploader
      * 文件上传
      * 返回文件信息多维数组|没有文件则返回FALSE(可用于判断)
      * @param array $keys 取指定的key对应的文件
-     * @param string $targetPath
+     * @param string $targetPath 存储目录路径
      * @return array|bool
      */
     public function uploadMulti(array $keys = [], $targetPath = '')
@@ -139,6 +138,7 @@ class Uploader
             return false;
         }
 
+        $result = [];
         !$targetPath && ($targetPath = $this->config['path']);
 
         foreach($this->_data as $key => $file){
@@ -146,14 +146,24 @@ class Uploader
                 continue;
             }
 
-            $this->result[$key] = $this->_uploadHandle($file, $targetPath);
+            $result[$key] = $this->_uploadHandle($file, $targetPath);
         }
 
-        return $this;
+        return $result;
     }
 
-    protected function _uploadHandle($sourceFile, $targetPath)
+    /**
+     * @param $sourceFile
+     * @param $targetPath
+     * @param bool|true $isDir
+     * @return array
+     */
+    protected function _uploadHandle($sourceFile, $targetPath, $isDir = true)
     {
+        if ($this->hasError()) {
+            return [];
+        }
+
         $filename = $sourceFile['name'];
 
         if ( is_array($filename) ) {
@@ -179,18 +189,18 @@ class Uploader
                 return [];
             }
 
-            $result = $this->moveTo($file, $targetPath);
+            $result = $isDir ? $this->moveToDir($file, $targetPath) : $this->moveToFile($file, $targetPath);
 
             //判断文件是图片，
-            if ( in_array($file['ext'], static::$imageTypes) && getimagesize($result['targetFile']) ) {
+            if ( in_array($file['ext'], static::$imageTypes) && getimagesize($result['newFile']) ) {
                 //缩略图处理
                 if ($this->config['thumbOn']) {
-                    $this->makeThumb($result['targetFile'], $result['targetName'], $result);
+                    $this->makeThumb($result['newFile']);
                 }
 
                 //加水印
                 if ($this->config['waterOn']) {
-                    $this->watermark($result['targetFile'], $result['targetName'], $result);
+                    $this->watermark($result['newFile']);
                 }
             }
         }
@@ -227,15 +237,53 @@ class Uploader
     }
 
     /**
-     * 存储文件
+     * 存储文件 -- 移动临时文件到指定文件
      * @param array $file 上传文件信息数组
-     * @param $targetPath
+     * @param $targetFile
      * @return array
      */
-    private function moveTo($file, $targetPath = '')
+    public function moveToFile(array $file, $targetFile)
     {
-        $nowName    = time().'_'.mt_rand(1000,9999).'.'.$file['ext'];
-        $filePath   = ($targetPath ? : $this->config['path']) . DIRECTORY_SEPARATOR . $nowName;
+        $dir = dirname($targetFile);
+
+        if ( !$this->_makeDir($dir) ) {
+            $this->error = "目录创建失败或者不可写.[$dir]";
+            return false;
+        }
+
+        if ( !move_uploaded_file($file['tmp_name'],$targetFile) ){
+            $this->error = '移动上传文件失败！';
+            return false;
+        }
+
+        $file['newFile'] = $targetFile;
+
+        return $file;
+    }
+
+    /**
+     * 存储文件 -- 移动临时文件到指定目录
+     * @param array $file 上传文件信息数组
+     * @param string $targetDir 目标目录
+     * @param \Closure $nameHandler 使用闭包回调自定义存储文件的命名
+     *
+     * e.g:
+     *
+     * $nameHandler = function ($fileInfo) {
+     *      return date('Ymd'). '.' . $file['ext'];
+     * };
+     *
+     * @return array
+     */
+    public function moveToDir(array $file, $targetDir = '', \Closure $nameHandler = null)
+    {
+        if ($nameHandler) {
+            $nowName = $nameHandler($file);
+        } else {
+            $nowName = time().'_'.mt_rand(1000,9999). '.' .$file['ext'];
+        }
+
+        $filePath = ($targetDir ? : $this->config['path']) . DIRECTORY_SEPARATOR . $nowName;
 
         $dir = dirname($filePath);
 
@@ -249,31 +297,44 @@ class Uploader
             return false;
         }
 
-        $file['targetFile'] = $filePath;
-        $file['targetName'] = $nowName;
-        $file['targetUrl'] = $nowName;
+        $file['newFile'] = $filePath;
+        $file['newName'] = $nowName;
 
         return $file;
     }
 
-    public function watermark($filePath, $targetFile, &$result)
+    /**
+     * @param string $filePath
+     * @param string $savePath
+     * @return $this
+     */
+    public function watermark($filePath, $savePath = '')
     {
-        $waterImage = dirname($targetFile). '/thumb/' .basename($targetFile);
-        $this->getPicture()->watermark($filePath, $waterImage);
+        $pic = $this->getPicture()->watermark($filePath, $savePath);
 
-        $result['waterImage'] = $waterImage;
+        if ( $err = $pic->getError() ) {
+            $this->error = $err;
+        } else {
+            $this->result['waterImage'] = $pic->working['outFile'];
+        }
 
         return $this;
     }
 
-    public function makeThumb($filePath, $targetFile, &$result)
+    /**
+     * @param string $filePath
+     * @param string $savePath
+     * @return $this
+     */
+    public function makeThumb($filePath, $savePath = '')
     {
-        $path = dirname($targetFile). '/thumb';
-        $name = basename($targetFile);
+        $pic = $this->getPicture()->thumb($filePath, $savePath);
 
-        $this->getPicture()->thumb($filePath, $path, $name);
-
-        $result['thumbImage'] = $path . '/' . $name;
+        if ( $err = $pic->getError() ) {
+            $this->error = $err;
+        } else {
+            $this->result['thumbImage'] = $pic->working['outFile'];
+        }
 
         return $this;
     }

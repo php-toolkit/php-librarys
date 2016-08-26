@@ -31,14 +31,19 @@ class ConnectException extends \LogicException{}
 
 class NotFoundException extends \LogicException{}
 class FileSystemException extends \LogicException{}
+class IOException extends FileSystemException{}
+class FileNotFoundException extends FileSystemException{}
+class FileReadException extends FileSystemException{}
+class FileWrittenException extends FileSystemException{}
 
 class InvalidConfigException extends \LogicException{}
 class InvalidOptionException extends \RuntimeException{}
 class DataTypeException extends \LogicException{}
 class DataParseException extends \RuntimeException{}
 
-class GetPropertyException extends \LogicException{}
-class SetPropertyException extends \LogicException{}
+class PropertyException extends \LogicException{}
+class GetPropertyException extends PropertyException{}
+class SetPropertyException extends PropertyException{}
 
 class UnknownCalledException extends \LogicException{}
 class RequestException extends \RuntimeException{}

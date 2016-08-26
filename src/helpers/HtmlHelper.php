@@ -14,6 +14,56 @@ namespace inhere\librarys\helpers;
  */
 class HtmlHelper
 {
+    /**
+     * Encodes special characters into HTML entities.
+     * @param string $text data to be encoded
+     * @param string $charset
+     * @return string the encoded data
+     * @see http://www.php.net/manual/en/function.htmlspecialchars.php
+     */
+    public static function encode($text, $charset= 'utf-8')
+    {
+        return htmlspecialchars($text,ENT_QUOTES, 'utf-8');
+    }
+
+    /**
+     * This is the opposite of {@link encode()}.
+     * @param string $text data to be decoded
+     * @return string the decoded data
+     * @see http://www.php.net/manual/en/function.htmlspecialchars-decode.php
+     */
+    public static function decode($text)
+    {
+        return htmlspecialchars_decode($text,ENT_QUOTES);
+    }
+
+    /**
+     * @form yii1
+     * @param array $data data to be encoded
+     * @param string $charset
+     * @return array the encoded data
+     * @see http://www.php.net/manual/en/function.htmlspecialchars.php
+     */
+    public static function encodeArray($data, $charset= 'utf-8')
+    {
+        $d = [];
+
+        foreach($data as $key=>$value) {
+            if (is_string($key)) {
+                $key = htmlspecialchars($key,ENT_QUOTES,$charset);
+            }
+
+            if (is_string($value)) {
+                $value = htmlspecialchars($value,ENT_QUOTES,$charset);
+            } elseif (is_array($value)) {
+                $value = static::encodeArray($value);
+            }
+
+            $d[$key] = $value;
+        }
+
+        return $d;
+    }
 
     /**
      * Strip img-tags from string

@@ -28,6 +28,7 @@
   },
   "suggest": {
     "inhere/simple-print-tool": "Very lightweight data printing tools",
-    "inhere/php-validate": "Very lightweight data validate tool"
+    "inhere/php-validate": "Very lightweight data validate tool",
+    "matthiasmullie/minify" : "compress css and js. if you want to compress assets."
   }
 }

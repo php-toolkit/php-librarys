@@ -15,6 +15,15 @@ namespace inhere\librarys\helpers;
 class UrlHelper
 {
     /**
+     * @param string $url the URL to be checked
+     * @return boolean whether the URL is relative
+     */
+    public static function isRelative($url)
+    {
+        return strncmp($url, '//', 2) && strpos($url, '://') === false;
+    }
+
+    /**
      * @param $str
      * @return bool
      */

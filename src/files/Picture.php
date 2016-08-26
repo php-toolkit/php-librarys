@@ -155,7 +155,7 @@ class Picture
      * @param string $waterImg 水印图片
      * @param string $alpha    透明度
      * @param string $text     文字水印内容
-     * @return bool
+     * @return self
      */
     public function watermark($img, $outPath = '', $pos = '', $waterImg = '', $alpha = '', $text = '')
     {
@@ -375,7 +375,6 @@ class Picture
     /**
      * 显示 image file 到浏览器
      * @param string $img 图片文件
-     * @param string $type 图片格式 jpeg|png|gif
      * @return bool
      */
     public static function show($img)
@@ -673,6 +672,10 @@ class Picture
     * other
     *********************************************************************************/
 
+    /**
+     * @param $pngImg
+     * @param string $outPath
+     */
     public function png2gif($pngImg, $outPath = '')
     {
         // Load the PNG

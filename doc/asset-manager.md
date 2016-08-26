@@ -30,6 +30,6 @@ AssetLoad::loadJs([
 
 class is at `inhere\librarys\asset\AssetManager`
 
-## AssetPublish
+## AssetPublisher
 
-class is at `inhere\librarys\asset\AssetPublish`
+class is at `inhere\librarys\asset\AssetPublisher`

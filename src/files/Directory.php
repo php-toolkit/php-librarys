@@ -12,16 +12,19 @@ namespace inhere\librarys\files;
 use DirectoryIterator;
 use inhere\librarys\exceptions\NotFoundException;
 
-class Directory extends AbstractFileSystem
+/**
+ * Class Directory
+ * @package inhere\librarys\files
+ */
+class Directory extends FileSystem
 {
     /**
      * 查看一个目录中的所有文件和子目录
      * @param $dirName
-     * @param bool $return
      * @throws NotFoundException
      * @return array|void
      */
-    static public function ls($dirName, $return=true)
+    static public function ls($dirName)
     {
         $list = [];
 
@@ -107,6 +110,7 @@ class Directory extends AbstractFileSystem
      * @param $dirName string 目标目录
      * @param $ext array('css','html','php') css|html|php
      * @param $recursive int|bool 是否包含子目录
+     * @param array $list
      * @return array
      */
     static public function getFiles($dirName, $ext=null, $recursive=0, &$list=[])

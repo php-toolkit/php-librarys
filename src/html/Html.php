@@ -4,26 +4,30 @@
  * Auth: Inhere
  * Date: 14-6-28
  * Time: 10:35
- * Uesd: 主要功能是 html 标签元素创建
+ * Use: 主要功能是 html 标签元素创建
  */
+
 namespace inhere\librarys\html;
 
+//use inhere\librarys\helpers\ArrHelper;
 
-use inhere\librarys\helpers\ArrHelper;
-
+/**
+ * Class Html
+ * @package inhere\librarys\html
+ */
 class Html
 {
-    public static $buildedTag;
-
-	// Independent lables
+	// Independent tag
     public static $aloneTags = [
         'area','br','base','col','frame','hr','img','input','link','mate' ,'param'
     ];
 
-    // closing tag | Ditags
-    public static $ditags = [];
+    // need close tags
+    public static $closeTags = [
+        'html', 'head', 'body', 'a' , 'div', 'p', 'ul', 'li', 'ol', 'dl', 'table', 'tr', 'th', 'td'
+    ];
 
-    public static $eleAttr = [ 'id', 'class', 'style', 'type', 'href', 'src', ];
+    public static $tagAttrs = [ 'id', 'class', 'style', 'type', 'href', 'src' ];
 
     /**
      * @param $name
@@ -33,10 +37,38 @@ class Html
     {
         return in_array(trim($name), static::$aloneTags);
     }
+    /**
+     * link tag
+     * @param array $attrs
+     * @return string
+     */
+    public static function link(array $attrs=[])
+    {
+        return static::tag('link',null,$attrs);
+    }
+
+    /**
+     * css link tag
+     * @param $href
+     * @param array $attrs
+     * @return string
+     */
+    public static function css($href,  array $attrs=[])
+    {
+        $attrs = array_merge([
+            'type' => "text/css",
+            'rel'  => 'stylesheet',
+            'href' => $href,
+        ],
+            $attrs );
+
+        return static::tag('link',null,$attrs);
+    }
 
     /**
      * style tag
      * @param  string $content
+     * @param array $attrs
      * @return string
      */
     public static function style($content,  array $attrs=[])
@@ -45,42 +77,9 @@ class Html
 
         return static::tag('style', PHP_EOL . trim($content) . PHP_EOL,$attrs);
     }
-
-    /**
-     * link tag
-     * @param $href
-     * @param array $attrs
-     * @return string
-     */
-    public static function link($href,  array $attrs=[])
+    public static function cssCode($content,  array $attrs=[])
     {
-        $attrs = array_merge(
-            [
-                'type' => "text/css",
-                'rel'  => 'stylesheet',
-                'href' => $href,
-            ],
-            $attrs );
-
-        return static::tag('link',null,$attrs);
-    }
-
-    public static function cssLink($href,  array $attrs=[])
-    {
-        return static::link($href, $attrs);
-    }
-
-    /**
-     * javascript tag
-     * @param  string $content
-     * @param array $attrs
-     * @return string
-     */
-    public static function scriptCode($content=null, array $attrs=[])
-    {
-        $attrs = array_merge( array('type' => 'text/javascript'), $attrs );
-
-        return static::tag('script',  PHP_EOL . trim($content) . PHP_EOL,$attrs);
+        return static::style($content, $attrs);
     }
 
     /**
@@ -101,6 +100,23 @@ class Html
         return static::tag('script',null,$attrs);
     }
 
+    /**
+     * javascript tag
+     * @param  string $content
+     * @param array $attrs
+     * @return string
+     */
+    public static function scriptCode($content=null, array $attrs=[])
+    {
+        $attrs = array_merge( array('type' => 'text/javascript'), $attrs );
+
+        return static::tag('script',  PHP_EOL . trim($content) . PHP_EOL,$attrs);
+    }
+    public static function jsCode($content=null, array $attrs=[])
+    {
+        return static::scriptCode($content, $attrs);
+    }
+
     public static function siteIcon($url)
     {
         return <<<EOF
@@ -109,6 +125,12 @@ class Html
 EOF;
     }
 
+    /**
+     * @param $content
+     * @param $url
+     * @param array $attrs
+     * @return string
+     */
     public static function a($content, $url, array $attrs=[])
     {
         $url   = $url ? : 'javascript:void(0);';
@@ -147,21 +169,6 @@ EOF;
         return $button;
     }
 
-    /**
-     * @param string $type
-     * @param array $attrs
-     * @return string
-     * @internal param string $content
-     */
-    public static function input($type='text', array $attrs=[])
-    {
-        $attrs = array_merge(['type'=>$type], $attrs);
-
-        $input = static::tag('input',null, $attrs);
-
-        return $input;
-    }
-
 //////////////////////////////////////// form tag ////////////////////////////////////////
 
     public static function startForm($action='', $method = 'post', array $attrs=[])
@@ -177,6 +184,33 @@ EOF;
     public static function endForm()
     {
         return static::endTag('form');
+    }
+
+
+    /**
+     * @param string $type
+     * @param array $attrs
+     * @return string
+     * @internal param string $content
+     */
+    public static function input($type='text', array $attrs=[])
+    {
+        $attrs = array_merge(['type'=>$type], $attrs);
+
+        $input = static::tag('input',null, $attrs);
+
+        return $input;
+    }
+
+    /**
+     * @param string $content
+     * @param array $attrs
+     * @return string
+     * @internal param string $content
+     */
+    public static function textarea($content, array $attrs=[])
+    {
+        return static::tag('textarea', $content, $attrs);
     }
 
 //////////////////////////////////////// create tag ////////////////////////////////////////
@@ -246,7 +280,7 @@ EOF;
      * @param string $value
      * @return string
      */
-    static protected function _buildAttr($attr, $value='')
+    protected static function _buildAttr($attr, $value='')
     {
         if ( is_string($attr) ) {
 
@@ -268,55 +302,5 @@ EOF;
         }
 
         return '';
-    }
-
-//////////////////////////////////////// other ////////////////////////////////////////
-
-    /**
-     * Encodes special characters into HTML entities.
-     * @param string $text data to be encoded
-     * @return string the encoded data
-     * @see http://www.php.net/manual/en/function.htmlspecialchars.php
-     */
-    public static function encode($text, $charset= 'utf-8')
-    {
-        return htmlspecialchars($text,ENT_QUOTES, 'utf-8');
-    }
-
-    /**
-     * This is the opposite of {@link encode()}.
-     * @param string $text data to be decoded
-     * @return string the decoded data
-     * @see http://www.php.net/manual/en/function.htmlspecialchars-decode.php
-     */
-    public static function decode($text)
-    {
-        return htmlspecialchars_decode($text,ENT_QUOTES);
-    }
-    /**
-     * @form yii1
-     * @param array $data data to be encoded
-     * @return array the encoded data
-     * @see http://www.php.net/manual/en/function.htmlspecialchars.php
-     */
-    public static function encodeArray($data, $charset= 'utf-8')
-    {
-        $d = [];
-
-        foreach($data as $key=>$value) {
-            if (is_string($key)) {
-                $key = htmlspecialchars($key,ENT_QUOTES,$charset);
-            }
-
-            if (is_string($value)) {
-                $value = htmlspecialchars($value,ENT_QUOTES,$charset);
-            } elseif (is_array($value)) {
-                $value = static::encodeArray($value);
-            }
-
-            $d[$key] = $value;
-        }
-
-        return $d;
     }
 }

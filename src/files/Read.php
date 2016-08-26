@@ -44,7 +44,7 @@ abstract class Read extends File
      * 如果 $process_sections = true, 则会以 [first_section] [second_section].. 标记 分割放置到以对应标记名为键名的数组内
      * @return array|bool
      */
-    static public function ini($ini, $process_sections = false, $scanner_mode = INI_SCANNER_NORMAL)
+    public static function ini($ini, $process_sections = false, $scanner_mode = INI_SCANNER_NORMAL)
     {
         $ini = trim($ini);
 
@@ -59,7 +59,7 @@ abstract class Read extends File
         return false;
     }
 
-    static public function contents($file)
+    public static function contents($file)
     {
         if ( !file_exists($file) ) {
             throw new NotFoundException("文件{$file}不存在!");
@@ -73,7 +73,7 @@ abstract class Read extends File
     }
 
 
-    static public function json($file, $toArray=true)
+    public static function json($file, $toArray=true)
     {
         $content = self::contents($file);
 
@@ -82,7 +82,7 @@ abstract class Read extends File
         return (bool)$toArray ? json_decode($content,true) : $content;
     }
 
-    static public function allLine($file, $filter=true)
+    public static function allLine($file, $filter=true)
     {
         $contents = self::contents($file);
 
@@ -104,7 +104,7 @@ abstract class Read extends File
      * @throws FileSystemException
      * @return array             返回内容
      */
-    static public function lines($fileName, $startLine = 1, $endLine = 50, $method = 'rb')
+    public static function lines($fileName, $startLine = 1, $endLine = 50, $method = 'rb')
     {
         $content = array();
 
@@ -155,7 +155,7 @@ abstract class Read extends File
      * @throws FileSystemException
      * @return array [type]            [description]
      */
-    static public function symmetry($fileName,$current=1,$lineNum=3)
+    public static function symmetry($fileName,$current=1,$lineNum=3)
     {
         $startLine  = $current-$lineNum;
         $endLine    = $current+$lineNum;
@@ -169,7 +169,7 @@ abstract class Read extends File
     }
 
     # 得到上5行下3行的内容， lines up and down
-    static public function getLines5u3d($fileName,$current='1')
+    public static function getLines5u3d($fileName,$current='1')
     {
         $startLine  = 1;
         $endLine    = 9;

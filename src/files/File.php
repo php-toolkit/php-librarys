@@ -10,6 +10,7 @@
 
 namespace inhere\librarys\files;
 
+use inhere\librarys\exceptions\IOException;
 use inhere\librarys\helpers\StrHelper;
 use inhere\librarys\exceptions\FileSystemException;
 
@@ -17,7 +18,7 @@ use inhere\librarys\exceptions\FileSystemException;
  * Class File
  * @package inhere\librarys\files
  */
-class File extends AbstractFileSystem
+class File extends FileSystem
 {
     /**
      * 获得文件名称
@@ -91,6 +92,46 @@ class File extends AbstractFileSystem
     public static function save($filename, $data )
     {
         return file_put_contents($filename, $data)!==false;
+    }
+
+    /**
+     * @param $content
+     * @param $path
+     */
+    public static function write($content, $path)
+    {
+        $handler = static::openHandler($path);
+
+        static::writeToFile($handler, $content);
+
+        @fclose($handler);
+    }
+
+    /**
+     * @param $path
+     * @return resource
+     */
+    public function openHandler($path)
+    {
+        if (($handler = @fopen($path, 'w')) === false) {
+            throw new IOException('The file "'.$path.'" could not be opened for writing. Check if PHP has enough permissions.');
+        }
+
+        return $handler;
+    }
+
+    /**
+     * Attempts to write $content to the file specified by $handler. $path is used for printing exceptions.
+     *
+     * @param resource $handler The resource to write to.
+     * @param string $content The content to write.
+     * @param string $path The path to the file (for exception printing only).
+     */
+    public static function writeToFile($handler, $content, $path = '')
+    {
+        if (($result = @fwrite($handler, $content)) === false || ($result < strlen($content))) {
+            throw new IOException('The file "'.$path.'" could not be written to. Check your disk space and file permissions.');
+        }
     }
 
     /**

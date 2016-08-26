@@ -16,8 +16,8 @@ class ArrHelper
 {
     /**
      * 递归合并多维数组,后面的值将会递归覆盖原来的值
-     * @param  [array|null] $old [description]
-     * @param  array  $new [description]
+     * @param  array|null $old
+     * @param  array  $new
      * @return array
      */
     static public function merge($old, array $new)
@@ -44,7 +44,26 @@ class ArrHelper
     }
 
     /**
-     * 清理数组值得空白
+     * remove the $key of the $arr, and return value.
+     * @param string $key
+     * @param array $arr
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function remove($key, array &$arr, $default = null)
+    {
+        if ( isset($arr[$key]) ) {
+            $value = $arr[$key];
+            unset($arr[$key]);
+        } else {
+            $value = $default;
+        }
+
+        return $value;
+    }
+
+    /**
+     * 清理数组值的空白
      * @param array $data
      * @return array|string
      */

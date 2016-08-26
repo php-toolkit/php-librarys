@@ -44,6 +44,7 @@ abstract class FileSystem
     public static function pathFormat($dirName)
     {
         $dirName = str_ireplace('\\','/', trim($dirName));
+
         return substr($dirName,-1) === '/' ? $dirName: $dirName.'/';
     }
 

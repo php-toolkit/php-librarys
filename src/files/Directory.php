@@ -78,27 +78,32 @@ class Directory extends FileSystem
      * @param $recursive int|bool 是否包含子目录
      * @return array
      */
-    static public function files($dir, $ext=null, $recursive=false)
+    static public function simpleInfo($dir, $ext=null, $recursive=false)
     {
         $list = [];
+        $dir = self::pathFormat($dir);
+        $ext = is_array($ext) ? implode('|',$ext) : trim($ext);
 
-        if ( is_array($ext) ){
-            $ext = implode('|',$ext);
+        if (!is_dir($dir)) {
+            throw new NotFoundException('目录' . $dir . ' 不存在！');
         }
 
-        //glob()寻找与模式匹配的文件路径
+        // glob()寻找与模式匹配的文件路径 $file is pull path
         foreach( glob($dir.'*') as $file ) {
-            // $id++;
 
-            //如果没有传入$ext 则全部遍历，传入了则按传入的类型来查找
-            if ( !$ext || preg_match("/\.($ext)$/i",$file)) {
+            // 匹配文件 如果没有传入$ext 则全部遍历，传入了则按传入的类型来查找
+            if ( is_file($file) && ( !$ext || preg_match("/\.($ext)$/i",$file) ) ) {
                 //basename — 返回路径中的 文件名部分
-                $list[]          = basename($file);
-            }
+                $list[]  = basename($file);
 
-            //是否遍历子目录
-            if ( is_dir($file) && $recursive){
-                $list = array_merge($list, self::files($file,$ext,$recursive));
+            // is directory
+            } else {
+                $list[]  = '/' . basename($file);
+
+                //是否遍历子目录
+                if ( $recursive){
+                    $list = array_merge($list, self::simpleInfo($file, $ext, $recursive));
+                }
             }
         }
 
@@ -115,31 +120,26 @@ class Directory extends FileSystem
      */
     static public function getFiles($dirName, $ext=null, $recursive=0, &$list=[])
     {
-
         $dirName= self::pathFormat($dirName);
 
         if (!is_dir($dirName)) {
             throw new NotFoundException('目录'.$dirName.' 不存在！');
         }
 
-        if ( is_array($ext) ){
-            $ext = implode('|',$ext);
-        }
+        $ext = is_array($ext) ? implode('|',$ext) : trim($ext);
 
         static $id = 0;
 
         //glob()寻找与模式匹配的文件路径
-        foreach( glob($dirName.'*') as $file ) {
+        foreach( glob($dirName.'*') as $file) {
             $id++;
 
-            //如果没有传入$ext 则全部遍历，传入了则按传入的类型来查找
-            if ( !$ext || preg_match("/\.($ext)$/i",$file)) {
-                //basename — 返回路径中的 文件名部分
-                $list[$id][] = File::getInfo($file); //文件的上次访问时间
-            }
+            // 匹配文件 如果没有传入$ext 则全部遍历，传入了则按传入的类型来查找
+            if ( is_file($file) && ( !$ext || preg_match("/\.($ext)$/i",$file) ) ) {
+                $list[$id] = File::getInfo($file);
 
             //是否遍历子目录
-            if ( $recursive && is_dir($file) ){
+            } elseif ( $recursive ){
                 $list = self::getFiles($file,$ext,$recursive,$list);
             }
         }
@@ -162,11 +162,11 @@ class Directory extends FileSystem
     /**
      * ********************** 创建多级目录 **********************
      * @param $path - 目录字符串
-     * @param int $mode =0664 - 权限，默认 0664
+     * @param int $mode =0664 - 权限，默认 0775
      * @param bool $recursive
      * @return bool
      */
-    static public function make($path, $mode=0664, $recursive = true)
+    static public function make($path, $mode=0775, $recursive = true)
     {
         return (is_dir($path) || mkdir($path, $mode, $recursive)) && is_writable($path);
     }

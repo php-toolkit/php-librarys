@@ -15,11 +15,17 @@ use inhere\librarys\helpers\ObjectHelper;
  *
  * AssetManager::loadAsset($name, $assets)
  *
- * Class NamedAsset
+ * Class AssetBag
  * @package inhere\librarys\asset
  */
-class NamedAsset
+class AssetBag
 {
+    /**
+     * asset map name
+     * @var string
+     */
+    protected $name;
+
     /**
      * @var string the directory that contains the source asset files for this asset bundle.
      * A source asset file is a file that is part of your source code repository of your Web application.
@@ -92,4 +98,26 @@ class NamedAsset
     {
         ObjectHelper::loadAttrs($this, $config);
     }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        if (!$this->name) {
+            $this->name = static::class;
+        }
+
+        return $this->name;
+    }
+
+    /**
+     * @param string $name
+     */
+    public function setName($name)
+    {
+        $this->name = trim($name);
+    }
+
+
 }

@@ -10,6 +10,7 @@
 
 namespace inhere\librarys\files;
 
+use inhere\librarys\exceptions\FileNotFoundException;
 use inhere\librarys\exceptions\IOException;
 use inhere\librarys\helpers\StrHelper;
 use inhere\librarys\exceptions\FileSystemException;
@@ -140,39 +141,28 @@ class File extends FileSystem
      * @param $fileData - 数组：要创建的多个文件名组成,含文件的完整路径
      * @param $append   - 是否以追加的方式写入数据 默认false
      * @param $mode=0777 - 权限，默认0775
-     *  ex: $fileData = array(
-     *          'file_name'     => 'content',
-     *           'case.html"'   => 'content' ,
-     *       );
+     *  eg: $fileData = array(
+     *      'file_name'   => 'content',
+     *      'case.html'   => 'content' ,
+     *  );
      **/
     public static function createAndWrite(array $fileData = [],$append=false,$mode=0664)
     {
         foreach($fileData as $file=>$content) {
-            $dir = dirname($file);                     //文件所在目录
-
             //检查目录是否存在，不存在就先创建（多级）目录
-            if (!is_dir($dir)) {
-                Directory::create($dir,$mode);
-            }
+            Directory::create(dirname($file),$mode);
 
-            $fileName = basename($file); //文件名
+            //$fileName = basename($file); //文件名
 
             //检查文件是否存在
-            if (!is_file($file)) {
+            if ( !is_file($file) ) {
                 file_put_contents($file,$content,LOCK_EX);
                 @chmod($file,$mode);
-            } else {
-                if ($append) {
-                    file_put_contents($file,$content,FILE_APPEND | LOCK_EX);
-                    @chmod($file,$mode);
-                } else {
-                    // \Trigger::notice('目录'.$dir.'下：'.$fileName." 文件已存在！将跳过".$fileName."的创建") ;
-                    continue;
-                }
-
+            } elseif ($append) {
+                file_put_contents($file,$content,FILE_APPEND | LOCK_EX);
+                @chmod($file,$mode);
             }
         }
-
     }
 
     /**
@@ -262,7 +252,7 @@ class File extends FileSystem
                 if (is_file($value)) {
                     $data .= trim( file_get_contents($value) );
                 } else {
-                    \Trigger::error('文件'.$value.'不存在！！');
+                    throw new FileNotFoundException('文件'.$value.'不存在！！');
                 }
             }
         }

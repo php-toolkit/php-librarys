@@ -25,12 +25,12 @@ use inhere\librarys\StdBase;
 class AssetManager extends StdBase
 {
     /**
-     * css or js file link tag
+     * asset bag list
      * @var array
      *
      * e.g:
      *
-     * $assets  = [
+     * $bags  = [
      *  self::POS_BODY => [
      *
      *  ],
@@ -39,9 +39,16 @@ class AssetManager extends StdBase
      *  ],
      * ]
      */
-    protected $assets  = []; //static
+    protected $bags  = []; //static
 
     /**
+     * asset file list
+     * @var array
+     */
+    protected $files = [];
+
+    /**
+     * asset code list
      * css or js code
      * @var array
      */
@@ -56,11 +63,6 @@ class AssetManager extends StdBase
      * @var bool
      */
     protected $mergeJsCode  = true;
-
-    // todo unused ...
-//    protected  $locked  = [
-//        ''
-//    ];
 
     /**
      * 资源基础URL
@@ -102,9 +104,9 @@ class AssetManager extends StdBase
         'data-source' => 'app-shell-load',
     ];
 
-    const POS_HEAD      = 'head';       # 在解析视图数据时放到</head>之前的位置
-    const POS_BODY      = 'body';       # 在解析视图数据时放到<body>之后的位置
-    const POS_END       = 'end';        # 在解析视图数据时放到</body>之前的位置
+    const POS_HEAD      = 1;       # 在解析视图数据时放到</head>之前的位置
+    const POS_BODY      = 2;       # 在解析视图数据时放到<body>之后的位置
+    const POS_END       = 3;       # 在解析视图数据时放到</body>之前的位置
 
     protected $headNode = '</head>';
     protected $bodyNode = '<body>';
@@ -127,101 +129,84 @@ class AssetManager extends StdBase
      *
      * e.g.
      *
-     * $manager->loadAsset('home-page',[
-     *  'css' => [
+     * $manager->loadAsset('homePage',[
+     *   'css' => [
      *          'xx/zz.css',
      *      ],
-     *  'js' => [
+     *   'js' => [
      *          'xx/zz.css',
      *      ],
-     *  'depends' => [''] // 当前资源的依赖. 依赖资源会在当前资源之前加载
-     * ],
-     * [
-     *      'cssOptions' => [],
-     *      'jsOptions'  => [],
+     *   'depends'    => [''] // 当前资源的依赖. 依赖资源会在当前资源之前加载
+     *   'cssOptions' => [],
+     *   'jsOptions'  => [],
      * ]);
      *
-     * @param string $name define zhe asset name. 当前注册资源添加命名标记
-     * @param array|NamedAsset $assets 要添加的资源
-     * @param array $options 选项
+     * @param array|AssetBag $name define zhe asset name. 当前注册资源添加命名标记
+     * @param array $config 要添加的资源以及相关选项
      * @return $this
      */
-    public function loadAsset($name, array $assets = [], array $options = [])
+    public function loadAsset($name, array $config = [])
     {
+        if ($name instanceof AssetBag) {
+            $this->bags[$name->getName()] = $name;
+        } else {
+            $asset = new AssetBag($config);
+            $asset->setName($name);
+
+            $this->bags[$asset->getName()] = $asset;
+        }
+
         return $this;
     }
 
     /**
-     * [addJsFile 注册添加 javascript 文件, 引入相关标签]
+     * [addJsFile 注册添加 javascript 文件
      * @param string|array $asset
-     * @param string $position
+     * @param array $options
+     * @param null|string $key
      * @return mixed
      */
-    public function addJsFile($asset, $position=self::POS_END)
+    public function addJsFile($asset, array $options = [], $key = null)
     {
-        return $this->_loggingAsset($asset, self::ASSET_JS_FILE , $position);
+        if ( !isset($options['position']) ) {
+            $options['position'] = self::POS_END;
+        }
+
+        return $this->loggingFileAsset($asset, self::ASSET_JS_FILE , $options, $key);
     }
 
     /**
-     * [addCssFile 注册添加 css style 文件, 引入相关标签]
+     * [addCssFile 注册添加 css style 文件
      * @param string|array $asset
-     * @param string $position
+     * @param array $options
+     * @param null|string $key
      * @return mixed
      */
-    public function addCssFile($asset, $position=self::POS_HEAD)
+    public function addCssFile($asset, array $options = [], $key = null)
     {
-        return $this->_loggingAsset($asset, self::ASSET_CSS_FILE, $position);
+        if ( !isset($options['position']) ) {
+            $options['position'] = self::POS_HEAD;
+        }
+
+        return $this->loggingFileAsset($asset, self::ASSET_CSS_FILE, $options, $key);
     }
 
     /**
-     * [addJs 注册添加 javascript 内容到视图数据]
-     * @param string $scriptCode
-     * @param string $position
-     * @internal param $ [type] $scriptCode
-     * @internal param $ [type] $position
-     * @return mixed
-     */
-    public function addJs($scriptCode, $position=self::POS_END)
-    {
-        return $this->_loggingAsset($scriptCode, self::ASSET_JS, $position);
-    }
-
-    /**
-     * [addCss 注册添加 css style code内容到视图数据]
-     * @param $styleCode
-     * @param string $position
-     * @return mixed
-     */
-    public function addCss($styleCode, $position=self::POS_HEAD)
-    {
-        return $this->_loggingAsset($styleCode, self::ASSET_CSS, $position);
-    }
-
-    /**
-     * [_loggingAsset description]
+     * [loggingAsset description]
      * @param  mixed $assets
      * @param  string $type
-     * @param  string $pos
      * @param array $options
+     * @param null|string $key
      * @return AssetManager
      */
-    protected function _loggingAsset($assets, $type=self::ASSET_CSS_FILE, $pos=self::POS_HEAD, array $options = [])
+    protected function loggingFileAsset($assets, $type=self::ASSET_CSS_FILE, array $options = [], $key = null)
     {
         if (!$assets) {
             throw new InvalidArgumentException('The 1th param [$assets] is can\'t empty.');
         }
 
-        $pos       = trim($pos);
-        $positions = $this->getPositions();
-        $types     = $this->getAssetTypes();
-
-        if ( !in_array($pos, $positions ) ) {
-            throw new InvalidArgumentException('资源注册位置允许设置 ['.implode(', ', $positions).'] 中的一个。');
-        }
-
-        if ( !in_array($type, $types ) ) {
-            throw new InvalidArgumentException('资源类型可选 ['.implode(', ', $types).'] 中的一个。');
-        }
+        $pos = trim($options['position']);
+        $this->checkTypeAndPosition($type, $pos);
 
         $assets = (array) $assets;
 
@@ -247,6 +232,62 @@ class AssetManager extends StdBase
         }
 
         return $this;
+    }
+
+    /**
+     * [addJs 注册添加 javascript 内容到视图数据]
+     * @param string $scriptCode
+     * @param array $options
+     * @return mixed
+     */
+    public function addJs($scriptCode, array $options = [])
+    {
+        if ( !isset($options['position']) ) {
+            $options['position'] = self::POS_END;
+        }
+
+        return $this->loggingCodeAsset($scriptCode, self::ASSET_JS, $options);
+    }
+
+    /**
+     * [addCss 注册添加 css style code内容到视图数据]
+     * @param $styleCode
+     * @param array $options
+     * @return mixed
+     */
+    public function addCss($styleCode, array $options = [])
+    {
+        if ( !isset($options['position']) ) {
+            $options['position'] = self::POS_HEAD;
+        }
+
+        return $this->loggingCodeAsset($styleCode, self::ASSET_CSS, $options);
+    }
+
+
+    /**
+     * @param $assets
+     * @param string $type
+     * @param array $options
+     * @return $this
+     */
+    protected function loggingCodeAsset($assets, $type=self::ASSET_CSS_FILE, array $options = [])
+    {
+        return $this;
+    }
+
+    protected function checkTypeAndPosition($type, $pos)
+    {
+        $positions = $this->getPositions();
+        $types     = $this->getAssetTypes();
+
+        if ( !in_array($pos, $positions ) ) {
+            throw new InvalidArgumentException('资源注册位置允许设置 ['.implode(', ', $positions).'] 中的一个。');
+        }
+
+        if ( !in_array($type, $types ) ) {
+            throw new InvalidArgumentException('资源类型可选 ['.implode(', ', $types).'] 中的一个。');
+        }
     }
 
     /**

@@ -11,6 +11,7 @@
 namespace inhere\librarys\files;
 
 use inhere\librarys\exceptions\FileNotFoundException;
+use inhere\librarys\exceptions\FileReadException;
 use inhere\librarys\exceptions\IOException;
 use inhere\librarys\helpers\StrHelper;
 use inhere\librarys\exceptions\FileSystemException;
@@ -166,36 +167,43 @@ class File extends FileSystem
     }
 
     /**
-     * @param $url
-     * @param bool|false $use_include_path
+     * @param string $file a file path or url path
+     * @param bool|false $useIncludePath
      * @param null $streamContext
-     * @param int $curl_timeout
+     * @param int $curlTimeout
      * @return bool|mixed|string
      */
-    public static function get($url, $use_include_path = false, $streamContext = null, $curl_timeout = 5)
+    public static function getContents($file, $useIncludePath = false, $streamContext = null, $curlTimeout = 5)
     {
-        return static::file_get_contents($url, $use_include_path , $streamContext , $curl_timeout);
-    }
-    public static function file_get_contents($url, $use_include_path = false, $streamContext = null, $curl_timeout = 5)
-    {
-        if ($streamContext == null && preg_match('/^https?:\/\//', $url)) {
-            $streamContext = @stream_context_create(array('http' => array('timeout' => $curl_timeout)));
+        if ($streamContext == null && preg_match('/^https?:\/\//', $file)) {
+            $streamContext = @stream_context_create(array('http' => array('timeout' => $curlTimeout)));
         }
 
-        if (in_array(ini_get('allow_url_fopen'), array('On', 'on', '1')) || !preg_match('/^https?:\/\//', $url)) {
-            return @file_get_contents($url, $use_include_path, $streamContext);
-        } elseif (function_exists('curl_init')) {
+        if (in_array(ini_get('allow_url_fopen'), ['On', 'on', '1']) || !preg_match('/^https?:\/\//', $file)) {
+            if ( !file_exists($file) ) {
+                throw new FileNotFoundException("File [{$file}] don't exists!");
+            }
+
+            if (!is_readable($file)) {
+                throw new FileReadException("File [{$file}] is not readable！");
+            }
+
+            return @file_get_contents($file, $useIncludePath, $streamContext);
+        }
+
+        // fetch remote content by url
+        if (function_exists('curl_init')) {
             $curl = curl_init();
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($curl, CURLOPT_URL, $url);
+            curl_setopt($curl, CURLOPT_URL, $file);
             curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5);
-            curl_setopt($curl, CURLOPT_TIMEOUT, $curl_timeout);
+            curl_setopt($curl, CURLOPT_TIMEOUT, $curlTimeout);
             curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 
             if ($streamContext != null) {
                 $opts = stream_context_get_options($streamContext);
 
-                if (isset($opts['http']['method']) && StrHelper::strtolower($opts['http']['method']) == 'post') {
+                if (isset($opts['http']['method']) && strtolower($opts['http']['method']) == 'post') {
                     curl_setopt($curl, CURLOPT_POST, true);
 
                     if (isset($opts['http']['content'])) {
@@ -214,13 +222,26 @@ class File extends FileSystem
         return false;
     }
 
+    /**
+     * @param $file
+     * @param $target
+     */
     public static function move($file, $target)
     {
-        Directory::create(dirname($target));
+        Directory::mkdir(dirname($target));
 
         if ( static::copy($file, $target) ) {
             unlink($file);
         }
+    }
+
+    /**
+     * @param $filename
+     * @return bool
+     */
+    public static function delete($filename)
+    {
+        return self::exists($filename) && unlink($filename);
     }
 
     /**
@@ -233,13 +254,13 @@ class File extends FileSystem
     {
         if (is_null($streamContext) && !preg_match('/^https?:\/\//', $source)) {
             if (!is_file($source)) {
-                throw new FileSystemException("file don't exists. File: $source");
+                throw new FileSystemException("Source file don't exists. File: $source");
             }
 
             return copy($source, $destination);
         }
 
-        return @file_put_contents($destination, self::file_get_contents($source, false, $streamContext));
+        return @file_put_contents($destination, self::getContents($source, false, $streamContext));
     }
 
     public static function combine($inFile, $outFile)
@@ -288,7 +309,7 @@ class File extends FileSystem
      * @param  boolean $deleteSpace [description]
      * @return void [type]               [description]
      */
-    function margePhp($fileArr,$outFile,$deleteSpace=true)
+    public static function margePhp($fileArr,$outFile,$deleteSpace=true)
     {
         $savePath = dirname($outFile);
 
@@ -319,11 +340,4 @@ class File extends FileSystem
         $data = "<?php ".$data."?>";
         file_put_contents($outFile, $data);
     }
-
-    public static function delete($filename)
-    {
-        return self::exists($filename) && unlink($filename);
-    }
-
-
 }

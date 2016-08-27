@@ -67,7 +67,7 @@ class CurlHelper
 
         $imgData = self::execute($ch);
 
-        Directory::make($savePath);
+        Directory::create($savePath);
 
         file_put_contents($imgFile, $imgData);
 

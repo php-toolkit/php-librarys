@@ -15,16 +15,29 @@ namespace inhere\librarys\helpers;
 class ArrHelper
 {
     /**
+     * @param mixed $array
+     * @return \Traversable
+     */
+    public static function toIterator($array)
+    {
+        if (!$array instanceof \Traversable) {
+            $array = new \ArrayObject(is_array($array) ? $array : array($array));
+        }
+
+        return $array;
+    }
+    
+    /**
      * 递归合并多维数组,后面的值将会递归覆盖原来的值
      * @param  array|null $old
      * @param  array  $new
      * @return array
      */
-    static public function merge($old, array $new)
+    public static function merge($old, array $new)
     {
         return self::recursiveMerge($old, $new);
     }
-    static public function recursiveMerge($old, array $new)
+    public static function recursiveMerge($old, array $new)
     {
         if (!$old || !is_array($old)) {
             return $new;
@@ -67,7 +80,7 @@ class ArrHelper
      * @param array $data
      * @return array|string
      */
-    static public function clearSpace(array $data)
+    public static function valueTrim(array $data)
     {
         if (is_scalar($data)) {
             return trim($data);
@@ -86,7 +99,7 @@ class ArrHelper
      * @param string $class
      * @return mixed
      */
-    static public function toObject(array $array, $class = '\stdClass')
+    public static function toObject(array $array, $class = '\stdClass')
     {
         if (!is_array($array)) {
             return $array;
@@ -107,7 +120,7 @@ class ArrHelper
         return $object;
     }
 
-    static public function arrayToObject($array, $class = '\stdClass')
+    public static function arrayToObject($array, $class = '\stdClass')
     {
         return self::toObject($array, $class);
     }
@@ -123,7 +136,7 @@ class ArrHelper
      * @param string $string
      * @return string [type]            [description]
      */
-    static public function toString($array,$length=800,$cycles=6,$showKey=true,$addMark = false,$separator=', ',$string = '')
+    public static function toString($array,$length=800,$cycles=6,$showKey=true,$addMark = false,$separator=', ',$string = '')
     {
 
         if (!is_array($array) || empty($array)) {
@@ -158,12 +171,12 @@ class ArrHelper
         return trim($string,$separator);
     }
 
-    static public function toStringNoKey($array,$length=800,$cycles=6,$showKey=false,$addMark = true,$separator=', ')
+    public static function toStringNoKey($array,$length=800,$cycles=6,$showKey=false,$addMark = true,$separator=', ')
     {
         return static::toString( $array, $length, $cycles, $showKey, $addMark, $separator );
     }
 
-    static public function getFormatString($array,$length=400)
+    public static function getFormatString($array,$length=400)
     {
         $string = var_export($array, true);
 
@@ -180,7 +193,7 @@ class ArrHelper
         return $string;
     }
 
-    static public function toLimitOut($array) //, $cycles=1
+    public static function toLimitOut($array) //, $cycles=1
     {
         if (!is_array($array)) {
             return $array;
@@ -215,7 +228,7 @@ class ArrHelper
      * @param $arr
      * @return bool
      */
-    static public function keyExists($key, $arr)
+    public static function keyExists($key, $arr)
     {
         return array_key_exists(strtolower($key), array_change_key_case($arr));
     }
@@ -226,7 +239,7 @@ class ArrHelper
      * @param int $toUpper    1 值大写 0 值小写
      * @return array
      */
-    static public function changeValueCase($arr, $toUpper = 1)
+    public static function changeValueCase($arr, $toUpper = 1)
     {
         $function = $toUpper ? 'strtoupper' : 'strtolower';
         $newArr   = array(); //格式化后的数组
@@ -243,12 +256,12 @@ class ArrHelper
         return $newArr;
     }
 
-    static public function valueToLower($arr)
+    public static function valueToLower($arr)
     {
         return self::changeValueCase($arr);
     }
 
-    static public function valueToUpper($arr)
+    public static function valueToUpper($arr)
     {
         return self::changeValueCase($arr,1);
     }
@@ -261,7 +274,7 @@ class ArrHelper
      * 注： 不分类型， 区分大小写  2 == '2' ‘a' != 'A'
      * @return bool
      */
-    static public function allExists($check, array $sampleArr)
+    public static function valueExistsAll($check, array $sampleArr)
     {
         // 以逗号分隔的会被拆开，组成数组
         if (is_string($check)) {
@@ -279,7 +292,7 @@ class ArrHelper
      * @param array $sampleArr 只能检查一维数组
      * @return bool
      */
-    static public function hasOne($check, array $sampleArr)
+    public static function valueExistsOne($check, array $sampleArr)
     {
         // 以逗号分隔的会被拆开，组成数组
         if (is_string($check)) {
@@ -298,22 +311,11 @@ class ArrHelper
      * @param bool $type 是否同时验证类型
      * @return bool | string 不存在的会返回 检查到的 字段，判断时 请使用 ArrHelper::existsAll($need,$arr)===true 来验证是否全存在
      */
-    static public function existsAll($need,$arr,$type=false)
+    public static function existsAll($need,$arr,$type=false)
     {
-        return self::inArray($need,$arr,$type);
-    }
-
-    static public function valueExistsAll($need,$arr,$type=false)
-    {
-        return self::inArray($need,$arr,$type);
-    }
-
-    static public function inArray($need,$arr,$type=false)
-    {
-
         if (is_array($need)) {
             foreach($need as $v) {
-                self::inArray($v,$arr,$type);
+                self::existsAll($v,$arr,$type);
             }
 
         } else {
@@ -321,7 +323,7 @@ class ArrHelper
             #以逗号分隔的会被拆开，组成数组
             if ( strpos($need,',')!==false ) {
                 $need = explode(',',$need);
-                self::inArray($need,$arr,$type);
+                self::existsAll($need,$arr,$type);
             } else {
                 $arr  = self::valueToLower($arr);//小写
                 $need = strtolower(trim($need));//小写
@@ -344,21 +346,11 @@ class ArrHelper
      * @param bool $type 是否同时验证类型
      * @return bool
      */
-    static public function existsOne($need,$arr,$type=false)
-    {
-        return self::inArrayOne($need,$arr,$type);
-    }
-
-    static public function valueExistsOne($need,$arr,$type=false)
-    {
-        return self::inArrayOne($need,$arr,$type);
-    }
-
-    static public function inArrayOne($need,$arr,$type=false)
+    public static function existsOne($need,$arr,$type=false)
     {
         if (is_array($need)) {
             foreach($need as $v) {
-                $result = self::inArrayOne($v,$arr,$type);
+                $result = self::existsOne($v,$arr,$type);
                 if ($result) {
                     return true;
                 }
@@ -366,7 +358,7 @@ class ArrHelper
         } else {
             if ( strpos($need,',')!==false ) {
                 $need = explode(',',$need);
-                return self::inArray($need,$arr,$type);
+                return self::existsOne($need,$arr,$type);
             } else {
                 $arr  = self::changeValueCase($arr);//小写
                 $need = strtolower($need);//小写
@@ -386,7 +378,7 @@ class ArrHelper
      * @param null $indexKey 可选 用相同的列的值作为新数组的键值
      * @return array
      */
-    static public function columns($input, $columnKey, $indexKey=null)
+    public static function columns($input, $columnKey, $indexKey=null)
     {
         if ( function_exists('array_column') ) {
             return array_column($input, $columnKey, $indexKey);

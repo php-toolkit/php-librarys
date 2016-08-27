@@ -10,6 +10,7 @@
 namespace inhere\librarys\files;
 
 use DirectoryIterator;
+use inhere\librarys\exceptions\FileSystemException;
 use inhere\librarys\exceptions\NotFoundException;
 
 /**
@@ -18,13 +19,35 @@ use inhere\librarys\exceptions\NotFoundException;
  */
 class Directory extends FileSystem
 {
+    //判断文件夹是否为空
+    public static function isEmpty($dir)
+    {
+        $handler = opendir($dir);
+
+        if (false === $handler) {
+            throw new FileSystemException("Open the dir failure! DIR: $dir");
+        }
+
+        while ( ($file = readdir($handler)) !== false ) {
+
+            if( $file != '.' && $file != '..' ) {
+                closedir($handler);
+                return true;
+            }
+        }
+
+        closedir($handler);
+
+        return false;
+    }
+
     /**
      * 查看一个目录中的所有文件和子目录
      * @param $dirName
      * @throws NotFoundException
      * @return array|void
      */
-    static public function ls($dirName)
+    public static function ls($dirName)
     {
         $list = [];
 
@@ -42,7 +65,7 @@ class Directory extends FileSystem
     }
 
     //只获得目录结构
-    static public function getList( $dirName, $pid=0, $son=0, $list = [] )
+    public static function getList( $dirName, $pid=0, $son=0, $list = [] )
     {
         $dirName = self::pathFormat($dirName);
 
@@ -78,7 +101,7 @@ class Directory extends FileSystem
      * @param $recursive int|bool 是否包含子目录
      * @return array
      */
-    static public function simpleInfo($dir, $ext=null, $recursive=false)
+    public static function simpleInfo($dir, $ext=null, $recursive=false)
     {
         $list = [];
         $dir = self::pathFormat($dir);
@@ -112,13 +135,63 @@ class Directory extends FileSystem
 
     /**
      * 获得目录下的文件，可选择类型、是否遍历子文件夹
+     * @param string $path string 目标目录
+     * @param $ext array('css','html','php') css|html|php
+     * @param $recursive int|bool 是否包含子目录
+     * @param array $list
+     * @return array
+     */
+    public static function getFiles($path, $ext=null, $recursive=0, &$list=[])
+    {
+        $path= self::pathFormat($path);
+
+        if ( !is_dir($path) ) {
+            throw new NotFoundException('目录'.$path.' 不存在！');
+        }
+
+        $ext = is_array($ext) ? implode('|',$ext) : trim($ext);
+
+        //glob()寻找与模式匹配的文件路径
+        foreach( glob($path.'*') as $file) {
+
+            // 匹配文件 如果没有传入$ext 则全部遍历，传入了则按传入的类型来查找
+            if ( is_file($file) &&
+                ( !$ext || preg_match("/\.($ext)$/i",$file) )
+            ) {
+                $list[] = str_replace($path,'',$file);
+
+            //是否遍历子目录
+            } elseif ( $recursive ){
+                $list = self::getFiles($file,$ext,$recursive,$list);
+            }
+        }
+
+        return $list;
+    }
+
+    /**
+     * @param $dir
+     * @param array $options more {@see \inhere\librarys\files\DirectoryFiles}
+     * @param bool|false $recursive
+     *
+     * @return array
+     */
+    public static function findFiles($dir, array $options = [], $recursive = false)
+    {
+        $df = new FileFinder($options);
+
+        return $df->findAll($recursive, $dir)->getFiles();
+    }
+
+    /**
+     * 获得目录下的文件以及详细信息，可选择类型、是否遍历子文件夹
      * @param $dirName string 目标目录
      * @param $ext array('css','html','php') css|html|php
      * @param $recursive int|bool 是否包含子目录
      * @param array $list
      * @return array
      */
-    static public function getFiles($dirName, $ext=null, $recursive=0, &$list=[])
+    public static function getFilesInfo($dirName, $ext=null, $recursive=0, &$list=[])
     {
         $dirName= self::pathFormat($dirName);
 
@@ -140,7 +213,7 @@ class Directory extends FileSystem
 
             //是否遍历子目录
             } elseif ( $recursive ){
-                $list = self::getFiles($file,$ext,$recursive,$list);
+                $list = self::getFilesInfo($file,$ext,$recursive,$list);
             }
         }
 
@@ -154,25 +227,13 @@ class Directory extends FileSystem
      * @param bool $recursive
      * @return bool
      */
-    static public function create($path, $mode=0664, $recursive = true)
-    {
-        return self::make($path, $mode, $recursive);
-    }
-
-    /**
-     * ********************** 创建多级目录 **********************
-     * @param $path - 目录字符串
-     * @param int $mode =0664 - 权限，默认 0775
-     * @param bool $recursive
-     * @return bool
-     */
-    static public function make($path, $mode=0775, $recursive = true)
+    public static function create($path, $mode=0775, $recursive = true)
     {
         return (is_dir($path) || mkdir($path, $mode, $recursive)) && is_writable($path);
     }
 
     //复制目录内容
-    static public function copy($oldDir, $newDir)
+    public static function copy($oldDir, $newDir)
     {
         $oldDir = self::pathFormat($oldDir);
         $newDir = self::pathFormat($newDir);
@@ -208,12 +269,12 @@ class Directory extends FileSystem
      * @param  boolean $type [description]
      * @return bool
      */
-    static public function delete($dirName,$type=true)
+    public static function delete($dirName,$type=true)
     {
         $dirPath = self::pathFormat($dirName);
 
-        if ( !is_dir($dirPath)) {
-            return false;
+        if ( is_file($dirPath) ) {
+            return unlink($dirPath);
         }
 
         foreach(glob($dirPath.'*') as $v) {
@@ -226,7 +287,7 @@ class Directory extends FileSystem
     }
 
     // 比较文件路径
-    static public function comparePath($newPath,$oldPath)
+    public static function comparePath($newPath,$oldPath)
     {
         $oldDirName  = basename(rtrim($oldPath,'/'));
         $newPath_arr = explode('/', rtrim($newPath,'/'));
@@ -265,13 +326,5 @@ class Directory extends FileSystem
         $dirStr = $dirStr.'/'.$oldDirName.'/Gee.php\'';
 
         return $dirStr;
-    }
-
-    // TODO ....
-    public function yaSuo($dirFile) {
-        # code...
-    }
-    public function jieYa($file) {
-        # code...
     }
 }

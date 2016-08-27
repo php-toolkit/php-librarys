@@ -12,6 +12,8 @@ use inhere\librarys\exceptions\FileSystemException;
 use inhere\librarys\exceptions\InvalidArgumentException;
 use inhere\librarys\files\Directory;
 use inhere\librarys\files\File;
+use inhere\librarys\files\FileFinder;
+use inhere\librarys\helpers\ArrHelper;
 use inhere\librarys\helpers\ObjectHelper;
 use inhere\librarys\StdBase;
 
@@ -33,31 +35,6 @@ class AssetPublisher extends StdBase
      * @var string
      */
     protected $publishPath = '';
-
-    /**
-     * 包含的可发布的 文件 文件扩展匹配 目录
-     * 比 {@see $exlude} 优先级更高
-     * @var array
-     */
-    protected $include = [
-        'file' => ['README.md'],
-        'ext' => [
-            'js','css',
-            'ttf','svg', 'eot', 'woff', 'woff2',
-            'png', 'jpg', 'jpeg', 'gif', 'ico',
-        ],
-        'dir' => [], // ['dist'],
-    ];
-
-    /**
-     * 排除发布的 文件 文件扩展匹配 目录
-     * @var array
-     */
-    protected $exclude = [
-        'file' => [ '.gitignore', 'LICENSE', 'LICENSE.txt' ],
-        'ext' => [ 'swp', 'json'],
-        'dir' => ['.git' , 'src'],
-    ];
 
     /**
      * @var array
@@ -85,9 +62,52 @@ class AssetPublisher extends StdBase
         'skipped' => [], // target file existing.
     ];
 
+    /**
+     * @var FileFinder
+     */
+    protected $finder;
+
     public function __construct(array $config = [])
     {
+        $include = ArrHelper::remove('include', $config, $this->defaultOptions()['include']);
+        $exclude = ArrHelper::remove('exclude', $config, $this->defaultOptions()['exclude']);
+
+        $this->finder = new FileFinder([
+            'include' => $include,
+            'exclude' => $exclude,
+        ]);
+
         ObjectHelper::loadAttrs($this, $config);
+    }
+
+    public function defaultOptions()
+    {
+        return [
+            /**
+             * 包含的可发布的 文件 文件扩展匹配 目录
+             * 比 {@see $exlude} 优先级更高
+             * @var array
+             */
+            'include' => [
+                'file' => ['README.md'],
+                'ext' => [
+                    'js','css',
+                    'ttf','svg', 'eot', 'woff', 'woff2',
+                    'png', 'jpg', 'jpeg', 'gif', 'ico',
+                ],
+                'dir' => [], // ['dist'],
+            ],
+
+            /**
+             * 排除发布的 文件 文件扩展匹配 目录
+             * @var array
+             */
+            'exclude' => [
+                'file' => [ '.gitignore', 'LICENSE', 'LICENSE.txt' ],
+                'ext' => [ 'swp', 'json'],
+                'dir' => ['.git' , 'src'],
+            ]
+        ];
     }
 
     /**
@@ -124,19 +144,19 @@ class AssetPublisher extends StdBase
 
     /**
      * target path is {@see $publishPath} + $path ( is param of the method `source($path)` )
-     * @param bool|false $replace
+     * @param bool|false $override
      * @return $this
      */
-    public function publish($replace = false)
+    public function publish($override = false)
     {
         // publish files
         foreach ($this->publishAssets['files'] as $from => $to) {
-            $this->publishFile($from, $to, $replace);
+            $this->publishFile($from, $to, $override);
         }
 
         // publish directory
         foreach ($this->publishAssets['dirs'] as $fromDir => $toDir) {
-            $this->publishDir($fromDir, $toDir, $replace);
+            $this->publishDir($fromDir, $toDir, $override);
         }
 
         return $this;
@@ -145,14 +165,14 @@ class AssetPublisher extends StdBase
     /**
      * @param string $from The is full file path
      * @param string $to  The is a relative path
-     * @param bool|false $replace
+     * @param bool|false $override
      */
-    public function publishFile($from, $to, $replace = false)
+    public function publishFile($from, $to, $override = false)
     {
         $targetFile = Directory::isAbsPath($to) ? $to : $this->publishPath . '/' . $to;
         //$targetFile = $to . '/' . basename($from);
 
-        if (!file_exists($targetFile) || $replace) {
+        if (!file_exists($targetFile) || $override) {
             if ( !Directory::create(dirname($targetFile), 0775) ) {
                 throw new FileSystemException('Create dir path [' . dirname($targetFile). '] failure.');
             }
@@ -168,62 +188,43 @@ class AssetPublisher extends StdBase
     /**
      * @param $fromDir
      * @param $toDir
-     * @param bool|false $replace
+     * @param bool|false $override
      */
-    public function publishDir($fromDir, $toDir, $replace = false)
+    public function publishDir($fromDir, $toDir, $override = false)
     {
-        $files = $this->collectFiles($fromDir, 1);
+        $files = $this->finder->findAll(1,$fromDir)->getFiles();
         $toDir = Directory::isAbsPath($toDir) ? $toDir : $this->publishPath . '/' . $toDir;
-        //} else {
-            // $toDir = $this->publishPath;
-        //}
 
         // publish files ...
         foreach ($files as $file) {
-            $this->publishFile($fromDir . $file, $toDir . $file, $replace);
+            $this->publishFile($fromDir . '/' . $file, $toDir . '/'. $file, $override);
         }
-    }
-
-    /**
-     * @param $dir
-     * @param bool|false $recursive
-     * @param string $basePath
-     * @return array
-     */
-    protected function collectFiles($dir, $recursive = false, $basePath = '/')
-    {
-        $dir .= '/';
-        $list = [];
-        $ext   = implode('|',$this->include['ext']);
-        $noExt = implode('|',$this->exclude['ext']);
-
-        //glob()寻找与模式匹配的文件路径
-        foreach( glob($dir.'*') as $file) {
-            $name = basename($file);
-
-            // 匹配文件 如果没有传入$ext 则全部遍历，传入了则按传入的类型来查找
-            if ( is_file($file) && (
-                    // check include ...
-                    ( in_array($name, $this->include['file']) || preg_match("/\.($ext)$/i", $name) ) ||
-
-                    // check exclude ...
-                    ( !in_array($name, $this->exclude['file']) && !preg_match("/\.($noExt)$/i", $name) )
-                )) {
-                $list[] = $basePath .  $name;
-
-                // 是否遍历子目录 并检查子目录是否在可发布列表
-            } elseif (
-                $recursive && is_dir($file) &&
-                ( in_array($name, $this->include['dir']) || !in_array($name, $this->exclude['dir']) )
-            ){
-                $list = array_merge($list, $this->collectFiles($file, $recursive, $basePath . $name . '/'));
-            }
-        }
-
-        return $list;
     }
 
     ////////////////////////////// getter/setter method //////////////////////////////
+
+    /**
+     * @return FileFinder
+     */
+    public function getFinder()
+    {
+        if (!$this->finder) {
+            $this->finder = new FileFinder([
+                'include' => $this->defaultOptions()['include'],
+                'exclude' => $this->defaultOptions()['exclude'],
+            ]);
+        }
+
+        return $this->finder;
+    }
+
+    /**
+     * @param FileFinder $finder
+     */
+    public function setFinder(FileFinder $finder)
+    {
+        $this->finder = $finder;
+    }
 
     /**
      * @return string
@@ -277,47 +278,5 @@ class AssetPublisher extends StdBase
     public function getPublishAssets()
     {
         return $this->publishAssets;
-    }
-
-    /**
-     * @param string $key
-     * @return array
-     */
-    public function getInclude($key = '')
-    {
-        if ( !$key || !is_string($key)) {
-            return $this->include;
-        }
-
-        return isset($this->include[$key]) ? $this->include[$key] : [];
-    }
-
-    /**
-     * @param array $include
-     */
-    public function setInclude(array $include)
-    {
-        $this->include = $include;
-    }
-
-    /**
-     * @param string $key
-     * @return array
-     */
-    public function getExclude($key = '')
-    {
-        if ( !$key || !is_string($key)) {
-            return $this->exclude;
-        }
-
-        return isset($this->exclude[$key]) ? $this->exclude[$key] : [];
-    }
-
-    /**
-     * @param array $exclude
-     */
-    public function setExclude(array $exclude)
-    {
-        $this->exclude = $exclude;
     }
 }

@@ -10,9 +10,7 @@
 
 namespace inhere\librarys\files;
 
-use app\extensions\exceptions\FileReadException;
 use app\extensions\exceptions\FileSystemException;
-use inhere\librarys\exceptions\NotFoundException;
 
 /**
  * Class Read
@@ -59,32 +57,28 @@ abstract class Read extends File
         return false;
     }
 
-    public static function contents($file)
-    {
-        if ( !file_exists($file) ) {
-            throw new NotFoundException("文件{$file}不存在!");
-        }
-
-        if (!is_readable($file)) {
-            throw new FileReadException("文件{$file}不可读！");
-        }
-
-        return trim(file_get_contents($file));
-    }
-
-
+    /**
+     * @param $file
+     * @param bool|true $toArray
+     * @return mixed
+     */
     public static function json($file, $toArray=true)
     {
-        $content = self::contents($file);
+        $content = self::getContents($file);
 
         $content = preg_replace('/\/\/.*?[\r\n]/is', '', trim($content));
 
         return (bool)$toArray ? json_decode($content,true) : $content;
     }
 
+    /**
+     * @param $file
+     * @param bool|true $filter
+     * @return array|string
+     */
     public static function allLine($file, $filter=true)
     {
-        $contents = self::contents($file);
+        $contents = self::getContents($file);
 
         if (!$contents) {
             return [];
@@ -102,7 +96,7 @@ abstract class Read extends File
      * @param  integer $endLine [结束行数 默认第50行]
      * @param  string $method [打开文件方式]
      * @throws FileSystemException
-     * @return array             返回内容
+     * @return array  返回内容
      */
     public static function lines($fileName, $startLine = 1, $endLine = 50, $method = 'rb')
     {
@@ -153,7 +147,7 @@ abstract class Read extends File
      * @param  integer $current [当前行数]
      * @param  integer $lineNum [获取行数] = $lineNum*2+1
      * @throws FileSystemException
-     * @return array [type]            [description]
+     * @return array
      */
     public static function symmetry($fileName,$current=1,$lineNum=3)
     {
@@ -168,7 +162,12 @@ abstract class Read extends File
         return self::lines($fileName, $startLine, $endLine);
     }
 
-    # 得到上5行下3行的内容， lines up and down
+    /**
+     * 得到基准行数上5行下3行的内容， lines up and down
+     * @param $fileName
+     * @param string $current 基准行数
+     * @return array
+     */
     public static function getLines5u3d($fileName,$current='1')
     {
         $startLine  = 1;

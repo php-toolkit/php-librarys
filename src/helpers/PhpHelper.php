@@ -1,41 +1,53 @@
 <?php
 /**
-*
-*/
+ *
+ */
 namespace inhere\librarys\helpers;
 
+use inhere\librarys\exceptions\ExtensionMissException;
+
 /**
- *
+ * Class PhpHelper
+ * @package inhere\librarys\helpers
  */
 class PhpHelper
 {
     /**
-     * 检查扩展是否加载
+     * @param $name
+     * @param bool|false $throwException
+     * @return bool
+     * @throws ExtensionMissException
+     */
+    public static function extIsLoaded($name, $throwException = false)
+    {
+        $result = extension_loaded($name);
+
+        if ( !$result && $throwException) {
+            throw new ExtensionMissException("Extension [$name] is not loaded.");
+        }
+
+        return $result;
+    }
+
+    /**
+     * 检查多个扩展加载情况
      * @param array $extensions
-     * @param  boolean $totalReport true: 检查完后报告结果(array). false: 立即报告出错的;若全部加载了，返回 true
      * @return array|bool
      */
-    public static function extensionIsLoaded($extensions=[], $totalReport=false)
+    public static function checkExtList($extensions=[])
     {
         $allTotal = [];
 
         foreach ((array)$extensions as $extension) {
-            $bool = extension_loaded($extension);
-
-            if (!$totalReport && !$bool){
-                return false;
-            }
-
-            if (!$bool) {
+            if (!extension_loaded($extension)) {
                 # 没有加载此扩展，记录
                 $allTotal['no'][] = $extension;
             } else {
                 $allTotal['yes'][] = $extension;
             }
-
         }
 
-        return $totalReport ? $allTotal : true;
+        return $allTotal;
     }
 
     /**

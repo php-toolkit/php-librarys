@@ -10,7 +10,9 @@
 
 namespace inhere\librarys\files;
 
+use inhere\librarys\exceptions\IOException;
 use inhere\librarys\exceptions\NotFoundException;
+use inhere\librarys\helpers\ArrHelper;
 use inhere\librarys\helpers\StrHelper;
 
 /**
@@ -27,13 +29,33 @@ abstract class FileSystem
     {
         if ( !$path || !is_string($path)) {
             return false;
-        } elseif ( $path{0} === '/' ) {
-            return true;
-        } elseif ( 1 === preg_match('/^[a-z]:[\/|\\\]{1}.+/i', $path)) {
+        }
+
+        if (
+            $path{0} === '/' ||  // linux/mac
+            1 === preg_match('/^[a-z]:[\/|\\\]{1}.+/i', $path) // windows
+        ) {
             return true;
         }
 
         return false;
+    }
+
+    /**
+     * Returns whether the file path is an absolute path.
+     * @from Symfony-filesystem
+     * @param string $file A file path
+     * @return bool
+     */
+    public static function isAbsolutePath($file)
+    {
+        return strspn($file, '/\\', 0, 1)
+        || (strlen($file) > 3 && ctype_alpha($file[0])
+            && substr($file, 1, 1) === ':'
+            && strspn($file, '/\\', 2, 1)
+        )
+        || null !== parse_url($file, PHP_URL_SCHEME)
+            ;
     }
 
     /**
@@ -79,11 +101,126 @@ abstract class FileSystem
     }
 
     /**
+     * Renames a file or a directory.
+     * @from Symfony-filesystem
+     * @param string $origin    The origin filename or directory
+     * @param string $target    The new filename or directory
+     * @param bool   $overwrite Whether to overwrite the target if it already exists
+     * @throws IOException When target file or directory already exists
+     * @throws IOException When origin cannot be renamed
+     */
+    public function rename($origin, $target, $overwrite = false)
+    {
+        // we check that target does not exist
+        if (!$overwrite && $this->isReadable($target)) {
+            throw new IOException(sprintf('Cannot rename because the target "%s" already exists.', $target), 0, null, $target);
+        }
+
+        if (true !== @rename($origin, $target)) {
+            throw new IOException(sprintf('Cannot rename "%s" to "%s".', $origin, $target), 0, null, $target);
+        }
+    }
+
+    /**
+     * Tells whether a file exists and is readable.
+     * @from Symfony-filesystem
+     * @param string $filename Path to the file
+     * @return bool
+     * @throws IOException When windows path is longer than 258 characters
+     */
+    public static function isReadable($filename)
+    {
+        if ('\\' === DIRECTORY_SEPARATOR && strlen($filename) > 258) {
+            throw new IOException('Could not check if file is readable because path length exceeds 258 characters.', 0, null, $filename);
+        }
+
+        return is_readable($filename);
+    }
+
+    /**
+     * Creates a directory recursively.
+     *
+     * @param string|array|\Traversable $dirs The directory path
+     * @param int                       $mode The directory mode
+     *
+     * @throws IOException On any directory creation failure
+     */
+    public static function mkdir($dirs, $mode = 0777)
+    {
+        foreach (ArrHelper::toIterator($dirs) as $dir) {
+            if (is_dir($dir)) {
+                continue;
+            }
+
+            if (true !== @mkdir($dir, $mode, true)) {
+                $error = error_get_last();
+                if (!is_dir($dir)) {
+                    // The directory was not created by a concurrent process. Let's throw an exception with a developer friendly error message if we have one
+                    if ($error) {
+                        throw new IOException(sprintf('Failed to create "%s": %s.', $dir, $error['message']), 0, null, $dir);
+                    }
+
+                    throw new IOException(sprintf('Failed to create "%s"', $dir), 0, null, $dir);
+                }
+            }
+        }
+    }
+
+    /**
+     * Change mode for an array of files or directories.
+     * @from Symfony-filesystem
+     * @param string|array|\Traversable $files     A filename, an array of files, or a \Traversable instance to change mode
+     * @param int                       $mode      The new mode (octal)
+     * @param int                       $umask     The mode mask (octal)
+     * @param bool                      $recursive Whether change the mod recursively or not
+     *
+     * @throws IOException When the change fail
+     */
+    public static function chmod($files, $mode, $umask = 0000, $recursive = false)
+    {
+        foreach (ArrHelper::toIterator($files) as $file) {
+            if (true !== @chmod($file, $mode & ~$umask)) {
+                throw new IOException(sprintf('Failed to chmod file "%s".', $file), 0, null, $file);
+            }
+            if ($recursive && is_dir($file) && !is_link($file)) {
+                self::chmod(new \FilesystemIterator($file), $mode, $umask, true);
+            }
+        }
+    }
+
+    /**
+     * Change the owner of an array of files or directories.
+     * @from Symfony-filesystem
+     * @param string|array|\Traversable $files     A filename, an array of files, or a \Traversable instance to change owner
+     * @param string                    $user      The new owner user name
+     * @param bool                      $recursive Whether change the owner recursively or not
+     *
+     * @throws IOException When the change fail
+     */
+    public static function chown($files, $user, $recursive = false)
+    {
+        foreach (ArrHelper::toIterator($files) as $file) {
+            if ($recursive && is_dir($file) && !is_link($file)) {
+                self::chown(new \FilesystemIterator($file), $user, true);
+            }
+            if (is_link($file) && function_exists('lchown')) {
+                if (true !== @lchown($file, $user)) {
+                    throw new IOException(sprintf('Failed to chown file "%s".', $file), 0, null, $file);
+                }
+            } else {
+                if (true !== @chown($file, $user)) {
+                    throw new IOException(sprintf('Failed to chown file "%s".', $file), 0, null, $file);
+                }
+            }
+        }
+    }
+
+    /**
      * @param $path
      * @param int $mode
      * @return bool
      */
-    public static function chmodr($path, $mode = 0664)
+    public static function chmodDir($path, $mode = 0664)
     {
         if (!is_dir($path)) {
             return @chmod($path, $mode);
@@ -97,7 +234,7 @@ abstract class FileSystem
                     return false;
                 } elseif (!is_dir($fullPath) && !@chmod($fullPath, $mode)) {
                     return false;
-                } elseif (!self::chmodr($fullPath, $mode)) {
+                } elseif (!self::chmodDir($fullPath, $mode)) {
                     return false;
                 }
             }
@@ -116,7 +253,7 @@ abstract class FileSystem
      *                  返回值在二进制计数法中，四位由高到低分别代表
      *                  可执行rename()函数权限 |可对文件追加内容权限 |可写入文件权限|可读取文件权限。
      */
-    public static function file_mode_info($file_path)
+    public static function pathModeInfo($file_path)
     {
         /* 如果不存在，则不可读、不可写、不可改 */
         if (!file_exists($file_path)) {

@@ -219,7 +219,7 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * Get number of items in collection
-         * @return int
+     * @return int
      */
     public function count()
     {
@@ -231,11 +231,11 @@ class SimpleCollection implements CollectionInterface
      *******************************************************************************/
 
     /**
-     * @return string
+     * @return array
      */
     public function jsonSerialize()
     {
-        return json_encode($this->data);
+        return $this->data;
     }
 
     /********************************************************************************

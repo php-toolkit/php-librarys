@@ -29,7 +29,7 @@ class Interact
      * @param  string $title
      * @return void
      */
-    static public function panel($data, $title='Info panel')
+    public static function panel($data, $title='Info panel')
     {
         $data = is_array($data) ? array_filter($data) : [trim($data)];
 
@@ -56,7 +56,7 @@ class Interact
      * @param  bool $allowExit  有退出选项 默认 true
      * @return string
      */
-    static public function choice($question, $option, $allowExit=true)
+    public static function choice($question, $option, $allowExit=true)
     {
         echo self::NL_TAB . $question;
 
@@ -99,7 +99,7 @@ class Interact
      * @param  string $question 发出的信息
      * @return bool
      */
-    static public function confirm($question)
+    public static function confirm($question)
     {
         $question = ucfirst(trim($question));
 
@@ -115,7 +115,7 @@ class Interact
      * @param  string $question 问题
      * @return string
      */
-    static public function ask($question)
+    public static function ask($question)
     {
         if ($question) {
             $question = ucfirst(trim($question));
@@ -145,7 +145,7 @@ class Interact
      * @param int $allowed 允许错误次数
      * @return string
      */
-    static public function loopAsk($question, callable $callbackVerify = null, $allowed=3)
+    public static function loopAsk($question, callable $callbackVerify = null, $allowed=3)
     {
         $question = ucfirst(trim($question));
         $allowed = ((int)$allowed > 4 || $allowed < 1) ? 3 : (int)$allowed;
@@ -263,7 +263,7 @@ class Interact
      * 读取输入信息
      * @return string
      */
-    static public function readRow()
+    public static function readRow()
     {
         return trim(fgets(STDIN));
     }
@@ -273,7 +273,7 @@ class Interact
      * @param  string  $text
      * @param  boolean $exit
      */
-    static public function rawOut($text, $exit=false)
+    public static function rawOut($text, $exit=false)
     {
         self::out($text, false, $exit);
     }
@@ -284,7 +284,7 @@ class Interact
      * @param bool $newLine
      * @param  boolean $exit
      */
-    static public function out($text, $newLine=true, $exit=false)
+    public static function out($text, $newLine=true, $exit=false)
     {
         echo  ($newLine ? self::NL_TAB : null) . $text;
 

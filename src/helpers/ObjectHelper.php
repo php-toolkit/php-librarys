@@ -27,30 +27,33 @@ class ObjectHelper
             $object->$property = $value;
         }
     }
-    
+
     /**
      * php对象转换成为数组
-     * @param mixed $object
+     * @param mixed $data
+     * @param bool $recursive
      * @return array|bool
      */
-    public static function toArray($object)
+    public static function toArray($data, $recursive = false)
     {
-        if ( ! is_object($object) ) {
-            throw new InvalidArgumentException('参数必须是个对象！');
+        // Ensure the input data is an array.
+        if ($data instanceof \Traversable) {
+            $data = iterator_to_array($data);
+        } elseif (is_object($data)) {
+            $data = get_object_vars($data);
+        } else {
+            $data = (array) $data;
         }
 
-        $arr = [];
-
-        foreach($object as $attr => $value){
-            /*if (is_object($value)){
-                $arr[$attr]=object_to_array($value);
-            } else {
-                $arr[$attr] = $value;
-            }*/
-            $arr[$attr] = is_object($value)? self::toArray($value) : $value;
+        if ($recursive) {
+            foreach ($data as &$value) {
+                if (is_array($value) || is_object($value)) {
+                    $value = static::toArray($value, $recursive);
+                }
+            }
         }
 
-        return $arr;
+        return $data;
     }
 
     //定义一个用来序列化对象的函数

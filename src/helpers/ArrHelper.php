@@ -101,12 +101,7 @@ class ArrHelper
                 continue;
             }
 
-            # code...
-            if ( is_array($value) ) {
-                $object->$name = self::toObject($value);
-            } else {
-                $object->$name = $value;
-            }
+            $object->$name = is_array($value) ? self::toObject($value) : $value;
         }
 
         return $object;

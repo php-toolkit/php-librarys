@@ -166,6 +166,19 @@ class DataCollector extends SimpleCollection
     }
 
     /**
+     * get all Data
+     * @return array
+     */
+    public function all()
+    {
+        return $this->data;
+    }
+    public function toArray()
+    {
+        return $this->all();
+    }
+
+    /**
      * @return string
      */
     public function getSeparator()

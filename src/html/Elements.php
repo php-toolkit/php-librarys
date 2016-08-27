@@ -12,6 +12,10 @@ namespace inhere\librarys\html;
 
 use inhere\librarys\StdBase;
 
+/**
+ * Class Elements
+ * @package inhere\librarys\html
+ */
 class Elements extends StdBase implements \IteratorAggregate
 {
     public $elements = [];

@@ -23,13 +23,13 @@ use inhere\librarys\StdBase;
 class AssetPublisher extends StdBase
 {
     /**
-     * asset source path
+     * asset source base path
      * @var string
      */
     protected $sourcePath  = '';
 
     /**
-     * will publish path
+     * asset publish base path
      * @var string
      */
     protected $publishPath = '';
@@ -62,19 +62,23 @@ class AssetPublisher extends StdBase
     /**
      * @var array
      */
-    public $publishAssets = [
+    protected $publishAssets = [
         'files' => [
             // from => to
-            // 'xxx/zzz.js' => 'xxx/zzz-new.js', // real is `$sourcePath+'xxx/zzz.js' => $publishPath+'xxx/zzz-new.js'`
-            // 'ccc/yy.js'  // can also only {from}, default {to} = {from}
+            // e.g.
+            //  # real is `$sourcePath+'xxx/zzz.js' => $publishPath+'xxx/zzz-new.js'`
+            // 'xxx/zzz.js' => 'xxx/zzz-new.js',
+            //  # can also only {from}, default {to} = {from}
+            // 'ccc/yy.js'
         ],
         'dirs' => [
             // from => to
+            // 'zzz/ddd' => 'aaa/bbb'
         ],
     ];
 
     /**
-     * @var string[]
+     * @var array
      */
     protected $publishedAssets = [
         'created' => [], // need new create file.
@@ -112,7 +116,7 @@ class AssetPublisher extends StdBase
         } elseif (is_dir($fullPath)) {
             $this->publishAssets['dirs'][$fullPath] = $to;
         } else {
-            throw new InvalidArgumentException("The param must be an existing source file or dir path. Current: [$from]");
+            throw new InvalidArgumentException("The param must be an existing source file or dir path. Input: [$from]");
         }
 
         return $this;
@@ -134,8 +138,6 @@ class AssetPublisher extends StdBase
         foreach ($this->publishAssets['dirs'] as $fromDir => $toDir) {
             $this->publishDir($fromDir, $toDir, $replace);
         }
-
-        vd($this);
 
         return $this;
     }
@@ -239,7 +241,7 @@ class AssetPublisher extends StdBase
         if ($sourcePath && is_dir($sourcePath)) {
             $this->sourcePath = $sourcePath;
         } else {
-            throw new InvalidArgumentException('The source path must be an existing dir path. ');
+            throw new InvalidArgumentException('The source path must be an existing dir path. Input: ' . $sourcePath);
         }
     }
 
@@ -261,5 +263,61 @@ class AssetPublisher extends StdBase
         }
     }
 
+    /**
+     * @return array
+     */
+    public function getPublishedAssets()
+    {
+        return $this->publishedAssets;
+    }
 
+    /**
+     * @return array
+     */
+    public function getPublishAssets()
+    {
+        return $this->publishAssets;
+    }
+
+    /**
+     * @param string $key
+     * @return array
+     */
+    public function getInclude($key = '')
+    {
+        if ( !$key || !is_string($key)) {
+            return $this->include;
+        }
+
+        return isset($this->include[$key]) ? $this->include[$key] : [];
+    }
+
+    /**
+     * @param array $include
+     */
+    public function setInclude(array $include)
+    {
+        $this->include = $include;
+    }
+
+    /**
+     * @param string $key
+     * @return array
+     */
+    public function getExclude($key = '')
+    {
+        if ( !$key || !is_string($key)) {
+            return $this->exclude;
+        }
+
+        return isset($this->exclude[$key]) ? $this->exclude[$key] : [];
+    }
+
+    /**
+     * @param array $exclude
+     */
+    public function setExclude(array $exclude)
+    {
+        $this->exclude = $exclude;
+    }
 }

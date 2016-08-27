@@ -29,6 +29,11 @@ $div2->addContent('add content');
 var_dump((string)$form);
 
 */
+
+/**
+ * Class Element
+ * @package inhere\librarys\html
+ */
 class Element extends StdBase
 {
     /**
@@ -60,18 +65,18 @@ class Element extends StdBase
     protected $parent = null;
 
     /**
-     * current tag's child element
+     * current tag's child elements
      * @var self[]
      */
     protected $childs = [];
 
     /**
-     * 如果当前元素有内容的话，添加子元素位置规则
+     * 如果当前元素有内容的话，添加子元素位置默认规则
      * before  -- 添加在内容之前
      * after  -- 添加在内容之后
      * replace -- 替换覆盖掉内容
      */
-    protected $addChildPosition = 'replace';
+    protected $defaultAddRule = 'after';
 
     const BEFORE_TEXT    = 'before';
     const AFTER_TEXT     = 'after';
@@ -82,6 +87,8 @@ class Element extends StdBase
         $this->name    = $name;
         $this->content = $content;
         $this->attrs   = $attrs;
+
+        $this->childs   = new \SplObjectStorage();
     }
 
 ///////////////////////////////////////// generate element /////////////////////////////////////////
@@ -140,7 +147,6 @@ class Element extends StdBase
             }
 
             $content = $string . "\n";
-// vd($content,-4);
         }
 
         if ( isset($childs[self::BEFORE_TEXT]) ) {
@@ -212,23 +218,27 @@ class Element extends StdBase
      * @param null $name
      * @param null $content
      * @param array $attrs
-     * @return \ulue\libs\front\Element $child self
+     * @param string $rule
+     * @return Element
      */
-    public function addChild($name=null, $content=null, array $attrs=[])
+    public function addChild($name=null, $content=null, array $attrs=[], $rule = self::AFTER_TEXT)
     {
         if ($name instanceof self) {
             $child = $name;
+            $rule = trim($content);
         } else {
-            $child = new self($name, $content, $attrs);
+            $child = new static($name, $content, $attrs);
         }
-
-        $this->childs[$this->addChildPosition][] = $child;
+    
+        $rule = $this->isValidRule($rule) ? $rule : $this->defaultAddRule;
+        
+        $this->childs[$rule][] = $child;
 
         return $child;
     }
 
     /**
-     * @param $childs self[]
+     * @param self[] $childs child list
      * @return $this
      */
     public function setChilds(array $childs)
@@ -239,15 +249,14 @@ class Element extends StdBase
     }
 
     /**
-     * @param $childs self[]
+     * @param self[] $childs
      * @return $this
      */
     public function addChilds(array $childs)
     {
         foreach ($childs as $child) {
-
             if ($child instanceof self) {
-                $this->childs[$this->addChildPosition][] = $child;
+                $this->childs[$this->defaultAddRule][] = $child;
             }
         }
 
@@ -262,10 +271,10 @@ class Element extends StdBase
      * @param $value
      * @return $this
      */
-    public function setChildPosition($value)
+    public function setDefaultAddRule($value)
     {
-        if (in_array($value, ['before','after','replace'])) {
-            $this->addChildPosition = $value;
+        if ( $this->isValidRule($value) ) {
+            $this->defaultAddRule = $value;
         }
 
         return $this;
@@ -274,9 +283,30 @@ class Element extends StdBase
     /**
      * @return string
      */
-    public function getChildPosition()
+    public function getDefaultAddRule()
     {
-        return $this->addChildPosition;
+        return $this->defaultAddRule;
+    }
+    
+    /**
+     * @return string
+     */
+    public function getChildAddRules()
+    {
+        return [
+            self::AFTER_TEXT,
+            self::BEFORE_TEXT,
+            self::REPLACE_TEXT,
+        ];
+    }
+
+    /**
+     * @param $value
+     * @return bool
+     */
+    protected function isValidRule($value)
+    {
+        return in_array($value, $this->getChildAddRules());
     }
 
 ///////////////////////////////////////// property /////////////////////////////////////////
@@ -341,6 +371,7 @@ class Element extends StdBase
 
         return $this->content;
     }
+    
 ///////////////////////////////////////// element attr /////////////////////////////////////////
 
     /**

@@ -117,6 +117,10 @@ class AssetPublisher extends StdBase
      */
     public function add($from, $to = '')
     {
+        if (!$from) {
+            return $this;
+        }
+
         if ( is_array($from) ) {
             array_walk($from,function($f,$t)
             {
@@ -159,6 +163,11 @@ class AssetPublisher extends StdBase
             $this->publishDir($fromDir, $toDir, $override);
         }
 
+        // no define asset to publish, will publish source-path to publish-path
+        if ( !$this->hasAssetToPublish() ) {
+            $this->publishDir($this->sourcePath, $this->publishPath, $override);
+        }
+
         return $this;
     }
 
@@ -199,6 +208,11 @@ class AssetPublisher extends StdBase
         foreach ($files as $file) {
             $this->publishFile($fromDir . '/' . $file, $toDir . '/'. $file, $override);
         }
+    }
+
+    public function hasAssetToPublish()
+    {
+        return 0 < count($this->publishAssets['files']) || 0 < count($this->publishAssets['dirs']);
     }
 
     ////////////////////////////// getter/setter method //////////////////////////////

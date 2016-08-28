@@ -12,6 +12,7 @@ namespace inhere\librarys\event;
 
 /**
  * @todo ... uncompleted
+ * the behavior can attach to a object. access it like object self.
  * Class Behavior
  * @package inhere\librarys\event
  */

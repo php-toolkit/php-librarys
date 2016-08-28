@@ -133,7 +133,7 @@ class Interact
      * @param  string $question 问题
      * @param callable $callbackVerify (默认验证输入是否为空)自定义回调验证输入是否符合要求; 验证成功返回true 否则 可返回错误消息
      * e.g.
-     * CliInteract::loopAsk('please entry you age?', function($age)
+     * Interact::loopAsk('please entry you age?', function($age)
      * {
      *     if ($age<1 || $age>100) {
      *         return 'Allow the input range is 1-100';

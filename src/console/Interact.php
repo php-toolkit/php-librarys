@@ -9,6 +9,7 @@
  */
 
 namespace inhere\librarys\console;
+use inhere\librarys\exceptions\InvalidArgumentException;
 
 /**
  * Class Interact
@@ -18,6 +19,7 @@ class Interact
 {
     const STAR_LINE = "*************************************%s*************************************\n";
 
+    const NL = "\n";// new line
     const TAB    = '    ';
     const NL_TAB = "\n    ";// new line + tab
 
@@ -97,33 +99,54 @@ class Interact
     /**
      * 确认, 发出信息要求确认；返回 true | false
      * @param  string $question 发出的信息
+     * @param bool $default
      * @return bool
      */
-    public static function confirm($question)
+    public static function confirm($question, $default = true)
     {
         $question = ucfirst(trim($question));
+        $defaultText = $default ? 'yes' : 'no';
 
-        echo "\n    $question  \n    Please confirm [y|n] : ";
+        $message = "$question  \n    Please confirm (yes|no) [default:$defaultText]: ";
+        static::out($message, false);
 
         $answer = self::readRow();
 
-        return !strncasecmp($answer, 'y', 1);
+        return $answer ? !strncasecmp($answer, 'y', 1) : (bool)$default;
     }
 
     /**
      * 询问，提出问题；返回 输入的结果
      * @param  string $question 问题
+     * @param null $default 默认值
+     * @param \Closure $validator
+     * @example
+     *  $answer = Interact::ask('Are you sure publish?', null, function ($answer) {
+     *      if (!is_integer($answer)) {
+     *           throw new \RuntimeException('You must type an integer.');
+     *       }
+     *
+     *       return $answer;
+     *   });
+     *
      * @return string
      */
-    public static function ask($question)
+    public static function ask($question, $default = null, \Closure $validator = null)
     {
-        if ($question) {
-            $question = ucfirst(trim($question));
-
-            echo "\n    $question ";
+        if (!$question) {
+            throw new InvalidArgumentException('Please provide a question!');
         }
 
-        return self::readRow();
+        // $question = ucfirst(trim($question));
+        static::out(ucfirst(trim($question)));
+        $answer = self::readRow();
+
+        if ('' === $answer && null === $default ) {
+            static::error('A value is required.');
+            static::ask($question, $default, $validator);
+        }
+
+        return $answer;
     }
 
     /**
@@ -148,7 +171,12 @@ class Interact
     public static function loopAsk($question, callable $callbackVerify = null, $allowed=3)
     {
         $question = ucfirst(trim($question));
-        $allowed = ((int)$allowed > 4 || $allowed < 1) ? 3 : (int)$allowed;
+
+        if (!$question) {
+            throw new InvalidArgumentException('Please provide a question!');
+        }
+
+        $allowed = ((int)$allowed > 6 || $allowed < 1) ? 3 : (int)$allowed;
         $loop  = true;
         $key  = 1;
 
@@ -163,7 +191,7 @@ class Interact
                     break;
                 }
 
-                echo self::TAB.self::space(2).($msg ?: 'Verify failure!!');
+                echo self::TAB. '  ' .($msg ?: 'Verify failure!!');
             } else if ( $answer !== '') {
                 break;
             }
@@ -212,11 +240,11 @@ class Interact
         static::out($text);
     }
 
-    public static function primary($messages, $type = '')
+    public static function primary($messages, $type = 'IMPORTANT')
     {
         static::block($messages, $type, 'primary');
     }
-    public static function success($messages, $type = '')
+    public static function success($messages, $type = 'SUCCESS')
     {
         static::block($messages, $type, 'success');
     }
@@ -275,7 +303,9 @@ class Interact
      */
     public static function rawOut($text, $exit=false)
     {
-        self::out($text, false, $exit);
+        echo $text;
+
+        $exit && exit();
     }
 
     /**
@@ -286,16 +316,43 @@ class Interact
      */
     public static function out($text, $newLine=true, $exit=false)
     {
-        echo  ($newLine ? self::NL_TAB : null) . $text;
+        if ( static::colorIsSupported() ) {
+            $text = static::getColors()->handle($text);
+        }
+
+        echo  ($newLine ? self::NL : '') . $text;
 
         $exit && exit();
     }
 
-    public static function space($number=2)
+    /**
+     * @param $msg
+     */
+    public static function title($msg)
     {
-        for ($i=0; $i<$number; $i++) {
-            echo ' ';
-        }
+        $msg = ucfirst(trim($msg));
+
+        $length = mb_strlen($msg, 'UTF-8');
+
+        $str = str_pad('=',$length + 6, '=');
+
+        static::out("   $msg   ");
+        static::out($str."\n");
+    }
+
+    /**
+     * @param $msg
+     */
+    public static function section($msg)
+    {
+        $msg = ucfirst(trim($msg));
+
+        $length = mb_strlen($msg, 'UTF-8');
+
+        $str = str_pad('-',$length + 6, '-');
+
+        static::out("   $msg   ");
+        static::out($str."\n");
     }
 
     /**

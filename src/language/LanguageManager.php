@@ -10,6 +10,7 @@ namespace inhere\librarys\language;
 
 use inhere\librarys\collections\DataCollector;
 use inhere\librarys\exceptions\NotFoundException;
+use inhere\librarys\helpers\ArrHelper;
 
 /**
  * Class LanguageManager
@@ -24,6 +25,8 @@ use inhere\librarys\exceptions\NotFoundException;
  */
 class LanguageManager extends DataCollector
 {
+    // use \inhere\librarys\traits\TraitStaBase;
+
     /**
      * current use language
      * @var string
@@ -37,10 +40,28 @@ class LanguageManager extends DataCollector
     protected $fallbackLang = 'en';
 
     /**
-     * language config file path
-     * @var string
+     * language config file path.
+     * if one: '/xx/yy'
+     * if more: ['/xx/yy', '/aa/dd']
+     * @var string|array
      */
-    protected $path = '';
+    protected $path;
+
+    /**
+     * e.g.
+     * [
+     *  'zh-cn' => [
+     *      'user'  => '/xx/yy/zh-cn/user.yml'
+     *      'admin' => '/xx/yy/zh-cn/admin.yml'
+     *   ],
+     *  'en' => [
+     *      'user'  => '/xx/yy/en/user.yml'
+     *      'admin' => '/xx/yy/en/admin.yml'
+     *   ],
+     * ]
+     * @var array
+     */
+    protected $langFiles = [];
 
     /**
      * type of language config. in [static::USE_MONOFILE, static::USE_MULTIFILE ]
@@ -113,17 +134,19 @@ class LanguageManager extends DataCollector
 
     protected function prepare($options, $fileType)
     {
-        foreach (['lang', 'fallbackLang', 'path', 'defaultName'] as $key) {
+        foreach (['lang', 'fallbackLang', 'defaultName'] as $key) {
             if ( isset($options[$key]) ) {
                 $this->$key = $options[$key];
             }
         }
 
+        $this->setPath(ArrHelper::remove('path', $options));
+
         if ( isset($options['type']) && in_array($options['type'], $this->getTypes()) ) {
             $this->type = (int)$options['type'];
         }
 
-        $this->mainFile = $this->spliceLangFilePath($this->defaultName);
+        $this->mainFile = $this->buildLangFilePath($this->defaultName);
 
         // check
         if ( !is_file($this->mainFile) ) {
@@ -254,7 +277,7 @@ class LanguageManager extends DataCollector
 
         // the first time fetch, instantiate it
         if ( !isset($this->others[$filename]) ) {
-            $otherFile = $this->spliceLangFilePath($filename);
+            $otherFile = $this->buildLangFilePath($filename);
 
             if ( is_file($otherFile) ) {
                 $this->loadedOtherFiles[$filename]  = $otherFile;
@@ -275,7 +298,7 @@ class LanguageManager extends DataCollector
     public function getFallbackData()
     {
         if ( !$this->fallbackData ) {
-            $fallbackFile = $this->spliceLangFilePath($this->defaultName, $this->fallbackLang);
+            $fallbackFile = $this->buildLangFilePath($this->defaultName, $this->fallbackLang);
             $collector = new DataCollector;
 
             if ($this->lang !== $this->fallbackLang && is_file($fallbackFile) ) {
@@ -336,7 +359,7 @@ class LanguageManager extends DataCollector
 
         // the first time fetch, instantiate it
         if ( !isset($this->fallbackData[$filename]) ) {
-            $otherFile = $this->spliceLangFilePath($filename);
+            $otherFile = $this->buildLangFilePath($filename);
 
             if ( is_file($otherFile) ) {
                 $this->loadedOtherFiles['fallback'][$filename]  = $otherFile;
@@ -348,15 +371,15 @@ class LanguageManager extends DataCollector
     }
 
     /*********************************************************************************
-    * helper method
-    *********************************************************************************/
+     * helper method
+     *********************************************************************************/
 
     /**
      * @param $filename
      * @param string $lang
      * @return string
      */
-    protected function spliceLangFilePath($filename, $lang = '')
+    protected function buildLangFilePath($filename, $lang = '')
     {
         $lang = $lang ?: $this->lang;
         $langFile = $this->isMonofile() ? $lang : $lang . DIRECTORY_SEPARATOR . trim($filename);
@@ -365,8 +388,8 @@ class LanguageManager extends DataCollector
     }
 
     /*********************************************************************************
-    * getter/setter
-    *********************************************************************************/
+     * getter/setter
+     *********************************************************************************/
 
     /**
      * @return string
@@ -382,6 +405,34 @@ class LanguageManager extends DataCollector
     public function getPath()
     {
         return $this->path;
+    }
+
+    /**
+     * @param string|array $path
+     */
+    protected function setPath($path)
+    {
+        if ($path) {
+            // $this->path = is_array($path) ? $path : [$path];
+            $this->path = $path;
+        }
+    }
+
+    /**
+     * @param string $path
+     */
+    public function addPath($path)
+    {
+        if (! ($old = $this->path) ) {
+            $this->path = is_array($path) ? $path : [$path];
+        } else {
+            $this->path = is_array($path) ? array_merge([$old], $path) : [$old, $path];
+        }
+    }
+
+    public function addLangFile($file, $lang='')
+    {
+
     }
 
     /**

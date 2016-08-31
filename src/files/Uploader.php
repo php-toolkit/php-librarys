@@ -108,7 +108,7 @@ class Uploader
     /**
      * @param string $name key of the $_FILES
      * @param string $targetFile save to the file path
-     * @return $this|false
+     * @return $this
      */
     public function uploadOne($name, $targetFile)
     {

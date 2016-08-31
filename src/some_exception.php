@@ -46,6 +46,7 @@ class GetPropertyException extends PropertyException{}
 class SetPropertyException extends PropertyException{}
 
 class UnknownCalledException extends \LogicException{}
+class UnknownMethodException extends \LogicException{}
 class RequestException extends \RuntimeException{}
 class ResponseException extends \RuntimeException{}
 

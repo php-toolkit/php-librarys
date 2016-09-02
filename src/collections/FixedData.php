@@ -37,7 +37,11 @@ class FixedData extends ActiveData
 
     public function __set($name, $value)
     {
-        throw new UnknownCalledException(sprintf('设置不存在的属性 %s ！',$name));
+        if ( !property_exists($this, $name) ) {
+            throw new UnknownCalledException(sprintf('设置不存在的属性 %s ！',$name));
+        }
+
+        $this->$name = $value;
     }
 
     public function __get($name)

@@ -19,19 +19,30 @@ namespace inhere\librarys\collections;
  */
 class ActiveData implements \ArrayAccess, \IteratorAggregate
 {
-    public function __construct(array $data=[])
+    /**
+     * @param array|\ArrayAccess $data
+     * @param bool|false $recursive
+     * @return static
+     */
+    public static function create($data=[], $recursive = false)
+    {
+        return new static($data, $recursive);
+    }
+
+    public function __construct($data=[], $recursive = false)
     {
         if ($data) {
-            $this->load($data);
+            $this->load($data, $recursive);
         }
     }
 
     /**
      * 初始化，载入数据
-     * @param  array $data
+     * @param array $data
+     * @param bool $recursive
      * @return $this
      */
-    public function load(array $data)
+    public function load($data, $recursive = false)
     {
         foreach ($data as $name=>$value) {
             $name = trim($name);
@@ -44,7 +55,7 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
                 $name = 'attr_';
             }
 
-            $this->$name = is_array($value) ? (new static)->load($value) :$value;
+            $this->$name = $recursive && is_array($value) ? static::create($value,$recursive) :$value;
         }
 
         return $this;
@@ -55,22 +66,23 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
         return false;
     }
 
-
     /**
+     * @param bool $toArray
      * @return array
      */
-    public function all()
+    public function all($toArray = false)
     {
-        $class = new \ReflectionClass( get_class($this) );
-        $attrs = array();
+        $class = new \ReflectionClass($this);
+        $attrs = [];
 
         foreach($class->getProperties() as $property) {
             if($property->isPublic() && !$property->isStatic()) {
-                $attrs[] = $property->getName();
+                $attrs[$property->getName()] = $property->getValue($this);
             }
         }
 
-        return $attrs;
+        return $toArray ? $attrs : (new \ArrayIterator($attrs));
+        //return $toArray ? $attrs : (new \ArrayObject($attrs));
     }
 
     /**
@@ -110,7 +122,7 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
      */
     public function getIterator()
     {
-        return new \ArrayIterator(get_object_vars($this));
+        return $this->all();
     }
 
     /**

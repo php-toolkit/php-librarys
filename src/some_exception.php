@@ -35,6 +35,7 @@ class IOException extends FileSystemException{}
 class FileNotFoundException extends FileSystemException{}
 class FileReadException extends FileSystemException{}
 class FileWrittenException extends FileSystemException{}
+class FileUploadException extends FileSystemException{}
 
 class InvalidConfigException extends \LogicException{}
 class InvalidOptionException extends \RuntimeException{}

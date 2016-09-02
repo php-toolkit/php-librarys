@@ -385,10 +385,10 @@ class Uploader
                 case UPLOAD_ERR_FORM_SIZE:  # 2
                     $this->error = '上传文件超过Html表单指定大小！';
                     break;
-                case UPLOAD_ERR_NO_FILE:    # 3
+                case UPLOAD_ERR_PARTIAL:    # 3
                     $this->error = '没有上传任何文件！';
                     break;
-                case UPLOAD_ERR_PARTIAL:    # 4
+                case UPLOAD_ERR_NO_FILE:    # 4
                     $this->error = '文件只上传了一部分！';
                     break;
                 case UPLOAD_ERR_NO_TMP_DIR: # 5

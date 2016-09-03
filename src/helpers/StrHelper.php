@@ -527,13 +527,14 @@ class StrHelper
      * Transform a CamelCase string to underscore_case string
      *
      * @param string $string
+     * @param string $sep
      * @return string
      */
-    static public function toUnderscoreCase($string)
+    static public function toUnderscoreCase($string, $sep='_')
     {
         // 'CMSCategories' => 'cms_categories'
         // 'RangePrice' => 'range_price'
-        return self::strtolower(trim(preg_replace('/([A-Z][a-z])/', '_$1', $string), '_'));
+        return self::strtolower(trim(preg_replace('/([A-Z][a-z])/', $sep . '$1', $string), $sep));
     }
 
     /**

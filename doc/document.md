@@ -27,7 +27,7 @@
 
 ## `inhere\librarys\language` 
 
-语言包处理类
+语言包处理类 [detail document](language.md)
 
 ## `functions.php` 
 

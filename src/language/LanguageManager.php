@@ -9,24 +9,20 @@
 namespace inhere\librarys\language;
 
 use inhere\librarys\collections\DataCollector;
+use inhere\librarys\exceptions\InvalidArgumentException;
 use inhere\librarys\exceptions\NotFoundException;
-use inhere\librarys\helpers\ArrHelper;
+use inhere\librarys\files\FileSystem;
+use inhere\librarys\helpers\ObjectHelper;
+use inhere\librarys\helpers\StrHelper;
+use inhere\librarys\StdBase;
 
 /**
  * Class LanguageManager
  * @package inhere\librarys\base
  *
- * property $type
- *  if type equal to 1, use monofile. this is default.
- *
- *  if type equal to 2, use multifile.
- *
- *
  */
-class LanguageManager extends DataCollector
+class LanguageManager extends StdBase
 {
-    // use \inhere\librarys\traits\TraitStaBase;
-
     /**
      * current use language
      * @var string
@@ -40,40 +36,26 @@ class LanguageManager extends DataCollector
     protected $fallbackLang = 'en';
 
     /**
-     * language config file path.
-     * if one: '/xx/yy'
-     * if more: ['/xx/yy', '/aa/dd']
-     * @var string|array
+     * @var array ['string' => DataCollector]
      */
-    protected $path;
+    private $data = [];
 
     /**
-     * e.g.
-     * [
-     *  'zh-cn' => [
-     *      'user'  => '/xx/yy/zh-cn/user.yml'
-     *      'admin' => '/xx/yy/zh-cn/admin.yml'
-     *   ],
-     *  'en' => [
-     *      'user'  => '/xx/yy/en/user.yml'
-     *      'admin' => '/xx/yy/en/admin.yml'
-     *   ],
-     * ]
-     * @var array
+     * @var array ['string' => DataCollector]
      */
-    protected $langFiles = [];
+    private $fallbackData = [];
 
     /**
-     * type of language config. in [static::USE_MONOFILE, static::USE_MULTIFILE ]
-     * @var int
-     */
-    protected $type = 1;
-
-    /**
-     * default file name, when use multifile. (self::type == self::USE_MULTIFILE)
+     * The default language directory path.
      * @var string
      */
-    protected $defaultName = 'default';
+    protected $basePath;
+
+    /**
+     * default file name.
+     * @var string
+     */
+    protected $defaultFile = 'default';
 
     /**
      * the language file type
@@ -82,7 +64,7 @@ class LanguageManager extends DataCollector
     protected $fileType = 'yml';
 
     /**
-     * file separator char, when use multifile.
+     * file separator char. when want to get translation form other file.
      * e.g:
      *  $language->tran('app:createPage');
      * will fetch `createPage` value at the file `{$this->path}/{$this->lang}/app.yml`
@@ -91,130 +73,63 @@ class LanguageManager extends DataCollector
     protected $fileSeparator = ':';
 
     /**
-     * loaded main language config file, data saved in {@link self::$data}
-     * @var string
-     */
-    protected $mainFile = '';
-
-    /**
-     * saved other config file data
-     * @var DataCollector[]
-     */
-    protected $others = [];
-
-    /**
-     * loaded other config file list.
+     * e.g.
+     * [
+     *    'user'  => '/xx/yy/zh-cn/user.yml'
+     *    'admin' => '/xx/yy/zh-cn/admin.yml'
+     * ]
      * @var array
      */
-    protected $loadedOtherFiles = [];
+    protected $langFiles = [];
 
     /**
-     * @var DataCollector|array
+     * loaded language file list.
+     * @var array
      */
-    protected $fallbackData;
+    protected $loadedFiles = [];
 
-    // use monofile. e.g: at config dir `{$this->path}/en.yml`
-    const USE_MONOFILE  = 1;
-
-    // use multifile. e.g: at config dir `{$this->path}/en/default.yml` `en/app.yml`
-    const USE_MULTIFILE = 2;
+    const DEFAULT_FILE_KEY = '__default';
 
     /**
      * @param array $options
-     * @param string $fileType
      */
-    public function __construct(array $options, $fileType=self::FORMAT_YML)
+    public function __construct(array $options = [])
     {
-        parent::__construct(null, static::FORMAT_PHP, 'language');
-
-        $this->fileType = $fileType;
-
-        $this->prepare($options, $fileType);
-    }
-
-    protected function prepare($options, $fileType)
-    {
-        foreach (['lang', 'fallbackLang', 'defaultName'] as $key) {
-            if ( isset($options[$key]) ) {
-                $this->$key = $options[$key];
-            }
-        }
-
-        $this->setPath(ArrHelper::remove('path', $options));
-
-        if ( isset($options['type']) && in_array($options['type'], $this->getTypes()) ) {
-            $this->type = (int)$options['type'];
-        }
-
-        $this->mainFile = $this->buildLangFilePath($this->defaultName);
-
-        // check
-        if ( !is_file($this->mainFile) ) {
-            throw new NotFoundException("Main language file don't exists! File: {$this->mainFile}");
-        }
-
-        // load main language file data.
-        $this->load($this->mainFile, $fileType);
+        ObjectHelper::loadAttrs($this, $options);
     }
 
     /**
      *
-     * how to use language translate ?
+     * how to use language translate ? please see '/doc/language.md'
      *
-     * 1. allow multi arguments. `tran(string $key , array [$arg1 , $arg2], string $default)`
-     *
-     * @example
-     * ```
-     *  // on language config file
-     * userNotFound: user [%s] don't exists!
-     *
-     *  // on code
-     * $msg = $language->tran('userNotFound', 'demo');
-     * // can also, tl() is alias method of thr tran()
-     * // $msg = $language->tl('userNotFound', 'demo');
-     * ```
-     *
-     * 2. allow fetch other config file data, when use multifile. (`static::$type === static::USE_MULTIFILE`)
-     *
-     * @example
-     * ```
-     * // on default config file (e.g. `en/default.yml`)
-     * userNotFound: user [%s] don't exists!
-     *
-     * // on app config file (e.g. `en/app.yml`)
-     * userNotFound: the app user [%s] don't exists!
-     *
-     * // on code
-     * // will fetch value at `en/default.yml`
-     * $msg = $language->tran('userNotFound', 'demo');
-     * //output $msg: user [demo] don't exists!
-     *
-     * // will fetch value at `en/app.yml`
-     * $msg = $language->tran('app:userNotFound', 'demo');
-     * //output $msg: the app user [demo] don't exists!
-     *
-     * ```
-     *
-     * @param $key
+     * @param string $key
      * @param array $args
      * @param string $default
-     * param string $lang
      * @return string
      */
-    public function translate($key, $args = [], $default = 'No translate.')
+    public function translate($key, $args = [], $default = '')
     {
+        $key = trim($key, $this->fileSeparator . ' ');
+
         if ( !$key || !is_string($key) ) {
             throw new \InvalidArgumentException('A lack of parameters or type error.');
         }
 
-        $key = trim($key);
+        // No separator, get value form default language file.
+        if ( ($pos = strpos($key, $this->fileSeparator)) === false ) {
+            $fileKey = static::DEFAULT_FILE_KEY;
 
-        // use monofile or multifile ?
-        $value = $this->isMonofile() ? $this->get($key) : $this->handleMultiFile($key);
+        // Will try to get the value from the other config file
+        } else {
+            $fileKey = substr($key, 0, $pos);
+            $key     = substr($key,$pos+1);
+        }
 
-        // translate form fallback language.
+        // translate form current language. if not found, translate form fallback language.
+        $value = $this->findTranslationText($fileKey, $key) ?: $this->tranByFallbackLang($fileKey, $key, $default);
+
         if (!$value) {
-            $value = $this->tranByFallbackLang($key, $default);
+            $value = ucfirst(StrHelper::toUnderscoreCase(str_replace(['-','_'],' ', $key), ' '));
         }
 
         $args = $args ? (array)$args : [];
@@ -226,148 +141,80 @@ class LanguageManager extends DataCollector
 
         return $hasArgs ? call_user_func_array('sprintf', $args) : $value;
     }
-    public function tran($key, $args = [], $default = 'No translate.')
+    public function tran($key, $args = [], $default = '')
     {
         return $this->translate($key, $args, $default);
     }
-    public function tl($key, $args = [], $default = 'No translate.')
+    public function tl($key, $args = [], $default = '')
     {
         return $this->translate($key, $args, $default);
     }
 
     /*********************************************************************************
-    * handle multi file config
+    * handle current language translate
     *********************************************************************************/
 
     /**
-     * @param $key
+     * @param string $fileKey
+     * @param string $key
      * @param string $default
-     * @return mixed|string
+     * @return mixed
      */
-    protected function handleMultiFile($key, $default = '')
+    protected function findTranslationText($fileKey, $key, $default = '')
     {
-        $key = trim($key, $this->fileSeparator);
-
-        // no separator, get value form default file.
-        if ( ($pos = strpos($key, $this->fileSeparator)) === false ) {
-            return $this->get($key, $default);
+        // has language data
+        if ($collector = $this->getLangFileData($fileKey)) {
+            return $collector->get($key, $default);
         }
 
-        // Will try to get the value from the other config file
-        $filename    = substr($key, 0, $pos);
-        $realKey = substr($key,$pos+1);
+        return $default;
+    }
+
+    /*********************************************************************************
+    * fallback language translate handle
+    *********************************************************************************/
+
+    /**
+     * @param string $fileKey
+     * @param string $key
+     * @param string $default
+     * @return mixed
+     */
+    protected function tranByFallbackLang($fileKey, $key, $default='')
+    {
+        if ( $this->lang === $this->fallbackLang ) {
+            return $default;
+        }
 
         // check exists
-        if ( $collector = $this->loadOtherFile($filename) ) {
-            return $collector->get($realKey, $default);
+        if ( $collector = $this->getFallbackFileData($fileKey) ) {
+            return $collector->get($key, $default);
         }
 
         return $default;
     }
 
     /**
-     * @param $filename
+     * @param string $fileKey
      * @return DataCollector
      */
-    public function loadOtherFile($filename)
+    public function getFallbackFileData($fileKey)
     {
-        if ( $this->isMonofile() ) {
-            return null;
+        if ( isset($this->fallbackData[$fileKey]) ) {
+            return $this->fallbackData[$fileKey];
         }
 
         // the first time fetch, instantiate it
-        if ( !isset($this->others[$filename]) ) {
-            $otherFile = $this->buildLangFilePath($filename);
+        if ( $langFile = $this->getLangFile($fileKey)) {
+            $file = str_replace("/{$this->lang}/","/{$this->fallbackLang}/", $langFile);
 
-            if ( is_file($otherFile) ) {
-                $this->loadedOtherFiles[$filename]  = $otherFile;
-                $this->others[$filename] = DataCollector::make($otherFile, $this->fileType, $filename);
+            if ( is_file($file) ) {
+                $this->loadedFiles[] = $file;
+                $this->fallbackData[$fileKey] = DataCollector::make($file, $this->fileType, $this->fallbackLang.'.'.$fileKey);
             }
         }
 
-        return isset($this->others[$filename]) ? $this->others[$filename] : null;
-    }
-
-    /*********************************************************************************
-    * fallback language handle
-    *********************************************************************************/
-
-    /**
-     * @return DataCollector|array
-     */
-    public function getFallbackData()
-    {
-        if ( !$this->fallbackData ) {
-            $fallbackFile = $this->buildLangFilePath($this->defaultName, $this->fallbackLang);
-            $collector = new DataCollector;
-
-            if ($this->lang !== $this->fallbackLang && is_file($fallbackFile) ) {
-                $collector->load($fallbackFile, $this->fileType);
-            }
-
-            $this->fallbackData = $this->isMonofile() ? $collector : [$collector];
-        }
-
-        return $this->fallbackData;
-    }
-
-    /**
-     * @param $key
-     * @param string $default
-     * @return mixed|string
-     */
-    protected function tranByFallbackLang($key, $default='')
-    {
-        $fallbackData = $this->getFallbackData();
-
-        // if use monofile.
-        if ( $this->isMonofile() ) {
-            return $fallbackData->get($key, $default);
-        }
-
-        // if use multifile.
-        // $value = $this->handleMultiFile($key, $default);
-
-        $key = trim($key, $this->fileSeparator);
-
-        // no separator, get value form default file.
-        if ( ($pos = strpos($key, $this->fileSeparator)) === false ) {
-            return $fallbackData[0]->get($key, $default);
-        }
-
-        // Will try to get the value from the other config file
-        $filename = substr($key, 0, $pos);
-        $realKey  = substr($key, $pos+1);
-
-        // check exists
-        if ( $collector = $this->loadFallbackOtherFile($filename) ) {
-            return $collector->get($realKey, $default);
-        }
-
-        return $default;
-    }
-
-    /**
-     * @param $filename
-     * @return DataCollector
-     */
-    public function loadFallbackOtherFile($filename)
-    {
-        if ( $this->isMonofile() ) {
-            return null;
-        }
-
-        // the first time fetch, instantiate it
-        if ( !isset($this->fallbackData[$filename]) ) {
-            $otherFile = $this->buildLangFilePath($filename);
-
-            if ( is_file($otherFile) ) {
-                $this->loadedOtherFiles['fallback'][$filename]  = $otherFile;
-                $this->fallbackData[$filename] = DataCollector::make($otherFile, $this->fileType, $filename);
-            }
-        }
-
-        return isset($this->fallbackData[$filename]) ? $this->fallbackData[$filename] : null;
+        return isset($this->fallbackData[$fileKey]) ? $this->fallbackData[$fileKey] : null;
     }
 
     /*********************************************************************************
@@ -381,10 +228,96 @@ class LanguageManager extends DataCollector
      */
     protected function buildLangFilePath($filename, $lang = '')
     {
-        $lang = $lang ?: $this->lang;
-        $langFile = $this->isMonofile() ? $lang : $lang . DIRECTORY_SEPARATOR . trim($filename);
+        $path = ($lang ?: $this->lang) . DIRECTORY_SEPARATOR . trim($filename);
 
-        return $this->path . DIRECTORY_SEPARATOR . $langFile . '.' . $this->fileType;
+        return $this->basePath . DIRECTORY_SEPARATOR . $path;
+    }
+
+    /*********************************************************************************
+     * language file handle
+     *********************************************************************************/
+
+    /**
+     * @param string $fileKey
+     * @return string|null
+     */
+    public function getLangFile($fileKey)
+    {
+        if ( static::DEFAULT_FILE_KEY === $fileKey && !$this->hasLangFile($fileKey)) {
+            $this->langFiles[$fileKey] = $this->buildLangFilePath($this->defaultFile.'.'.$this->fileType);
+        }
+
+        return isset($this->langFiles[$fileKey]) ? $this->langFiles[$fileKey] : null;
+    }
+
+    /**
+     * @param string $fileKey
+     * @return bool
+     */
+    public function hasLangFile($fileKey)
+    {
+        return isset($this->langFiles[$fileKey]);
+    }
+
+    /**
+     * @param string $fileKey
+     * @param $file
+     */
+    public function addLangFile($file, $fileKey = '')
+    {
+        if ( !FileSystem::isAbsPath($file) ) {
+            $file = $this->buildLangFilePath($file);
+        }
+
+        if ( !is_file($file) ) {
+            throw new NotFoundException("The language file don't exists. FILE: $file");
+        }
+
+        $fileKey = $fileKey ?: basename($file, '.' . $this->fileType);
+
+        if (!preg_match('/^[a-z][\w-]+$/i', $fileKey)) {
+            throw new InvalidArgumentException("language file key [$fileKey] naming format error!!");
+        }
+
+        if ( $this->hasLangFile($fileKey) ) {
+            throw new InvalidArgumentException("language file key [$fileKey] have been exists, don't allow override!!");
+        }
+
+        $this->langFiles[trim($fileKey)] = $file;
+    }
+
+    /**
+     * @param string $fileKey
+     * @return DataCollector
+     */
+    public function getLangFileData($fileKey)
+    {
+        if ( isset($this->data[$fileKey]) ) {
+            return $this->data[$fileKey];
+        }
+
+        // at first, load language data, create data collector.
+        if ($file = $this->getLangFile($fileKey)) {
+
+            if ( !is_file($file) ) {
+                throw new NotFoundException("The language file don't exists. FILE: $file");
+            }
+
+            $this->data[$fileKey] = DataCollector::make($file, $this->fileType, $this->lang.'.'.$fileKey);
+            $this->loadedFiles[] = $file;
+
+            return $this->data[$fileKey];
+        }
+
+        return null;
+    }
+
+    /**
+     * @return DataCollector
+     */
+    public function getDefaultFileData()
+    {
+        return $this->getLangFileData(static::DEFAULT_FILE_KEY);
     }
 
     /*********************************************************************************
@@ -400,68 +333,129 @@ class LanguageManager extends DataCollector
     }
 
     /**
+     * @param string $lang
+     */
+    public function setLang($lang)
+    {
+        $this->lang = trim($lang);
+    }
+
+    /**
      * @return string
      */
-    public function getPath()
+    public function getBasePath()
     {
-        return $this->path;
+        return $this->basePath;
     }
 
     /**
      * @param string|array $path
      */
-    protected function setPath($path)
+    public function setBasePath($path)
     {
-        if ($path) {
-            // $this->path = is_array($path) ? $path : [$path];
-            $this->path = $path;
+        if ($path && is_dir($path)) {
+            $this->basePath = $path;
         }
-    }
-
-    /**
-     * @param string $path
-     */
-    public function addPath($path)
-    {
-        if (! ($old = $this->path) ) {
-            $this->path = is_array($path) ? $path : [$path];
-        } else {
-            $this->path = is_array($path) ? array_merge([$old], $path) : [$old, $path];
-        }
-    }
-
-    public function addLangFile($file, $lang='')
-    {
-
     }
 
     /**
      * @return array
      */
-    public function getTypes()
+    public function getData()
     {
-        return [static::USE_MONOFILE, static::USE_MULTIFILE];
-    }
-
-    public function isMonofile()
-    {
-        return $this->type === static::USE_MONOFILE;
+        return $this->data;
     }
 
     /**
-     * @return int
+     * @return array
      */
-    public function getType()
+    public function getLangFiles()
     {
-        return $this->type;
+        return $this->langFiles;
+    }
+
+    /**
+     * @param array $langFiles
+     */
+    public function setLangFiles(array $langFiles)
+    {
+        foreach ($langFiles as $fileKey => $file) {
+            $this->addLangFile($file, is_numeric($fileKey) ? '' : $fileKey);
+        }
+    }
+
+    /**
+     * @param bool $full
+     * @return string
+     */
+    public function getDefaultFile($full= false)
+    {
+        return $full ? $this->getLangFile(static::DEFAULT_FILE_KEY) : $this->defaultFile;
     }
 
     /**
      * @return string
      */
-    public function getDefaultName()
+    public function getFallbackLang()
     {
-        return $this->defaultName;
+        return $this->fallbackLang;
     }
 
+    /**
+     * @param string $fallbackLang
+     */
+    public function setFallbackLang($fallbackLang)
+    {
+        $this->fallbackLang = $fallbackLang;
+    }
+
+    /**
+     * @return array
+     */
+    public function getFallbackData()
+    {
+        return $this->fallbackData;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFileType()
+    {
+        return $this->fileType;
+    }
+
+    /**
+     * @param string $fileType
+     */
+    public function setFileType($fileType)
+    {
+        if ( in_array($fileType, DataCollector::getFormats()) ) {
+            $this->fileType = $fileType;
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getFileSeparator()
+    {
+        return $this->fileSeparator;
+    }
+
+    /**
+     * @param string $fileSeparator
+     */
+    public function setFileSeparator($fileSeparator)
+    {
+        $this->fileSeparator = $fileSeparator;
+    }
+
+    /**
+     * @return array
+     */
+    public function getLoadedFiles()
+    {
+        return $this->loadedFiles;
+    }
 }

@@ -1,5 +1,23 @@
 # php-librarys
 
+## install
+
+- at command
+
+```
+composer require inhere/php-librarys
+```
+
+- at composer.json
+
+at "require" add 
+
+```
+"inhere/php-librarys": "~1.0"
+```
+
+RUN: `composer update`
+
 ### tool library list
 
 - `inhere\librarys\asset` 资源(css,js)管理,加载,发布 
@@ -12,6 +30,8 @@
 - `inhere\librarys\helpers` 辅助类库(`string array object date url curl php`)
 - `inhere\librarys\language` 语言包处理类
 - `functions.php` 一些有用的函数
+
+[Document](doc/document.md)
 
 ### 收集的一些库（推荐使用） 
 

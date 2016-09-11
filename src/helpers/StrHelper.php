@@ -17,7 +17,7 @@ class StrHelper
      * @param string $rule 验证规则 require email url currency number integer english
      * @return boolean
      */
-    static public function regexVerify($value,$rule)
+    public static function regexVerify($value,$rule)
     {
         $value    = trim($value);
         $validate = array(
@@ -46,7 +46,7 @@ class StrHelper
      * @param $string
      * @return bool
      */
-    static public function isVarName($string)
+    public static function isVarName($string)
     {
         return preg_match('@^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*@i', $string)===1;
     }
@@ -56,7 +56,7 @@ class StrHelper
      * @param  [type] $str
      * @return int|string [type]
      */
-    static public function length($str)
+    public static function length($str)
     {
 
         if (empty($str)){
@@ -83,7 +83,7 @@ class StrHelper
      * @internal param bool $type 计算长度类型，0(默认)表示一个中文算一个字符，1表示一个中文算两个字符
      * @return int
      */
-    static public function abs_length($str)
+    public static function abs_length($str)
     {
         if (empty($str)){
             return 0;
@@ -107,7 +107,7 @@ class StrHelper
      * @param int $end 要进行截取的长度
      * @return string
      */
-    static public function utf8_substr($str,$start=0,$end=null)
+    public static function utf8_substr($str,$start=0,$end=null)
     {
         if (empty($str)){
             return false;
@@ -149,7 +149,7 @@ class StrHelper
      * @param bool $suffix 是否加尾缀
      * @return string
      */
-    static public function zhSubstr($str, $start=0, $length, $charset="utf-8", $suffix=true)
+    public static function zhSubstr($str, $start=0, $length, $charset="utf-8", $suffix=true)
     {
         if (function_exists("mb_substr"))
         {
@@ -183,7 +183,7 @@ class StrHelper
      * @internal param string $chars
      * @return string
      */
-    static public function randStr($length, array $param=array())
+    public static function randStr($length, array $param=array())
     {
         $param = array_merge(
             array(
@@ -211,20 +211,19 @@ class StrHelper
      * @param  string $sep
      * @return array
      */
-    static public function toArray( $string, $sep=',')
+    public static function toArray( $string, $sep=',')
     {
         $array = [];
 
         if ( is_string($string) ) {
-            $string = trim( str_replace(' ', '', $string), $sep);
-            $array = strpos($string,$sep)!==false ? explode($sep, $string) : array($string);
+            $array = strpos($string,$sep)!==false ? array_map('trim', explode(',', $string)) : [ trim($string)];
         }
 
         return $array;
     }
 
     // var_dump(string2array('34,56,678, 678, 89, '));
-    static public function string2array($string)
+    public static function string2array($string)
     {
         if (!$string) {
             return array();
@@ -243,7 +242,7 @@ class StrHelper
     */
     /* CAUTION : Use it only on module hookEvents.
     ** For other purposes use the smarty function instead */
-    static public function truncate($str, $max_length, $suffix = '...')
+    public static function truncate($str, $max_length, $suffix = '...')
     {
         if (self::strlen($str) <= $max_length)
             return $str;
@@ -252,7 +251,7 @@ class StrHelper
     }
 
     // 字符截断输出
-    static public function truncate_two($string,$start,$length='')
+    public static function truncate_two($string,$start,$length='')
     {
         if ($length=='') {
           $length = $start;
@@ -273,7 +272,7 @@ class StrHelper
     }
 
     /*Copied from CakePHP String utility file*/
-    static public function truncateString($text, $length = 120, $options = array())
+    public static function truncateString($text, $length = 120, $options = array())
     {
         $default = array(
             'ellipsis' => '...', 'exact' => true, 'html' => true
@@ -404,7 +403,7 @@ class StrHelper
      * @param $str
      * @return bool|string
      */
-    static public function strtolower($str)
+    public static function strtolower($str)
     {
         if (is_array($str))
             return false;
@@ -418,7 +417,7 @@ class StrHelper
      * @param string $encoding
      * @return bool|int
      */
-    static public function strlen($str, $encoding = 'UTF-8')
+    public static function strlen($str, $encoding = 'UTF-8')
     {
         if (is_array($str))
             return false;
@@ -432,7 +431,7 @@ class StrHelper
      * @param $str
      * @return bool|string
      */
-    static public function strtoupper($str)
+    public static function strtoupper($str)
     {
         if (is_array($str))
             return false;
@@ -448,7 +447,7 @@ class StrHelper
      * @param string $encoding
      * @return bool|string
      */
-    static public function substr($str, $start, $length = false, $encoding = 'utf-8')
+    public static function substr($str, $start, $length = false, $encoding = 'utf-8')
     {
         if (is_array($str))
             return false;
@@ -464,7 +463,7 @@ class StrHelper
      * @param string $encoding
      * @return bool|int
      */
-    static public function strpos($str, $find, $offset = 0, $encoding = 'UTF-8')
+    public static function strpos($str, $find, $offset = 0, $encoding = 'UTF-8')
     {
         if (function_exists('mb_strpos'))
             return mb_strpos($str, $find, $offset, $encoding);
@@ -478,7 +477,7 @@ class StrHelper
      * @param string $encoding
      * @return bool|int
      */
-    static public function strrpos($str, $find, $offset = 0, $encoding = 'utf-8')
+    public static function strrpos($str, $find, $offset = 0, $encoding = 'utf-8')
     {
         if (function_exists('mb_strrpos'))
             return mb_strrpos($str, $find, $offset, $encoding);
@@ -489,7 +488,7 @@ class StrHelper
      * @param $str
      * @return string
      */
-    static public function ucfirst($str)
+    public static function ucfirst($str)
     {
         return self::strtoupper(self::substr($str, 0, 1)).self::substr($str, 1);
     }
@@ -498,7 +497,7 @@ class StrHelper
      * @param $str
      * @return string
      */
-    static public function ucwords($str)
+    public static function ucwords($str)
     {
         if (function_exists('mb_convert_case'))
             return mb_convert_case($str, MB_CASE_TITLE);
@@ -508,12 +507,12 @@ class StrHelper
 
     /**
      * Translates a string with underscores into camel case (e.g. first_name -> firstName)
-     * @prototype string static public function toCamelCase(string $str[, bool $capitalise_first_char = false])
+     * @prototype string public static function toCamelCase(string $str[, bool $capitalise_first_char = false])
      * @param $str
      * @param bool $upper_case_first_char
      * @return mixed
      */
-    static public function toCamelCase($str, $upper_case_first_char = false)
+    public static function toCamelCase($str, $upper_case_first_char = false)
     {
         $str = self::strtolower($str);
 
@@ -530,7 +529,7 @@ class StrHelper
      * @param string $sep
      * @return string
      */
-    static public function toUnderscoreCase($string, $sep='_')
+    public static function toUnderscoreCase($string, $sep='_')
     {
         // 'CMSCategories' => 'cms_categories'
         // 'RangePrice' => 'range_price'
@@ -542,7 +541,7 @@ class StrHelper
      * @param string $value value to convert
      * @return int
      */
-    static public function convertBytes($value)
+    public static function convertBytes($value)
     {
         if (is_numeric($value))
             return $value;
@@ -573,7 +572,7 @@ class StrHelper
      * @param int $precision
      * @return string
      */
-    static public function formatBytes($size, $precision = 2)
+    public static function formatBytes($size, $precision = 2)
     {
         if (!$size) {
             return '0';

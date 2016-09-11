@@ -112,7 +112,7 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
             return $node;
         }
 
-        return $this->$name;
+        return property_exists($this, $name) ? $this->$name : null;
     }
 
     /**

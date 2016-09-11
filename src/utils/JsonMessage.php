@@ -8,7 +8,8 @@
 
 namespace inhere\librarys\utils;
 
-use inhere\librarys\collections\FixedData;
+use inhere\librarys\collections\ActiveData;
+use inhere\librarys\exceptions\PropertyException;
 
 /**
  * Class JsonMessage
@@ -30,7 +31,7 @@ use inhere\librarys\collections\FixedData;
  * }
  *
  */
-class JsonMessage extends FixedData
+class JsonMessage extends ActiveData
 {
     /**
      * @var int
@@ -63,4 +64,23 @@ class JsonMessage extends FixedData
         return (int)$this->code !== 0;
     }
 
+    public function __set($name, $value)
+    {
+        $this->data[$name] = $value;
+    }
+
+    // disable unset property
+    public function offsetUnset($offset)
+    {
+        //$this->$offset = null;
+    }
+
+    public function __get($name)
+    {
+        if ( isset($this->data[$name]) ) {
+            return $this->data[$name];
+        }
+
+        throw new PropertyException(sprintf('获取不存在的属性 %s ！',$name));
+    }
 }

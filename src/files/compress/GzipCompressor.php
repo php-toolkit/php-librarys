@@ -33,6 +33,10 @@ class GzipCompressor extends AbstractCompressor
      * @param string $archiveFile zip file save path
      * @param bool $override
      * @return bool
+     * @throws FileSystemException
+     * @throws NotFoundException
+     * @throws \inhere\librarys\exceptions\IOException
+     * @throws \inhere\librarys\exceptions\InvalidArgumentException
      */
     public function encode($sourcePath, $archiveFile, $override = true)
     {
@@ -84,6 +88,7 @@ class GzipCompressor extends AbstractCompressor
      * @param string $extractTo
      * @param bool $override
      * @return bool
+     * @throws FileNotFoundException
      */
     public function decode($archiveFile, $extractTo = '', $override = true)
     {

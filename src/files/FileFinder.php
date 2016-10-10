@@ -135,6 +135,7 @@ class FileFinder extends StdBase
      * @param string $path
      * @param string $pathPrefix
      * @return $this
+     * @throws InvalidArgumentException
      */
     public function findAll($recursive = false, $path = '', $pathPrefix = '')
     {
@@ -287,6 +288,7 @@ class FileFinder extends StdBase
 
     /**
      * @param string $sourcePath
+     * @throws InvalidArgumentException
      */
     public function setSourcePath($sourcePath)
     {

@@ -10,6 +10,10 @@
 
 namespace inhere\librarys\di;
 
+/**
+ * Class Service
+ * @package inhere\librarys\di
+ */
 class Service
 {
     protected $callback;

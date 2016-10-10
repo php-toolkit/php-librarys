@@ -266,10 +266,10 @@ class Directory extends FileSystem
     /**
      * 删除目录及里面的文件
      * @param $dirName
-     * @param  boolean $type [description]
+     * @param  boolean $delSelf 默认最后删掉自己
      * @return bool
      */
-    public static function delete($dirName,$type=true)
+    public static function delete($dirName,$delSelf=true)
     {
         $dirPath = self::pathFormat($dirName);
 
@@ -281,7 +281,7 @@ class Directory extends FileSystem
             is_dir($v) ? self::delete($v) : unlink($v);
         }
 
-        !$type or rmdir($dirPath);//默认最后删掉自己
+        $delSelf && rmdir($dirPath);//默认最后删掉自己
 
         return true;
     }

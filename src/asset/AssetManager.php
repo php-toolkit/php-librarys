@@ -198,6 +198,7 @@ class AssetManager extends StdBase
      * @param array $options
      * @param null|string $key
      * @return AssetManager
+     * @throws InvalidArgumentException
      */
     protected function loggingFileAsset($assets, $type=self::ASSET_CSS_FILE, array $options = [], $key = null)
     {
@@ -448,7 +449,7 @@ class AssetManager extends StdBase
     }
 
     /**
-     * @param string $pos
+     * @param int|string $pos
      */
     public function dump($pos = self::POS_HEAD)
     {
@@ -471,7 +472,7 @@ class AssetManager extends StdBase
     }
 
     /**
-     * @param string $pos
+     * @param int|string $pos
      * @return array
      */
     public function getAssetsByPos($pos = self::POS_HEAD)

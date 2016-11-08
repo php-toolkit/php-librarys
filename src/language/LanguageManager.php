@@ -345,7 +345,7 @@ class LanguageManager extends StdBase
      */
     public function __call($name, $args)
     {
-        return $this->translate($name);
+        return $this->translate($name, $args);
     }
 
     /**

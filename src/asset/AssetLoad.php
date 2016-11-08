@@ -168,6 +168,7 @@ class AssetLoad extends StdBase
      *
      * @param string $assetType 资源文件类型 css js
      * @return $this
+     * @throws InvalidArgumentException
      */
     protected function handleLoad($assets, $assetType = self::TYPE_CSS)
     {
@@ -218,8 +219,12 @@ class AssetLoad extends StdBase
 //////////////////////////////////// compress assets ////////////////////////////////////
 
     /**
-     * @param $options
+     * @param array $options
      * @return $this
+     * @throws FileNotFoundException
+     * @throws FileSystemException
+     * @throws InvalidOptionException
+     * @throws NotFoundException
      */
     public function compress(array $options = [])
     {
@@ -264,6 +269,8 @@ class AssetLoad extends StdBase
      * @param string $saveFile
      * @param string $webPath
      * @return string
+     * @throws FileNotFoundException
+     * @throws FileSystemException
      */
     public function compressAndMerge(array $assets, $saveFile, $webPath = '')
     {
@@ -327,6 +334,8 @@ class AssetLoad extends StdBase
      * @param string $saveFile If is empty, will save to old file dir.
      * @param string $webPath
      * @return string
+     * @throws FileNotFoundException
+     * @throws FileSystemException
      */
     public function compressAndSave($url, $saveFile = '', $webPath = '')
     {
@@ -449,6 +458,7 @@ class AssetLoad extends StdBase
 
     /**
      * @param string $assetType
+     * @throws InvalidArgumentException
      */
     public function setAssetType($assetType)
     {

@@ -260,8 +260,10 @@ class LanguageManager extends StdBase
     }
 
     /**
-     * @param string $fileKey
      * @param $file
+     * @param string $fileKey
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
     public function addLangFile($file, $fileKey = '')
     {
@@ -289,6 +291,7 @@ class LanguageManager extends StdBase
     /**
      * @param string $fileKey
      * @return DataCollector
+     * @throws NotFoundException
      */
     public function getLangFileData($fileKey)
     {

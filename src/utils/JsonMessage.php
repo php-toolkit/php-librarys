@@ -64,6 +64,54 @@ class JsonMessage extends ActiveData
         return (int)$this->code !== 0;
     }
 
+    /**
+     * @param $code
+     * @return $this
+     */
+    public function code($code)
+    {
+        $this->code = (int)$code;
+
+        return $this;
+    }
+
+    /**
+     * @param $msg
+     * @return $this
+     */
+    public function msg($msg)
+    {
+        $this->msg = $msg;
+
+        return $this;
+    }
+
+    /**
+     * @param array $data
+     * @return $this
+     */
+    public function data(array $data)
+    {
+        $this->data = $data;
+
+        return $this;
+    }
+
+    public function all($toArray=true)
+    {
+        // add a new alert message
+        return [
+            'code'  => (int)$this->code,
+            'msg'   => $this->msg,
+            'data'  => (array)$this->data
+        ];
+    }
+
+    public function toArray()
+    {
+        return $this->all();
+    }
+
     public function __set($name, $value)
     {
         $this->data[$name] = $value;

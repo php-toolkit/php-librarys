@@ -2,13 +2,31 @@
 
 namespace inhere\librarys\exceptions;
 
+abstract class BaseException extends \Exception {
 
-class InvalidArgumentException extends \LogicException {}
+    /**
+     * Whether the user can see the error message
+     * @var bool
+     */
+    public $isVisible = false;
+
+    /**
+     * append custom data
+     * @var array
+     */
+    public $params = [];
+
+    public function __construct($message = "", $code = 1000, $params = [], \Exception $previous = null)
+    {
+        parent::__construct($message, $code, $previous);
+
+        $this->params = $params;
+    }
+}
 
 //////////////////////////////////// Http exception ////////////////////////////////////
 
-
-class HttpException extends \Exception{}
+class HttpException extends BaseException{}
 
 class HttpRuntimeException extends HttpException{}
 class HttpInvalidParamException extends HttpException{}
@@ -26,30 +44,39 @@ class HttpQueryStringException extends HttpException{}
 
 //////////////////////////////////// Custom exception ////////////////////////////////////
 
-class ExtensionMissException extends \Exception{}
-class ConnectException extends \LogicException{}
+class LogicException extends BaseException {}
+class RuntimeException extends BaseException {}
+class PromptUserException extends BaseException {
+    public $isVisible = true;
+}
 
-class NotFoundException extends \LogicException{}
-class FileSystemException extends \LogicException{}
+class ExtensionMissException extends RuntimeException{}
+class ConnectException extends RuntimeException{}
+
+class FileSystemException extends LogicException{}
 class IOException extends FileSystemException{}
 class FileNotFoundException extends FileSystemException{}
 class FileReadException extends FileSystemException{}
 class FileWrittenException extends FileSystemException{}
 class FileUploadException extends FileSystemException{}
 
-class InvalidConfigException extends \LogicException{}
-class InvalidOptionException extends \RuntimeException{}
-class DataTypeException extends \LogicException{}
-class DataParseException extends \RuntimeException{}
+class InvalidArgumentException extends RuntimeException{}
+class InvalidConfigException extends RuntimeException{}
+class InvalidOptionException extends RuntimeException{}
 
-class PropertyException extends \LogicException{}
+class DataParseException extends RuntimeException{}
+class DataTypeException extends RuntimeException{}
+
+class PropertyException extends LogicException{}
 class GetPropertyException extends PropertyException{}
 class SetPropertyException extends PropertyException{}
 
-class UnknownCalledException extends \LogicException{}
-class UnknownMethodException extends \LogicException{}
-class RequestException extends \RuntimeException{}
-class ResponseException extends \RuntimeException{}
+class NotFoundException extends LogicException{}
+class UnknownCalledException extends NotFoundException{}
+class UnknownMethodException extends NotFoundException{}
 
-class ContainerException extends \LogicException{}
+class RequestException extends RuntimeException{}
+class ResponseException extends RuntimeException{}
+
+class ContainerException extends RuntimeException{}
 class DependencyResolutionException extends ContainerException{}

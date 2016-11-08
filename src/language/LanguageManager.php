@@ -325,6 +325,27 @@ class LanguageManager extends StdBase
      *********************************************************************************/
 
     /**
+     * Allow quick access default file translate by `$lang->key`,
+     * is equals to `$lang->tl('key')`.
+     * @param string $name
+     */
+    public function __get($name)
+    {
+        return $this->translate($name);
+    }
+
+    /**
+     * Allow quick access default file translate by `$lang->key()`,
+     * is equals to `$lang->tl('key')`.
+     * @param string $name
+     * @param array $args
+     */
+    public function __call($name, $args)
+    {
+        return $this->translate($name);
+    }
+
+    /**
      * @return string
      */
     public function getLang()

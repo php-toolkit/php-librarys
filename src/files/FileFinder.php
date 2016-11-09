@@ -95,7 +95,7 @@ class FileFinder extends StdBase
     protected $dirFilter;
 
     /**
-     * @var ArrayObject
+     * @var array|ArrayObject
      */
     protected $files;
 
@@ -120,7 +120,7 @@ class FileFinder extends StdBase
     public function reset()
     {
         $this->sourcePath = '';
-        $this->files  = new ArrayObject([]);
+        $this->files  = [];
         $this->include = $this->exclude = [
             'file' => [],
             'ext' => [],
@@ -151,9 +151,8 @@ class FileFinder extends StdBase
             return $this;
         }
 
-        $this->files = new ArrayObject(
-            $this->findFiles($path, $recursive, $pathPrefix)
-        );
+        $files = $this->findFiles($path, $recursive, $pathPrefix);
+        $this->files = $files ? new ArrayObject($files) : [];
 
         $this->_relatedFile = $path;
 
@@ -250,13 +249,13 @@ class FileFinder extends StdBase
         $ext   = implode('|',$this->getInclude('ext'));
         $noExt = implode('|',$this->getExclude('ext'));
 
-        return (
+        if ( $ext || $this->include['file'] ) {
             // check include ...
-            ( in_array($name, $this->include['file']) || preg_match("/\.($ext)$/i", $name) ) ||
+            return in_array($name, $this->include['file']) || preg_match("/\.($ext)$/i", $name);
+        }
 
-            // check exclude ...
-            ( !in_array($name, $this->exclude['file']) && !preg_match("/\.($noExt)$/i", $name) )
-        );
+        // check exclude ...
+        return  !in_array($name, $this->exclude['file']) && !preg_match("/\.($noExt)$/i", $name);
     }
 
     /**
@@ -334,7 +333,7 @@ class FileFinder extends StdBase
     }
 
     /**
-     * @return ArrayObject
+     * @return array|ArrayObject
      */
     public function getFiles()
     {

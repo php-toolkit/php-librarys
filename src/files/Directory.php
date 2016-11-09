@@ -176,7 +176,7 @@ class Directory extends FileSystem
      * @param array $options more {@see \inhere\librarys\files\DirectoryFiles}
      * @param bool|false $recursive
      *
-     * @return \ArrayObject
+     * @return array|\ArrayObject
      */
     public static function findFiles($dir, array $options = [], $recursive = false)
     {

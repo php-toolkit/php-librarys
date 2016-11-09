@@ -148,7 +148,7 @@ class FileFinder extends StdBase
 
         // have been find
         if ( $this->_relatedFile === $path && ($this->files instanceof ArrayObject) ) {
-            return $this->files;
+            return $this;
         }
 
         $this->files = new ArrayObject(
@@ -359,7 +359,7 @@ class FileFinder extends StdBase
      */
     public function setInclude(array $include)
     {
-        $this->include = $include;
+        $this->include = array_merge($this->include, $include);
     }
 
     /**
@@ -380,6 +380,6 @@ class FileFinder extends StdBase
      */
     public function setExclude(array $exclude)
     {
-        $this->exclude = $exclude;
+        $this->exclude = array_merge($this->exclude, $exclude);
     }
 }

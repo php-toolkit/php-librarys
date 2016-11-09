@@ -100,6 +100,7 @@ class Directory extends FileSystem
      * @param $ext array('css','html','php') css|html|php
      * @param $recursive int|bool 是否包含子目录
      * @return array
+     * @throws NotFoundException
      */
     public static function simpleInfo($dir, $ext=null, $recursive=false)
     {
@@ -140,6 +141,7 @@ class Directory extends FileSystem
      * @param $recursive int|bool 是否包含子目录
      * @param array $list
      * @return array
+     * @throws NotFoundException
      */
     public static function getFiles($path, $ext=null, $recursive=0, &$list=[])
     {
@@ -174,7 +176,7 @@ class Directory extends FileSystem
      * @param array $options more {@see \inhere\librarys\files\DirectoryFiles}
      * @param bool|false $recursive
      *
-     * @return array
+     * @return \ArrayObject
      */
     public static function findFiles($dir, array $options = [], $recursive = false)
     {
@@ -190,6 +192,7 @@ class Directory extends FileSystem
      * @param $recursive int|bool 是否包含子目录
      * @param array $list
      * @return array
+     * @throws NotFoundException
      */
     public static function getFilesInfo($dirName, $ext=null, $recursive=0, &$list=[])
     {

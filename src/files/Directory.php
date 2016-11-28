@@ -32,13 +32,13 @@ class Directory extends FileSystem
 
             if( $file != '.' && $file != '..' ) {
                 closedir($handler);
-                return true;
+                return false;
             }
         }
 
         closedir($handler);
 
-        return false;
+        return true;
     }
 
     /**

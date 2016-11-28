@@ -162,7 +162,8 @@ class PhpHelper
                 'fast-cgi',
                 'cgi-fcgi',
                 'fpm-fcgi',
-                'srv'
+                'srv',
+                'cli-server'
             )
         );
     }
@@ -177,7 +178,6 @@ class PhpHelper
             PHP_SAPI,
             array(
                 'cli',
-                'cli-server'
             )
         );
     }

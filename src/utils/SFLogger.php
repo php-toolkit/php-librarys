@@ -8,15 +8,14 @@
 
 namespace inhere\librarys\utils;
 
-use Psr\Log\AbstractLogger;
-use inhere\librarys\helpers\PublicHelper;
+use inhere\librarys\helpers\PhpHelper;
 
 /**
- * simple file logger SFLogger
- * Class SFLogger
- * @package inhere\librarys\utils
+ * simple file logger handler
+ * Class SLogger
+ * @package ug\utils
  */
-class SFLogger extends AbstractLogger
+class SFLogger
 {
     /**
      * logger instance list
@@ -45,7 +44,7 @@ class SFLogger extends AbstractLogger
      * file content max size. (M)
      * @var int
      */
-    protected $maxSize = 2;
+    protected $maxSize = 4;
 
     /**
      * 存放日志的基础路径
@@ -72,6 +71,12 @@ class SFLogger extends AbstractLogger
     protected $levels = [];
 
     /**
+     * channel name
+     * @var string
+     */
+    protected $channel = 'WEB';
+
+    /**
      * level name
      * @var string
      */
@@ -84,15 +89,36 @@ class SFLogger extends AbstractLogger
     protected $splitFile = false;
 
     /**
-     * default format
+     * log print to console
+     * @var bool
      */
-    const SIMPLE_FORMAT = "[{datetime}] {channel}.{level_name}: {message} {context} {extra}\n";
+    protected $logConsole = true;
+
+    /**
+     * log print to console
+     * @var bool
+     */
+    protected $debug = true;
 
     /**
      * 格式
      * @var string
      */
-    public $format = '[{datetime}] {channel}.{level_name}: {message} {context}';
+    public $format = '[{datetime}] [{level_name}] {message} {context}';
+
+    /**
+     * default format
+     */
+    const SIMPLE_FORMAT = "[{datetime}] [{channel}.{level_name}] {message} {context} {extra}\n";
+
+    const EMERGENCY = 'emergency';
+    const ALERT     = 'alert';
+    const CRITICAL  = 'critical';
+    const ERROR     = 'error';
+    const WARNING   = 'warning';
+    const NOTICE    = 'notice';
+    const INFO      = 'info';
+    const DEBUG     = 'debug';
 
     /**
      * create new instance or get exists instance
@@ -107,9 +133,6 @@ class SFLogger extends AbstractLogger
             if ( isset(self::$loggers[$name]) ) {
                 return self::$loggers[$name];
             }
-
-            // $config = \Yii::$app->settings->get($name);
-            // $config = \Yii::$app->params[$name];
 
             if ( !isset($config['name']) ) {
                 $config['name'] = $name;
@@ -188,7 +211,6 @@ class SFLogger extends AbstractLogger
         }
     }
 
-
     /**
      * create new instance
      * @param array $config
@@ -197,8 +219,9 @@ class SFLogger extends AbstractLogger
     private function __construct(array $config = [])
     {
         $this->name = $config['name'];
+        $canSetting = ['logConsole','debug','channel', 'basePath', 'subFolder', 'format', 'splitFile'];
 
-        foreach (['basePath', 'subFolder', 'format', 'splitFile'] as $name) {
+        foreach ($canSetting as $name) {
             if ( isset($config[$name]) ) {
                 $this->$name = $config[$name];
             }
@@ -207,6 +230,17 @@ class SFLogger extends AbstractLogger
         if (isset($config['filenameHandler'])) {
             $this->setFilenameHandler($config['filenameHandler']);
         }
+    }
+    public function error($message, array $context = array())
+    {
+        $this->log(self::ERROR, $message, $context);
+        $this->save();
+    }
+
+    public function alert($message, array $context = array())
+    {
+        $this->log(self::ALERT, $message, $context);
+        $this->save();
     }
 
     /**
@@ -235,6 +269,7 @@ class SFLogger extends AbstractLogger
                 'HOST' => $this->getServer('HTTP_HOST'),
                 'METHOD' => $this->getServer('request_method'),
                 'URI' => $this->getServer('request_uri'),
+                'DATA' => $_REQUEST,
                 'REFERER' => $this->getServer('HTTP_REFERER'),
             ];
         }
@@ -258,7 +293,7 @@ class SFLogger extends AbstractLogger
      */
     public function trace($message = '', array $context = [])
     {
-        if ( !YII_DEBUG ) {
+        if ( !$this->debug ) {
             return false;
         }
 
@@ -286,17 +321,30 @@ class SFLogger extends AbstractLogger
             }
         }
 
-        $message = "\n  POS: $method, At $file Line [$line]. $msg\n  DATA:";
+        $message = "\n  FUNC: $method\n  POS: $file Line [$line]. $msg\n  DATA:";
         $this->log('trace', $message, $context);
 
         return true;
     }
 
+    public function warning($message, array $context = array())
+    {
+        $this->log(self::WARNING, $message, $context);
+    }
+
+    public function notice($message, array $context = array())
+    {
+        $this->log(self::NOTICE, $message, $context);
+    }
+
+    public function info($message, array $context = array())
+    {
+        $this->log(self::INFO, $message, $context);
+    }
+
     public function debug($message, array $context = array())
     {
-        parent::debug($message, $context);
-
-        $this->save();
+        $this->log(self::DEBUG, $message, $context);
     }
 
     /**
@@ -310,9 +358,17 @@ class SFLogger extends AbstractLogger
     {
         $string = $this->dataFormatter($level, $message, $context);
 
-        // $this->write($string);
+        // serve is running in php build in server env.
+        if ( $this->logConsole && PublicHelper::isBuildInServer() ) {
+            defined('STDOUT') or define('STDOUT', fopen('php://stdout', 'w'));
+            fwrite(\STDOUT, $string.PHP_EOL);
+        }
 
-        $this->_records[$level][] = $string;
+        if ( $this->splitFile ) {
+            $this->_records[$level][] = $string;
+        } else {
+            $this->_records[] = $string;
+        }
 
         return null;
     }
@@ -326,23 +382,34 @@ class SFLogger extends AbstractLogger
             return true;
         }
 
+        $writed = false;
         $uri = $this->getServer('REQUEST_URI', 'Unknown');
-        $str = "####### REQUEST [$uri] BEGIN ####### \n";
+        $str = "------------- REQUEST URI [$uri]  ------------- \n";
 
-        foreach ($this->_records as $level => $levelRecords) {
-            $this->levelName = $level;
+        foreach ($this->_records as $key => $record) {
+            $this->levelName = $key;
 
             if ( $this->splitFile ) {
-                $str = "####### REQUEST [$uri] BEGIN ####### \n";
-            }
+                $str = "------------- REQUEST URI [$uri]  ------------- \n";
 
-            foreach ($levelRecords as $text) {
-                $str .= $text . "\n";
-            }
+                foreach ($record as $text) {
+                    $str .= $text . "\n";
+                }
 
-            $this->write($str, false);
+                $this->write($str, false);
+                $writed = true;
+            } else {
+                $str .= $record . "\n";
+            }
         }
 
+        // no split File
+        if (!$writed) {
+            $this->write($str, false);
+            $writed = true;
+        }
+
+        unset($str);
         $this->_records = [];
         $this->_hasLogged = true;
 
@@ -361,10 +428,10 @@ class SFLogger extends AbstractLogger
         $record = [
             '{datetime}' => date('Y-m-d H:i:s'),
             '{message}'  => $message,
-            '{level_name}' => $level,
+            '{level_name}' => strtoupper($level),
         ];
 
-        $record['{channel}'] = self::arrayRemove($context, 'channel', 'App');
+        $record['{channel}'] = strtoupper(self::arrayRemove($context, 'channel', $this->channel));
         $record['{context}'] = $context ? json_encode($context) : '';
 
         return strtr($format, $record);
@@ -513,3 +580,4 @@ class SFLogger extends AbstractLogger
         // Yii::$app->gearman->doBackground();
     }
 }
+

@@ -13,7 +13,7 @@ use inhere\librarys\helpers\PhpHelper;
 /**
  * simple file logger handler
  * Class SLogger
- * @package ug\utils
+ * @package inhere\librarys\utils
  */
 class SFLogger
 {
@@ -66,6 +66,7 @@ class SFLogger
     protected $filenameHandler;
 
     /**
+     * 设置需要记录的日志级别
      * @var array
      */
     protected $levels = [];
@@ -111,6 +112,7 @@ class SFLogger
      */
     const SIMPLE_FORMAT = "[{datetime}] [{channel}.{level_name}] {message} {context} {extra}\n";
 
+    const EXCEPTION = 'exception';
     const EMERGENCY = 'emergency';
     const ALERT     = 'alert';
     const CRITICAL  = 'critical';
@@ -219,7 +221,7 @@ class SFLogger
     private function __construct(array $config = [])
     {
         $this->name = $config['name'];
-        $canSetting = ['logConsole','debug','channel', 'basePath', 'subFolder', 'format', 'splitFile'];
+        $canSetting = ['logConsole','debug','channel','basePath','subFolder','format','splitFile'];
 
         foreach ($canSetting as $name) {
             if ( isset($config[$name]) ) {
@@ -229,6 +231,10 @@ class SFLogger
 
         if (isset($config['filenameHandler'])) {
             $this->setFilenameHandler($config['filenameHandler']);
+        }
+
+        if (isset($config['levels'])) {
+            $this->setLevels($config['levels']);
         }
     }
     public function error($message, array $context = array())
@@ -356,6 +362,11 @@ class SFLogger
      */
     public function log($level, $message, array $context = [])
     {
+        // 不在记录的级别内
+        if ( $this->levels && !in_array($level, $this->levels)) {
+            return null;
+        }
+
         $string = $this->dataFormatter($level, $message, $context);
 
         // serve is running in php build in server env.
@@ -481,6 +492,18 @@ class SFLogger
         }
 
         return $this->basePath . '/' . ( $this->subFolder ? $this->subFolder . '/' : '' );
+    }
+
+    public function setLevels($levels)
+    {
+        if (is_array($levels)) {
+            $this->levels = $levels;
+        } elseif (is_string($levels)) {
+            $levels = str_replace(' ', '', $levels);
+            $this->levels = strpos($levels, ',') ? explode(',', $levels) : [$levels];
+        }
+
+        return $this;
     }
 
     /**

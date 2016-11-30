@@ -26,7 +26,45 @@ class ArrHelper
 
         return $array;
     }
-    
+
+    /**
+     * @param array $data array data
+     * @param array $keys key list
+     * @param bool|false $unsetKey
+     * @param null $default
+     * @return array
+     */
+    public static function getMulti(array &$data, array $keys, $unsetKey=false, $default = null)
+    {
+        $values = [];
+
+        foreach ($keys as $key) {
+            if (isset($data[$key])) {
+                $values[$key] = $data[$key];
+
+                if ($unsetKey) {
+                    unset($data[$key]);
+                }
+            } else {
+                $values[$key] = $default;
+            }
+        }
+
+        return $values;
+    }
+
+    /**
+     * get value from an array
+     * @param $arr
+     * @param $key
+     * @param null $default
+     * @return mixed
+     */
+    public static function get($arr, $key, $default = null)
+    {
+        return isset($arr[$key]) ? $arr[$key]: $default;
+    }
+
     /**
      * 递归合并多维数组,后面的值将会递归覆盖原来的值
      * @param  array|null $old

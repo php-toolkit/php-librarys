@@ -12,8 +12,19 @@ use inhere\librarys\helpers\PhpHelper;
 
 /**
  * simple file logger handler
- * Class SLogger
+ * Class SFLogger
  * @package inhere\librarys\utils
+ * ```
+ * $config = [...];
+ * $logger = SFLogger::make($config);
+ * $logger->info(...);
+ * $logger->debug(...);
+ *
+ * ......
+ *
+ * // Notice: must call SFLogger::flushAll() on application run end.
+ * SFLogger::flushAll();
+ * ```
  */
 class SFLogger
 {
@@ -66,7 +77,6 @@ class SFLogger
     protected $filenameHandler;
 
     /**
-     * 设置需要记录的日志级别
      * @var array
      */
     protected $levels = [];
@@ -96,10 +106,14 @@ class SFLogger
     protected $logConsole = true;
 
     /**
-     * log print to console
      * @var bool
      */
-    protected $debug = true;
+    protected $debug = false;
+
+    /**
+     * @var bool
+     */
+    protected $showUri = false;
 
     /**
      * 格式
@@ -121,6 +135,7 @@ class SFLogger
     const NOTICE    = 'notice';
     const INFO      = 'info';
     const DEBUG     = 'debug';
+    const TRACE     = 'trace';
 
     /**
      * create new instance or get exists instance
@@ -171,7 +186,7 @@ class SFLogger
      * exists logger instance
      * @return bool
      */
-    public static function existsLogger()
+    public static function existLogger()
     {
         return count(self::$loggers) > 0;
     }
@@ -194,7 +209,7 @@ class SFLogger
      * fast get logger instance
      * @param $name
      * @param $args
-     * @return SLogger
+     * @return static
      */
     public static function __callStatic($name, $args)
     {
@@ -229,12 +244,12 @@ class SFLogger
             }
         }
 
-        if (isset($config['filenameHandler'])) {
-            $this->setFilenameHandler($config['filenameHandler']);
-        }
-
         if (isset($config['levels'])) {
             $this->setLevels($config['levels']);
+        }
+
+        if (isset($config['filenameHandler'])) {
+            $this->setFilenameHandler($config['filenameHandler']);
         }
     }
     public function error($message, array $context = array())
@@ -322,7 +337,6 @@ class SFLogger
 
             if (isset($data[1])) {
                 $t = $data[1];
-
                 $method = self::arrayRemove($t, 'class', 'CLASS') . '::' .  self::arrayRemove($t, 'function', 'METHOD');
             }
         }
@@ -389,11 +403,11 @@ class SFLogger
      */
     public function save()
     {
-        if ($this->_hasLogged) {
+        if ($this->_hasLogged || !$this->_records) {
             return true;
         }
 
-        $writed = false;
+        $written = false;
         $uri = $this->getServer('REQUEST_URI', 'Unknown');
         $str = "------------- REQUEST URI [$uri]  ------------- \n";
 
@@ -408,16 +422,15 @@ class SFLogger
                 }
 
                 $this->write($str, false);
-                $writed = true;
+                $written = true;
             } else {
                 $str .= $record . "\n";
             }
         }
 
         // no split File
-        if (!$writed) {
+        if (!$written) {
             $this->write($str, false);
-            $writed = true;
         }
 
         unset($str);
@@ -479,6 +492,19 @@ class SFLogger
         return error_log($str . PHP_EOL, 3, $file);
     }
 
+    /**
+     * @param array|string $levels
+     */
+    public function setLevels($levels)
+    {
+        if (is_array($levels)) {
+            $this->levels = $levels;
+        } elseif (is_string($levels)) {
+            $levels = trim($levels, ', ');
+
+            $this->levels = strpos($levels, ',') ? array_map('trim', explode(',', $levels)) : [$levels];
+        }
+    }
 
     /**
      * get log path
@@ -492,18 +518,6 @@ class SFLogger
         }
 
         return $this->basePath . '/' . ( $this->subFolder ? $this->subFolder . '/' : '' );
-    }
-
-    public function setLevels($levels)
-    {
-        if (is_array($levels)) {
-            $this->levels = $levels;
-        } elseif (is_string($levels)) {
-            $levels = str_replace(' ', '', $levels);
-            $this->levels = strpos($levels, ',') ? explode(',', $levels) : [$levels];
-        }
-
-        return $this;
     }
 
     /**
@@ -528,7 +542,7 @@ class SFLogger
             return $handler($this);
         }
 
-        return ( $this->splitFile ? $this->levelName : $this->name ) . '_' . date('Y-m-d') . '.log';
+        return ( $this->splitFile ? $this->levelName : $this->name ) . '.' . date('Y-m-d') . '.log';
     }
 
     /**
@@ -603,4 +617,5 @@ class SFLogger
         // Yii::$app->gearman->doBackground();
     }
 }
+
 

@@ -33,7 +33,7 @@ abstract class FileSystem
 
         if (
             $path{0} === '/' ||  // linux/mac
-            1 === preg_match('/^[a-z]:[\/|\\\]{1}.+/i', $path) // windows
+            1 === preg_match('#^[a-z]:[\/|\\\]{1}.+#i', $path) // windows
         ) {
             return true;
         }

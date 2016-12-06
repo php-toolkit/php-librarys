@@ -236,7 +236,7 @@ class SFLogger
     private function __construct(array $config = [])
     {
         $this->name = $config['name'];
-        $canSetting = ['logConsole','debug','channel','basePath','subFolder','format','splitFile'];
+        $canSetting = ['logConsole','debug','channel','basePath','showUri','subFolder','format','splitFile'];
 
         foreach ($canSetting as $name) {
             if ( isset($config[$name]) ) {
@@ -409,13 +409,13 @@ class SFLogger
 
         $written = false;
         $uri = $this->getServer('REQUEST_URI', 'Unknown');
-        $str = "------------- REQUEST URI [$uri]  ------------- \n";
+        $str = !$this->showUri ? '' : "------------- REQUEST URI [$uri]  ------------- \n";
 
         foreach ($this->_records as $key => $record) {
             $this->levelName = $key;
 
             if ( $this->splitFile ) {
-                $str = "------------- REQUEST URI [$uri]  ------------- \n";
+                $str = !$this->showUri ? '' : "------------- REQUEST URI [$uri]  ------------- \n";
 
                 foreach ($record as $text) {
                     $str .= $text . "\n";

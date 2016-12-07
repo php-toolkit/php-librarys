@@ -28,17 +28,29 @@ class ArrHelper
     }
 
     /**
+     * Get Multi - 获取多个, 可以设置默认值
      * @param array $data array data
-     * @param array $keys key list
+     * @param array $needKeys
+     * $needKeys = [
+     *     'name',
+     *     'password',
+     *     'status' => '1'
+     * ]
      * @param bool|false $unsetKey
-     * @param null $default
      * @return array
      */
-    public static function getMulti(array &$data, array $keys, $unsetKey=false, $default = null)
+    public static function getMulti(array &$data, array $needKeys=[], $unsetKey=false)
     {
-        $values = [];
+        $needed = [];
 
-        foreach ($keys as $key) {
+        foreach ($needKeys as $key => $value) {
+            if ( is_int($key) ) {
+                $key = $value;
+                $default = null;
+            } else {
+                $default = $value;
+            }
+
             if (isset($data[$key])) {
                 $values[$key] = $data[$key];
 
@@ -50,7 +62,7 @@ class ArrHelper
             }
         }
 
-        return $values;
+        return $needed;
     }
 
     /**

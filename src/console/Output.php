@@ -8,7 +8,6 @@
 
 namespace inhere\librarys\console;
 
-
 use inhere\librarys\StdBase;
 
 /**
@@ -32,45 +31,31 @@ class Output extends StdBase
     /**
      * 控制台窗口(字体/背景)颜色添加处理
      * window colors
-     * @var Colors
+     * @var Color
      */
-    protected $colors;
+    protected $color;
 
     /**
-     * make Colors
-     * @param  string     $fg      前景色(字体颜色)
-     * @param  string     $bg      背景色
-     * @param  array      $options 其它选项
-     * @return Colors
+     * @param Color $color
+     * @return static
      */
-    public function makeColors($fg = '', $bg = '', array $options=[])
+    public function setColor(Color $color)
     {
-        $this->colors = new Colors($fg, $bg, $options);
+        $this->color = $color;
 
         return $this;
     }
 
     /**
-     * @param Colors $colors
-     * @return Colors
+     * @return Color
      */
-    public function setColors(Colors $colors)
+    public function getColor()
     {
-        $this->colors = $colors;
-
-        return $this;
-    }
-
-    /**
-     * @return Colors
-     */
-    public function getColors()
-    {
-        if (!$this->colors) {
-            $this->colors = new Colors;
+        if (!$this->color) {
+            $this->color = new Color;
         }
 
-        return $this->colors;
+        return $this->color;
     }
 
     /**
@@ -87,23 +72,23 @@ class Output extends StdBase
             $messages[0] = sprintf('[%s] %s', $type, $messages[0]);
         }
 
-        $colors = $this->getColors();
+        $color = $this->getColor();
 
-        if (is_string($style) && !$colors->hasStyle($style)) {
+        if (is_string($style) && !$color->hasStyle($style)) {
             $style = '';
         } elseif ( is_array($style) ) {
-            $colors->addStyle($style[0], $style[1]);
+            $color->addStyle($style[0], $style[1]);
         }
 
         $text = implode(PHP_EOL, $messages);
         $text = $this->createStyleTag("[$type]: ".$text, $style);
 
-        $this->out($text);
+        $this->write($text);
     }
 
     /**
      * add style tag for $text
-     * all enable color style @see Colors::$styles
+     * all enable color style @see Color::$styles
      * @param  string     $text
      * @param  string     $colorStyle
      * @return string
@@ -114,25 +99,16 @@ class Output extends StdBase
     }
 
     /**
-     * use color render text
-     * @author inhere
-     * @date   2015-10-05
-     * @param  string     $text
-     * @return string
+     * @param string $text
+     * @param bool $nl
+     * @return $this
      */
-    public function renderColor($text)
+    public function write($text = '', $nl = true)
     {
         // at windows CMD , don't handle ...
-        if ( !$this->hasColorSupport()) {
-            return $text;
+        if ( ConsoleHelper::isSupportColor() ) {
+            $text = $this->getColor()->handle($text);
         }
-
-        return $this->getColors()->handle($text);
-    }
-
-    public function out($text = '', $nl = true)
-    {
-        $text = $this->getColors()->handle($text);
 
         fwrite($this->outputStream, $text . ($nl ? "\n" : null));
 
@@ -147,41 +123,16 @@ class Output extends StdBase
      */
     public function err($text = '', $nl = true)
     {
-        $text = $this->renderColor($text);
+        // at windows CMD , don't handle ...
+        if ( ConsoleHelper::isSupportColor() ) {
+            $text = $this->getColor()->handle($text);
+        }
 
         fwrite($this->errorStream, $text . ($nl ? "\n" : null));
 
         return $this;
     }
 
-    /**
-     * Returns true if STDOUT supports colorization.
-     * This code has been copied and adapted from
-     * \Symfony\Component\Console\Output\OutputStream.
-     * @return boolean
-     */
-    public function hasColorSupport()
-    {
-        if (DIRECTORY_SEPARATOR === '\\') {
-            return false !== getenv('ANSICON') || 'ON' === getenv('ConEmuANSI');
-        }
-
-        if (!defined('STDOUT')) {
-            return false;
-        }
-
-        return $this->isInteractive(STDOUT);
-    }
-
-    /**
-     * Returns if the file descriptor is an interactive terminal or not.
-     * @param  int|resource $fileDescriptor
-     * @return boolean
-     */
-    public function isInteractive($fileDescriptor)
-    {
-        return function_exists('posix_isatty') && @posix_isatty($fileDescriptor);
-    }
 
     /**
      * getOutStream

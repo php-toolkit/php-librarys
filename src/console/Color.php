@@ -13,17 +13,18 @@ namespace inhere\librarys\console;
 use inhere\librarys\StdBase;
 
 /**
- * Class Colors
+ * Class Color
  * @package inhere\librarys\console
  * @link https://github.com/ventoviro/windwalker-IO
  */
-class Colors extends StdBase
+class Color
+
 {
     /**
      * Flag to remove color codes from the output
      * @var bool
      */
-    public $noColors = false;
+    public $noColor = false;
 
     /**
      * Regex to match tags
@@ -37,8 +38,8 @@ class Colors extends StdBase
     protected static $stripFilter = '/<[\/]?[a-z=;]+>/';
 
     /**
-     * Array of ColorStyle objects
-     * @var array[]
+     * Array of Style objects
+     * @var array
      */
     protected $styles = [];
 
@@ -54,7 +55,8 @@ class Colors extends StdBase
         'blue'    => 4,
         'magenta' => 5, // 洋红色 洋红 品红色
         'cyan'    => 6, // 青色 青绿色 蓝绿色
-        'white'   => 7
+        'white'   => 7,
+        'default' => 9
     ];
 
     /**
@@ -74,13 +76,13 @@ class Colors extends StdBase
      * Foreground base value
      * @var int
      */
-    private static $fgBase = 30;
+    const FG_BASE = 30;
 
     /**
      * Background base value
      * @var int
      */
-    private static $bgBase = 40;
+    const BG_BASE = 40;
 
     /**
      * Constructor
@@ -111,57 +113,42 @@ class Colors extends StdBase
     }
 
     /**
-     * Adds predefined color styles to the Colors styles
+     * Adds predefined color styles to the Color styles
      * default primary success info warning danger
      */
     protected function addPredefinedStyles()
     {
-        $this->addStyle(
-            'default',
-            [
-                'options' => ['bold','underscore']
-            ]
-        )->addStyle(
-            'primary',
-            [
-                'bgColor' => 'blue', 'options' => ['bold']
-            ]
-        )->addStyle(
-            'success',
-            [
-                'bgColor' => 'green', 'options' => ['bold']
-            ]
-        )->addStyle(
-            'info',
-            [
-                /*'bgColor' => 'cyan', */'options' => ['bold']
-            ]
-        )->addStyle(
-            'warning',
-            [
-                'bgColor' => 'yellow', 'options' => ['bold']
-            ]
-        )->addStyle(
-            'danger',
-            [
-                'fgColor' => 'white', 'bgColor' => 'red', 'options' => ['bold']
-            ]
-        )->addStyle(
-            'comment',
-            [
-                'fgColor' => 'yellow', 'options' => ['bold']
-            ]
-        )->addStyle(
-            'question',
-            [
+        $this->addStyle('default', [
+                'fgColor' => 'default'
+            ])
+            ->addStyle('notice', [
+                'options' => ['bold']
+            ])
+            ->addStyle('primary', [
+                'fgColor' => 'blue', //'options' => ['bold']
+            ])
+            ->addStyle('success', [
+                'fgColor' => 'green', 'options' => ['bold']
+            ])
+            ->addStyle('info', [
+                'fgColor' => 'green', //'options' => ['bold']
+            ])
+            ->addStyle('warning', [
+                'fgColor' => 'yellow', //'options' => ['bold']
+            ])
+            ->addStyle('comment', [
+                'fgColor' => 'cyan', //'options' => ['bold']
+            ])
+            ->addStyle('question', [
                 'fgColor' => 'black', 'bgColor' => 'cyan'
-            ]
-        )->addStyle(
-            'error',
-            [
+            ])
+            ->addStyle('danger', [
+                'fgColor' => 'white', 'bgColor' => 'magenta',// 'options' => ['bold']
+            ])
+            ->addStyle('error', [
                 'fgColor' => 'white', 'bgColor' => 'red'
-            ]
-        );
+            ])
+        ;
     }
 
 //////////////////////////////////////////// Text Color handle ////////////////////////////////////////////
@@ -171,7 +158,7 @@ class Colors extends StdBase
      * @param $string
      * @return mixed
      */
-    public static function stripColors($string)
+    public static function stripColor($string)
     {
         return preg_replace(static::$stripFilter, '', $string);
     }
@@ -191,11 +178,11 @@ class Colors extends StdBase
 
         foreach ($matches[0] as $i => $m) {
             if (array_key_exists($matches[1][$i], $this->styles)) {
-                $string = $this->replaceColors($string, $matches[1][$i], $matches[2][$i], $this->styles[$matches[1][$i]]);
+                $string = $this->replaceColor($string, $matches[1][$i], $matches[2][$i], $this->styles[$matches[1][$i]]);
             }
             // Custom format
             elseif (strpos($matches[1][$i], '=')) {
-                $string = $this->replaceColors($string, $matches[1][$i], $matches[2][$i], $this->fromString($matches[1][$i]));
+                $string = $this->replaceColor($string, $matches[1][$i], $matches[2][$i], $this->fromString($matches[1][$i]));
             }
         }
 
@@ -210,10 +197,10 @@ class Colors extends StdBase
      * @param   array $styles The color style to apply.
      * @return mixed
      */
-    protected function replaceColors($text, $tag, $match, array $styles)
+    protected function replaceColor($text, $tag, $match, array $styles)
     {
         $style   = $this->styleToString($styles);
-        $replace = $this->noColors ? $match : "\033[{$style}m{$match}\033[0m";
+        $replace = $this->noColor ? $match : "\033[{$style}m{$match}\033[0m";
 
         return str_replace('<' . $tag . '>' . $match . '</' . $tag . '>', $replace, $text);
     }
@@ -308,7 +295,7 @@ class Colors extends StdBase
                 );
             }
 
-            $style['fgColor'] = static::$fgBase + static::$knownColors[$fg];
+            $style['fgColor'] = static::FG_BASE + static::$knownColors[$fg];
         }
 
         if ($bg) {
@@ -320,7 +307,7 @@ class Colors extends StdBase
                 );
             }
 
-            $style['bgColor'] = static::$bgBase + static::$knownColors[$bg];
+            $style['bgColor'] = static::BG_BASE + static::$knownColors[$bg];
         }
 
         foreach ($options as $option) {
@@ -424,21 +411,21 @@ class Colors extends StdBase
     }
 
     /**
-     * Method to get property NoColors
+     * Method to get property NoColor
      */
-    public function getNoColors()
+    public function getNoColor()
     {
-        return $this->noColors;
+        return $this->noColor;
     }
 
     /**
-     * Method to set property noColors
-     * @param $noColors
+     * Method to set property noColor
+     * @param $noColor
      * @return $this
      */
-    public function setNoColors($noColors)
+    public function setNoColor($noColor)
     {
-        $this->noColors = $noColors;
+        $this->noColor = $noColor;
 
         return $this;
     }

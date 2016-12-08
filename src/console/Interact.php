@@ -108,7 +108,7 @@ class Interact
         $defaultText = $default ? 'yes' : 'no';
 
         $message = "$question  \n    Please confirm (yes|no) [default:$defaultText]: ";
-        static::out($message, false);
+        static::write($message, false);
 
         $answer = self::readRow();
 
@@ -138,7 +138,7 @@ class Interact
         }
 
         // $question = ucfirst(trim($question));
-        static::out(ucfirst(trim($question)));
+        static::write(ucfirst(trim($question)));
         $answer = self::readRow();
 
         if ('' === $answer && null === $default ) {
@@ -221,23 +221,22 @@ class Interact
             $messages[0] = sprintf('[%s] %s', $type, $messages[0]);
         }
 
-        $colors = static::getColors();
+        $color = static::getColor();
 
-        if (is_string($style) && !$colors->hasStyle($style)) {
+        if (is_string($style) && !$color->hasStyle($style)) {
             $style = '';
         } elseif ( is_array($style) ) {
-            $colors->addStyle($style[0], $style[1]);
+            $color->addStyle($style[0], $style[1]);
         }
 
         $text = implode(PHP_EOL, $messages);
 
         // at windows CMD , don't handle ...
-        if ( static::colorIsSupported() ) {
-            $text = "<{$style}>". $text ."</{$style}>";
-            $text = static::getColors()->handle($text);
+        if ( ConsoleHelper::isSupportColor() ) {
+            $text = $color->handle("<{$style}>$text</{$style}>");
         }
 
-        static::out($text);
+        static::write($text);
     }
 
     public static function primary($messages, $type = 'IMPORTANT')
@@ -274,14 +273,14 @@ class Interact
     }
 
     /**
-     * @var Colors
+     * @var Color
      */
     private static $colors;
 
-    public static function getColors()
+    public static function getColor()
     {
         if (!static::$colors) {
-            static::$colors = new Colors();
+            static::$colors = new Color();
         }
 
         return static::$colors;
@@ -297,30 +296,20 @@ class Interact
     }
 
     /**
-     * 原样输出，不添加换行符
-     * @param  string  $text
-     * @param  boolean $exit
-     */
-    public static function rawOut($text, $exit=false)
-    {
-        echo $text;
-
-        $exit && exit();
-    }
-
-    /**
-     * 输出，会在前添加换行符并自动缩进
+     * 输出，
      * @param  string $text
-     * @param bool $newLine
+     * @param bool $newLine true 会在前添加换行符并自动缩进 false 原样输出，不添加换行符
      * @param  boolean $exit
      */
-    public static function out($text, $newLine=true, $exit=false)
+    public static function write($text, $newLine=true, $exit=false)
     {
-        if ( static::colorIsSupported() ) {
-            $text = static::getColors()->handle($text);
+        if ( ConsoleHelper::isSupportColor() ) {
+            $text = static::getColor()->handle($text);
+        } else {
+            $text = strip_tags($text);
         }
 
-        echo  ($newLine ? self::NL : '') . $text;
+        echo $text . ($newLine ? self::NL : '');
 
         $exit && exit();
     }
@@ -331,13 +320,11 @@ class Interact
     public static function title($msg)
     {
         $msg = ucfirst(trim($msg));
-
         $length = mb_strlen($msg, 'UTF-8');
-
         $str = str_pad('=',$length + 6, '=');
 
-        static::out("   $msg   ");
-        static::out($str."\n");
+        static::write("   $msg   ");
+        static::write($str."\n");
     }
 
     /**
@@ -346,42 +333,11 @@ class Interact
     public static function section($msg)
     {
         $msg = ucfirst(trim($msg));
-
         $length = mb_strlen($msg, 'UTF-8');
-
         $str = str_pad('-',$length + 6, '-');
 
-        static::out("   $msg   ");
-        static::out($str."\n");
-    }
-
-    /**
-     * Returns true if STDOUT supports colorization.
-     * This code has been copied and adapted from
-     * \Symfony\Component\Console\Output\OutputStream.
-     * @return boolean
-     */
-    public static function colorIsSupported()
-    {
-        if (DIRECTORY_SEPARATOR === '\\') {
-            return false !== getenv('ANSICON') || 'ON' === getenv('ConEmuANSI') || '1' !== getenv('AT_CMD');
-        }
-
-        if (!defined('STDOUT')) {
-            return false;
-        }
-
-        return static::isInteractive(STDOUT);
-    }
-
-    /**
-     * Returns if the file descriptor is an interactive terminal or not.
-     * @param  int|resource $fileDescriptor
-     * @return boolean
-     */
-    public static function isInteractive($fileDescriptor)
-    {
-        return function_exists('posix_isatty') && @posix_isatty($fileDescriptor);
+        static::write("   $msg   ");
+        static::write($str."\n");
     }
 
 } // end class

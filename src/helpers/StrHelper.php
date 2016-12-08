@@ -58,7 +58,6 @@ class StrHelper
      */
     public static function length($str)
     {
-
         if (empty($str)){
           return '0';
         }

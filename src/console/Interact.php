@@ -34,21 +34,20 @@ class Interact
     public static function panel($data, $title='Info panel')
     {
         $data = is_array($data) ? array_filter($data) : [trim($data)];
-
-        echo PHP_EOL . self::TAB . sprintf(self::STAR_LINE,$title) ;
+        self::write("\n  " . sprintf(self::STAR_LINE,"<bold>$title</bold>"), false);
 
         foreach ($data as $label => $value) {
-            $line = self::TAB . '* ';
+            $line = '  * ';
             if (!is_numeric($label)) {
                 $line .= "$label: ";
             }
 
-            echo ($line . $value) . PHP_EOL;
+            self::write($line . $value);
         }
 
         $star = $title ? substr(self::STAR_LINE, 0, strlen($title)): '';
 
-        echo self::TAB . sprintf(self::STAR_LINE, $star );
+        self::write('  ' . sprintf(self::STAR_LINE, $star ));
     }
 
     /**
@@ -107,7 +106,7 @@ class Interact
         $question = ucfirst(trim($question));
         $defaultText = $default ? 'yes' : 'no';
 
-        $message = "$question  \n    Please confirm (yes|no) [default:$defaultText]: ";
+        $message = "<comment>$question</comment>\n    Please confirm (yes|no) [default:<info>$defaultText</info>]: ";
         static::write($message, false);
 
         $answer = self::readRow();
@@ -297,7 +296,7 @@ class Interact
      */
     public static function write($text, $newLine=true, $exit=false)
     {
-        $text = static::getColor()->handle($text);
+        $text = static::getColor()->format($text);
         echo $text . ($newLine ? self::NL : '');
 
         $exit && exit();

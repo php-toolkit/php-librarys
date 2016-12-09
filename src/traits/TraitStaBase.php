@@ -36,8 +36,9 @@ trait TraitStaBase
     final public static function spaceName($fullName=null)
     {
         $fullName = $fullName ? : self::fullName();
+        $fullName = str_replace('\\', '/', $fullName);
 
-        return strpos($fullName, '\\') ? dirname($fullName) : null;
+        return strpos($fullName, '/') ? dirname($fullName) : null;
     }
 
     /**
@@ -48,6 +49,7 @@ trait TraitStaBase
     final public static function className($fullName=null)
     {
         $fullName = $fullName ? : self::fullName();
+        $fullName = str_replace('\\', '/', $fullName);
 
         return basename( $fullName );
     }

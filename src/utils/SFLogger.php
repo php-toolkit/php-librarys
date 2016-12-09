@@ -35,11 +35,6 @@ class SFLogger
     private static $loggers = [];
 
     /**
-     * @var bool
-     */
-    private $_hasLogged = false;
-
-    /**
      * log text records list
      * @var array
      */
@@ -100,7 +95,7 @@ class SFLogger
     protected $splitFile = false;
 
     /**
-     * log print to console
+     * log print to console (when on the CLI is valid.)
      * @var bool
      */
     protected $logConsole = true;
@@ -114,6 +109,15 @@ class SFLogger
      * @var bool
      */
     protected $showUri = false;
+
+    /**
+     * 日志写入阀值
+     *  即是除了手动调用 self::flushAll() 之外，当 self::$_records 存储到了阀值时，就会自动写入一次
+     *  设为 0 则是每次记录都立即写入文件
+     *  注意：如果启用了按级别分割文件，次阀值检查可能会出现错误。
+     * @var int
+     */
+    protected $logThreshold  = 1000;
 
     /**
      * 格式
@@ -144,18 +148,6 @@ class SFLogger
      */
     public static function make($config)
     {
-        if ( $config && is_string($config) ) {
-            $name = $config;
-
-            if ( isset(self::$loggers[$name]) ) {
-                return self::$loggers[$name];
-            }
-
-            if ( !isset($config['name']) ) {
-                $config['name'] = $name;
-            }
-        }
-
         if (!$config || !is_array($config)) {
             throw new \InvalidArgumentException('Log config is must be an array and not allow empty.');
         }
@@ -209,7 +201,7 @@ class SFLogger
      * fast get logger instance
      * @param $name
      * @param $args
-     * @return static
+     * @return SFLogger
      */
     public static function __callStatic($name, $args)
     {
@@ -236,22 +228,20 @@ class SFLogger
     private function __construct(array $config = [])
     {
         $this->name = $config['name'];
-        $canSetting = ['logConsole','debug','channel','basePath','showUri','subFolder','format','splitFile'];
+        $canSetting = ['logConsole','logThreshold','debug','channel','basePath','showUri','subFolder','format','splitFile'];
 
         foreach ($canSetting as $name) {
             if ( isset($config[$name]) ) {
-                $this->$name = $config[$name];
+                $setter = 'set' . ucfirst($name);
+                if ( method_exists($this, $setter) ) {
+                    $this->$setter($config[$name]);
+                } else {
+                    $this->$name = $config[$name];
+                }
             }
         }
-
-        if (isset($config['levels'])) {
-            $this->setLevels($config['levels']);
-        }
-
-        if (isset($config['filenameHandler'])) {
-            $this->setFilenameHandler($config['filenameHandler']);
-        }
     }
+
     public function error($message, array $context = array())
     {
         $this->log(self::ERROR, $message, $context);
@@ -269,11 +259,10 @@ class SFLogger
      * @param \Exception $e
      * @param array $context
      * @param bool $logRequest
-     * @return bool
      */
     public function ex(\Exception $e, array $context = [], $logRequest = true)
     {
-        return $this->exception($e, $context, $logRequest);
+        $this->exception($e, $context, $logRequest);
     }
     public function exception(\Exception $e, array $context = [], $logRequest = true)
     {
@@ -283,9 +272,8 @@ class SFLogger
         $message .= "\nCode Trace :\n" . $e->getTraceAsString();
 
         // If log the request info
-        if ($logRequest && !PhpHelper::isCli()) {
+        if ($logRequest) {
             $message .= PHP_EOL;
-
             $context['request'] = [
                 'HOST' => $this->getServer('HTTP_HOST'),
                 'METHOD' => $this->getServer('request_method'),
@@ -297,17 +285,10 @@ class SFLogger
 
         $this->format .= PHP_EOL;
         $this->log('exception', $message, $context);
-
-        return $this->save();
+        $this->save();
     }
 
     /**
-     * please config like:
-     * 'log.trace' => [
-     *      'basePath'  => PROJECT_PATH . '/app/runtime/logs',
-     *      'subFolder' => 'web'
-     *  ],
-     *
      * @param string $message
      * @param array $context
      * @return bool
@@ -384,15 +365,20 @@ class SFLogger
         $string = $this->dataFormatter($level, $message, $context);
 
         // serve is running in php build in server env.
-        if ( $this->logConsole && PublicHelper::isBuildInServer() ) {
+        if ( $this->logConsole && (PhpHelper::isBuildInServer() || PhpHelper::isCli()) ) {
             defined('STDOUT') or define('STDOUT', fopen('php://stdout', 'w'));
-            fwrite(\STDOUT, $string.PHP_EOL);
+            fwrite(STDOUT, $string . PHP_EOL);
         }
 
         if ( $this->splitFile ) {
             $this->_records[$level][] = $string;
         } else {
             $this->_records[] = $string;
+        }
+
+        // 检查阀值
+        if ( count($this->_records) >= $this->logThreshold ) {
+            $this->save();
         }
 
         return null;
@@ -403,7 +389,7 @@ class SFLogger
      */
     public function save()
     {
-        if ($this->_hasLogged || !$this->_records) {
+        if (!$this->_records) {
             return true;
         }
 
@@ -421,7 +407,7 @@ class SFLogger
                     $str .= $text . "\n";
                 }
 
-                $this->write($str, false);
+                $this->write($str);
                 $written = true;
             } else {
                 $str .= $record . "\n";
@@ -430,12 +416,11 @@ class SFLogger
 
         // no split File
         if (!$written) {
-            $this->write($str, false);
+            $this->write($str);
+            unset($str);
         }
 
-        unset($str);
         $this->_records = [];
-        $this->_hasLogged = true;
 
         return true;
     }
@@ -464,15 +449,10 @@ class SFLogger
     /**
      * write log info to file
      * @param string $str
-     * @param bool $end
      * @return bool
      */
-    protected function write($str, $end = true)
+    protected function write($str)
     {
-        if ($this->_hasLogged) {
-            return true;
-        }
-
         $file = $this->getLogPath() . $this->getFilename();
         $dir  = dirname($file);
 
@@ -485,11 +465,7 @@ class SFLogger
             rename($file, substr($file, 0, -3) . time(). '.log');
         }
 
-        if ($end) {
-            $this->_hasLogged = true;
-        }
-
-        return error_log($str . PHP_EOL, 3, $file);
+        return error_log($str, 3, $file);
     }
 
     /**
@@ -504,6 +480,14 @@ class SFLogger
 
             $this->levels = strpos($levels, ',') ? array_map('trim', explode(',', $levels)) : [$levels];
         }
+    }
+
+    /**
+     * @param int $logThreshold
+     */
+    public function setLogThreshold($logThreshold)
+    {
+        $this->logThreshold = (bool)$logThreshold;
     }
 
     /**
@@ -597,7 +581,7 @@ class SFLogger
 
     /**
      * @param string $name
-     * @return SLogger
+     * @return static
      */
     public function getLogger($name = 'default')
     {

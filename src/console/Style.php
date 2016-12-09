@@ -16,12 +16,10 @@ final class Style
 
 //////////////////////////////////////////// Color Style ////////////////////////////////////////////
 
-
     /**
-     * Known colors
-     * @var array
+     * Known color list
      */
-    private static $knownColors = [
+    private static $knownColors = array(
         'black'   => 0,
         'red'     => 1,
         'green'   => 2,
@@ -31,10 +29,10 @@ final class Style
         'cyan'    => 6, // 青色 青绿色 蓝绿色
         'white'   => 7,
         'default' => 9
-    ];
+    );
 
     /**
-     * Known styles
+     * Known style option
      * @var array
      */
     private static $knownOptions = [
@@ -48,15 +46,13 @@ final class Style
 
     /**
      * Foreground base value
-     * @var int
      */
-    const FG_BASE = 30;
+    private static $fgBase = 30;
 
     /**
      * Background base value
-     * @var int
      */
-    const BG_BASE = 40;
+    private static $bgBase = 40;
 
     /**
      * Foreground color
@@ -73,68 +69,18 @@ final class Style
      */
     private $options = [];
 
-    /**
-     * Constructor
-     * @param string $fg
-     * @param string $bg Background color.
-     * @param array $options Style options.
-     */
-    public function __construct($fg = '', $bg = '', $options = [])
+    public static function make($fg = '', $bg = '', $options = [])
     {
-        if ($fg) {
-            if (false === array_key_exists($fg, static::$knownColors)) {
-                throw new \InvalidArgumentException(
-                    sprintf('Invalid foreground color "%1$s" [%2$s]',
-                        $fg,
-                        implode(', ', $this->getKnownColors())
-                    )
-                );
-            }
-
-            $this->fgColor = static::FG_BASE + static::$knownColors[$fg];
-        }
-
-        if ($bg) {
-            if (false === array_key_exists($bg, static::$knownColors)) {
-                throw new \InvalidArgumentException(
-                    sprintf('Invalid background color "%1$s" [%2$s]',
-                        $bg,
-                        implode(', ', $this->getKnownColors())
-                    )
-                );
-            }
-
-            $this->bgColor = static::BG_BASE + static::$knownColors[$bg];
-        }
-
-        foreach ($options as $option) {
-            if (false === array_key_exists($option, static::$knownOptions)) {
-                throw new \InvalidArgumentException(
-                    sprintf('Invalid option "%1$s" [%2$s]',
-                        $option,
-                        implode(', ', $this->getKnownOptions())
-                    )
-                );
-            }
-
-            $this->options[] = $option;
-        }
-    }
-
-    /**
-     * Convert to a string.
-     */
-    public function __toString()
-    {
-        return $this->getStyle();
+        return new self($fg, $bg, $options);
     }
 
     /**
      * Create a color style from a parameter string.
-     * @param $string
+     *
+     * @param string $string e.g 'fg=white;bg=black;options=bold,underscore'
      * @return static
      */
-    public static function fromString($string)
+    public static function makeByString($string)
     {
         $fg = $bg = '';
         $options = [];
@@ -157,6 +103,7 @@ final class Style
                 case 'options':
                     $options = explode(',', $subParts[1]);
                     break;
+
                 default:
                     throw new \RuntimeException('Invalid option');
                     break;
@@ -167,9 +114,65 @@ final class Style
     }
 
     /**
+     * Constructor
+     * @param string $fg Foreground color.  e.g 'white'
+     * @param string $bg Background color.  e.g 'black'
+     * @param array $options Style options. e.g ['bold', 'underscore']
+     */
+    public function __construct($fg = '', $bg = '', $options = [])
+    {
+        if ($fg) {
+            if (false === array_key_exists($fg, static::$knownColors)) {
+                throw new \InvalidArgumentException(
+                    sprintf('Invalid foreground color "%1$s" [%2$s]',
+                        $fg,
+                        implode(', ', $this->getKnownColors())
+                    )
+                );
+            }
+
+            $this->fgColor = static::$fgBase + static::$knownColors[$fg];
+        }
+
+        if ($bg) {
+            if (false === array_key_exists($bg, static::$knownColors)) {
+                throw new \InvalidArgumentException(
+                    sprintf('Invalid background color "%1$s" [%2$s]',
+                        $bg,
+                        implode(', ', $this->getKnownColors())
+                    )
+                );
+            }
+
+            $this->bgColor = static::$bgBase + static::$knownColors[$bg];
+        }
+
+        foreach ($options as $option) {
+            if (false === array_key_exists($option, static::$knownOptions)) {
+                throw new \InvalidArgumentException(
+                    sprintf('Invalid option "%1$s" [%2$s]',
+                        $option,
+                        implode(', ', $this->getKnownOptions())
+                    )
+                );
+            }
+
+            $this->options[] = $option;
+        }
+    }
+
+    /**
+     * Convert to a string.
+     */
+    public function __toString()
+    {
+        return $this->toString();
+    }
+
+    /**
      * Get the translated color code.
      */
-    public function getStyle()
+    public function toString()
     {
         $values = [];
 
@@ -190,17 +193,22 @@ final class Style
 
     /**
      * Get the known colors.
+     * @param bool $onlyName
+     * @return array
      */
-    public function getKnownColors()
+    public function getKnownColors($onlyName=true)
     {
-        return array_keys(static::$knownColors);
+        return (bool)$onlyName ? array_keys(static::$knownColors) : static::$knownColors;
     }
 
     /**
      * Get the known options.
+     * @param bool $onlyName
+     * @return array
      */
-    public function getKnownOptions()
+    public function getKnownOptions($onlyName=true)
     {
-        return array_keys(static::$knownOptions);
+        return (bool)$onlyName ? array_keys(static::$knownOptions) : static::$knownOptions;
     }
+
 }

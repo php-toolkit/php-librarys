@@ -36,17 +36,6 @@ class Output extends StdBase
     protected $color;
 
     /**
-     * @param Color $color
-     * @return static
-     */
-    public function setColor(Color $color)
-    {
-        $this->color = $color;
-
-        return $this;
-    }
-
-    /**
      * @return Color
      */
     public function getColor()
@@ -59,11 +48,11 @@ class Output extends StdBase
     }
 
     /**
-     * @param $messages
+     * @param array|string $messages
      * @param string $type
      * @param string|array $style
      */
-    public function block($messages, $type = 'INFO', $style='question')
+    public function block($messages, $type = 'INFO', $style='info')
     {
         $messages = is_array($messages) ? array_values($messages) : array($messages);
 
@@ -72,30 +61,14 @@ class Output extends StdBase
             $messages[0] = sprintf('[%s] %s', $type, $messages[0]);
         }
 
+        $text = implode(PHP_EOL, $messages);
         $color = $this->getColor();
 
-        if (is_string($style) && !$color->hasStyle($style)) {
-            $style = '';
-        } elseif ( is_array($style) ) {
-            $color->addStyle($style[0], $style[1]);
+        if (is_string($style) && $color->hasStyle($style)) {
+            $text = "<{$style}>$text</{$style}>";
         }
 
-        $text = implode(PHP_EOL, $messages);
-        $text = $this->createStyleTag("[$type]: ".$text, $style);
-
         $this->write($text);
-    }
-
-    /**
-     * add style tag for $text
-     * all enable color style @see Color::$styles
-     * @param  string     $text
-     * @param  string     $colorStyle
-     * @return string
-     */
-    protected function createStyleTag($text, $colorStyle)
-    {
-        return "<{$colorStyle}>". $text ."</{$colorStyle}>";
     }
 
     /**
@@ -105,10 +78,7 @@ class Output extends StdBase
      */
     public function write($text = '', $nl = true)
     {
-        // at windows CMD , don't handle ...
-        if ( ConsoleHelper::isSupportColor() ) {
-            $text = $this->getColor()->handle($text);
-        }
+        $text = $this->getColor()->format($text);
 
         fwrite($this->outputStream, $text . ($nl ? "\n" : null));
 
@@ -123,16 +93,20 @@ class Output extends StdBase
      */
     public function err($text = '', $nl = true)
     {
-        // at windows CMD , don't handle ...
-        if ( ConsoleHelper::isSupportColor() ) {
-            $text = $this->getColor()->handle($text);
-        }
+        $text = $this->getColor()->format($text);
 
         fwrite($this->errorStream, $text . ($nl ? "\n" : null));
 
         return $this;
     }
 
+    /**
+     * @return bool
+     */
+    public function supportColor()
+    {
+        return ConsoleHelper::isSupportColor();
+    }
 
     /**
      * getOutStream

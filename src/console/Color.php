@@ -18,7 +18,6 @@ use inhere\librarys\StdBase;
  * @link https://github.com/ventoviro/windwalker-IO
  */
 class Color
-
 {
     /**
      * Flag to remove color codes from the output
@@ -42,35 +41,6 @@ class Color
      * @var array
      */
     protected $styles = [];
-
-    /**
-     * Known colors
-     * @var array
-     */
-    private static $knownColors = [
-        'black'   => 0,
-        'red'     => 1,
-        'green'   => 2,
-        'yellow'  => 3,
-        'blue'    => 4,
-        'magenta' => 5, // 洋红色 洋红 品红色
-        'cyan'    => 6, // 青色 青绿色 蓝绿色
-        'white'   => 7,
-        'default' => 9
-    ];
-
-    /**
-     * Known styles
-     * @var array
-     */
-    private static $knownOptions = [
-        'bold'       => 1,      // 加粗
-        'fuzzy'      => 2,      // 模糊(不是所有的终端仿真器都支持)
-        'italic'     => 3,      // 斜体(不是所有的终端仿真器都支持)
-        'underscore' => 4,      // 下划线
-        'blink'      => 5,      // 闪烁
-        'reverse'    => 7,      // 颠倒的 交换背景色与前景色
-    ];
 
     /**
      * Foreground base value
@@ -101,25 +71,23 @@ class Color
             ]);
         }
 
-        $this->init();
-    }
-
-    /**
-     * Class constructor
-     */
-    public function init()
-    {
-        $this->addPredefinedStyles();
+        $this->addDefaultStyles();
     }
 
     /**
      * Adds predefined color styles to the Color styles
      * default primary success info warning danger
      */
-    protected function addPredefinedStyles()
+    protected function addDefaultStyles()
     {
         $this->addStyle('default', [
                 'fgColor' => 'default'
+            ])
+            ->addStyle('faintly', [ // 不明显的 浅灰色的
+                'fgColor' => 'default'
+            ])
+            ->addStyle('bold', [
+                'options' => ['bold']
             ])
             ->addStyle('notice', [
                 'options' => ['bold']
@@ -134,16 +102,16 @@ class Color
                 'fgColor' => 'green', //'options' => ['bold']
             ])
             ->addStyle('warning', [
-                'fgColor' => 'yellow', //'options' => ['bold']
+                'bgColor' => 'yellow', //'options' => ['bold']
             ])
             ->addStyle('comment', [
-                'fgColor' => 'cyan', //'options' => ['bold']
+                'fgColor' => 'yellow', //'options' => ['bold']
             ])
             ->addStyle('question', [
                 'fgColor' => 'black', 'bgColor' => 'cyan'
             ])
             ->addStyle('danger', [
-                'fgColor' => 'white', 'bgColor' => 'magenta',// 'options' => ['bold']
+                'fgColor' => 'red', // 'bgColor' => 'magenta', 'options' => ['bold']
             ])
             ->addStyle('error', [
                 'fgColor' => 'white', 'bgColor' => 'red'
@@ -160,90 +128,136 @@ class Color
      */
     public static function stripColor($string)
     {
+        // $text = strip_tags($text);
         return preg_replace(static::$stripFilter, '', $string);
     }
 
     /**
      * Process a string.
-     * @param $string
+     * @param $text
      * @return mixed
      */
-    public function handle($string)
+    public function handle($text)
     {
-        preg_match_all($this->tagFilter, $string, $matches);
+        return $this->format($text);
+    }
+    public function format($text)
+    {
+        // if don't support output color text, clear color tag.
+        if ( !ConsoleHelper::isSupportColor() ) {
+            return static::stripColor($text);
+        }
+
+        preg_match_all($this->tagFilter, $text, $matches);
 
         if (!$matches) {
-            return $string;
+            return $text;
         }
 
         foreach ($matches[0] as $i => $m) {
             if (array_key_exists($matches[1][$i], $this->styles)) {
-                $string = $this->replaceColor($string, $matches[1][$i], $matches[2][$i], $this->styles[$matches[1][$i]]);
-            }
-            // Custom format
-            elseif (strpos($matches[1][$i], '=')) {
-                $string = $this->replaceColor($string, $matches[1][$i], $matches[2][$i], $this->fromString($matches[1][$i]));
+                $text = $this->replaceColor($text, $matches[1][$i], $matches[2][$i], $this->styles[$matches[1][$i]]);
+
+            // Custom style format @see Style::makeByString()
+            } elseif (strpos($matches[1][$i], '=')) {
+                $text = $this->replaceColor($text, $matches[1][$i], $matches[2][$i], Style::makeByString($matches[1][$i]));
             }
         }
 
-        return $string;
+        return $text;
     }
 
     /**
      * Replace color tags in a string.
      * @param string $text
-     * @param   string $tag The matched tag.
+     * @param   string $tag  The matched tag.
      * @param   string $match The match.
-     * @param   array $styles The color style to apply.
-     * @return mixed
+     * @param   Style $style  The color style to apply.
+     * @return  string
      */
-    protected function replaceColor($text, $tag, $match, array $styles)
+    protected function replaceColor($text, $tag, $match, Style $style)
     {
-        $style   = $this->styleToString($styles);
+        $style   = $style->toString();
         $replace = $this->noColor ? $match : "\033[{$style}m{$match}\033[0m";
 
-        return str_replace('<' . $tag . '>' . $match . '</' . $tag . '>', $replace, $text);
+        return str_replace("<$tag>$match</$tag>", $replace, $text);
     }
 
 ///////////////////////////////////////// Attr Color Style /////////////////////////////////////////
 
-    public function setStyles(array $styles)
+
+    /**
+     * Add a style.
+     * @param $name
+     * @param  string|Style|array  $fg      前景色|也可以穿入Style对象|也可以是style配置数组(@see self::addStyleByArray())
+     *                                      当它为Style对象或配置数组时，后面两个参数无效
+     * @param  string              $bg      背景色
+     * @param  array               $options 其它选项
+     * @return $this
+     */
+    public function addStyle($name, $fg = '', $bg = '', array $options = [])
     {
-        $this->styles = $styles;
+        if (is_array($fg)) {
+            return $this->addStyleByArray($name, $fg);
+        } elseif (is_object($fg) && $fg instanceof Style) {
+            $this->styles[$name] = $fg;
+        } else {
+            $this->styles[$name] = Style::make($fg, $bg, $options);
+        }
 
         return $this;
     }
 
+    /**
+     * Add a style by an array config
+     * @param $name
+     * @param array $styleConfig 样式设置信息
+     * e.g  [
+     *       'fgColor' => 'white',
+     *       'bgColor' => 'black',
+     *       'options' => ['bold', 'underscore']
+     *   ]
+     * @return $this
+     */
+    public function addStyleByArray($name, array $styleConfig)
+    {
+        $style = [
+            'fgColor' => '',
+            'bgColor' => '',
+            'options' => []
+        ];
+
+        $config = array_merge($style, $styleConfig);
+        list($fg, $bg, $options) = array_values($config);
+
+        $this->styles[$name] = Style::make($fg, $bg, $options);
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
     public function getStyleList()
     {
         return array_keys($this->styles);
     }
     public function getStyleNames()
     {
-        return array_keys($this->styles);
+        return $this->getStyleList();
     }
 
+    /**
+     * @return array
+     */
     public function getStyles()
     {
         return $this->styles;
     }
 
     /**
-     * Add a style.
      * @param $name
-     * @param array $styleOptions
-     * @return $this
-     */
-    public function addStyle($name, array $styleOptions=[])
-    {
-        $this->styles[$name] = $this->handleStyle($styleOptions);
-
-        return $this;
-    }
-
-    /**
-     * @param $name
-     * @return null|string
+     * @return Style|null
      */
     public function getStyle($name)
     {
@@ -254,168 +268,21 @@ class Color
         return $this->styles[$name];
     }
 
-    public function existsStyle($name)
-    {
-        return $this->hasStyle($name);
-    }
+    /**
+     * @param $name
+     * @return bool
+     */
     public function hasStyle($name)
     {
         return isset($this->styles[$name]);
     }
 
-//////////////////////////////////////////// Color Style handle ////////////////////////////////////////////
-
-    /**
-     * handle color Style
-     * @param  array      $styleOptions 样式设置信息
-     *   [
-     *       'fgColor' => 'white',
-     *       'bgColor' => 'black',
-     *       'options' => ['bold', 'underscore']
-     *   ]
-     * @return array
-     */
-    public function handleStyle(array $styleOptions = [])
-    {
-        $style = [
-            'fgColor' => 'white',
-            'bgColor' => 'black',
-            'options' => []
-        ];
-
-        $styleOptions = array_merge($style, $styleOptions);
-        list($fg, $bg, $options) = array_values($styleOptions);
-
-        if ($fg) {
-            if (false === array_key_exists($fg, static::$knownColors)) {
-                throw new \InvalidArgumentException(
-                    sprintf('Invalid foreground color "%1$s" [%2$s]',
-                        $fg, implode(', ', $this->getKnownColors())
-                    )
-                );
-            }
-
-            $style['fgColor'] = static::FG_BASE + static::$knownColors[$fg];
-        }
-
-        if ($bg) {
-            if (false === array_key_exists($bg, static::$knownColors)) {
-                throw new \InvalidArgumentException(
-                    sprintf('Invalid background color "%1$s" [%2$s]',
-                        $bg, implode(', ', $this->getKnownColors())
-                    )
-                );
-            }
-
-            $style['bgColor'] = static::BG_BASE + static::$knownColors[$bg];
-        }
-
-        foreach ($options as $option) {
-            if (false === array_key_exists($option, static::$knownOptions)) {
-                throw new \InvalidArgumentException(
-                    sprintf('Invalid option "%1$s" [%2$s]',
-                        $option,
-                        implode(', ', $this->getKnownOptions())
-                    )
-                );
-            }
-
-            $style['options'][] = $option;
-        }
-
-        return $style;
-    }
-
-    /**
-     * Create a color style from a parameter string.
-     * @param $string
-     * @return string
-     */
-    public function fromString($string)
-    {
-        $fg = '';
-        $bg = '';
-        $options = [];
-        $parts = explode(';', $string);
-
-        foreach ($parts as $part) {
-            $subParts = explode('=', $part);
-
-            if (count($subParts) < 2) {
-                continue;
-            }
-
-            switch ($subParts[0]) {
-                case 'fg':
-                    $fg = $subParts[1];
-                    break;
-
-                case 'bg':
-                    $bg = $subParts[1];
-                    break;
-
-                case 'options':
-                    $options = explode(',', $subParts[1]);
-                    break;
-
-                default:
-                    throw new \RuntimeException('Invalid option');
-                    break;
-            }
-        }
-
-        return $this->styleToString( $this->handleStyle([
-            'fgColor' => $fg,
-            'bgColor' => $bg,
-            'options' => $options
-        ]) );
-    }
-
-    /**
-     * Get the translated color code.
-     * @param array $style
-     * @return string
-     */
-    public function styleToString(array $style)
-    {
-        $values = [];
-
-        isset($style['fgColor']) && $values[] = $style['fgColor'];
-        isset($style['bgColor']) && $values[] = $style['bgColor'];
-
-        foreach ($style['options'] as $option) {
-            $values[] = static::$knownOptions[$option];
-        }
-
-        return implode(';', $values);
-    }
-
-    /**
-     * Get the known colors.
-     * @param bool $onlyName
-     * @return array
-     */
-    public function getKnownColors($onlyName=true)
-    {
-        return (bool)$onlyName ? array_keys(static::$knownColors) : static::$knownColors;
-    }
-
-    /**
-     * Get the known options.
-     * @param bool $onlyName
-     * @return array
-     */
-    public function getKnownOptions($onlyName=true)
-    {
-        return (bool)$onlyName ? array_keys(static::$knownOptions) : static::$knownOptions;
-    }
-
     /**
      * Method to get property NoColor
      */
-    public function getNoColor()
+    public function isNoColor()
     {
-        return $this->noColor;
+        return (bool)$this->noColor;
     }
 
     /**
@@ -425,7 +292,7 @@ class Color
      */
     public function setNoColor($noColor)
     {
-        $this->noColor = $noColor;
+        $this->noColor = (bool)$noColor;
 
         return $this;
     }

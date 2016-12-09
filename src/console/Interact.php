@@ -207,38 +207,6 @@ class Interact
         return $answer;
     }
 
-    /**
-     * @param $messages
-     * @param string|null $type
-     * @param string|array $style
-     */
-    public static function block($messages, $type = null, $style='default')
-    {
-        $messages = is_array($messages) ? array_values($messages) : array($messages);
-
-        // add type
-        if ($type) {
-            $messages[0] = sprintf('[%s] %s', $type, $messages[0]);
-        }
-
-        $color = static::getColor();
-
-        if (is_string($style) && !$color->hasStyle($style)) {
-            $style = '';
-        } elseif ( is_array($style) ) {
-            $color->addStyle($style[0], $style[1]);
-        }
-
-        $text = implode(PHP_EOL, $messages);
-
-        // at windows CMD , don't handle ...
-        if ( ConsoleHelper::isSupportColor() ) {
-            $text = $color->handle("<{$style}>$text</{$style}>");
-        }
-
-        static::write($text);
-    }
-
     public static function primary($messages, $type = 'IMPORTANT')
     {
         static::block($messages, $type, 'primary');
@@ -273,17 +241,43 @@ class Interact
     }
 
     /**
+     * @param $messages
+     * @param string|null $type
+     * @param string|array $style
+     */
+    public static function block($messages, $type = null, $style='default')
+    {
+        $messages = is_array($messages) ? array_values($messages) : array($messages);
+
+        // add type
+        if (null !== $type) {
+            $messages[0] = sprintf('[%s] %s', $type, $messages[0]);
+        }
+
+        $text = implode(PHP_EOL, $messages);
+        $color = static::getColor();
+
+        if (is_string($style) && $color->hasStyle($style)) {
+            $text = "<{$style}>$text</{$style}>";
+        }
+
+        $this->write($text);
+
+        static::write($text);
+    }
+
+    /**
      * @var Color
      */
-    private static $colors;
+    private static $color;
 
     public static function getColor()
     {
-        if (!static::$colors) {
-            static::$colors = new Color();
+        if (!static::$color) {
+            static::$color = new Color();
         }
 
-        return static::$colors;
+        return static::$color;
     }
 
     /**
@@ -303,12 +297,7 @@ class Interact
      */
     public static function write($text, $newLine=true, $exit=false)
     {
-        if ( ConsoleHelper::isSupportColor() ) {
-            $text = static::getColor()->handle($text);
-        } else {
-            $text = strip_tags($text);
-        }
-
+        $text = static::getColor()->handle($text);
         echo $text . ($newLine ? self::NL : '');
 
         $exit && exit();

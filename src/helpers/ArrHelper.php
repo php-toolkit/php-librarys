@@ -72,7 +72,7 @@ class ArrHelper
      * @param null $default
      * @return mixed
      */
-    public static function get($arr, $key, $default = null)
+    public static function get($key, $arr, $default = null)
     {
         return isset($arr[$key]) ? $arr[$key]: $default;
     }

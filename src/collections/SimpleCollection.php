@@ -45,7 +45,7 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * Set collection item
-         * @param string $key   The data key
+     * @param string $key   The data key
      * @param mixed  $value The data value
      * @return static
      */
@@ -72,9 +72,9 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * Get collection item for key
-         * @param string $key     The data key
+     * @param string $key     The data key
      * @param mixed  $default The default value to return if data key does not exist
-         * @return mixed The key's value, or the default value
+     * @return mixed The key's value, or the default value
      */
     public function get($key, $default = null)
     {
@@ -83,7 +83,7 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * Add item to collection
-         * @param array $items Key-value array of data to append to this collection
+     * @param array $items Key-value array of data to append to this collection
      */
     public function replace(array $items)
     {
@@ -122,7 +122,7 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * Get all items in collection
-         * @return array The collection's source data
+     * @return array The collection's source data
      */
     public function all()
     {
@@ -136,7 +136,7 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * Get collection keys
-         * @return array The collection's source data keys
+     * @return array The collection's source data keys
      */
     public function keys()
     {
@@ -145,8 +145,8 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * Does this collection have a given key?
-         * @param string $key The data key
-         * @return bool
+     * @param string $key The data key
+     * @return bool
      */
     public function has($key)
     {
@@ -155,11 +155,18 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * Remove item from collection
-         * @param string $key The data key
+     * @param string $key The data key
      */
     public function remove($key)
     {
-        unset($this->data[$key]);
+        $value = null;
+
+        if ($this->has($key)) {
+            $value = $this->data[$key];
+            unset($this->data[$key]);
+        }
+
+        return $value;
     }
 
     /**
@@ -176,8 +183,8 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * Does this collection have a given key?
-         * @param  string $key The data key
-         * @return bool
+     * @param  string $key The data key
+     * @return bool
      */
     public function offsetExists($key)
     {
@@ -186,8 +193,8 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * Get collection item for key
-         * @param string $key The data key
-         * @return mixed The key's value, or the default value
+     * @param string $key The data key
+     * @return mixed The key's value, or the default value
      */
     public function offsetGet($key)
     {
@@ -196,7 +203,7 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * Set collection item
-         * @param string $key   The data key
+     * @param string $key   The data key
      * @param mixed  $value The data value
      */
     public function offsetSet($key, $value)
@@ -206,11 +213,11 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * Remove item from collection
-         * @param string $key The data key
+     * @param string $key The data key
      */
     public function offsetUnset($key)
     {
-        $this->remove($key);
+        return $this->remove($key);
     }
 
     /********************************************************************************
@@ -261,7 +268,7 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * Get collection iterator
-         * @return \ArrayIterator
+     * @return \ArrayIterator
      */
     public function getIterator()
     {

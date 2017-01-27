@@ -8,7 +8,7 @@
 
 namespace inhere\librarys;
 
-use inhere\librarys\traits\TraitStaBase;
+use inhere\librarys\traits\TraitStdBase;
 
 /**
  * Class StdBase
@@ -16,6 +16,5 @@ use inhere\librarys\traits\TraitStaBase;
  */
 abstract class StdBase
 {
-    use TraitStaBase;
-
+    use TraitStdBase;
 }

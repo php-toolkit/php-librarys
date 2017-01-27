@@ -114,6 +114,7 @@ class AssetPublisher extends StdBase
      * @param mixed $from
      * @param string $to
      * @return $this
+     * @throws InvalidArgumentException
      */
     public function add($from, $to = '')
     {
@@ -173,8 +174,9 @@ class AssetPublisher extends StdBase
 
     /**
      * @param string $from The is full file path
-     * @param string $to  The is a relative path
+     * @param string $to The is a relative path
      * @param bool|false $override
+     * @throws FileSystemException
      */
     public function publishFile($from, $to, $override = false)
     {
@@ -250,6 +252,7 @@ class AssetPublisher extends StdBase
 
     /**
      * @param string $sourcePath
+     * @throws InvalidArgumentException
      */
     public function setSourcePath($sourcePath)
     {

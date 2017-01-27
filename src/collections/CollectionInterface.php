@@ -1,6 +1,6 @@
 <?php
 
-namespace inhere\librarys\interfaces;
+namespace inhere\librarys\collections;
 
 /**
  * Collection Interface

@@ -17,7 +17,7 @@ use inhere\librarys\exceptions\UnknownCalledException;
  * Class TraitStaBase
  * @package inhere\librarys\traits
  */
-trait TraitStaBase
+trait TraitStdBase
 {
     /**
      * get called class full name
@@ -111,6 +111,7 @@ trait TraitStaBase
 
     /**
      * @param $name
+     * @throws NotFoundException
      */
     public function __unset($name)
     {
@@ -144,6 +145,7 @@ trait TraitStaBase
      * @param $method
      * @param $args
      * @return mixed
+     * @throws UnknownCalledException
      */
     static public function __callStatic($method, $args)
     {

@@ -3,7 +3,6 @@
 namespace inhere\librarys\collections;
 
 use ArrayIterator;
-use inhere\librarys\interfaces\CollectionInterface;
 
 /**
  * Collection
@@ -94,7 +93,7 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * @param array $names
-     * @return $this
+     * @return array
      */
     public function gets(array $names)
     {
@@ -156,6 +155,7 @@ class SimpleCollection implements CollectionInterface
     /**
      * Remove item from collection
      * @param string $key The data key
+     * @return mixed|null
      */
     public function remove($key)
     {
@@ -214,6 +214,7 @@ class SimpleCollection implements CollectionInterface
     /**
      * Remove item from collection
      * @param string $key The data key
+     * @return mixed|null|void
      */
     public function offsetUnset($key)
     {

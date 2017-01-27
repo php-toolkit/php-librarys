@@ -23,7 +23,7 @@ class Output
 
     public function __construct(array $config = [])
     {
-        ObjectHelper::loadAttrs($this, $confg);
+        ObjectHelper::loadAttrs($this, $config);
     }
 
     public function header($name, $value)
@@ -53,11 +53,11 @@ class Output
 
         $content = implode('', $this->bodys);
 
-        if ( !$content && APP_DEBUG ) {
+        if ( !$content ) {
             throw new \RuntimeException('No content to display.');
         }
 
-        \App::logger()->debug('Send text content.');
+//        \App::logger()->debug('Send text content.');
 
         echo $content;
 

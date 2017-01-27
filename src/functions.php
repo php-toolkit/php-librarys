@@ -189,3 +189,16 @@ if ( !function_exists('imagebmp')) {
 
     }
 }
+
+if ( !function_exists('make_object')) {
+    function make_object($class)
+    {
+        static $__object_list_box = [];
+
+        if ( !isset($__object_list_box[$class]) ) {
+            $__object_list_box[$class] = new $class;
+        }
+
+        return $__object_list_box[$class];
+    }
+}

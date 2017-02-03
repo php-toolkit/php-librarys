@@ -10,12 +10,13 @@ namespace inhere\librarys\auth;
 
 use inhere\librarys\collections\SimpleCollection;
 use inhere\librarys\helpers\ObjectHelper;
-use inhere\librarys\exceptions\InvalidArgumentException;
-use inhere\librarys\exceptions\InvalidConfigException;
+use Psr\Http\Message\ResponseInterface;
+use inhere\exceptions\InvalidArgumentException;
+use inhere\exceptions\InvalidConfigException;
 
 /**
  * Class User
- * @package inhere\librarys\auth
+ * @package slimExt\base
  *
  * @property int id
  */
@@ -46,7 +47,17 @@ class User extends SimpleCollection
     /**
      * @var string
      */
+    public $loggedTo = '/';
+
+    /**
+     * @var string
+     */
     public $logoutUrl = '/logout';
+
+    /**
+     * @var string
+     */
+    public $logoutTo = '/';
 
     /**
      * @var CheckAccessInterface
@@ -85,14 +96,14 @@ class User extends SimpleCollection
         }
 
         // if have already login
-        if ( session(self::$saveKey) ) {
+        if ( isset($_SESSION[static::$saveKey]) ) {
             $this->refreshIdentity();
         }
     }
 
     /**
      * @param IdentityInterface $user
-     * @return static
+     * @return bool
      */
     public function login(IdentityInterface $user)
     {
@@ -109,10 +120,10 @@ class User extends SimpleCollection
         unset($_SESSION[static::$saveKey]);
     }
 
-    /*
+    /**
      * @param Request $request
      * @param Response $response
-     * @return Response
+     * @return ResponseInterface
      * @throws InvalidConfigException
      */
     /*public function loginRequired(Request $request, Response $response)
@@ -171,7 +182,7 @@ class User extends SimpleCollection
      */
     public function getId()
     {
-        return $this->get($this->idColumn);
+        return $this->get($this->idColumn) ?: 0;
     }
 
     /**
@@ -222,7 +233,7 @@ class User extends SimpleCollection
     public function setIdentity(IdentityInterface $identity)
     {
         if ($identity instanceof IdentityInterface) {
-            $this->sets($identity->all());
+            $this->sets((array)$identity);
             session([ self::$saveKey => $identity->all()]);
             $this->_accesses = [];
         } elseif ($identity === null) {
@@ -232,7 +243,7 @@ class User extends SimpleCollection
         }
     }
 
-    public function sets($data)
+    public function sets(array $data)
     {
         // except column at set.
         foreach ($this->excepted as $column) {
@@ -249,16 +260,15 @@ class User extends SimpleCollection
      */
     public function getAccessChecker()
     {
-        return $this->accessChecker ?: new AccessChecker();
+        return $this->accessChecker ? : \Slim::get('accessChecker');
     }
 
     /**
-     * @param string $default
      * @return string
      */
-    public function getLogoutTo($default='/')
+    public function getLogoutTo()
     {
-        return session(self::AFTER_LOGOUT_TO_KEY, $default);
+        return $this->logoutTo;
     }
 
     /**
@@ -266,18 +276,15 @@ class User extends SimpleCollection
      */
     public function setLogoutTo($url)
     {
-        session([
-            self::AFTER_LOGOUT_TO_KEY => trim($url)
-        ]);
+        $this->logoutTo = trim($url);
     }
 
     /**
-     * @param string $default
      * @return string
      */
-    public function getLoggedTo($default='/')
+    public function getLoggedTo()
     {
-        return session(self::AFTER_LOGGED_TO_KEY, $default);
+        return $this->loggedTo;
     }
 
     /**
@@ -285,9 +292,21 @@ class User extends SimpleCollection
      */
     public function setLoggedTo($url)
     {
-        session([
-            self::AFTER_LOGGED_TO_KEY => trim($url)
-        ]);
+        $this->loggedTo = trim($url);
     }
 
+    /**
+     * @param $name
+     * @return mixed
+     */
+    public function __get($name)
+    {
+        $getter = 'get' . ucfirst($name);
+
+        if ( method_exists($this, $getter) ) {
+            return $this->$getter();
+        }
+
+        return parent::__get($name);
+    }
 }

@@ -143,6 +143,14 @@ class PhpHelper
     /**
      * @return bool
      */
+    public static function isMac()
+    {
+        return strstr(PHP_OS, 'Darwin') ? true : false;
+    }
+
+    /**
+     * @return bool
+     */
     public static function isCgi()
     {
         return strpos(PHP_SAPI, 'cgi') !== false ? true : false;   #  cgi环境

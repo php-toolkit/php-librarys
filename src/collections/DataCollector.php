@@ -78,11 +78,7 @@ class DataCollector extends SimpleCollection
     public function __construct($data = [], $format = 'php', $name = 'box1')
     {
         // Optionally load supplied data.
-        if (is_array($data) || is_object($data)) {
-            $this->bindData($this->data, $data);
-        } elseif ($data && is_string($data)) {
-            $this->load($data, $format);
-        }
+        $this->load($data, $format);
 
         parent::__construct();
 
@@ -101,7 +97,7 @@ class DataCollector extends SimpleCollection
     }
 
     /**
-     * set
+     * set config value by path
      * @param string $path
      * @param mixed $value
      * @return mixed
@@ -118,7 +114,7 @@ class DataCollector extends SimpleCollection
     }
 
     /**
-     * get
+     * get value by path
      * @param string $path
      * @param string $default
      * @return mixed
@@ -250,7 +246,7 @@ class DataCollector extends SimpleCollection
                     break;
             }
 
-        } else if ( is_array($data) ) {
+        } else if ( is_array($data) || is_object($data) ) {
             $this->bindData($this->data, $data);
         } else {
             throw new \RangeException('params error!!');

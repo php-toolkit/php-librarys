@@ -33,14 +33,14 @@ class Input
      * e.g `./bin/app` OR `bin/cli.php`
      * @var string
      */
-    public static $scriptName;
+    public static $scriptName = '';
 
     /**
      * the script name
      * e.g `image/packTask` OR `start`
      * @var string
      */
-    public static $command;
+    public static $command = '';
 
     public function __construct($parseArgv = true, $fixServer = false, $fillToGlobal = false)
     {
@@ -128,10 +128,6 @@ class Input
         global $argv;
         $args = $argv;
 
-        if ($args[0] === 'php') {
-            array_shift($args);
-        }
-
         self::$scriptName = array_shift($args);
 
         if ($fixServer) {
@@ -153,7 +149,7 @@ class Input
         }
 
         // collect command
-        if ( isset($args[0]) && strpos($args[0], '=') === false ) {
+        if ( isset($args[0]) && $args[0]{0} !== '-' && strpos($args[0], '=') === false ) {
             self::$command = trim(array_shift($args), '/');
 
             if ($fixServer) {

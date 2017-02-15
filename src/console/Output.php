@@ -8,13 +8,11 @@
 
 namespace inhere\librarys\console;
 
-use inhere\librarys\StdBase;
-
 /**
  * Class Output
  * @package inhere\librarys\console
  */
-class Output extends StdBase
+class Output
 {
     /**
      * 正常输出流

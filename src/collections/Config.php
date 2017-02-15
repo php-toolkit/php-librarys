@@ -45,11 +45,15 @@ class Config extends DataCollector
     /**
      * __construct
      * @param mixed $data If mode is 'folder', $data is config folder path
-     * @param string $format
+     * @param array $options
      * @param string $name
      */
-    public function __construct($data = [], array $options = [], $name = 'config')
+    public function __construct($data = [], $options = [], $name = 'config')
     {
+        if (is_string($options)) {
+            $options = [ 'format' => $options ];
+        }
+
         $options = array_merge([
             'format'     => 'php',
             'readonly'   => true,

@@ -8,17 +8,46 @@
 
 namespace inhere\librarys\console;
 
-use inhere\librarys\io\Input as BaseInput;
-
 /**
  * Class Input
  * @package inhere\librarys\console
+ * e.g:
+ *     ./bin/app image/packTask test -d -s=df --debug=true
+ *     php bin/cli.php start test -d -s=df --debug=true
  */
-class Input extends BaseInput
+class Input
 {
+    /**
+     * @var @resource
+     */
     protected $inputStream = STDIN;
 
+    /**
+     * Input data
+     * @var array
+     */
+    protected $data = [];
+
+    /**
+     * the script name
+     * e.g `./bin/app` OR `bin/cli.php`
+     * @var string
+     */
     public static $scriptName;
+
+    /**
+     * the script name
+     * e.g `image/packTask` OR `start`
+     * @var string
+     */
+    public static $command;
+
+    public function __construct($parseArgv = true, $fixServer = false, $fillToGlobal = false)
+    {
+        if ($parseArgv) {
+            $this->data = self::parseGlobalArgv($fixServer, $fillToGlobal);
+        }
+    }
 
     /**
      * @return string
@@ -26,6 +55,20 @@ class Input extends BaseInput
     public function read()
     {
         return trim(fgets($this->inputStream));
+    }
+
+    /**
+     * @param null|string $name
+     * @param mixed $default
+     * @return mixed
+     */
+    public function get($name=null, $default = null)
+    {
+        if (null === $name) {
+            return $this->data;
+        }
+
+        return isset($this->data[$name]) ? $this->data[$name] : $default;
     }
 
     /**
@@ -41,7 +84,31 @@ class Input extends BaseInput
             return $default;
         }
 
-        return in_array($value, ['0', 0, 'false'], true) ? false : true;
+        return in_array($value, ['0', 0, 'false', false], true) ? false : true;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScriptName()
+    {
+        return self::$scriptName;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCommand()
+    {
+        return self::$command;
+    }
+
+    /**
+     * @return string
+     */
+    public function getData()
+    {
+        return $this->data;
     }
 
     /**
@@ -52,44 +119,64 @@ class Input extends BaseInput
         return $this->inputStream;
     }
 
-
     /**
-     * @param array $argv
      */
-    public static function parseConsoleArgs($argv)
+    public static function parseGlobalArgv($fixServer = false, $fillToGlobal = false)
     {
-        // fixed: '/home' is not equals to '/home/'
-        if (isset($_SERVER['REQUEST_URI'])) {
-            $_SERVER['REQUEST_URI'] = rtrim($_SERVER['REQUEST_URI'],'/ ');
+        // ./bin/app image/packTask start test -d -s=df --debug=true
+        // php bin/cli.php image/packTask start test -d -s=df --debug=true
+        global $argv;
+        $args = $argv;
+
+        if ($args[0] === 'php') {
+            array_shift($args);
         }
 
-        // fixed: PHP_SELF = 'index.php', it is should be '/index.php'
-        if (isset($_SERVER['PHP_SELF'])) {
-            $_SERVER['PHP_SELF'] = '/' . ltrim($_SERVER['PHP_SELF'],'/ ');
+        self::$scriptName = array_shift($args);
+
+        if ($fixServer) {
+            // fixed: '/home' is not equals to '/home/'
+            if (isset($_SERVER['REQUEST_URI'])) {
+                $_SERVER['REQUEST_URI'] = rtrim($_SERVER['REQUEST_URI'],'/ ');
+            }
+
+            // fixed: PHP_SELF = 'index.php', it is should be '/index.php'
+            if (isset($_SERVER['PHP_SELF'])) {
+                $_SERVER['PHP_SELF'] = '/' . ltrim($_SERVER['PHP_SELF'],'/ ');
+            }
+
+
+            // $_SERVER['PHP_SELF'] = self::$scriptName;
+            $_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
+            $_SERVER['REQUEST_METHOD'] = 'GET';
+            $_SERVER['REQUEST_URI'] = '/';
         }
 
-        self::$scriptName = array_shift($argv);
+        // collect command
+        if ( isset($args[0]) && strpos($args[0], '=') === false ) {
+            self::$command = trim(array_shift($args), '/');
 
-        // $_SERVER['PHP_SELF'] = self::$scriptName;
-        $_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
-        $_SERVER['REQUEST_METHOD'] = 'GET';
-        $_SERVER['REQUEST_URI'] = '/';
-
-        if ( isset($argv[0]) && strpos($argv[0], '=') === false ) {
-            $path = trim(array_shift($argv), '/');
-
-            $_SERVER['REQUEST_URI'] .= $path;
+            if ($fixServer) {
+                $_SERVER['REQUEST_URI'] .= self::$command;
+            }
         }
+
+        $data = [];
 
         // parse query params
         // ./bin/app image/packTask start test -d -s=df --debug=true
         // parse to
         // ./bin/app image/packTask?start&test&d&s=df&debug=true
-        if ($argv) {
-            $url = preg_replace('/&[-]+/', '&', implode('&',$argv));
+        if ($args) {
+            $url = preg_replace('/&[-]+/', '&', implode('&',$args));
 
             parse_str($url, $data);
-            $_REQUEST = $_GET = $data;
+
+            if ($fillToGlobal) {
+                $_REQUEST = $_GET = $data;
+            }
         }
+
+        return $data;
     }
 }

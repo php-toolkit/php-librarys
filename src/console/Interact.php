@@ -260,8 +260,7 @@ class Interact
             $text = "<{$style}>$text</{$style}>";
         }
 
-        $this->write($text);
-
+        // $this->write($text);
         static::write($text);
     }
 

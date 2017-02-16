@@ -23,32 +23,9 @@ class Interact
     const TAB    = '    ';
     const NL_TAB = "\n    ";// new line + tab
 
-//////////////////////////////////////// Interactive ////////////////////////////////////////
-
-    /**
-     * 多行信息展示
-     * @param  mixed $data
-     * @param  string $title
-     * @return void
-     */
-    public static function panel($data, $title='Info panel')
-    {
-        $data = is_array($data) ? array_filter($data) : [trim($data)];
-        self::write("\n  " . sprintf(self::STAR_LINE,"<bold>$title</bold>"), false);
-
-        foreach ($data as $label => $value) {
-            $line = '  * ';
-            if (!is_numeric($label)) {
-                $line .= "$label: ";
-            }
-
-            self::write($line . $value);
-        }
-
-        $star = $title ? substr(self::STAR_LINE, 0, strlen($title)): '';
-
-        self::write('  ' . sprintf(self::STAR_LINE, $star ));
-    }
+/////////////////////////////////////////////////////////////////
+/// Interactive
+/////////////////////////////////////////////////////////////////
 
     /**
      * 多选一
@@ -107,7 +84,7 @@ class Interact
         $defaultText = $default ? 'yes' : 'no';
 
         $message = "<comment>$question</comment>\n    Please confirm (yes|no) [default:<info>$defaultText</info>]: ";
-        static::write($message, false);
+        self::write($message, false);
 
         $answer = self::readRow();
 
@@ -137,7 +114,7 @@ class Interact
         }
 
         // $question = ucfirst(trim($question));
-        static::write(ucfirst(trim($question)));
+        self::write(ucfirst(trim($question)));
         $answer = self::readRow();
 
         if ('' === $answer && null === $default ) {
@@ -206,6 +183,176 @@ class Interact
         return $answer;
     }
 
+/////////////////////////////////////////////////////////////////
+/// Output Message
+/////////////////////////////////////////////////////////////////
+
+    /**
+     * @param $msg
+     */
+    public static function title($msg, $width = null)
+    {
+        $msg = ucwords(trim($msg));
+        $msgLength = mb_strlen($msg, 'UTF-8');
+        $width = (int)$width ? (int)$width : 50;
+
+        $indentSpace = str_pad(' ', ceil($width/2) - ceil($msgLength/2), ' ');
+        $charStr = str_pad('=', $width, '=');
+
+        self::write("  {$indentSpace}{$msg}   \n  {$charStr}\n");
+    }
+
+    /**
+     * @param $msg
+     */
+    public static function section($msg, $width = null)
+    {
+        $msg = ucwords(trim($msg));
+        $msgLength = mb_strlen($msg, 'UTF-8');
+        $width = (int)$width ? (int)$width : 50;
+
+        $indentSpace = str_pad(' ', ceil($width/2) - ceil($msgLength/2), ' ');
+        $charStr = str_pad('-', $width, '-');
+
+        self::write("  {$indentSpace}{$msg}   \n  {$charStr}\n");
+    }
+
+    /**
+     * 多行信息展示
+     * @param  mixed $data
+     * @param  string $title
+     * @return void
+     */
+    public static function panel(array $data, $title='Info panel')
+    {
+        $data = is_array($data) ? array_filter($data) : [trim($data)];
+        $title = ucwords(trim($title));
+
+        self::write("\n  " . sprintf(self::STAR_LINE,"<bold>$title</bold>"), false);
+
+        foreach ($data as $label => $value) {
+            $line = '  * ';
+            if (!is_numeric($label)) {
+                $line .= "$label: ";
+            }
+
+            self::write("$line  <info>$value</info>");
+        }
+
+        $star = $title ? substr(self::STAR_LINE, 0, strlen($title)): '';
+
+        self::write('  ' . sprintf(self::STAR_LINE, $star ));
+    }
+
+    /**
+     * 表格数据信息展示
+     * @param  array $data
+     * @param  string $title
+     * @return void
+     */
+    public static function table(array $data, $title='Info List', $showBorder = true)
+    {
+        $rowIndex = 0;
+        $head = $table = [];
+        $info = [
+            'rowCount'  => count($data),
+            'columnCount' => 0,     // how many column in the table.
+            'columnMaxWidth' => [], // table column max width
+            'tableWidth' => 0,      // table width. equals to all max column width's sum.
+        ];
+
+        // parse table data
+        foreach ($data as $row) {
+            // collection all field name
+            if ($rowIndex === 0) {
+                $head = array_keys($row);
+                $info['columnCount'] = count($row);
+
+                foreach ($head as $index => $name) {
+                    $info['columnMaxWidth'][$index] = mb_strlen($name, 'UTF-8');
+                }
+            }
+
+            $colIndex = 0;
+
+            foreach ($row as $value) {
+                // collection column max width
+                if ( isset($info['columnMaxWidth'][$colIndex]) ) {
+                    $colWidth = mb_strlen($value, 'UTF-8');
+
+                    // If current column width gt old column width. override old width.
+                    if ($colWidth > $info['columnMaxWidth'][$colIndex]) {
+                        $info['columnMaxWidth'][$colIndex] = $colWidth;
+                    }
+                } else {
+                    $info['columnMaxWidth'][$colIndex] = mb_strlen($value, 'UTF-8');
+                }
+
+                $colIndex++;
+            }
+
+            $rowIndex++;
+        }
+
+        $tableWidth = $info['tableWidth'] = array_sum($info['columnMaxWidth']);
+        $columnCount = $info['columnCount'];
+
+        // output title
+        if ($title) {
+            $title = ucwords(trim($title));
+            $titleLength = mb_strlen($title, 'UTF-8');
+            $indentSpace = str_pad(' ', ceil($tableWidth/2) - ceil($titleLength/2) + ($columnCount*2), ' ');
+            self::write("  {$indentSpace}<bold>{$title}</bold>");
+        }
+
+        // output table top border
+        if ($showBorder) {
+            $border = str_pad('-', $tableWidth + ($columnCount*3) + 2, '-');
+            self::write('  ' . $border);
+        }
+
+        // output table head
+        $headStr = '  | ';
+        foreach ($head as $index => $name) {
+            $colMaxWidth = $info['columnMaxWidth'][$index];
+            $name = str_pad($name, $colMaxWidth, ' ');
+            $headStr .= " {$name} |";
+        }
+
+        self::write($headStr);
+
+        if ($showBorder) {
+            self::write('  ' . $border);
+        }
+
+        $rowIndex = 0;
+
+        // output table info
+        foreach ($data as $row) {
+            $colIndex = 0;
+            $rowStr = '  | ';
+
+            foreach ($row as $value) {
+                $colMaxWidth = $info['columnMaxWidth'][$colIndex];
+                $value = str_pad($value, $colMaxWidth, ' ');
+                $rowStr .= " <info>{$value}</info> |";
+                $colIndex++;
+            }
+
+            self::write("{$rowStr}");
+
+            $rowIndex++;
+        }
+
+        // output table bottom border
+        if ($showBorder) {
+            self::write('  ' . $border);
+        }
+
+        echo "\n";
+        unset($data);
+    }
+
     public static function primary($messages, $type = 'IMPORTANT')
     {
         static::block($messages, $type, 'primary');
@@ -261,8 +408,13 @@ class Interact
         }
 
         // $this->write($text);
-        static::write($text);
+        self::write($text);
     }
+
+/////////////////////////////////////////////////////////////////
+/// Helper Method
+/////////////////////////////////////////////////////////////////
+
 
     /**
      * @var Color
@@ -301,30 +453,5 @@ class Interact
         $exit && exit();
     }
 
-    /**
-     * @param $msg
-     */
-    public static function title($msg)
-    {
-        $msg = ucfirst(trim($msg));
-        $length = mb_strlen($msg, 'UTF-8');
-        $str = str_pad('=',$length + 6, '=');
-
-        static::write("   $msg   ");
-        static::write($str."\n");
-    }
-
-    /**
-     * @param $msg
-     */
-    public static function section($msg)
-    {
-        $msg = ucfirst(trim($msg));
-        $length = mb_strlen($msg, 'UTF-8');
-        $str = str_pad('-',$length + 6, '-');
-
-        static::write("   $msg   ");
-        static::write($str."\n");
-    }
 
 } // end class

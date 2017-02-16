@@ -36,31 +36,31 @@ class Interact
      */
     public static function choice($question, $option, $allowExit=true)
     {
-        echo self::NL_TAB . $question;
+        self::write("  <comment>$question</comment>");
 
         $option    = is_array($option) ? $option : explode(',', $option);
         // no set key
         $isNumeric = isset($option[0]);
         $keys = [];
+        $optStr = '';
 
         foreach ($option as $key => $value) {
             $keys[] = $isNumeric ? ++$key : $key;
 
-            echo self::NL_TAB . " $key) $value";
+            $optStr .= "\n    $key) $value";
         }
 
         if ($allowExit) {
             $keys[] = 'q';
-
-            echo self::NL_TAB . ' q) quit';
+            $optStr .= "\n    q) quit";
         }
 
-        echo self::NL_TAB . 'You choice : ';
+        self::write($optStr . "\n  You choice : ");
 
         $r = self::readRow();
 
         if ( !in_array($r, $keys) ) {
-            echo self::TAB . "warning! option $r) don't exists! please entry again! :";
+            self::write("Warning! option <comment>$r<comment>) don't exists! please entry again! :");
 
             $r = self::readRow();
         }
@@ -75,111 +75,158 @@ class Interact
     /**
      * 确认, 发出信息要求确认；返回 true | false
      * @param  string $question 发出的信息
-     * @param bool $default
+     * @param bool $yes
      * @return bool
      */
-    public static function confirm($question, $default = true)
+    public static function confirm($question, $yes = true)
     {
         $question = ucfirst(trim($question));
-        $defaultText = $default ? 'yes' : 'no';
+        $defaultText = $yes ? 'yes' : 'no';
 
         $message = "<comment>$question</comment>\n    Please confirm (yes|no) [default:<info>$defaultText</info>]: ";
         self::write($message, false);
 
         $answer = self::readRow();
 
-        return $answer ? !strncasecmp($answer, 'y', 1) : (bool)$default;
+        return $answer ? !strncasecmp($answer, 'y', 1) : (bool)$yes;
     }
 
     /**
      * 询问，提出问题；返回 输入的结果
-     * @param  string $question 问题
-     * @param null $default 默认值
-     * @param \Closure $validator
-     * @example
-     *  $answer = Interact::ask('Are you sure publish?', null, function ($answer) {
-     *      if (!is_integer($answer)) {
-     *           throw new \RuntimeException('You must type an integer.');
-     *       }
+     * @param string      $question   问题
+     * @param null|string $default    默认值
+     * @param \Closure    $validator  The validate callback. It must return bool.
+     * @example This is an example
      *
-     *       return $answer;
+     * ```
+     *  $answer = Interact::ask('Please input your name?', null, function ($answer) {
+     *      if ( !preg_match('/\w+/', $answer) ) {
+     *          Interact::error('The name must match "/\w+/"');
+     *
+     *          return false;
+     *      }
+     *
+     *      return true;
      *   });
+     * ```
      *
      * @return string
      */
     public static function ask($question, $default = null, \Closure $validator = null)
     {
-        if (!$question) {
-            throw new InvalidArgumentException('Please provide a question!');
+        return self::question($question, $default, $validator);
+    }
+    public static function question($question, $default = null, \Closure $validator = null)
+    {
+        if ( !$question = trim($question) ) {
+            self::error('Please provide a question text!', 1);
         }
 
-        // $question = ucfirst(trim($question));
-        self::write(ucfirst(trim($question)));
-        $answer = self::readRow();
+        $defaultText = null !== $default ? "(default: <info>$default</info>)" : '';
+        $answer = self::read( "<comment>" . ucfirst($question) . "</comment>$defaultText " );
 
-        if ('' === $answer && null === $default ) {
-            static::error('A value is required.');
-            static::ask($question, $default, $validator);
+        if ( '' === $answer ) {
+            if ( null === $default) {
+                self::error('A value is required.', false);
+
+                return static::question($question, $default, $validator);
+            }
+
+            return $default;
+        }
+
+        if ( $validator ) {
+            return $validator($answer) ? $answer : static::question($question, $default, $validator);
         }
 
         return $answer;
     }
 
     /**
-     * 持续询问，提出问题；
-     * 若输入了值且验证成功则返回 输入的结果
-     * 否则，会连续询问 $allowed 次， 若任然错误，退出
-     * @param  string $question 问题
-     * @param callable $callbackVerify (默认验证输入是否为空)自定义回调验证输入是否符合要求; 验证成功返回true 否则 可返回错误消息
-     * e.g.
-     * Interact::loopAsk('please entry you age?', function($age)
+     * 有次数限制的询问,提出问题
+     *   若输入了值且验证成功则返回 输入的结果
+     *   否则，会连续询问 $allowed 次， 若仍然错误，退出
+     * @param string      $question 问题
+     * @param null|string $default    默认值
+     * @param callable    $validator (默认验证输入是否为空)自定义回调验证输入是否符合要求; 验证成功返回true 否则 可返回错误消息
+     * @example This is an example
+     *
+     * ```
+     * // no default value
+     * Interact::loopAsk('please entry you age?', null, function($age)
      * {
      *     if ($age<1 || $age>100) {
-     *         return 'Allow the input range is 1-100';
+     *         Interact::error('Allow the input range is 1-100');
+     *         return false;
      *     }
      *
      *     return true;
      * } );
      *
-     * @param int $allowed 允许错误次数
+     * // has default value
+     * Interact::loopAsk('please entry you age?', 89, function($age)
+     * {
+     *     if ($age<1 || $age>100) {
+     *         Interact::error('Allow the input range is 1-100');
+     *         return false;
+     *     }
+     *
+     *     return true;
+     * } );
+     * ```
+     *
+     * @param int $times Allow input times
      * @return string
      */
-    public static function loopAsk($question, callable $callbackVerify = null, $allowed=3)
+    public static function loopAsk($question, $default = null, \Closure $validator = null, $times=3)
     {
-        $question = ucfirst(trim($question));
-
-        if (!$question) {
-            throw new InvalidArgumentException('Please provide a question!');
+        if ( !$question = trim($question) ) {
+            self::error('Please provide a question text!', 1);
         }
 
-        $allowed = ((int)$allowed > 6 || $allowed < 1) ? 3 : (int)$allowed;
-        $loop  = true;
-        $key  = 1;
+        $result = false;
+        $answer = '';
+        $question = ucfirst($question);
+        $back = $times = ((int)$times > 6 || $times < 1) ? 3 : (int)$times;
+        $defaultText = null !== $default ? "(default: <info>$default</info>)" : '';
 
-        while ($loop) {
-            echo "\n    $question ";
-            $answer = self::readRow();
+        while ($times--) {
+            if ( $defaultText ) {
+                $answer = self::read("<comment>{$question}</comment>{$defaultText} ");
 
-            if ($callbackVerify && is_callable($callbackVerify)) {
-                $msg = call_user_func($callbackVerify, $answer);
+                if ( '' === $answer ) {
+                    $answer = $default;
+                    $result = true;
 
-                if ($msg === true) {
                     break;
                 }
+            } else {
+                $num = $times + 1;
+                $answer = self::read("<comment>{$question}</comment>\n(You have a [<bold>$num</bold>] chance to enter!) ");
+            }
 
-                echo self::TAB. '  ' .($msg ?: 'Verify failure!!');
-            } else if ( $answer !== '') {
+            // If setting verify callback
+            if ($validator && ($result = $validator($answer)) === true ) {
                 break;
             }
 
-            if ($key === $allowed) {
-                exit(self::NL_TAB."You've entered incorrectly $allowed times in a row !!\n");
-            }
+            // no setting verify callback
+            if ( !$validator && $answer !== '') {
+                $result = true;
 
-            $key++;
+                break;
+            }
         }
 
-        /** @var string $answer */
+        if ( !$result ) {
+
+            if ( null !== $default ) {
+                return $default;
+            }
+
+            self::write("\n  You've entered incorrectly <danger>$back</danger> times in a row. exit!\n", true, 1);
+        }
+
         return $answer;
     }
 
@@ -188,31 +235,26 @@ class Interact
 /////////////////////////////////////////////////////////////////
 
     /**
-     * @param $msg
+     * @param string $msg   The title message
+     * @param int    $width The title section width
      */
-    public static function title($msg, $width = null)
+    public static function title($msg, $width = 50)
     {
-        $msg = ucwords(trim($msg));
-        $msgLength = mb_strlen($msg, 'UTF-8');
-        $width = (int)$width ? (int)$width : 50;
-
-        $indentSpace = str_pad(' ', ceil($width/2) - ceil($msgLength/2), ' ');
-        $charStr = str_pad('=', $width, '=');
-
-        self::write("  {$indentSpace}{$msg}   \n  {$charStr}\n");
+        self::section($msg, $width, '=');
     }
 
     /**
-     * @param $msg
+     * @param string $msg   The section message
+     * @param int    $width The section width
      */
-    public static function section($msg, $width = null)
+    public static function section($msg, $width = 50, $char = '-')
     {
         $msg = ucwords(trim($msg));
         $msgLength = mb_strlen($msg, 'UTF-8');
-        $width = (int)$width ? (int)$width : 50;
+        $width = is_int($width) && $width > 10 ? $width : 50;
 
         $indentSpace = str_pad(' ', ceil($width/2) - ceil($msgLength/2), ' ');
-        $charStr = str_pad('-', $width, '-');
+        $charStr = str_pad($char, $width, $char);
 
         self::write("  {$indentSpace}{$msg}   \n  {$charStr}\n");
     }
@@ -232,6 +274,7 @@ class Interact
 
         foreach ($data as $label => $value) {
             $line = '  * ';
+
             if (!is_numeric($label)) {
                 $line .= "$label: ";
             }
@@ -353,62 +396,58 @@ class Interact
         unset($data);
     }
 
-    public static function primary($messages, $type = 'IMPORTANT')
-    {
-        static::block($messages, $type, 'primary');
-    }
-    public static function success($messages, $type = 'SUCCESS')
-    {
-        static::block($messages, $type, 'success');
-    }
-    public static function info($messages, $type = 'INFO')
-    {
-        static::block($messages, $type, 'info');
-    }
-    public static function warning($messages, $type = 'WARNING')
-    {
-        static::block($messages, $type, 'warning');
-    }
-    public static function danger($messages, $type = 'DANGER')
-    {
-        static::block($messages, $type, 'danger');
-    }
-    public static function error($messages, $type = 'ERROR')
-    {
-        static::block($messages, $type, 'error');
-    }
-    public static function comment($messages, $type = 'COMMENT')
-    {
-        static::block($messages, $type, 'comment');
-    }
-    public static function question($messages, $type = '')
-    {
-        static::block($messages, $type, 'question');
-    }
-
     /**
-     * @param $messages
-     * @param string|null $type
-     * @param string|array $style
+     * @param mixed         $messages
+     * @param string|null   $type
+     * @param string        $style
+     * @param int|boolean   $quit  If is int, settin it is exit code.
      */
-    public static function block($messages, $type = null, $style='default')
+    public static function block($messages, $type = null, $style='default', $quit = false)
     {
         $messages = is_array($messages) ? array_values($messages) : array($messages);
 
         // add type
         if (null !== $type) {
-            $messages[0] = sprintf('[%s] %s', $type, $messages[0]);
+            $messages[0] = sprintf('[%s] %s', strtoupper($type), $messages[0]);
         }
 
         $text = implode(PHP_EOL, $messages);
         $color = static::getColor();
 
         if (is_string($style) && $color->hasStyle($style)) {
-            $text = "<{$style}>$text</{$style}>";
+            $text = "<{$style}>{$text}</{$style}>";
         }
 
         // $this->write($text);
-        self::write($text);
+        self::write($text, true, $quit);
+    }
+    public static function primary($messages, $quit = false)
+    {
+        static::block($messages, 'IMPORTANT', 'primary', $quit);
+    }
+    public static function success($messages, $quit = false)
+    {
+        static::block($messages, 'SUCCESS', 'success', $quit);
+    }
+    public static function info($messages, $quit = false)
+    {
+        static::block($messages, 'INFO', 'info', $quit);
+    }
+    public static function warning($messages, $quit = false)
+    {
+        static::block($messages, 'WARNING', 'warning', $quit);
+    }
+    public static function danger($messages, $quit = false)
+    {
+        static::block($messages, 'DANGER', 'danger', $quit);
+    }
+    public static function error($messages, $quit = false)
+    {
+        static::block($messages, 'ERROR', 'error', $quit);
+    }
+    public static function comment($messages, $quit = false)
+    {
+        static::block($messages, 'COMMENT', 'comment', $quit);
     }
 
 /////////////////////////////////////////////////////////////////
@@ -432,25 +471,37 @@ class Interact
 
     /**
      * 读取输入信息
+     * @param  string $text  若不为空，则先输出文本
+     * @param  bool   $nl    true 会添加换行符 false 原样输出，不添加换行符
      * @return string
      */
-    public static function readRow()
+    public static function readRow($message = null, $nl = false)
     {
+        return self::read($message, $nl);
+    }
+    public static function read($message = null, $nl = false)
+    {
+        self::write($message, $nl);
+
         return trim(fgets(STDIN));
     }
 
     /**
-     * 输出，
-     * @param  string $text
-     * @param bool $newLine true 会在前添加换行符并自动缩进 false 原样输出，不添加换行符
-     * @param  boolean $exit
+     * 输出
+     * @param  string      $text
+     * @param  bool        $nl    true 会添加换行符 false 原样输出，不添加换行符
+     * @param  int|boolean $quit  If is int, settin it is exit code.
      */
-    public static function write($text, $newLine=true, $exit=false)
+    public static function write($text, $nl = true, $quit = false)
     {
         $text = static::getColor()->format($text);
-        echo $text . ($newLine ? self::NL : '');
 
-        $exit && exit();
+        fwrite(STDOUT, $text . ($nl ? "\n" : null));
+
+        if ( is_int($quit) || true === $quit) {
+            $code = true === $quit ? 0 : $quit;
+            exit($code);
+        }
     }
 
 

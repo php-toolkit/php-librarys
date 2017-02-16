@@ -50,10 +50,15 @@ class Input
     }
 
     /**
+     * 读取输入信息
+     * @param  string $text  若不为空，则先输出文本消息
+     * @param  bool   $nl    true 会添加换行符 false 原样输出，不添加换行符
      * @return string
      */
-    public function read()
+    public function read($message = null, $nl = false)
     {
+        fwrite(STDOUT, $message . ($nl ? "\n" : ''));
+
         return trim(fgets($this->inputStream));
     }
 

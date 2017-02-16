@@ -81,16 +81,16 @@ class Color
     protected function addDefaultStyles()
     {
         $this->addStyle('default', [
-                'fgColor' => 'default'
+                'fgColor' => 'default', 'options' => ['underscore']
             ])
             ->addStyle('faintly', [ // 不明显的 浅灰色的
-                'fgColor' => 'default'
+                'fgColor' => 'default', 'options' => ['italic']
             ])
             ->addStyle('bold', [
                 'options' => ['bold']
             ])
             ->addStyle('notice', [
-                'options' => ['bold']
+                'options' => ['bold'], 'options' => ['underscore']
             ])
             ->addStyle('primary', [
                 'fgColor' => 'blue', //'options' => ['bold']

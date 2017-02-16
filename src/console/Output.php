@@ -33,6 +33,153 @@ class Output
      */
     protected $color;
 
+/////////////////////////////////////////////////////////////////
+/// Output Message
+/////////////////////////////////////////////////////////////////
+
+
+    /**
+     * @param $msg
+     */
+    public function title($msg, $width = null)
+    {
+        Interact::title($msg, $width);
+    }
+
+    /**
+     * @param $msg
+     */
+    public function section($msg, $width = null)
+    {
+        Interact::section($msg, $width);
+    }
+
+    /**
+     * 多行信息展示
+     * @param  mixed $data
+     * @param  string $title
+     * @return void
+     */
+    public function panel(array $data, $title='Info panel')
+    {
+        Interact::panel($data, $title);
+    }
+
+    /**
+     * 表格数据信息展示
+     * @param  array $data
+     * @param  string $title
+     * @return void
+     */
+    public function table(array $data, $title='Info List', $showBorder = true)
+    {
+        Interact::table($data, $title, $showBorder);
+    }
+
+    /**
+     * @param mixed         $messages
+     * @param string|null   $type
+     * @param string        $style
+     * @param int|boolean   $quit  If is int, settin it is exit code.
+     */
+    public function block($messages, $type = 'INFO', $style='info', $quit = false)
+    {
+        $messages = is_array($messages) ? array_values($messages) : array($messages);
+
+        // add type
+        if (null !== $type) {
+            $messages[0] = sprintf('[%s] %s', strtoupper($type), $messages[0]);
+        }
+
+        $text = implode(PHP_EOL, $messages);
+
+        if (is_string($style) && $this->getColor()->hasStyle($style)) {
+            $text = "<{$style}>{$text}</{$style}>";
+        }
+
+        $this->write($text, true, $quit);
+    }
+    public function primary($messages, $quit = false)
+    {
+        $this->block($messages, 'IMPORTANT', 'primary', $quit);
+    }
+    public function success($messages, $quit = false)
+    {
+        $this->block($messages, 'SUCCESS', 'success', $quit);
+    }
+    public function info($messages, $quit = false)
+    {
+        $this->block($messages, 'INFO', 'info', $quit);
+    }
+    public function warning($messages, $quit = false)
+    {
+        $this->block($messages, 'WARNING', 'warning', $quit);
+    }
+    public function danger($messages, $quit = false)
+    {
+        $this->block($messages, 'DANGER', 'danger', $quit);
+    }
+    public function error($messages, $quit = false)
+    {
+        $this->block($messages, 'ERROR', 'error', $quit);
+    }
+    public function comment($messages, $quit = false)
+    {
+        $this->block($messages, 'COMMENT', 'comment', $quit);
+    }
+
+    /**
+     * 读取输入信息
+     * @param  string $text  若不为空，则先输出文本
+     * @param  bool   $nl    true 会添加换行符 false 原样输出，不添加换行符
+     * @return string
+     */
+    public function read($message = null, $nl = false)
+    {
+        $this->write($message, $nl);
+
+        return trim(fgets(STDIN));
+    }
+
+    /**
+     * Write a message to standard output.
+     * @param  string      $text  output message
+     * @param  bool        $nl    true 会添加换行符 false 原样输出，不添加换行符
+     * @param  int|boolean $quit  If is int, settin it is exit code.
+     * @return static
+     */
+    public function write($text = '', $nl = true, $quit = false)
+    {
+        $text = $this->getColor()->format($text);
+
+        fwrite($this->outputStream, $text . ($nl ? "\n" : null));
+
+        if ( is_int($quit) || true === $quit) {
+            $code = true === $quit ? 0 : $quit;
+            exit($code);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Write a message to standard error output.
+     * @param string $text
+     * @param   boolean $nl True (default) to append a new line at the end of the output string.
+     */
+    public function err($text = '', $nl = true)
+    {
+        $text = $this->getColor()->format($text);
+
+        fwrite($this->errorStream, $text . ($nl ? "\n" : null));
+
+        return $this;
+    }
+
+/////////////////////////////////////////////////////////////////
+/// Getter/Setter
+/////////////////////////////////////////////////////////////////
+
     /**
      * @return Color
      */
@@ -43,59 +190,6 @@ class Output
         }
 
         return $this->color;
-    }
-
-    /**
-     * @param array|string $messages
-     * @param string $type
-     * @param string|array $style
-     */
-    public function block($messages, $type = 'INFO', $style='info')
-    {
-        $messages = is_array($messages) ? array_values($messages) : array($messages);
-
-        // add type
-        if (null !== $type) {
-            $messages[0] = sprintf('[%s] %s', $type, $messages[0]);
-        }
-
-        $text = implode(PHP_EOL, $messages);
-        $color = $this->getColor();
-
-        if (is_string($style) && $color->hasStyle($style)) {
-            $text = "<{$style}>$text</{$style}>";
-        }
-
-        $this->write($text);
-    }
-
-    /**
-     * @param string $text
-     * @param bool $nl
-     * @return $this
-     */
-    public function write($text = '', $nl = true)
-    {
-        $text = $this->getColor()->format($text);
-
-        fwrite($this->outputStream, $text . ($nl ? "\n" : null));
-
-        return $this;
-    }
-
-    /**
-     * Write a string to standard error output.
-     * @param string $text
-     * @param   boolean $nl True (default) to append a new line at the end of the output string.
-     * @return $this
-     */
-    public function err($text = '', $nl = true)
-    {
-        $text = $this->getColor()->format($text);
-
-        fwrite($this->errorStream, $text . ($nl ? "\n" : null));
-
-        return $this;
     }
 
     /**

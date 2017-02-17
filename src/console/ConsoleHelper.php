@@ -75,10 +75,10 @@ class ConsoleHelper
      * @param  string $leftChar e.g ' * '
      * @return string
      */
-    public static function spliceKeyValue($data, $keyMaxWidth, $sepChar = ' ', $leftChar='')
+    public static function spliceKeyValue(array $data, $keyMaxWidth, $sepChar = ' ', $leftChar='')
     {
         $text = '';
-        foreach ($panelData as $key => $value) {
+        foreach ($data as $key => $value) {
             $text .= $leftChar;
 
             if ($keyMaxWidth) {

@@ -354,7 +354,7 @@ class Interact
      * @param  string $title
      * @return void
      */
-    public static function panel($data, $title='Info panel', $char = '*')
+    public static function panel($data, $title='Information Panel', $char = '*')
     {
         $data = is_array($data) ? array_filter($data) : [trim($data)];
         $title = trim($title);
@@ -362,8 +362,6 @@ class Interact
         $panelData = []; // [ 'label' => 'value' ]
         $labelMaxWidth = 0; // if label exists, label max width
         $valueMaxWidth = 0; // value max width
-
-        self::write("\n  " . sprintf(self::STAR_LINE,"<bold>$title</bold>"), false);
 
         foreach ($data as $label => $value) {
             // label exists
@@ -377,11 +375,18 @@ class Interact
                 $temp = '';
 
                 foreach ($value as $key => $val) {
-                    $val = (string)$val;
-                    $temp .= (!is_numeric($key) ? "$key: " : '') . "<info>$value</info>, ";
+                    if (is_bool($val)) {
+                        $val = $val ? 'True' : 'False';
+                    } else {
+                        $val = (string)$val;
+                    }
+
+                    $temp .= (!is_numeric($key) ? "$key: " : '') . "<info>$val</info>, ";
                 }
 
                 $value = rtrim($temp, ' ,');
+            } else if (is_bool($value)) {
+                $value = $value ? 'True' : 'False';
             }
 
             // get value width
@@ -390,6 +395,7 @@ class Interact
                 $width = mb_strlen(strip_tags($value), 'UTF-8'); // must clear style tag
                 $valueMaxWidth = $width > $valueMaxWidth ? $width : $valueMaxWidth;
             } else {
+                de((string)$value);
                 throw new \Exception('Panel data value only allow [array|string|number]');
             }
 
@@ -402,12 +408,13 @@ class Interact
         if ($title) {
             $title = ucwords($title);
             $titleLength = mb_strlen($title, 'UTF-8');
+            $panelWidth = $panelWidth > $titleLength ? $panelWidth : $titleLength;
             $indentSpace = str_pad(' ', ceil($panelWidth/2) - ceil($titleLength/2) + 2*2, ' ');
             self::write("  {$indentSpace}<bold>{$title}</bold>");
         }
 
         // output panel top border
-        $border = str_pad($char, $panelWidth + (2*3), $char);
+        $border = str_pad($char, $panelWidth + (3*3), $char);
         self::write('  ' . $border);
 
         // output panel body

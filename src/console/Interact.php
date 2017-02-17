@@ -17,11 +17,6 @@ use inhere\librarys\exceptions\InvalidArgumentException;
  */
 class Interact
 {
-    const STAR_LINE = "*************************************%s*************************************\n";
-
-    const NL = "\n";// new line
-    const TAB    = '    ';
-    const NL_TAB = "\n    ";// new line + tab
 
 /////////////////////////////////////////////////////////////////
 /// Interactive method (select/confirm/question/loopAsk)
@@ -631,8 +626,8 @@ class Interact
 
     /**
      * 读取输入信息
-     * @param  string $text  若不为空，则先输出文本
-     * @param  bool   $nl    true 会添加换行符 false 原样输出，不添加换行符
+     * @param  string $message  若不为空，则先输出文本
+     * @param  bool   $nl       true 会添加换行符 false 原样输出，不添加换行符
      * @return string
      */
     public static function readRow($message = null, $nl = false)
@@ -641,27 +636,35 @@ class Interact
     }
     public static function read($message = null, $nl = false)
     {
-        self::write($message, $nl);
+        if ( $message ) {
+            self::write($message, $nl);
+        }
 
         return trim(fgets(STDIN));
     }
 
     /**
-     * 输出
-     * @param  string      $text
-     * @param  bool        $nl    true 会添加换行符 false 原样输出，不添加换行符
-     * @param  int|boolean $quit  If is int, settin it is exit code.
+     * Write a message to standard output stream.
+     * @param  string|array $messages    Output message
+     * @param  boolean      $nl          true 会添加换行符 false 原样输出，不添加换行符
+     * @param  int|boolean  $quit        If is int, settin it is exit code.
      */
-    public static function write($text, $nl = true, $quit = false)
+    public static function write($messages, $nl = true, $quit = false)
     {
-        $text = static::getColor()->format($text);
+        // if ( is_array($messages) ) {
+        //     $messages = implode( $nl ? PHP_EOL : '', $messages );
+        // }
 
-        fwrite(STDOUT, $text . ($nl ? "\n" : null));
+        $messages = static::getColor()->format($messages);
+
+        fwrite(STDOUT, $messages . ($nl ? PHP_EOL : ''));
 
         if ( is_int($quit) || true === $quit) {
             $code = true === $quit ? 0 : $quit;
             exit($code);
         }
+
+        fflush(STDOUT);
     }
 
 

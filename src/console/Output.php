@@ -132,34 +132,45 @@ class Output
 
     /**
      * 读取输入信息
-     * @param  string $text  若不为空，则先输出文本
-     * @param  bool   $nl    true 会添加换行符 false 原样输出，不添加换行符
+     * @param  string $message  若不为空，则先输出文本
+     * @param  bool   $nl       true 会添加换行符 false 原样输出，不添加换行符
      * @return string
      */
     public function read($message = null, $nl = false)
     {
-        $this->write($message, $nl);
+        if ( $message ) {
+            $this->write($message, $nl);
+        }
 
         return trim(fgets(STDIN));
     }
 
     /**
-     * Write a message to standard output.
-     * @param  string      $text  output message
-     * @param  bool        $nl    true 会添加换行符 false 原样输出，不添加换行符
-     * @param  int|boolean $quit  If is int, settin it is exit code.
+     * Write a message to standard output stream.
+     * @param  mixed       $messages  Output message
+     * @param  bool        $nl        true 会添加换行符 false 原样输出，不添加换行符
+     * @param  int|boolean $quit      If is int, settin it is exit code.
      * @return static
      */
-    public function write($text = '', $nl = true, $quit = false)
+    public function write($messages = '', $nl = true, $quit = false)
     {
-        $text = $this->getColor()->format($text);
+        if ( is_array($messages) ) {
+            $messages = implode( $nl ? PHP_EOL : '', $messages );
+        }
 
-        fwrite($this->outputStream, $text . ($nl ? "\n" : null));
+        $messages = $this->getColor()->format($messages);
+
+        if (false === @fwrite($this->outputStream, $messages . ($nl ? PHP_EOL : ''))) {
+            // should never happen
+            throw new \RuntimeException('Unable to write output.');
+        }
 
         if ( is_int($quit) || true === $quit) {
             $code = true === $quit ? 0 : $quit;
             exit($code);
         }
+
+        fflush($this->outputStream);
 
         return $this;
     }

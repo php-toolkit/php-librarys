@@ -37,9 +37,8 @@ class Output
 /// Output Message
 /////////////////////////////////////////////////////////////////
 
-
     /**
-     * @param $msg
+     * @see Interact::title()
      */
     public function title($msg, $width = null)
     {
@@ -47,7 +46,7 @@ class Output
     }
 
     /**
-     * @param $msg
+     * @see Interact::section()
      */
     public function section($msg, $width = null)
     {
@@ -55,10 +54,16 @@ class Output
     }
 
     /**
-     * 多行信息展示
-     * @param  mixed $data
-     * @param  string $title
-     * @return void
+     * helpPanel
+     * @see Interact::helpPanel()
+     */
+    public function helpPanel($usage, $commands = [], $options = [], $examples = [], $description = '')
+    {
+        Interact::helpPanel($msg, $width);
+    }
+
+    /**
+     * @see Interact::panel()
      */
     public function panel(array $data, $title='Info panel')
     {
@@ -66,10 +71,7 @@ class Output
     }
 
     /**
-     * 表格数据信息展示
-     * @param  array $data
-     * @param  string $title
-     * @return void
+     * @see Interact::table()
      */
     public function table(array $data, $title='Info List', $showBorder = true)
     {

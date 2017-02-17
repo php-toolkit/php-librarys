@@ -24,30 +24,47 @@ class Interact
     const NL_TAB = "\n    ";// new line + tab
 
 /////////////////////////////////////////////////////////////////
-/// Interactive
+/// Interactive method (select/confirm/question/loopAsk)
 /////////////////////////////////////////////////////////////////
 
     /**
      * 多选一
-     * @param  string $question 说明
-     * @param  mixed $option  选项数据
-     * @param  bool $allowExit  有退出选项 默认 true
+     * @param  string  $description 说明
+     * @param  mixed   $options     选项数据
+     * e.g
+     * [
+     *    // option => value
+     *    '1' => 'chengdu',
+     *    '2' => 'beijing'
+     * ]
+     * @param  mixed   $default     默认选项
+     * @param  bool    $allowExit   有退出选项 默认 true
      * @return string
      */
-    public static function choice($question, $option, $allowExit=true)
+    public static function select($description, $options, $default = null, $allowExit=true)
     {
-        self::write("  <comment>$question</comment>");
+        self::choice($description, $options, $default, $allowExit);
+    }
+    public static function choice($description, $options, $default = null, $allowExit=true)
+    {
+        if ( !$description = trim($description) ) {
+            self::error('Please provide a description text!', 1);
+        }
 
-        $option    = is_array($option) ? $option : explode(',', $option);
-        // no set key
-        $isNumeric = isset($option[0]);
+        self::write("  <comment>$description</comment>");
+
         $keys = [];
         $optStr = '';
+        $options  = is_array($options) ? $options : explode(',', $options);
 
-        foreach ($option as $key => $value) {
-            $keys[] = $isNumeric ? ++$key : $key;
+        // If defaut option is error
+        if ( null === $default && !isset($options[$default]) ) {
+            self::error("The default option [{$default}] don't exists.", true);
+        }
 
-            $optStr .= "\n    $key) $value";
+        foreach ($options as $key => $value) {
+            $keys[] = $key;
+            $optStr .= "\n    <info>$key</info>) $value";
         }
 
         if ($allowExit) {
@@ -55,40 +72,49 @@ class Interact
             $optStr .= "\n    q) quit";
         }
 
-        self::write($optStr . "\n  You choice : ");
+        $r = self::read($optStr . "\n  You choice : ");
 
-        $r = self::readRow();
-
+        // error, allow try again
         if ( !in_array($r, $keys) ) {
-            self::write("Warning! option <comment>$r<comment>) don't exists! please entry again! :");
-
-            $r = self::readRow();
+            $r = self::read("Warning! Option <info>$r</info>) don't exists! Please entry again! : ");
         }
 
-        if ($r === 'q' || !in_array($r, $keys) ) {
-            exit("\n\n Quit,ByeBye.\n");
+        // exit
+        if ( $r === 'q' ) {
+            self::write("\n  Quit,ByeBye.", true, true);
+        }
+
+        // error
+        if ( !in_array($r, $keys) ) {
+            if ( null === $default ) {
+                self::write("\n  Select error. Quit,ByeBye.", true, true);
+            }
+
+            $r = $default;
         }
 
         return $r;
     }
 
     /**
-     * 确认, 发出信息要求确认；返回 true | false
-     * @param  string $question 发出的信息
-     * @param bool $yes
+     * 确认, 发出信息要求确认
+     * @param string $question 发出的信息
+     * @param bool   $default  Default value
      * @return bool
      */
-    public static function confirm($question, $yes = true)
+    public static function confirm($question, $default = true)
     {
-        $question = ucfirst(trim($question));
-        $defaultText = $yes ? 'yes' : 'no';
+        if ( !$question = trim($question) ) {
+            self::error('Please provide a question text!', 1);
+        }
 
-        $message = "<comment>$question</comment>\n    Please confirm (yes|no) [default:<info>$defaultText</info>]: ";
-        self::write($message, false);
+        $question = ucfirst($question);
+        $defaultText = (bool)$default ? 'yes' : 'no';
 
-        $answer = self::readRow();
+        $message = " <comment>$question ?</comment>\n Please confirm (yes|no) [default:<info>$defaultText</info>]: ";
+        $answer = self::read($message);
 
-        return $answer ? !strncasecmp($answer, 'y', 1) : (bool)$yes;
+        return $answer ? !strncasecmp($answer, 'y', 1) : (bool)$default;
     }
 
     /**
@@ -231,7 +257,7 @@ class Interact
     }
 
 /////////////////////////////////////////////////////////////////
-/// Output Message
+/// Output Format Message(title/section/helpPanel/panel/table)
 /////////////////////////////////////////////////////////////////
 
     /**
@@ -260,31 +286,140 @@ class Interact
     }
 
     /**
-     * 多行信息展示
+     * Show console help message
+     * @param  string $usage    The usage message text. e.g 'command [options] [arguments]'
+     * @param  array  $commands The command list
+     * e.g
+     * [
+     *     // command => description
+     *     'start'    => 'Start the app server',
+     *     ... ...
+     * ]
+     * @param  array  $options The option list
+     * e.g
+     * [
+     *     // option    => description
+     *     '-d'         => 'Run the server on daemonize.(default: <comment>false</comment>)',
+     *     '-h, --help' => 'Display this help message'
+     *     ... ...
+     * ]
+     * @param  array  $examples The command usage example. e.g 'php server.php {start|reload|restart|stop} [-d]'
+     * @param  string $description The description text. e.g 'Composer version 1.3.2'
+     */
+    public static function consoleHelp($usage, $commands = [], $options = [], $examples = [], $description = '')
+    {
+        self::helpPanel($usage, $commands, $options, $examples, $description);
+    }
+    public static function helpPanel($usage, $commands = [], $options = [], $examples = [], $description = '')
+    {
+        // usage
+        self::write("<comment>Usage</comment>:\n  {$usage}\n");
+
+        // options list
+        if ( $options ) {
+            // translate array to string
+            if ( is_array($options)) {
+                $optionMaxWidth = ConsoleHelper::keyMaxWidth($options);
+                $options = ConsoleHelper::spliceKeyValue($options, $optionMaxWidth);
+            }
+
+            if ( is_string($options) ) {
+                self::write("<comment>Options</comment>:\n  {$options}\n");
+            }
+        }
+
+        // command list
+        if ( $commands ) {
+            // translate array to string
+            if ( is_array($commands)) {
+                $commandMaxWidth = ConsoleHelper::keyMaxWidth($commands);
+                $commands = ConsoleHelper::spliceKeyValue($commands, $commandMaxWidth);
+            }
+
+            if ( is_string($commands) ) {
+                self::write("<comment>Commands</comment>:\n  {$commands}\n");
+            }
+        }
+
+        // examples list
+        if ( $examples ) {
+            $examples = is_array($examples) ? implode(PHP_EOL, $examples) : $examples;
+            self::write("<comment>Examples</comment>:\n  {$examples}\n");
+        }
+    }
+
+    /**
+     * Show information data panel
      * @param  mixed $data
      * @param  string $title
      * @return void
      */
-    public static function panel(array $data, $title='Info panel')
+    public static function panel($data, $title='Info panel', $char = '*')
     {
         $data = is_array($data) ? array_filter($data) : [trim($data)];
-        $title = ucwords(trim($title));
+        $title = trim($title);
+
+        $panelData = []; // [ 'label' => 'value' ]
+        $labelMaxWidth = 0; // if label exists, label max width
+        $valueMaxWidth = 0; // value max width
 
         self::write("\n  " . sprintf(self::STAR_LINE,"<bold>$title</bold>"), false);
 
         foreach ($data as $label => $value) {
-            $line = '  * ';
-
-            if (!is_numeric($label)) {
-                $line .= "$label: ";
+            // label exists
+            if ( !is_numeric($label) ) {
+                $width = mb_strlen($label, 'UTF-8');
+                $labelMaxWidth = $width > $labelMaxWidth ? $width : $labelMaxWidth;
             }
 
-            self::write("$line  <info>$value</info>");
+            // translate array to string
+            if ( is_array($value) ) {
+                $temp = '';
+
+                foreach ($value as $key => $val) {
+                    $val = (string)$val;
+                    $temp .= (!is_numeric($key) ? "$key: " : '') . "<info>$value</info>, ";
+                }
+
+                $value = rtrim($temp, ' ,');
+            }
+
+            // get value width
+            if ( is_string($value) || is_numeric($value) ) {
+                $value = trim($value);
+                $width = mb_strlen(strip_tags($value), 'UTF-8'); // must clear style tag
+                $valueMaxWidth = $width > $valueMaxWidth ? $width : $valueMaxWidth;
+            } else {
+                throw new \Exception('Panel data value only allow [array|string|number]');
+            }
+
+            $panelData[$label] = $value;
         }
 
-        $star = $title ? substr(self::STAR_LINE, 0, strlen($title)): '';
+        $panelWidth = $labelMaxWidth + $valueMaxWidth;
 
-        self::write('  ' . sprintf(self::STAR_LINE, $star ));
+        // output title
+        if ($title) {
+            $title = ucwords($title);
+            $titleLength = mb_strlen($title, 'UTF-8');
+            $indentSpace = str_pad(' ', ceil($panelWidth/2) - ceil($titleLength/2) + 2*2, ' ');
+            self::write("  {$indentSpace}<bold>{$title}</bold>");
+        }
+
+        // output panel top border
+        $border = str_pad($char, $panelWidth + (2*3), $char);
+        self::write('  ' . $border);
+
+        // output panel body
+        $panelStr = ConsoleHelper::spliceKeyValue($panelData, $labelMaxWidth, ' | ', "  $char ");
+
+        // already exists "\n"
+        self::write($panelStr, false);
+
+        // output panel bottom border
+        self::write("  $border\n");
+
+        unset($data, $panelData);
     }
 
     /**

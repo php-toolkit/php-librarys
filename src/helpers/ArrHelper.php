@@ -422,7 +422,7 @@ class ArrHelper
     }
 
     /**
-     * 取出出所有子数组的相同列（单元）组成新的一位数组
+     * 取出出所有子数组的相同列（单元）组成新的一位数组(array_column)
      * @param array $input 原始数组
      * @param string $columnKey 要获取的列 键名
      * @param null $indexKey 可选 用相同的列的值作为新数组的键值
@@ -459,5 +459,57 @@ class ArrHelper
         }
 
         return $result;
+    }
+
+
+    /**
+     * getFirstColumnMaxWidth
+     * @todo un-complete
+     * @param  array  $rows
+     * [
+     *     [
+     *     ],
+     * ]
+     * @return int
+     */
+    public static function getFirstColumnMaxWidth(array $rows)
+    {
+        $maxWidth = 0;
+
+        foreach ($rows as $key => $row) {
+            foreach ($row as $field => $val) {
+                // if ( !is_numeric($label) ) {
+                //     $width = mb_strlen($label, 'UTF-8');
+                //     $maxWidth = $width > $maxWidth ? $width : $maxWidth;
+                // }
+            }
+        }
+
+        return $maxWidth;
+    }
+
+    /**
+     * get key Max Width
+     *
+     * @param  array  $data
+     * [
+     *     'key1'      => 'value1',
+     *     'key2-test' => 'value2',
+     * ]
+     * @return int
+     */
+    public static function keyMaxWidth(array $data, $expactInt = true)
+    {
+        $keyMaxWidth = 0;
+
+        foreach ($data as $key => $value) {
+            // key is not a integer
+            if ( !$expactInt || !is_numeric($key) ) {
+                $width = mb_strlen($key, 'UTF-8');
+                $keyMaxWidth = $width > $keyMaxWidth ? $width : $keyMaxWidth;
+            }
+        }
+
+        return $keyMaxWidth;
     }
 }

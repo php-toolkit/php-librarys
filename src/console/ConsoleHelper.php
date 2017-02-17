@@ -48,7 +48,7 @@ class ConsoleHelper
      * ]
      * @return int
      */
-    public static function keyMaxWidth(array $data, $expactInt = true)
+    public static function getKeyMaxWidth(array $data, $expactInt = true)
     {
         $keyMaxWidth = 0;
 
@@ -71,18 +71,31 @@ class ConsoleHelper
      *     'version'  => '4.4.5',
      * ]
      * @param  int    $keyMaxWidth
-     * @param  string $sepChar  e.g ' | ' => OUT: key | value
-     * @param  string $leftChar e.g ' * '
+     * @param  array  $opts
      * @return string
      */
-    public static function spliceKeyValue(array $data, $keyMaxWidth, $sepChar = ' ', $leftChar='')
+    public static function spliceKeyValue(array $data, array $opts = [])
     {
         $text = '';
-        foreach ($data as $key => $value) {
-            $text .= $leftChar;
+        $opts = array_merge([
+            'leftChar'    => '',   // e.g '  ', ' * '
+            'sepChar'     => ' ',  // e.g ' | ' => OUT: key | value
+            'keyStyle'    => '',   // e.g 'info','commont'
+            'keyMaxWidth' => null, // if not set, will automatic calculation
+        ], $opts);
 
-            if ($keyMaxWidth) {
-                $text .= str_pad($key, $keyMaxWidth, ' ') . $sepChar;
+        if ( !is_numeric($opts['keyMaxWidth']) ) {
+            $opts['keyMaxWidth'] = self::getKeyMaxWidth($data);
+        }
+
+        $keyStyle = trim($opts['keyStyle']);
+
+        foreach ($data as $key => $value) {
+            $text .= $opts['leftChar'];
+
+            if ($opts['keyMaxWidth']) {
+                $key = str_pad($key, $opts['keyMaxWidth'], ' ');
+                $text .= ( $keyStyle ? "<{$keyStyle}>$key</{$keyStyle}> " : $key ) . $opts['sepChar'];
             }
 
             $text .= "$value\n";

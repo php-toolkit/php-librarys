@@ -57,9 +57,9 @@ class Output
      * helpPanel
      * @see Interact::helpPanel()
      */
-    public function helpPanel($usage, $commands = [], $options = [], $examples = [], $description = '')
+    public function helpPanel($usage, $commands = [], $options = [], $examples = [], $description = '', $showAfterQuit = true)
     {
-        Interact::helpPanel($msg, $width);
+        Interact::helpPanel($usage, $commands, $options, $examples, $description, $showAfterQuit);
     }
 
     /**

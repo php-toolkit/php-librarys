@@ -305,13 +305,19 @@ class Interact
      * ]
      * @param  array  $examples The command usage example. e.g 'php server.php {start|reload|restart|stop} [-d]'
      * @param  string $description The description text. e.g 'Composer version 1.3.2'
+     * @param  bool   $showAfterQuit Show help after quit
      */
-    public static function consoleHelp($usage, $commands = [], $options = [], $examples = [], $description = '')
+    public static function consoleHelp($usage, $commands = [], $options = [], $examples = [], $description = '', $showAfterQuit = true)
     {
-        self::helpPanel($usage, $commands, $options, $examples, $description);
+        self::helpPanel($usage, $commands, $options, $examples, $description, $showAfterQuit);
     }
-    public static function helpPanel($usage, $commands = [], $options = [], $examples = [], $description = '')
+    public static function helpPanel($usage, $commands = [], $options = [], $examples = [], $description = '', $showAfterQuit = true)
     {
+        // description
+        if ( $description ) {
+            self::write($description . PHP_EOL);
+        }
+
         // usage
         self::write("<comment>Usage</comment>:\n  {$usage}\n");
 
@@ -319,12 +325,14 @@ class Interact
         if ( $options ) {
             // translate array to string
             if ( is_array($options)) {
-                $optionMaxWidth = ConsoleHelper::keyMaxWidth($options);
-                $options = ConsoleHelper::spliceKeyValue($options, $optionMaxWidth);
+                $options = ConsoleHelper::spliceKeyValue($options, [
+                    'leftChar' => '  ',
+                    'keyStyle' => 'info',
+                ]);
             }
 
             if ( is_string($options) ) {
-                self::write("<comment>Options</comment>:\n  {$options}\n");
+                self::write("<comment>Options</comment>:\n{$options}");
             }
         }
 
@@ -332,12 +340,14 @@ class Interact
         if ( $commands ) {
             // translate array to string
             if ( is_array($commands)) {
-                $commandMaxWidth = ConsoleHelper::keyMaxWidth($commands);
-                $commands = ConsoleHelper::spliceKeyValue($commands, $commandMaxWidth);
+                $commands = ConsoleHelper::spliceKeyValue($commands, [
+                    'leftChar' => '  ',
+                    'keyStyle' => 'info',
+                ]);
             }
 
             if ( is_string($commands) ) {
-                self::write("<comment>Commands</comment>:\n  {$commands}\n");
+                self::write("<comment>Commands</comment>:\n{$commands}");
             }
         }
 
@@ -345,6 +355,10 @@ class Interact
         if ( $examples ) {
             $examples = is_array($examples) ? implode(PHP_EOL, $examples) : $examples;
             self::write("<comment>Examples</comment>:\n  {$examples}\n");
+        }
+
+        if ($showAfterQuit) {
+            exit(0);
         }
     }
 
@@ -418,7 +432,11 @@ class Interact
         self::write('  ' . $border);
 
         // output panel body
-        $panelStr = ConsoleHelper::spliceKeyValue($panelData, $labelMaxWidth, ' | ', "  $char ");
+        $panelStr = ConsoleHelper::spliceKeyValue($panelData, [
+            'leftChar'    => "  $char ",
+            'sepChar'     => ' | ',
+            'keyMaxWidth' => $labelMaxWidth,
+        ]);
 
         // already exists "\n"
         self::write($panelStr, false);

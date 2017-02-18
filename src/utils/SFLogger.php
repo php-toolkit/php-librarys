@@ -487,7 +487,7 @@ class SFLogger
      */
     public function setLogThreshold($logThreshold)
     {
-        $this->logThreshold = (bool)$logThreshold;
+        $this->logThreshold = (int)$logThreshold;
     }
 
     /**

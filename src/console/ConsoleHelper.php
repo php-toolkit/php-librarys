@@ -102,6 +102,27 @@ class ConsoleHelper
                 $text .= ( $keyStyle ? "<{$keyStyle}>$key</{$keyStyle}> " : $key ) . $opts['sepChar'];
             }
 
+            // if value is array, translate array to string
+            if ( is_array($value) ) {
+                $temp = '';
+
+                foreach ($value as $key => $val) {
+                    if (is_bool($val)) {
+                        $val = $val ? 'True' : 'False';
+                    } else {
+                        $val = (string)$val;
+                    }
+
+                    $temp .= (!is_numeric($key) ? "$key: " : '') . "<info>$val</info>, ";
+                }
+
+                $value = rtrim($temp, ' ,');
+            } else if (is_bool($value)) {
+                $value = $value ? 'True' : 'False';
+            } else {
+                $value = (string)$value;
+            }
+
             $text .= "$value\n";
         }
 

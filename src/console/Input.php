@@ -12,8 +12,8 @@ namespace inhere\librarys\console;
  * Class Input
  * @package inhere\librarys\console
  * e.g:
- *     ./bin/app image/packTask test -d -s=df --debug=true
- *     php bin/cli.php start test -d -s=df --debug=true
+ *     ./bin/app image/packTask name=john -d -s=test --debug=true
+ *     php bin/cli.php start name=john -d -s=test --debug=true
  */
 class Input
 {
@@ -75,6 +75,10 @@ class Input
 
         return isset($this->data[$name]) ? $this->data[$name] : $default;
     }
+    public function getOption($name=null, $default = null)
+    {
+        return $this->get($name, $default);
+    }
 
     /**
      * @param $key
@@ -96,6 +100,14 @@ class Input
      * @return string
      */
     public function getScriptName()
+    {
+        return self::$scriptName;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScript()
     {
         return self::$scriptName;
     }
@@ -128,8 +140,8 @@ class Input
      */
     public static function parseGlobalArgv($fixServer = false, $fillToGlobal = false)
     {
-        // ./bin/app image/packTask start test -d -s=df --debug=true
-        // php bin/cli.php image/packTask start test -d -s=df --debug=true
+        // ./bin/app image/packTask start name=john -d -s=test --debug=true
+        // php bin/cli.php image/packTask start name=john -d -s=test --debug=true
         global $argv;
         $args = $argv;
 
@@ -165,13 +177,15 @@ class Input
         $data = [];
 
         // parse query params
-        // ./bin/app image/packTask start test -d -s=df --debug=true
+        // ./bin/app image/packTask start name=john -d -s=test --debug=true
         // parse to
-        // ./bin/app image/packTask?start&test&d&s=df&debug=true
+        // ./bin/app image/packTask?start&name=john&d&s=test&debug=true
         if ($args) {
-            $url = preg_replace('/&[-]+/', '&', implode('&',$args));
+            $args = array_map(function($val){
+                return trim($val,'- ');
+            }, $args);
 
-            parse_str($url, $data);
+            parse_str(implode('&',$args), $data);
 
             if ($fillToGlobal) {
                 $_REQUEST = $_GET = $data;

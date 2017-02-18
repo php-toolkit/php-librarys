@@ -9,6 +9,7 @@
  */
 
 namespace inhere\librarys\console;
+
 use inhere\librarys\exceptions\InvalidArgumentException;
 
 /**
@@ -23,7 +24,7 @@ class Interact
 /////////////////////////////////////////////////////////////////
 
     /**
-     * 多选一
+     * Select one of the options 在多个选项中选择一个
      * @param  string  $description 说明
      * @param  mixed   $options     选项数据
      * e.g
@@ -50,7 +51,7 @@ class Interact
 
         $keys = [];
         $optStr = '';
-        $options  = is_array($options) ? $options : explode(',', $options);
+        $options = is_array($options) ? $options : explode(',', $options);
 
         // If defaut option is error
         if ( null === $default && !isset($options[$default]) ) {
@@ -67,9 +68,10 @@ class Interact
             $optStr .= "\n    q) quit";
         }
 
-        $r = self::read($optStr . "\n  You choice : ");
+        $defaultText = $default ? "[default:<comment>{$default}</comment>]" : '';
+        $r = self::read($optStr . "\n  You choice{$defaultText} : ");
 
-        // error, allow try again
+        // error, allow try again once.
         if ( !in_array($r, $keys) ) {
             $r = self::read("Warning! Option <info>$r</info>) don't exists! Please entry again! : ");
         }
@@ -348,7 +350,7 @@ class Interact
 
         // examples list
         if ( $examples ) {
-            $examples = is_array($examples) ? implode(PHP_EOL, $examples) : $examples;
+            $examples = is_array($examples) ? implode(PHP_EOL . '  ', $examples) : (string)$examples;
             self::write("<comment>Examples</comment>:\n  {$examples}\n");
         }
 
@@ -359,11 +361,12 @@ class Interact
 
     /**
      * Show information data panel
-     * @param  mixed $data
+     * @param  mixed  $data
      * @param  string $title
+     * @param  string $borderChar
      * @return void
      */
-    public static function panel($data, $title='Information Panel', $char = '*')
+    public static function panel($data, $title='Information Panel', $borderChar = '*')
     {
         $data = is_array($data) ? array_filter($data) : [trim($data)];
         $title = trim($title);
@@ -396,17 +399,14 @@ class Interact
                 $value = rtrim($temp, ' ,');
             } else if (is_bool($value)) {
                 $value = $value ? 'True' : 'False';
+            } else {
+                $value = trim((string)$value);
             }
 
             // get value width
-            if ( is_string($value) || is_numeric($value) ) {
-                $value = trim($value);
-                $width = mb_strlen(strip_tags($value), 'UTF-8'); // must clear style tag
-                $valueMaxWidth = $width > $valueMaxWidth ? $width : $valueMaxWidth;
-            } else {
-                de((string)$value);
-                throw new \Exception('Panel data value only allow [array|string|number]');
-            }
+            $value = trim($value);
+            $width = mb_strlen(strip_tags($value), 'UTF-8'); // must clear style tag
+            $valueMaxWidth = $width > $valueMaxWidth ? $width : $valueMaxWidth;
 
             $panelData[$label] = $value;
         }
@@ -423,12 +423,14 @@ class Interact
         }
 
         // output panel top border
-        $border = str_pad($char, $panelWidth + (3*3), $char);
-        self::write('  ' . $border);
+        if ($borderChar) {
+            $border = str_pad($borderChar, $panelWidth + (3*3), $borderChar);
+            self::write('  ' . $border);
+        }
 
         // output panel body
         $panelStr = ConsoleHelper::spliceKeyValue($panelData, [
-            'leftChar'    => "  $char ",
+            'leftChar'    => "  $borderChar ",
             'sepChar'     => ' | ',
             'keyMaxWidth' => $labelMaxWidth,
         ]);
@@ -437,7 +439,9 @@ class Interact
         self::write($panelStr, false);
 
         // output panel bottom border
-        self::write("  $border\n");
+        if (isset($border)) {
+            self::write("  $border\n");
+        }
 
         unset($data, $panelData);
     }
@@ -519,7 +523,8 @@ class Interact
 
         self::write($headStr);
 
-        if ($showBorder) {
+        // border: split head and body
+        if (isset($border)) {
             self::write('  ' . $border);
         }
 
@@ -543,7 +548,7 @@ class Interact
         }
 
         // output table bottom border
-        if ($showBorder) {
+        if (isset($border)) {
             self::write('  ' . $border);
         }
 
@@ -600,9 +605,9 @@ class Interact
     {
         static::block($messages, 'ERROR', 'error', $quit);
     }
-    public static function comment($messages, $quit = false)
+    public static function notice($messages, $quit = false)
     {
-        static::block($messages, 'COMMENT', 'comment', $quit);
+        static::block($messages, 'NOTICE', 'comment', $quit);
     }
 
 /////////////////////////////////////////////////////////////////

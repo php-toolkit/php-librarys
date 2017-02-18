@@ -65,9 +65,9 @@ class Output
     /**
      * @see Interact::panel()
      */
-    public function panel(array $data, $title='Info panel')
+    public function panel(array $data, $title='Info panel', $borderChar = '*')
     {
-        Interact::panel($data, $title);
+        Interact::panel($data, $title, $borderChar);
     }
 
     /**
@@ -125,9 +125,9 @@ class Output
     {
         $this->block($messages, 'ERROR', 'error', $quit);
     }
-    public function comment($messages, $quit = false)
+    public function notice($messages, $quit = false)
     {
-        $this->block($messages, 'COMMENT', 'comment', $quit);
+        $this->block($messages, 'NOTICE', 'comment', $quit);
     }
 
     /**

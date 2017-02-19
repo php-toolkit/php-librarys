@@ -14,35 +14,6 @@ namespace inhere\librarys\helpers;
  */
 abstract class DataHelper
 {
-    /**
-     * @var array
-     */
-    private static $_local = [
-        '__loaded' => false,
-        'env' => 'pdt',
-    ];
-
-    /**
-     * @param null $name
-     * @param null $default
-     * @param null|string $file The local config ini file
-     * @return array|mixed|null
-     */
-    public static function localEnv($name = null, $default = null, $file = null)
-    {
-        if ( !self::$_local['__loaded'] && $file && is_file($file) ) {
-            self::$_local = array_merge(self::$_local, parse_ini_file($file, true));
-            self::$_local['__loaded'] = true;
-        }
-
-        // get all
-        if ( null === $name ) {
-            return self::$_local;
-        }
-
-        // get one by key name
-        return isset(self::$_local[$name]) ? self::$_local[$name] : $default;
-    }
 
     /**
     * Get a value from $_POST / $_GET

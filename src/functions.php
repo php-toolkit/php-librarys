@@ -3,6 +3,13 @@
  * function collection
  */
 
+if ( !function_exists('local_env') ) {
+    function local_env($name = null, $default = null)
+    {
+        return inhere\librarys\collections\Local::env($name, $default);
+    }
+}
+
 if ( !function_exists('html_minify') ) {
     function html_minify($body)
     {

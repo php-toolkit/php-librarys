@@ -142,6 +142,12 @@ class Server extends AbstractEnv
         return dirname($this->getEntry($full));
     }
 
+    /**
+     * get $_SERVER value
+     * @param  string $name
+     * @param  string $default
+     * @return mixed
+     */
     public static function value($name, $default = '')
     {
         $name = strtoupper($name);

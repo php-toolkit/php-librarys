@@ -578,7 +578,7 @@ class StrHelper
         }
 
         $base     = log($size) / log(1024);
-        $suffixes = array('', 'k', 'M', 'G', 'T');
+        $suffixes = array('b', 'k', 'M', 'G', 'T');
         $floorBase = floor($base);
 
         return round(pow(1024, $base - $floorBase), $precision).$suffixes[(int)$floorBase];

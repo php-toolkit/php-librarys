@@ -5,10 +5,8 @@
  * Date: 2016/8/10 0010
  * Time: 00:41
  */
-
 namespace inhere\librarys\helpers;
 use inhere\librarys\exceptions\NotFoundException;
-
 /**
  * Class JsonHelper
  * @package inhere\librarys\helpers
@@ -23,42 +21,32 @@ class JsonHelper
     public static function loadFile($file, $toArray=true)
     {
         if (!file_exists($file)) {
-            throw new NotFoundException("Ã»ÓĞÕÒµ½»ò²»´æÔÚ×ÊÔ´ÎÄ¼ş{$file}");
+            throw new NotFoundException("æ²¡æœ‰æ‰¾åˆ°æˆ–ä¸å­˜åœ¨èµ„æºæ–‡ä»¶{$file}");
         }
-
         $data = file_get_contents($file);
-
         if ( !$data ) {
             return null;
         }
-
         $data = preg_replace(array(
-
-            // È¥µôËùÓĞ¶àĞĞ×¢ÊÍ/* .... */
+            // å»æ‰æ‰€æœ‰å¤šè¡Œæ³¨é‡Š/* .... */
             '/\/\*.*?\*\/\s*/is',
-
-            // È¥µôËùÓĞµ¥ĞĞ×¢ÊÍ//....
+            // å»æ‰æ‰€æœ‰å•è¡Œæ³¨é‡Š//....
             '/\/\/.*?[\r\n]/is',
-
-            // È¥µô¿Õ°×
+            // å»æ‰ç©ºç™½
             '/(?!\w)\s*?(?!\w)/is'
-
         ),  array('','',' '), $data);
-
         if ($toArray) {
             return json_decode($data, true);
         }
-
         return $data;
     }
-
     /**
-     * @param string $input ÎÄ¼ş »ò Êı¾İ
-     * @param bool $output ÊÇ·ñÊä³öµ½ÎÄ¼ş£¬ Ä¬ÈÏ·µ»Ø¸ñÊ½»¯µÄÊı¾İ
-     * @param array $options µ± $output=true,´ËÑ¡ÏîÓĞĞ§
+     * @param string $input æ–‡ä»¶ æˆ– æ•°æ®
+     * @param bool $output æ˜¯å¦è¾“å‡ºåˆ°æ–‡ä»¶ï¼Œ é»˜è®¤è¿”å›æ ¼å¼åŒ–çš„æ•°æ®
+     * @param array $options å½“ $output=true,æ­¤é€‰é¡¹æœ‰æ•ˆ
      * $options = [
-     *      'type'      => 'min' // Êä³öÊı¾İÀàĞÍ min Ñ¹Ëõ¹ıµÄ raw Õı³£µÄ
-     *      'file'      => 'xx.json' // Êä³öÎÄ¼şÂ·¾¶;½öÊÇÎÄ¼şÃû£¬Ôò»áÈ¡ÊäÈëÂ·¾¶
+     *      'type'      => 'min' // è¾“å‡ºæ•°æ®ç±»å‹ min å‹ç¼©è¿‡çš„ raw æ­£å¸¸çš„
+     *      'file'      => 'xx.json' // è¾“å‡ºæ–‡ä»¶è·¯å¾„;ä»…æ˜¯æ–‡ä»¶åï¼Œåˆ™ä¼šå–è¾“å…¥è·¯å¾„
      * ]
      * @return string | bool
      */
@@ -67,37 +55,26 @@ class JsonHelper
         if (!is_string($input)) {
             return false;
         }
-
         $data = trim($input);
-
         if ( file_exists($input) ) {
             $data = file_get_contents($input);
         }
-
         if ( !$data ) {
             return false;
         }
-
         $data = preg_replace(array(
-
-            // È¥µôËùÓĞ¶àĞĞ×¢ÊÍ/* .... */
+            // å»æ‰æ‰€æœ‰å¤šè¡Œæ³¨é‡Š/* .... */
             '/\/\*.*?\*\/\s*/is',
-
-            // È¥µôËùÓĞµ¥ĞĞ×¢ÊÍ//....
+            // å»æ‰æ‰€æœ‰å•è¡Œæ³¨é‡Š//....
             '/\/\/.*?[\r\n]/is',
-
-            // È¥µô¿Õ°×ĞĞ
+            // å»æ‰ç©ºç™½è¡Œ
             "/(\n[\r])+/is"
-
         ),  array('','',"\n"), $data);
-
         if (!$output) {
             return $data;
         }
-
         $default = [ 'type' => 'min' ];
         $options = array_merge($default, $options);
-
         if ( file_exists($input) && (empty($options['file']) || !is_file($options['file']) ) )
         {
             $dir   = dirname($input);
@@ -105,12 +82,9 @@ class JsonHelper
             $file  = $dir . '/' . $name . '.' . $options['type'].'.json';
             $options['file'] = $file;
         }
-
         static::saveAs($data, $options['file'], $options['type']);
-
         return $data;
     }
-
     /**
      * @param $data
      * @param $output
@@ -120,22 +94,16 @@ class JsonHelper
     {
         $default = [ 'type' => 'min',  'file' => '' ];
         $options = array_merge($default, $options);
-
         $dir   = dirname($output);
-
         if ( !file_exists($dir) ) {
-            trigger_error('ÉèÖÃµÄjsonÎÄ¼şÊä³ö'.$dir.'Ä¿Â¼²»´æÔÚ£¡');
+            trigger_error('è®¾ç½®çš„jsonæ–‡ä»¶è¾“å‡º'.$dir.'ç›®å½•ä¸å­˜åœ¨ï¼');
         }
-
         $name  = basename($output, '.json');
         $file  = $dir . '/' . $name . '.' . $options['type'].'.json';
-
         if ( $options['type '] === 'min' ) {
-            // È¥µô¿Õ°×
+            // å»æ‰ç©ºç™½
             $data = preg_replace('/(?!\w)\s*?(?!\w)/i', '',$data);
         }
-
         @file_put_contents($file, $data);
-
     }
 }

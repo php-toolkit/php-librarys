@@ -1,6 +1,9 @@
 <?php
 /**
- * @referee  windwalker-registry {@link https://github.com/ventoviro/windwalker-registry}
+ * Created by PhpStorm.
+ * User: Inhere
+ * Date: 2016/12/14
+ * Time: 19:44
  */
 
 namespace inhere\librarys\collections;

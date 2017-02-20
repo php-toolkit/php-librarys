@@ -5,6 +5,10 @@
  */
 namespace inhere\librarys\helpers;
 
+/**
+ * Class PublicHelper
+ * @package inhere\librarys\helpers
+ */
 class PublicHelper
 {
     /**

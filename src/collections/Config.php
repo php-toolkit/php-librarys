@@ -83,6 +83,7 @@ class Config extends DataCollector
      * set config value by path
      * @param string $path
      * @param mixed $value
+     * @return mixed
      */
     public function set($path, $value)
     {
@@ -103,7 +104,7 @@ class Config extends DataCollector
     public function get($path, $default = null)
     {
         if ( $this->mode === self::MODE_FOLDER ) {
-            $nodes = static::getPathNodes($path, $separator);
+            $nodes = static::getPathNodes($path, $this->separator);
             $name = array_shift($nodes);// config file name
 
             // if config file not load. load it.

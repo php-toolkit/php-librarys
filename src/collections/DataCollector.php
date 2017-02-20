@@ -9,7 +9,7 @@
 namespace inhere\librarys\collections;
 
 use RuntimeException;
-use inhere\librarys\exceptions\DataParseException;
+use inhere\exceptions\DataParseException;
 
 /**
  * Class DataCollector - 数据收集器 (数据存储器 - DataStorage)

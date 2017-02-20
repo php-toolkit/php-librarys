@@ -6,7 +6,9 @@
  * Time: 00:41
  */
 namespace inhere\librarys\helpers;
+
 use inhere\librarys\exceptions\NotFoundException;
+
 /**
  * Class JsonHelper
  * @package inhere\librarys\helpers
@@ -17,16 +19,18 @@ class JsonHelper
      * @param $file
      * @param bool|true $toArray
      * @return mixed|null|string
+     * @throws NotFoundException
      */
     public static function loadFile($file, $toArray=true)
     {
         if (!file_exists($file)) {
             throw new NotFoundException("没有找到或不存在资源文件{$file}");
         }
-        $data = file_get_contents($file);
-        if ( !$data ) {
+
+        if ( !$data= file_get_contents($file) ) {
             return null;
         }
+
         $data = preg_replace(array(
             // 去掉所有多行注释/* .... */
             '/\/\*.*?\*\/\s*/is',
@@ -35,9 +39,11 @@ class JsonHelper
             // 去掉空白
             '/(?!\w)\s*?(?!\w)/is'
         ),  array('','',' '), $data);
+
         if ($toArray) {
             return json_decode($data, true);
         }
+
         return $data;
     }
     /**
@@ -55,13 +61,17 @@ class JsonHelper
         if (!is_string($input)) {
             return false;
         }
+
         $data = trim($input);
+
         if ( file_exists($input) ) {
             $data = file_get_contents($input);
         }
+
         if ( !$data ) {
             return false;
         }
+
         $data = preg_replace(array(
             // 去掉所有多行注释/* .... */
             '/\/\*.*?\*\/\s*/is',
@@ -70,11 +80,14 @@ class JsonHelper
             // 去掉空白行
             "/(\n[\r])+/is"
         ),  array('','',"\n"), $data);
+
         if (!$output) {
             return $data;
         }
+
         $default = [ 'type' => 'min' ];
         $options = array_merge($default, $options);
+
         if ( file_exists($input) && (empty($options['file']) || !is_file($options['file']) ) )
         {
             $dir   = dirname($input);
@@ -82,7 +95,9 @@ class JsonHelper
             $file  = $dir . '/' . $name . '.' . $options['type'].'.json';
             $options['file'] = $file;
         }
+
         static::saveAs($data, $options['file'], $options['type']);
+
         return $data;
     }
     /**
@@ -95,15 +110,19 @@ class JsonHelper
         $default = [ 'type' => 'min',  'file' => '' ];
         $options = array_merge($default, $options);
         $dir   = dirname($output);
+
         if ( !file_exists($dir) ) {
             trigger_error('设置的json文件输出'.$dir.'目录不存在！');
         }
+
         $name  = basename($output, '.json');
         $file  = $dir . '/' . $name . '.' . $options['type'].'.json';
+
         if ( $options['type '] === 'min' ) {
             // 去掉空白
             $data = preg_replace('/(?!\w)\s*?(?!\w)/i', '',$data);
         }
+
         @file_put_contents($file, $data);
     }
 }

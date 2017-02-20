@@ -10,8 +10,6 @@
 
 namespace inhere\librarys\console;
 
-use inhere\librarys\StdBase;
-
 /**
  * Class Color
  * @package inhere\librarys\console
@@ -90,7 +88,7 @@ class Color
                 'options' => ['bold']
             ])
             ->addStyle('notice', [
-                'options' => ['bold'], 'options' => ['underscore']
+                'options' => ['bold','underscore'],
             ])
             ->addStyle('primary', [
                 'fgColor' => 'blue', //'options' => ['bold']

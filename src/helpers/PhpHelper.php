@@ -4,7 +4,7 @@
  */
 namespace inhere\librarys\helpers;
 
-use inhere\librarys\exceptions\ExtensionMissException;
+use inhere\exceptions\ExtensionMissException;
 
 /**
  * Class PhpHelper

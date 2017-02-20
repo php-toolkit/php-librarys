@@ -38,6 +38,7 @@ class Output
 /////////////////////////////////////////////////////////////////
 
     /**
+     * @inheritdoc
      * @see Interact::title()
      */
     public function title($msg, $width = null)
@@ -46,6 +47,7 @@ class Output
     }
 
     /**
+     * @inheritdoc
      * @see Interact::section()
      */
     public function section($msg, $width = null)
@@ -55,6 +57,7 @@ class Output
 
     /**
      * helpPanel
+     * @inheritdoc
      * @see Interact::helpPanel()
      */
     public function helpPanel($usage, $commands = [], $options = [], $examples = [], $description = '', $showAfterQuit = true)
@@ -63,6 +66,7 @@ class Output
     }
 
     /**
+     * @inheritdoc
      * @see Interact::panel()
      */
     public function panel(array $data, $title='Info panel', $borderChar = '*')
@@ -71,6 +75,7 @@ class Output
     }
 
     /**
+     * @inheritdoc
      * @see Interact::table()
      */
     public function table(array $data, $title='Info List', $showBorder = true)
@@ -82,7 +87,7 @@ class Output
      * @param mixed         $messages
      * @param string|null   $type
      * @param string        $style
-     * @param int|boolean   $quit  If is int, settin it is exit code.
+     * @param int|boolean   $quit  If is int, setting it is exit code.
      */
     public function block($messages, $type = 'INFO', $style='info', $quit = false)
     {
@@ -149,7 +154,7 @@ class Output
      * Write a message to standard output stream.
      * @param  mixed       $messages  Output message
      * @param  bool        $nl        true 会添加换行符 false 原样输出，不添加换行符
-     * @param  int|boolean $quit      If is int, settin it is exit code.
+     * @param  int|boolean $quit      If is int, setting it is exit code.
      * @return static
      */
     public function write($messages = '', $nl = true, $quit = false)
@@ -176,9 +181,10 @@ class Output
     }
 
     /**
-     * Write a message to standard error output.
-     * @param string $text
-     * @param   boolean $nl True (default) to append a new line at the end of the output string.
+     * Write a message to standard error output stream.
+     * @param string  $text
+     * @param boolean $nl True (default) to append a new line at the end of the output string.
+     * @return $this
      */
     public function err($text = '', $nl = true)
     {

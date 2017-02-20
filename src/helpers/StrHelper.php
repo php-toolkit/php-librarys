@@ -6,6 +6,10 @@ namespace inhere\librarys\helpers;
 
 use inhere\librarys\traits\TraitStringFormat;
 
+/**
+ * Class StrHelper
+ * @package inhere\librarys\helpers
+ */
 class StrHelper
 {
     use TraitStringFormat;

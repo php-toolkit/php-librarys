@@ -10,7 +10,6 @@
 
 namespace inhere\librarys\console;
 
-use inhere\librarys\exceptions\InvalidArgumentException;
 
 /**
  * Class Interact
@@ -39,7 +38,7 @@ class Interact
      */
     public static function select($description, $options, $default = null, $allowExit=true)
     {
-        self::choice($description, $options, $default, $allowExit);
+        return self::choice($description, $options, $default, $allowExit);
     }
     public static function choice($description, $options, $default = null, $allowExit=true)
     {
@@ -171,7 +170,7 @@ class Interact
      *   否则，会连续询问 $allowed 次， 若仍然错误，退出
      * @param string      $question 问题
      * @param null|string $default    默认值
-     * @param callable    $validator (默认验证输入是否为空)自定义回调验证输入是否符合要求; 验证成功返回true 否则 可返回错误消息
+     * @param \Closure    $validator (默认验证输入是否为空)自定义回调验证输入是否符合要求; 验证成功返回true 否则 可返回错误消息
      * @example This is an example
      *
      * ```
@@ -267,8 +266,9 @@ class Interact
     }
 
     /**
-     * @param string $msg   The section message
-     * @param int    $width The section width
+     * @param string $msg The section message
+     * @param int $width The section width
+     * @param string $char
      */
     public static function section($msg, $width = 50, $char = '-')
     {
@@ -450,6 +450,7 @@ class Interact
      * 表格数据信息展示
      * @param  array $data
      * @param  string $title
+     * @param  bool $showBorder
      * @return void
      */
     public static function table(array $data, $title='Info List', $showBorder = true)

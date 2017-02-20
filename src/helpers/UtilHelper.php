@@ -39,22 +39,24 @@ abstract class UtilHelper
     }
 
     /**
-    * Display a var dump in firebug console
-    *
-    * @param object $object Object to display
-    */
+     * Display a var dump in firebug console
+     *
+     * @param object $object Object to display
+     * @param string $type
+     */
     static public function fd($object, $type = 'log')
     {
         $types = array('log', 'debug', 'info', 'warn', 'error', 'assert');
 
-        if (!in_array($type, $types))
+        if (!in_array($type, $types)) {
             $type = 'log';
+        }
 
-        echo '
-            <script type="text/javascript">
-                console.'.$type.'('. json_encode($object).');
-            </script>
-        ';
+        $data = json_encode($object);
+
+        echo <<<EOF
+    <script type="text/javascript">console.$type($data);</script>
+EOF;
     }
 
 }

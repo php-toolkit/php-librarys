@@ -214,7 +214,7 @@ class SimpleCollection implements CollectionInterface
     /**
      * Remove item from collection
      * @param string $key The data key
-     * @return mixed|null|void
+     * @return mixed|null
      */
     public function offsetUnset($key)
     {

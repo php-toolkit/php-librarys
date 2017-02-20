@@ -8,8 +8,6 @@
  */
 namespace inhere\librarys\helpers;
 
-use inhere\librarys\exceptions\InvalidArgumentException;
-
 /**
  * Class ObjectHelper
  * @package inhere\librarys\helpers

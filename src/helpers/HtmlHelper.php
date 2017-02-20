@@ -23,7 +23,7 @@ class HtmlHelper
      */
     public static function encode($text, $charset= 'utf-8')
     {
-        return htmlspecialchars($text,ENT_QUOTES, 'utf-8');
+        return htmlspecialchars($text, ENT_QUOTES, $charset);
     }
 
     /**

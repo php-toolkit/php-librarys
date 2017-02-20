@@ -82,7 +82,7 @@ class UrlHelper
         '='  , '$'  , ','  ,  '/' ,  '?' ,  '#' ,  '[' ,  ']'
     );
 
-    static public function parseUrl($url)
+    public static function parseUrl($url)
     {
         $result         = [];
 
@@ -113,7 +113,7 @@ class UrlHelper
      * @param $url
      * @return mixed|string [type] [description]
      */
-    static public function encode($url)
+    public static function encode($url)
     {
         $url        = trim($url);
 
@@ -139,7 +139,7 @@ class UrlHelper
      * @param  string $url [description]
      * @return mixed|string [type]      [description]
      */
-    static public function encode2($url)
+    public static function encode2($url)
     {
         $url         = trim($url);
 

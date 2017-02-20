@@ -127,9 +127,9 @@ class CurlHelper
     /**
      * Executes a CURL request with optional retries and exception on failure
      *
-     * @param  resource     $ch     curl handler
-     * @param  int          $retries 重试
-     * @throws \RuntimeException
+     * @param  resource $ch curl handler
+     * @param  int $retries 重试
+     * @param bool $closeAfterDone
      * @return string
      */
     public static function execute($ch, $retries = 3, $closeAfterDone = true)
@@ -137,16 +137,16 @@ class CurlHelper
         $ret = '';
         while ($retries--) {
             if ( ($ret = curl_exec($ch)) === false) {
-                $curlErrno = curl_errno($ch);
+                $curlErrNo = curl_errno($ch);
 
-                if (false === in_array($curlErrno, self::$retriableErrorCodes, true) || !$retries) {
+                if (false === in_array($curlErrNo, self::$retriableErrorCodes, true) || !$retries) {
                     $curlError = curl_error($ch);
 
                     if ($closeAfterDone) {
                         curl_close($ch);
                     }
 
-                    throw new \RuntimeException(sprintf('Curl error (code %s): %s', $curlErrno, $curlError));
+                    throw new \RuntimeException(sprintf('Curl error (code %s): %s', $curlErrNo, $curlError));
                 }
 
                 continue;

@@ -1,5 +1,12 @@
 <?php
-
+/**
+ * Created by PhpStorm.
+ * User: Inhere
+ * Date: 16-4-1
+ * Time: 上午10:08
+ * Used:
+ * file: Color.php
+ */
 
 namespace inhere\librarys\console;
 
@@ -45,20 +52,21 @@ class ConsoleHelper
     /**
      * get key Max Width
      *
-     * @param  array  $data
+     * @param  array $data
      * [
      *     'key1'      => 'value1',
      *     'key2-test' => 'value2',
      * ]
+     * @param bool $expectInt
      * @return int
      */
-    public static function getKeyMaxWidth(array $data, $expactInt = true)
+    public static function getKeyMaxWidth(array $data, $expectInt = true)
     {
         $keyMaxWidth = 0;
 
         foreach ($data as $key => $value) {
             // key is not a integer
-            if ( !$expactInt || !is_numeric($key) ) {
+            if ( !$expectInt || !is_numeric($key) ) {
                 $width = mb_strlen($key, 'UTF-8');
                 $keyMaxWidth = $width > $keyMaxWidth ? $width : $keyMaxWidth;
             }
@@ -74,7 +82,6 @@ class ConsoleHelper
      *     'system'  => 'Linux',
      *     'version'  => '4.4.5',
      * ]
-     * @param  int    $keyMaxWidth
      * @param  array  $opts
      * @return string
      */
@@ -84,7 +91,7 @@ class ConsoleHelper
         $opts = array_merge([
             'leftChar'    => '',   // e.g '  ', ' * '
             'sepChar'     => ' ',  // e.g ' | ' => OUT: key | value
-            'keyStyle'    => '',   // e.g 'info','commont'
+            'keyStyle'    => '',   // e.g 'info','comment'
             'keyMaxWidth' => null, // if not set, will automatic calculation
         ], $opts);
 
@@ -106,14 +113,14 @@ class ConsoleHelper
             if ( is_array($value) ) {
                 $temp = '';
 
-                foreach ($value as $key => $val) {
+                foreach ($value as $k => $val) {
                     if (is_bool($val)) {
                         $val = $val ? 'True' : 'False';
                     } else {
                         $val = (string)$val;
                     }
 
-                    $temp .= (!is_numeric($key) ? "$key: " : '') . "<info>$val</info>, ";
+                    $temp .= (!is_numeric($k) ? "$k: " : '') . "<info>$val</info>, ";
                 }
 
                 $value = rtrim($temp, ' ,');

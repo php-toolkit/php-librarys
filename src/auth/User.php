@@ -120,7 +120,7 @@ class User extends SimpleCollection
         unset($_SESSION[static::$saveKey]);
     }
 
-    /**
+    /*
      * @param Request $request
      * @param Response $response
      * @return ResponseInterface

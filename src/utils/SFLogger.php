@@ -365,7 +365,7 @@ class SFLogger
         $string = $this->dataFormatter($level, $message, $context);
 
         // serve is running in php build in server env.
-        if ( $this->logConsole && (PhpHelper::isBuildInServer() || PhpHelper::isCli()) ) {
+        if ( $this->logConsole && (PhpHelper::isBuiltInServer() || PhpHelper::isCli()) ) {
             defined('STDOUT') or define('STDOUT', fopen('php://stdout', 'w'));
             fwrite(STDOUT, $string . PHP_EOL);
         }

@@ -12,7 +12,7 @@
  */
 namespace inhere\librarys\collections;
 
-use inhere\librarys\exceptions\UnknownCalledException;
+use inhere\exceptions\UnknownCalledException;
 
 /**
  * Class FixedData

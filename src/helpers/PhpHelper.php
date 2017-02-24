@@ -157,6 +157,25 @@ class PhpHelper
     }
 
     /**
+     * is Cli
+     * @return  boolean
+     */
+    public static function isCli()
+    {
+        return PHP_SAPI === 'cli';
+    }
+
+    /**
+     * is Build In Server
+     * run server use like: `php -S 127.0.0.1:8085`
+     * @return  boolean
+     */
+    public static function isBuiltInServer()
+    {
+        return PHP_SAPI === 'cli-server';
+    }
+
+    /**
      * isWeb
      * @return  boolean
      */
@@ -172,20 +191,6 @@ class PhpHelper
                 'fpm-fcgi',
                 'srv',
                 'cli-server'
-            )
-        );
-    }
-
-    /**
-     * isCli
-     * @return  boolean
-     */
-    public static function isCli()
-    {
-        return in_array(
-            PHP_SAPI,
-            array(
-                'cli',
             )
         );
     }

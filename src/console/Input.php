@@ -85,15 +85,23 @@ class Input
      * @param bool $default
      * @return bool
      */
+    public function getInt($key, $default = 0)
+    {
+        $value = $this->get($key);
+
+        return $value === null ? (int)$default : (int)$value;
+    }
+
+    /**
+     * @param $key
+     * @param bool $default
+     * @return bool
+     */
     public function getBool($key, $default = false)
     {
         $value = $this->get($key);
 
-        if ($value === null) {
-            return $default;
-        }
-
-        return in_array($value, ['0', 0, 'false', false], true) ? false : true;
+        return $value === null ? (bool)$default : !in_array($value, ['0', 0, 'false', false], true);
     }
 
     /**

@@ -193,7 +193,7 @@ class FileFinder extends StdBase
         $result = [];
 
         foreach ($this->files as $file) {
-            if ( call_user_func($filter, $file) ) {
+            if ($filter($file)) {
                 $result[] = $file;
             }
         }
@@ -268,7 +268,7 @@ class FileFinder extends StdBase
     {
         // have bee set custom dir Filter
         if ( ($fileFilter = $this->fileFilter) && is_callable($fileFilter) ) {
-            return call_user_func($fileFilter, $name, $this);
+            return $fileFilter($name, $this);
         }
 
         // use default filter handle

@@ -30,7 +30,7 @@ class Directory extends FileSystem
 
         while ( ($file = readdir($handler)) !== false ) {
 
-            if( $file != '.' && $file != '..' ) {
+            if( $file !== '.' && $file !== '..' ) {
                 closedir($handler);
                 return false;
             }
@@ -45,7 +45,7 @@ class Directory extends FileSystem
      * 查看一个目录中的所有文件和子目录
      * @param $dirName
      * @throws NotFoundException
-     * @return array|void
+     * @return array
      */
     public static function ls($dirName)
     {
@@ -65,7 +65,7 @@ class Directory extends FileSystem
     }
 
     //只获得目录结构
-    public static function getList( $dirName, $pid=0, $son=0, $list = [] )
+    public static function getList($dirName, $pid=0, $son=0, array $list = [])
     {
         $dirName = self::pathFormat($dirName);
 
@@ -96,9 +96,9 @@ class Directory extends FileSystem
 
     /**
      * 获得目录下的文件，可选择类型、是否遍历子文件夹
-     * @param $dir string 目标目录
-     * @param $ext array('css','html','php') css|html|php
-     * @param $recursive int|bool 是否包含子目录
+     * @param string $dir string 目标目录
+     * @param string|array $ext array('css','html','php') css|html|php
+     * @param bool $recursive int|bool 是否包含子目录
      * @return array
      * @throws NotFoundException
      */
@@ -137,13 +137,13 @@ class Directory extends FileSystem
     /**
      * 获得目录下的文件，可选择类型、是否遍历子文件夹
      * @param string $path string 目标目录
-     * @param $ext array('css','html','php') css|html|php
-     * @param $recursive int|bool 是否包含子目录
+     * @param array|string $ext array('css','html','php') css|html|php
+     * @param bool $recursive  是否包含子目录
      * @param array $list
      * @return array
      * @throws NotFoundException
      */
-    public static function getFiles($path, $ext=null, $recursive=0, &$list=[])
+    public static function getFiles($path, $ext=null, $recursive=false, &$list=[])
     {
         $path= self::pathFormat($path);
 
@@ -188,7 +188,7 @@ class Directory extends FileSystem
     /**
      * 获得目录下的文件以及详细信息，可选择类型、是否遍历子文件夹
      * @param $dirName string 目标目录
-     * @param $ext array('css','html','php') css|html|php
+     * @param array|string $ext array('css','html','php') css|html|php
      * @param $recursive int|bool 是否包含子目录
      * @param array $list
      * @return array

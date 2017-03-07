@@ -153,7 +153,7 @@ class PhpHelper
      */
     public static function isCgi()
     {
-        return strpos(PHP_SAPI, 'cgi') !== false ? true : false;   #  cgi环境
+        return strpos(PHP_SAPI, 'cgi') !== false;   #  cgi环境
     }
 
     /**
@@ -219,12 +219,7 @@ class PhpHelper
      */
     public static function isEmbed()
     {
-        return in_array(
-            PHP_SAPI,
-            array(
-                'embed',
-            )
-        );
+        return 'embed' === PHP_SAPI;
     }
 
     /**

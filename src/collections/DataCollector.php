@@ -39,12 +39,6 @@ use inhere\exceptions\DataParseException;
 class DataCollector extends SimpleCollection
 {
     /**
-     * data
-     * @var array
-     */
-    protected $data = [];
-
-    /**
      * @var array
      */
 //    protected $files = [];
@@ -159,22 +153,13 @@ class DataCollector extends SimpleCollection
         return $this->reset();
     }
 
-    public function toObject($class = 'stdClass')
+    /**
+     * @param $class
+     * @return mixed
+     */
+    public function toObject($class = \stdClass::class)
     {
         return static::dataToObject($this->data, $class);
-    }
-
-    /**
-     * get all Data
-     * @return array
-     */
-    public function all()
-    {
-        return $this->data;
-    }
-    public function toArray()
-    {
-        return $this->all();
     }
 
     /**
@@ -513,11 +498,11 @@ class DataCollector extends SimpleCollection
     }
 
     /**
-     * @param $array
+     * @param array $array
      * @param string $class
      * @return mixed
      */
-    public static function dataToObject($array, $class = 'stdClass')
+    public static function dataToObject($array, $class = \stdClass::class)
     {
         $object = new $class;
 
@@ -609,7 +594,7 @@ class DataCollector extends SimpleCollection
 
             // if needed custom handle $importFile path. e.g: Maybe it uses custom alias path
             if ( $pathHandler && is_callable($pathHandler) ) {
-                $importFile = call_user_func($pathHandler, $importFile);
+                $importFile = $pathHandler($importFile);
             }
 
             // if $importFile is not exists AND $importFile is not a absolute path AND have $parentFile

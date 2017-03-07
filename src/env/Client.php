@@ -110,9 +110,8 @@ class Client extends AbstractEnv
 
     protected function _handleInfo($info)
     {
-        return array_map(function($val)
-        {
-            return trim(strpos($val,';') ? strchr($val,';', true) : $val);
+        return array_map(function($val) {
+            return trim(strpos($val,';') ? strstr($val,';', true) : $val);
         },
         (array) explode(',', $info)
         );
@@ -138,7 +137,7 @@ class Client extends AbstractEnv
      *
      * ]
      */
-    private $_headers = null;
+    private $_headers;
 
     /**
      * @return array|false|null
@@ -152,7 +151,7 @@ class Client extends AbstractEnv
                 $this->_headers = http_get_request_headers();
             } else {
                 foreach ($_SERVER as $name => $value) {
-                    if ( $name = $this->_nameConver($name)) {
+                    if ( $name = $this->_nameConvert($name)) {
                         $this->_headers[$name] = $value;
                     }
                 }
@@ -185,14 +184,14 @@ class Client extends AbstractEnv
 
     // HTTP_X_TOKEN => xToken
     // HTTP_USER_AGENT => userAgent
-    protected function _nameConver($string)
+    protected function _nameConvert($string)
     {
         // if ( !strpos($string, '_') ) {
         //     return strtolower($string);
         // }
 
         if ( strpos($string,'HTTP_')!==false ) {
-            $string    = substr($string, strlen('HTTP_'));
+            $string = substr($string, strlen('HTTP_'));
         } else {
             return false;
         }
@@ -239,9 +238,9 @@ class Client extends AbstractEnv
         //// system check
 //        $isLinux = $isMac = $isAndroid = false;
 
-        if (preg_match('/win/i', $agent)) {
-
+        if (false !== strpos($agent, 'win') ) {
             $this->set('isWin', true);
+            $os = 'Windows other';
 
             if (preg_match('/nt 6.0/i', $agent)) {
                 $os = 'Windows Vista';
@@ -255,10 +254,7 @@ class Client extends AbstractEnv
                 $os = 'Windows XP';
             } else if (preg_match('/nt 5/i', $agent)) {
                 $os = 'Windows 2000';
-            } else {
-                $os = 'Windows other';
             }
-
         } elseif (strpos($agent, 'linux')) {
 
             if (strpos($agent, 'android')) {
@@ -340,7 +336,7 @@ class Client extends AbstractEnv
      * @from web
      * @return string
      */
-    public function getIP()
+    public function getIp()
     {
         $ip = '';
 

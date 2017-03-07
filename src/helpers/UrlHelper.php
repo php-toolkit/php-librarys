@@ -57,7 +57,7 @@ class UrlHelper
         } elseif ( function_exists('get_headers') ) {
             $headers = get_headers($url, 1);
 
-            return (bool)preg_match('/200/',$headers[0]);
+            return strpos($headers[0], 200) > 0;
         } else {
             $opts = [
                 'http'=> ['timeout' => 5,]

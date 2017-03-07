@@ -6,7 +6,7 @@
  * Time: 9:22
  */
 
-namespace inhere\librarys\traits;
+namespace inhere\librarys\di;
 
 /**
  * Class TraitSimpleContainer
@@ -33,7 +33,7 @@ trait TraitSimpleContainer
     /**
      * register a app service
      * @param string $name the service name
-     * @param object|\Closure $service service
+     * @param mixed $service service
      * @param bool $replace replace exists service
      * @return static
      */
@@ -47,7 +47,7 @@ trait TraitSimpleContainer
     /**
      * register a app service
      * @param string $name
-     * @param object $service
+     * @param mixed $service service
      * @param bool $replace replace exists service
      * @return bool
      */
@@ -109,7 +109,7 @@ trait TraitSimpleContainer
      * create a app service by name
      * it always return a new instance.
      * @param string $name
-     * @return object
+     * @return mixed
      */
     public function factory($name)
     {
@@ -143,6 +143,11 @@ trait TraitSimpleContainer
         return array_keys(self::$services);
     }
 
+    public function __isset($name)
+    {
+        return $this->has($name);
+    }
+
     /**
      * allow register a app service by property
      * ```
@@ -151,7 +156,7 @@ trait TraitSimpleContainer
      * };
      * ```
      * @param string $name
-     * @param object $service
+     * @param mixed $service
      * @return bool
      */
     public function __set($name, $service)
@@ -165,7 +170,7 @@ trait TraitSimpleContainer
      * $logger = Micro::$me->logger;
      * ```
      * @param  string $name service name
-     * @return object
+     * @return mixed
      */
     public function __get($name)
     {

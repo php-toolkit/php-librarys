@@ -112,10 +112,11 @@ class File extends FileSystem
     /**
      * @param $path
      * @return resource
+     * @throws IOException
      */
-    public function openHandler($path)
+    public static function openHandler($path)
     {
-        if (($handler = @fopen($path, 'w')) === false) {
+        if (($handler = @fopen($path, 'wb')) === false) {
             throw new IOException('The file "'.$path.'" could not be opened for writing. Check if PHP has enough permissions.');
         }
 
@@ -128,6 +129,7 @@ class File extends FileSystem
      * @param resource $handler The resource to write to.
      * @param string $content The content to write.
      * @param string $path The path to the file (for exception printing only).
+     * @throws IOException
      */
     public static function writeToFile($handler, $content, $path = '')
     {
@@ -172,10 +174,12 @@ class File extends FileSystem
      * @param null $streamContext
      * @param int $curlTimeout
      * @return bool|mixed|string
+     * @throws FileNotFoundException
+     * @throws FileReadException
      */
     public static function getContents($file, $useIncludePath = false, $streamContext = null, $curlTimeout = 5)
     {
-        if ($streamContext == null && preg_match('/^https?:\/\//', $file)) {
+        if (null === $streamContext && preg_match('/^https?:\/\//', $file)) {
             $streamContext = @stream_context_create(array('http' => array('timeout' => $curlTimeout)));
         }
 
@@ -200,10 +204,10 @@ class File extends FileSystem
             curl_setopt($curl, CURLOPT_TIMEOUT, $curlTimeout);
             curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 
-            if ($streamContext != null) {
+            if (null !== $streamContext) {
                 $opts = stream_context_get_options($streamContext);
 
-                if (isset($opts['http']['method']) && strtolower($opts['http']['method']) == 'post') {
+                if (isset($opts['http']['method']) && strtolower($opts['http']['method']) === 'post') {
                     curl_setopt($curl, CURLOPT_POST, true);
 
                     if (isset($opts['http']['content'])) {
@@ -249,10 +253,11 @@ class File extends FileSystem
      * @param $destination
      * @param null $streamContext
      * @return bool|int
+     * @throws FileSystemException
      */
     public static function copy($source, $destination, $streamContext = null)
     {
-        if (is_null($streamContext) && !preg_match('/^https?:\/\//', $source)) {
+        if (null === $streamContext && !preg_match('/^https?:\/\//', $source)) {
             if (!is_file($source)) {
                 throw new FileSystemException("Source file don't exists. File: $source");
             }
@@ -332,12 +337,12 @@ class File extends FileSystem
             }#不删除注释、空白
             else {
                 $o_data = file_get_contents($v);
-                $o_data = substr($o_data,0,5) == "<?php" ? substr($o_data,5) : $o_data ;
-                $data  .= substr($o_data,-2) == "?>" ? substr($o_data,0,-2) : $o_data ;
+                $o_data = substr($o_data,0,5) === "<?php" ? substr($o_data,5) : $o_data ;
+                $data  .= substr($o_data,-2) === "?>" ? substr($o_data,0,-2) : $o_data ;
             }
         }
 
-        $data = "<?php ".$data."?>";
+        $data = '<?php ' .$data. '?>';
         file_put_contents($outFile, $data);
     }
 }

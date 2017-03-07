@@ -10,7 +10,6 @@ namespace inhere\librarys\auth;
 
 use inhere\librarys\collections\SimpleCollection;
 use inhere\librarys\helpers\ObjectHelper;
-use Psr\Http\Message\ResponseInterface;
 use inhere\exceptions\InvalidArgumentException;
 use inhere\exceptions\InvalidConfigException;
 
@@ -25,7 +24,7 @@ class User extends SimpleCollection
     /**
      * @var string
      */
-    protected static $saveKey = '_slim_auth';
+    protected static $saveKey = '_user_auth_data';
 
     /**
      * Exclude fields that don't need to be saved.
@@ -260,7 +259,7 @@ class User extends SimpleCollection
      */
     public function getAccessChecker()
     {
-        return $this->accessChecker ? : \Slim::get('accessChecker');
+        return $this->accessChecker; // ? : \Slim::get('accessChecker');
     }
 
     /**

@@ -15,7 +15,6 @@ namespace inhere\librarys\helpers;
  */
 abstract class DataHelper
 {
-
     /**
     * Get a value from $_POST / $_GET
     * if unavailable, take a default value
@@ -26,13 +25,15 @@ abstract class DataHelper
     */
     public static function getValue($key, $default_value = false)
     {
-        if (!isset($key) || empty($key) || !is_string($key))
+        if (!$key || !is_string($key)) {
             return false;
+        }
 
         $ret = (isset($_POST[$key]) ? $_POST[$key] : (isset($_GET[$key]) ? $_GET[$key] : $default_value));
 
-        if (is_string($ret))
+        if (is_string($ret)) {
             return stripslashes(urldecode(preg_replace('/((\%5C0+)|(\%00+))/i', '', urlencode($ret))));
+        }
 
         return $ret;
     }
@@ -47,19 +48,26 @@ abstract class DataHelper
         return $_POST + $_GET;
     }
 
-    public static function getIsset($key)
+    /**
+     * @param $key
+     * @return bool
+     */
+    public static function hasKey($key)
     {
-        if (!isset($key) || empty($key) || !is_string($key))
+        if (!$key || !is_string($key)) {
             return false;
+        }
+
         return isset($_POST[$key]) ? true : (isset($_GET[$key]) ? true : false);
     }
 
     public static function safePostVars()
     {
-        if (!isset($_POST) || !is_array($_POST))
+        if (!$_POST || !is_array($_POST)) {
             $_POST = array();
-        else
+        } else {
             $_POST = array_map(array(__CLASS__, 'htmlentitiesUTF8'), $_POST);
+        }
     }
 
     /**
@@ -80,19 +88,20 @@ abstract class DataHelper
 
     public static function htmlentitiesUTF8($string, $type = ENT_QUOTES)
     {
-        if (is_array($string))
+        if (is_array($string)) {
             return array_map(array(__CLASS__, 'htmlentitiesUTF8'), $string);
+        }
 
         return htmlentities((string)$string, $type, 'utf-8');
     }
 
     public static function htmlentitiesDecodeUTF8($string)
     {
-        if (is_array($string))
-        {
+        if (is_array($string)) {
             $string = array_map(array(__CLASS__, 'htmlentitiesDecodeUTF8'), $string);
             return (string)array_shift($string);
         }
+
         return html_entity_decode((string)$string, ENT_QUOTES, 'utf-8');
     }
 
@@ -111,13 +120,15 @@ abstract class DataHelper
 
     public static function argvToGET($argc, $argv)
     {
-        if ($argc <= 1)
+        if ($argc <= 1) {
             return null;
+        }
 
         // get the first argument and parse it like a query string
         parse_str($argv[1], $args);
-        if (!is_array($args) || !count($args))
+        if (!is_array($args) || !count($args)) {
             return null;
+        }
 
         $_GET = array_merge($args, $_GET);
         $_SERVER['QUERY_STRING'] = $argv[1];
@@ -134,8 +145,7 @@ abstract class DataHelper
             return trim($data);
         }
 
-        array_walk_recursive($data, function( &$value)
-        {
+        array_walk_recursive($data, function( &$value) {
             $value = trim($value);
         });
 
@@ -212,7 +222,7 @@ abstract class DataHelper
 
         } else {
 
-            if ( $type == false ){//默认使用  htmlspecialchars()
+            if ( !$type ){//默认使用  htmlspecialchars()
                 $data = htmlspecialchars($data,ENT_QUOTES,$encoding);
             } else {
                 $data = htmlentities($data,ENT_QUOTES, $encoding);
@@ -237,7 +247,7 @@ abstract class DataHelper
             }
 
         } else {
-            if ( $type == false ){//默认使用  htmlspecialchars_decode()
+            if ( !$type ){//默认使用  htmlspecialchars_decode()
                 $data = htmlspecialchars_decode($data, ENT_QUOTES);
             } else {
                 $data = html_entity_decode($data, ENT_QUOTES, $encoding);
@@ -252,10 +262,10 @@ abstract class DataHelper
      * 对数组或字符串进行加斜杠\转义处理 去除转义
      *
      * 去除转义返回一个去除反斜线后的字符串（\' 转换为 ' 等等）。双反斜线（\\）被转换为单个反斜线（\）。
-     * @param void $data 数据可以是字符串或数组
+     * @param array|string $data 数据可以是字符串或数组
      * @param int $escape 进行转义 true 转义处理 false 去除转义
      * @param int $level 增强
-     * @return array|string|void
+     * @return array|string
      */
     public static function slashes($data , $escape=1, $level=0 )
     {
@@ -277,8 +287,7 @@ abstract class DataHelper
 
         if ($level) {
             // 两个str_replace替换转义目的是防止黑客转换SQL编码进行攻击。
-            $data = str_replace("_","\_",$data);    // 转义掉”_”
-            $data = str_replace("%","\%",$data);    // 转义掉”%”
+            $data = str_replace(['_', '%'],["\_","\%"],$data);    // 转义掉_ %
         }
 
         return $data;
@@ -288,21 +297,21 @@ abstract class DataHelper
     {
         return strtr($str, array(
             "\0" => "",
-            "'"  => "&#39;",
-            "\"" => "&#34;",
-            "\\" => "&#92;",
+            "'"  => '&#39;',
+            "\"" => '&#34;',
+            "\\" => '&#92;',
             // more secure
-            "<"  => "&lt;",
-            ">"  => "&gt;",
+            '<' => '&lt;',
+            '>' => '&gt;',
         ));
     }
 
     /**
      * 对数据进行字符集转换处理，数据可以是字符串或数组及对象
-     * @param void $data
+     * @param array $data
      * @param $in_charset
      * @param $out_charset
-     * @return array|string|void
+     * @return array|string
      */
     public static function changeEncode($data ,$in_charset='GBK' , $out_charset='UTF-8' )
     {
@@ -319,7 +328,7 @@ abstract class DataHelper
             return mb_convert_encoding($data,$out_charset,$in_charset);
         }
 
-        return iconv ( $in_charset , $out_charset."/"."/IGNORE" , $data );
+        return iconv ( $in_charset , $out_charset. '/' . '/IGNORE', $data );
     }
 
 }

@@ -41,7 +41,7 @@ abstract class UtilHelper
     /**
      * Display a var dump in firebug console
      *
-     * @param object $object Object to display
+     * @param mixed $object Object to display
      * @param string $type
      */
     static public function fd($object, $type = 'log')

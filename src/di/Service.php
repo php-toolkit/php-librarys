@@ -16,10 +16,16 @@ namespace inhere\librarys\di;
  */
 class Service
 {
+    /**
+     * @var callable
+     */
     protected $callback;
 
-    protected $instance  = null;
+    protected $instance;
 
+    /**
+     * @var array
+     */
     protected $arguments = [];
 
     /**

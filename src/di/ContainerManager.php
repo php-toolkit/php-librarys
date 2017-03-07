@@ -166,7 +166,7 @@ abstract class ContainerManager
      * @param string $name 容器名称
      * @param array $params
      * @param int $bindType
-     * @return null|object
+     * @return mixed
      */
     static public function get($id, $name='', array $params=[], $bindType=self::OVERLOAD_PARAM)
     {
@@ -182,7 +182,7 @@ abstract class ContainerManager
      * @param string $name
      * @param array $params
      * @param int $bindType
-     * @return null|object
+     * @return mixed
      */
     static public function getNew($id, $name='', array $params=[], $bindType=self::OVERLOAD_PARAM)
     {

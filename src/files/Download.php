@@ -196,15 +196,14 @@ class Download
      */
     public function start($filePath, $downName='')
     {
-        if ($filePath == '' && !$this->filePath) {
+        if (!$filePath && !$this->filePath) {
             $this->errInfo = $this->_lang['err'] . ':' . $this->_lang['args_empty'];
             return false;
         }
 
-        if ($filePath == '') $filePath = $this->filePath;
+        $filePath = $filePath ?: $this->filePath;
 
-        if (!file_exists($filePath))
-        {
+        if (!file_exists($filePath)) {
             $this->errInfo = $this->_lang['err'] . ':' . $this->_lang['file_not_exists'];
             return false;
         }
@@ -215,7 +214,7 @@ class Download
         $fileExt = substr(strrchr($filePath, '.'), 1);
 
         // 文件类型
-        $fileType = $this->MIMETypes[$fileExt] ? $this->MIMETypes[$fileExt] : 'application/octet-stream';
+        $fileType = $this->MIMETypes[$fileExt] ?: 'application/octet-stream';
 
         // 是否是图片
         $isImage = false;

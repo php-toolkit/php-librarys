@@ -87,7 +87,7 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
 
     /**
      * 以点连接 快速获取子级节点的值
-     * @param $name
+     * @param array|string $name
      * @return ActiveData|null
      */
     public function get($name)
@@ -164,6 +164,15 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
     public function offsetUnset($offset)
     {
         unset($this->$offset);
+    }
+
+    public function __isset($name)
+    {
+        return $this->offsetExists($name);
+    }
+
+    public function __set($name, $value)
+    {
     }
 
     public function __get($name)

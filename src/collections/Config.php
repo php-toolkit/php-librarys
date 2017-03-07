@@ -48,7 +48,7 @@ class Config extends DataCollector
     /**
      * __construct
      * @param mixed $data If mode is 'folder', $data is config folder path
-     * @param array $options
+     * @param array|string $options
      * @param string $name
      */
     public function __construct($data = [], $options = [], $name = 'config')

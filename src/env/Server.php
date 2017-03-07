@@ -104,8 +104,8 @@ class Server extends AbstractEnv
             'os'   => PHP_OS,
             'osShort'      => strtoupper(substr(PHP_OS, 0, 3)),
             'isUnix'  => $this->isUnix(),
-        ])->set('isWin',   $this->get('osShort') == 'WIN')
-          ->set('isLinux', $this->get('osShort') == 'LIN');
+        ])->set('isWin',   $this->get('osShort') === 'Win')
+          ->set('isLinux', $this->get('osShort') === 'Lin');
     }
 
     /**
@@ -162,9 +162,9 @@ class Server extends AbstractEnv
      */
     public function isUnix()
     {
-        $unames = array('CYG', 'DAR', 'FRE', 'HP-', 'IRI', 'LIN', 'NET', 'OPE', 'SUN', 'UNI');
+        $uNames = array('CYG', 'DAR', 'FRE', 'HP-', 'IRI', 'LIN', 'NET', 'OPE', 'SUN', 'UNI');
 
-        return in_array($this->get('osShort'), $unames);
+        return in_array($this->get('osShort'), $uNames);
     }
 
     /**

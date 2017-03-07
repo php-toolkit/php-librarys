@@ -12,11 +12,16 @@ use inhere\librarys\files\Directory;
 use inhere\librarys\files\File;
 
 /**
- *
+ * Class CurlHelper
+ * @package inhere\librarys\helpers
  */
 class CurlHelper
 {
-    private static $retriableErrorCodes = [
+    /**
+     * Can to retry
+     * @var array
+     */
+    private static $canRetryErrorCodes = [
         CURLE_COULDNT_RESOLVE_HOST,
         CURLE_COULDNT_CONNECT,
         CURLE_HTTP_NOT_FOUND,
@@ -139,7 +144,7 @@ class CurlHelper
             if ( ($ret = curl_exec($ch)) === false) {
                 $curlErrNo = curl_errno($ch);
 
-                if (false === in_array($curlErrNo, self::$retriableErrorCodes, true) || !$retries) {
+                if (false === in_array($curlErrNo, self::$canRetryErrorCodes, true) || !$retries) {
                     $curlError = curl_error($ch);
 
                     if ($closeAfterDone) {

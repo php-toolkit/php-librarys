@@ -113,22 +113,23 @@ echo strtotime("last Monday"), "\n";
 
         $unit    = $unit ?: ['年','月','星期','日','小时','分钟','秒'];
         $nowTime = time();
+        $diffTime = $nowTime - $time;
 
         switch(true) {
             case $time<($nowTime - 31536000):
-                return floor(($nowTime - $time)/31536000).$unit[0];
+                return floor($diffTime/31536000).$unit[0];
             case $time<($nowTime - 2592000):
-                return floor(($nowTime - $time)/2592000).$unit[1];
+                return floor($diffTime/2592000).$unit[1];
             case $time<($nowTime - 604800):
-                return floor(($nowTime - $time)/604800).$unit[2];
+                return floor($diffTime/604800).$unit[2];
             case $time<($nowTime - 86400):
-                return floor(($nowTime - $time)/86400).$unit[3];
+                return floor($diffTime/86400).$unit[3];
             case $time<($nowTime - 3600):
-                return floor(($nowTime - $time)/3600).$unit[4];
+                return floor($diffTime/3600).$unit[4];
             case $time<($nowTime - 60):
-                return floor(($nowTime - $time)/60).$unit[5];
+                return floor($diffTime /60).$unit[5];
             default:
-                return floor($nowTime - $time).$unit[6];
+                return floor($diffTime).$unit[6];
         }
     }
 

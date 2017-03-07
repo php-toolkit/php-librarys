@@ -127,7 +127,6 @@ class SimpleCollection implements CollectionInterface
     {
         return $this->data;
     }
-
     public function toArray()
     {
         return $this->all();

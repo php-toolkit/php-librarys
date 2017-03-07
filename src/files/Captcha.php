@@ -54,6 +54,7 @@ class Captcha
     /**
      * @param array $config
      * @throws ExtensionMissException
+     * @throws NotFoundException
      */
     public function __construct(array $config=[])
     {

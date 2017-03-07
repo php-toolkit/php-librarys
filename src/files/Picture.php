@@ -149,13 +149,14 @@ class Picture
 
     /**
      * 水印处理
-     * @param string $img      操作的图像
-     * @param string $outPath   另存的图像
-     * @param string $pos      水印位置
+     * @param string $img 操作的图像
+     * @param string $outPath 另存的图像
+     * @param string $pos 水印位置
      * @param string $waterImg 水印图片
-     * @param string $alpha    透明度
-     * @param string $text     文字水印内容
-     * @return self
+     * @param string $alpha 透明度
+     * @param string $text 文字水印内容
+     * @return Picture
+     * @throws InvalidConfigException
      */
     public function watermark($img, $outPath = '', $pos = '', $waterImg = '', $alpha = '', $text = '')
     {
@@ -376,6 +377,8 @@ class Picture
      * 显示 image file 到浏览器
      * @param string $img 图片文件
      * @return bool
+     * @throws FileSystemException
+     * @throws InvalidArgumentException
      */
     public static function show($img)
     {

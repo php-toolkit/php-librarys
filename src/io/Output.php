@@ -5,7 +5,8 @@ namespace inhere\librarys\io;
 use inhere\librarys\helpers\ObjectHelper;
 
 /**
- *
+ * Class Output
+ * @package inhere\librarys\io
  */
 class Output
 {
@@ -17,8 +18,14 @@ class Output
      */
     protected $charset = 'UTF-8';
 
+    /**
+     * @var array
+     */
     private $headers = [];
 
+    /**
+     * @var array
+     */
     private $bodys = [];
 
     public function __construct(array $config = [])
@@ -49,6 +56,7 @@ class Output
             $this->write($content);
         }
 
+        header($_SERVER['SERVER_PROTOCOL'] . ' 200 OK');
         header('Content-type: text/html; charset=' . $this->charset);
 
         $content = implode('', $this->bodys);
@@ -73,6 +81,7 @@ class Output
      */
     public function json(array $data)
     {
+        header($_SERVER['SERVER_PROTOCOL'] . ' 200 OK');
         header('Content-type: application/json; charset='.$this->charset);
 
         echo json_encode($data);

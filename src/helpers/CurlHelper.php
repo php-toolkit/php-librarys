@@ -103,12 +103,12 @@ class CurlHelper
     /**
      * send POST request
      *
-     * @param string $url url
-     * @param array $data url params
-     * @param array $headers HEADER info
+     * @param string        $url     submit url
+     * @param array|string  $data    post data. array: form data, string: json data
+     * @param array         $headers HEADER info
      * @return string
      */
-    public static function post($url, array $data = [], array $headers = [])
+    public static function post($url, $data = [], array $headers = [])
     {
         // $headers = [ 'Content-Type: application/json' ];
 

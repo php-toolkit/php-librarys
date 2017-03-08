@@ -26,7 +26,7 @@ class Output
     /**
      * @var array
      */
-    private $bodys = [];
+    private $body = [];
 
     public function __construct(array $config = [])
     {
@@ -40,7 +40,7 @@ class Output
 
     public function write($content)
     {
-        $this->bodys[] = $content;
+        $this->body[] = $content;
 
         return $this;
     }
@@ -59,7 +59,7 @@ class Output
         header($_SERVER['SERVER_PROTOCOL'] . ' 200 OK');
         header('Content-type: text/html; charset=' . $this->charset);
 
-        $content = implode('', $this->bodys);
+        $content = implode('', $this->body);
 
         if ( !$content ) {
             throw new \RuntimeException('No content to display.');
@@ -91,7 +91,7 @@ class Output
 
     public function formatJson($data, $code = 0, $msg = '')
     {
-        // if `$data` is integer, queals to `formatJson(int $code, string $msg )`
+        // if `$data` is integer, equals to `formatJson(int $code, string $msg )`
         if ( is_numeric($data) ) {
             $jsonData = [
                 'code'     => (int)$data,

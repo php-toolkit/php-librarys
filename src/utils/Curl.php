@@ -129,21 +129,29 @@ class Curl
 
     public function post($url, $data = [], array $headers = [], array $options = [])
     {
+        $options[CURLOPT_POST] = true;
+
         return $this->request($url, $data, self::POST, $headers, $options);
     }
 
     public function put($url, $data = [], array $headers = [], array $options = [])
     {
+        $options[CURLOPT_PUT] = true;
+
         return $this->request($url, $data, self::PUT, $headers, $options);
     }
 
     public function patch($url, $data = [], array $headers = [], array $options = [])
     {
+        $options[CURLOPT_CUSTOMREQUEST] = self::PATCH;
+
         return $this->request($url, $data, self::PATCH, $headers, $options);
     }
 
     public function delete($url, $data = [], array $headers = [], array $options = [])
     {
+        $options[CURLOPT_CUSTOMREQUEST] = self::DELETE;
+
         return $this->request($url, $data, self::DELETE, $headers, $options);
     }
 

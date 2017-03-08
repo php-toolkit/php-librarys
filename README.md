@@ -29,6 +29,7 @@ RUN: `composer update`
 - `inhere\librarys\html` html 元素创建, dom 创建
 - `inhere\librarys\helpers` 辅助类库(`string array object date url curl php`)
 - `inhere\librarys\language` 语言包处理类
+- `inhere\librarys\utils` 一些独立的工具类(`curl logger`)
 - `functions.php` 一些有用的函数
 
 [Document](doc/document.md)

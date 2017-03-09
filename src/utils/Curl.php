@@ -8,6 +8,8 @@
 
 namespace inhere\librarys\utils;
 
+use inhere\librarys\helpers\UrlHelper;
+
 /**
  * Class Curl
  * @package inhere\librarys\utils
@@ -16,21 +18,20 @@ namespace inhere\librarys\utils;
  * $curl = Curl::make('http://my-site.com');
  * $curl->get('/users/1');
  *
- * $data = $curl->getResponse();
+ * $headers = $curl->getResponseHeaders();
+ * $data = $curl->getResponseBody();
+ * $array = $curl->getArrayData();
+ *
+ * $post = ['name' => 'john'];
+ * $curl->reset()->post('/users/1', $post);
+ * // $curl->reset()->byAjax()->post('/users/1', $post);
+ * // $curl->reset()->byJson()->post('/users/1', json_encode($post));
+ * $array = $curl->getArrayData();
+ *
  * ```
  */
-class Curl
+class Curl implements CurlInterface
 {
-    // request method list
-    const GET = 'GET';
-    const POST = 'POST';
-    const PUT = 'PUT';
-    const PATCH = 'PATCH';
-    const DELETE = 'DELETE';
-    const HEAD = 'HEAD';
-    const OPTIONS = 'OPTIONS';
-    const TRACE = 'TRACE';
-
     private static $supportedMethods = [
         // method => allow post data
         'GET'     => false,
@@ -44,34 +45,47 @@ class Curl
     ];
 
     /**
-     * @var bool
+     * config for self
+     * @var array
      */
-    private $debug = false;
+    private $_config = [
+        // open debug mode
+        'debug'   => false,
 
-    /**
-     * set a base url
-     * @var string
-     */
-    private $bashUrl;
+        // if 'debug = true ', is valid. will output log to the file. if is empty, output to STDERR.
+        'logFile' => '',
 
-    /**
-     * set retries times
-     * @var int
-     */
-    private $retries = 0;
+        // set a base uri
+        'baseUri' => '',
+
+        // retry times, when an error occurred.
+        'retry'   => 0,
+    ];
 
     /**
      * The default curl options
      * @var array
      */
     private static $defaultOptions = [
+        // TRUE 将 curl_exec() 获取的信息以字符串返回，而不是直接输出
         CURLOPT_RETURNTRANSFER => true,
+
+        //
         CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HEADER         => true, // false
+
+        // true curl_exec() 会将头文件的信息作为数据流输出到响应的最前面，此时可用 [[self::parseResponse()]] 解析。
+        // false curl_exec() 返回的响应就只有body
+        CURLOPT_HEADER         => true,
+
+        // enable debug
         CURLOPT_VERBOSE        => false,
+
+        // auto add REFERER
         CURLOPT_AUTOREFERER    => true,
+
         CURLOPT_CONNECTTIMEOUT => 30,
         CURLOPT_TIMEOUT        => 30,
+
         CURLOPT_SSL_VERIFYPEER => false,
         // isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
         CURLOPT_USERAGENT => '5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36',
@@ -119,6 +133,7 @@ class Curl
     private $_response;
     private $_responseBody = '';
     private $_responseHeaders = [];
+    private $_responseParsed = false;
 
     /**
      * The curl exec result mete info.
@@ -133,21 +148,24 @@ class Curl
     ];
 
     /**
-     * @param string $bashUrl
-     * @param int $retries
+     * @param array|string $config
      * @return Curl
      */
-    public static function make($bashUrl = '', $retries = 0)
+    public static function make($config = [])
     {
-        return new self($bashUrl, $retries);
+        return new self($config);
     }
-    public function __construct($baseUrl = '', $retries = 0)
+    public function __construct($config = [])
     {
         if (!extension_loaded('curl')) {
             throw new \ErrorException('The cURL extensions is not loaded, make sure you have installed the cURL extension: https://php.net/manual/curl.setup.php');
         }
 
-        $this->setBashUrl($baseUrl)->setRetries($retries);
+        if (is_string($config)) {
+            $this->_config['baseUri'] = trim($config);
+        } elseif (is_array($config)) {
+            $this->setConfig($config);
+        }
     }
 
     /**
@@ -173,6 +191,7 @@ class Curl
 
     public function post($url, $data = [], array $headers = [], array $options = [])
     {
+        // will auto setting: 'Content-Type' => 'application/x-www-form-urlencoded'
         $options[CURLOPT_POST] = true;
 
         return $this->request($url, $data, self::POST, $headers, $options);
@@ -269,14 +288,54 @@ class Curl
         return $this;
     }
 
+
     /**
-     * send request
-     * @param $url
-     * @param array $data
-     * @param string $type
-     * @param array $headers
-     * @param array $options
-     * @return mixed|false If is fail, will return false
+     * Image file download and save
+     * @param string $imgUrl image url e.g. http://static.oschina.net/uploads/user/277/554046_50.jpg
+     * @param string $saveTo 图片保存路径
+     * @param string $rename 图片重命名(只写名称，不用后缀) 为空则使用原名称
+     * @return string
+     */
+    public function downImage($imgUrl, $saveTo, $rename = '')
+    {
+        // e.g. http://static.oschina.net/uploads/user/277/554046_50.jpg?t=34512323
+        if ( strpos($imgUrl, '?')) {
+            list($real,) = explode('?', $imgUrl, 2);
+        } else {
+            $real = $imgUrl;
+        }
+
+        $last = trim(strrchr($real, '/'), '/');
+
+        // special url e.g http://img.blog.csdn.net/20150929103749499
+        if ( false === strpos($last, '.')) {
+            $suffix = '.jpg';
+            $name   = $rename ? : $last;
+        } else {
+            $info = pathinfo($real,PATHINFO_EXTENSION | PATHINFO_FILENAME);
+            $suffix = $info['extension']  ?: '.jpg';
+            $name   = $rename ? : $info['filename'];
+        }
+
+        $imgFile = $saveTo . '/' . $name .$suffix;
+
+        if ( file_exists($imgFile) ) {
+            return $imgFile;
+        }
+
+        // set Referer
+        $this->setReferer('http://www.baidu.com');
+
+        $imgData = $this->request($imgUrl)->getResponseBody();
+
+        file_put_contents($imgFile, $imgData);
+
+        return $imgFile;
+    }
+
+    /**
+     * Send request
+     * @inheritdoc
      */
     public function request($url, $data = [], $type = self::GET, array $headers = [], array $options = [])
     {
@@ -306,11 +365,11 @@ class Curl
         }
 
         // set request url
-        $url = $this->bashUrl . $url;
-        curl_setopt($ch, CURLOPT_URL, $url);
+        $url = $this->_config['baseUri'] . $url;
+        curl_setopt($ch, CURLOPT_URL, UrlHelper::encode2($url));
 
         $response = '';
-        $retries = $this->retries + 1;
+        $retries = $this->_config['retry'] + 1;
 
         // execute
         while ($retries--) {
@@ -339,7 +398,7 @@ class Curl
         // get http status code
         $this->_responseMeta['status'] = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        if( $this->debug ) {
+        if( $this->isDebug() ) {
             $this->_responseMeta['info'] = curl_getinfo($ch);
         }
 
@@ -348,15 +407,54 @@ class Curl
         return $this;
     }
 
-    public function parseResponse()
+///////////////////////////////////////////////////////////////////////
+//   helper method
+///////////////////////////////////////////////////////////////////////
+
+    protected function prepareRequest(array $headers = [], array $options = [])
     {
-        if ( !$response = $this->_response ) {
-            return $this;
+        $this->resetResponse();
+
+        // open debug
+        if ( $this->isDebug() ) {
+            $this->_options[CURLOPT_VERBOSE] = true;
+
+            // redirect exec log to logFile.
+            if ( $logFile = $this->_config['logFile'] ) {
+                $this->_options[CURLOPT_STDERR] = $logFile;
+            }
         }
 
-        // have been parsed
-        if ( $this->_responseHeaders ) {
-            return $this;
+        // merge default options
+        $this->_options = array_merge(self::$defaultOptions, $this->_options, $options);
+
+        // set headers
+        $this->setHeaders($headers);
+
+        // append http headers to options
+        if ( $this->_headers ) {
+            $this->_options[CURLOPT_HTTPHEADER] = $this->getHeaders(true);
+        }
+
+        // append http cookies to options
+        if ( $this->_cookies ) {
+            $this->_options[CURLOPT_COOKIE] = http_build_query($this->_cookies, '', '; ');
+        }
+    }
+
+    protected function parseResponse()
+    {
+        // have been parsed || no response data
+        if ( $this->_responseParsed || !($response = $this->_response) ) {
+            return false;
+        }
+
+        // if no return headers data
+        if ( false === $this->getOption(CURLOPT_HEADER, false) ) {
+            $this->_responseBody = $response;
+            $this->_responseParsed = true;
+
+            return true;
         }
 
         # Headers regex
@@ -390,64 +488,15 @@ class Curl
             $this->_responseHeaders[$matches[1]] = $matches[2];
         }
 
-        return $this;
-    }
+        $this->_responseParsed = true;
 
-///////////////////////////////////////////////////////////////////////
-//   helper method
-///////////////////////////////////////////////////////////////////////
-
-    public function byJson()
-    {
-        $this->setHeader('Content-Type', 'application/json');
-
-        return $this;
-    }
-
-    public function byAjax()
-    {
-        $this->setHeader('X-Requested-With', 'XMLHttpRequest');
-
-        return $this;
-    }
-
-    public function setUserAuth($user, $pwd, $authType = CURLAUTH_BASIC)
-    {
-        $this->_options[CURLOPT_HTTPAUTH] = $authType;
-        $this->_options[CURLOPT_USERPWD] = "$user:$pwd";
-
-        return $this;
-    }
-
-    protected function prepareRequest(array $headers = [], array $options = [])
-    {
-        $this->resetResponse();
-
-        if ($this->debug) {
-            $this->_options[CURLOPT_VERBOSE] = true;
-        }
-
-        // merge default options
-        $this->_options = array_merge(self::$defaultOptions, $this->_options, $options);
-
-        // set headers
-        $this->setHeaders($headers);
-
-        // append http headers to options
-        if ( $this->_headers ) {
-            $this->_options[CURLOPT_HTTPHEADER] = $this->getHeaders(true);
-        }
-
-        // append http cookies to options
-        if ( $this->_cookies ) {
-            $this->_options[CURLOPT_COOKIE] = http_build_query($this->_cookies, '', '; ');
-        }
+        return true;
     }
 
     /**
      * @return array
      */
-    public static function supportedMethods()
+    public static function getSupportedMethods()
     {
         return self::$supportedMethods;
     }
@@ -455,53 +504,9 @@ class Curl
     /**
      * @return array
      */
-    public static function defaultOptions()
+    public static function getDefaultOptions()
     {
         return self::$defaultOptions;
-    }
-
-///////////////////////////////////////////////////////////////////////
-//   assert
-///////////////////////////////////////////////////////////////////////
-
-    /**
-     * @return bool
-     */
-    public function isDebug()
-    {
-        return $this->debug;
-    }
-
-    /**
-     * Was an 'info' header returned.
-     */
-    public function isInfo()
-    {
-        return $this->_responseMeta['status'] >= 100 && $this->_responseMeta['status'] < 200;
-    }
-
-    /**
-     * Was an 'OK' response returned.
-     */
-    public function isSuccess()
-    {
-        return $this->_responseMeta['status'] >= 200 && $this->_responseMeta['status'] < 300;
-    }
-
-    /**
-     * Was a 'redirect' returned.
-     */
-    public function isRedirect()
-    {
-        return $this->_responseMeta['status'] >= 300 && $this->_responseMeta['status'] < 400;
-    }
-
-    /**
-     * Was an 'error' returned (client error or server error).
-     */
-    public function isError()
-    {
-        return $this->_responseMeta['status'] >= 400 && $this->_responseMeta['status'] < 600;
     }
 
 ///////////////////////////////////////////////////////////////////////
@@ -548,7 +553,7 @@ class Curl
     }
 
     /**
-     * @return bool|mixed
+     * @return bool|array
      */
     public function getArrayData()
     {
@@ -556,7 +561,7 @@ class Curl
             return false;
         }
 
-        $data = json_decode($this->getResponseBody(), true);
+        $data = json_decode($this->_responseBody, true);
 
         if ( json_last_error() > 0 ) {
             return false;
@@ -587,9 +592,40 @@ class Curl
         return isset($this->_responseHeaders[$name]) ? $this->_responseHeaders[$name] : $default;
     }
 
+    /**
+     * Was an 'info' header returned.
+     */
+    public function isInfo()
+    {
+        return $this->_responseMeta['status'] >= 100 && $this->_responseMeta['status'] < 200;
+    }
+
+    /**
+     * Was an 'OK' response returned.
+     */
+    public function isSuccess()
+    {
+        return $this->_responseMeta['status'] >= 200 && $this->_responseMeta['status'] < 300;
+    }
+
+    /**
+     * Was a 'redirect' returned.
+     */
+    public function isRedirect()
+    {
+        return $this->_responseMeta['status'] >= 300 && $this->_responseMeta['status'] < 400;
+    }
+
+    /**
+     * Was an 'error' returned (client error or server error).
+     */
+    public function isError()
+    {
+        return $this->_responseMeta['status'] >= 400 && $this->_responseMeta['status'] < 600;
+    }
 
 ///////////////////////////////////////////////////////////////////////
-//   reset
+//   reset data
 ///////////////////////////////////////////////////////////////////////
 
     /**
@@ -628,6 +664,7 @@ class Curl
     public function resetResponse()
     {
         $this->_response = $this->_responseBody = null;
+        $this->_responseParsed = false;
         $this->_responseHeaders = [];
         $this->_responseMeta = [
             // http status code
@@ -641,7 +678,7 @@ class Curl
     }
 
     /**
-     * reset
+     * Reset the last time headers,cookies,options,response data.
      * @return $this
      */
     public function reset()
@@ -656,7 +693,7 @@ class Curl
     }
 
 ///////////////////////////////////////////////////////////////////////
-//   getter/setter
+//   request cookies
 ///////////////////////////////////////////////////////////////////////
 
     /**
@@ -680,6 +717,28 @@ class Curl
         return $this->_cookies;
     }
 
+///////////////////////////////////////////////////////////////////////
+//   request headers
+///////////////////////////////////////////////////////////////////////
+
+    public function byJson()
+    {
+        $this->setHeader('Content-Type', 'application/json');
+
+        return $this;
+    }
+
+    public function byXhr()
+    {
+        return $this->byAjax();
+    }
+    public function byAjax()
+    {
+        $this->setHeader('X-Requested-With', 'XMLHttpRequest');
+
+        return $this;
+    }
+
     /**
      * get Headers
      * @param bool $onlyValues
@@ -692,14 +751,7 @@ class Curl
 
     /**
      * set Headers
-     *
-     * [
-     *  'Content-Type' => 'application/json'
-     * ]
-     *
-     * @param array $headers
-     * @param bool $override
-     * @return $this
+     * @inheritdoc
      */
     public function setHeaders(array $headers, $override = false)
     {
@@ -740,9 +792,79 @@ class Curl
         return $this;
     }
 
+///////////////////////////////////////////////////////////////////////
+//   request options
+///////////////////////////////////////////////////////////////////////
+
     /**
-     * @param array $options
+     * @param $userAgent
      * @return $this
+     */
+    public function setUserAgent($userAgent)
+    {
+        $this->_options[CURLOPT_USERAGENT] = $userAgent;
+
+        return $this;
+    }
+
+    /**
+     * @param $referer
+     * @return $this
+     */
+    public function setReferer($referer)
+    {
+        $this->_options[CURLOPT_REFERER] = $referer;
+
+        return $this;
+    }
+
+    /**
+     * Use http auth
+     * @param string $user
+     * @param string $pwd
+     * @param int $authType
+     * @return $this
+     */
+    public function setUserAuth($user, $pwd, $authType = CURLAUTH_BASIC)
+    {
+        $this->_options[CURLOPT_HTTPAUTH] = $authType;
+        $this->_options[CURLOPT_USERPWD] = "$user:$pwd";
+
+        return $this;
+    }
+
+    /**
+     * Use SSL certificate/private-key auth
+     *
+     * @param string $pwd The SLL CERT/KEY password
+     * @param string $file The SLL CERT/KEY file
+     * @param string $authType The auth type: 'cert' or 'key'
+     * @return $this
+     */
+    public function setSSLAuth($pwd, $file, $authType = self::SSL_TYPE_CERT)
+    {
+        if ( $authType !== self::SSL_TYPE_CERT && $authType !== self::SSL_TYPE_KEY ) {
+            throw new \InvalidArgumentException("The SSL auth type only allow: cert|key");
+        }
+
+        if ( !file_exists($file) ) {
+            $name = $authType === self::SSL_TYPE_CERT ? 'certificate' : 'private key';
+            throw new \InvalidArgumentException("The SSL $name file not found: {$file}");
+        }
+
+        if ( $authType === self::SSL_TYPE_CERT ) {
+            $this->_options[CURLOPT_SSLCERTPASSWD] = $pwd;
+            $this->_options[CURLOPT_SSLCERT] = $file;
+        } else {
+            $this->_options[CURLOPT_SSLKEYPASSWD] = $pwd;
+            $this->_options[CURLOPT_SSLKEY] = $file;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @inheritdoc
      */
     public function setOptions(array $options)
     {
@@ -751,11 +873,6 @@ class Curl
         return $this;
     }
 
-    /**
-     * @param $name
-     * @param $value
-     * @return $this
-     */
     public function setOption($name, $value)
     {
         $this->_options[$name] = $value;
@@ -772,41 +889,47 @@ class Curl
     }
 
     /**
-     * @return int
+     * @param int $name
+     * @param bool $default
+     * @return mixed
      */
-    public function getRetries()
+    public function getOption($name, $default = null)
     {
-        return $this->retries;
+        return isset($this->_options[$name]) ? $this->_options[$name] : $default;
+    }
+
+///////////////////////////////////////////////////////////////////////
+//   config self
+///////////////////////////////////////////////////////////////////////
+
+    /**
+     * @inheritdoc
+     */
+    public function getConfig($name = null, $default = null)
+    {
+        if ( $name === null ) {
+            return $this->_config;
+        }
+
+        return isset($this->_config[$name]) ? $this->_config[$name] : $default;
     }
 
     /**
-     * @param int $retries
-     * @return $this
+     * @inheritdoc
      */
-    public function setRetries($retries)
+    public function setConfig(array $config)
     {
-        $this->retries = (int)$retries;
+        $this->_config = array_merge($this->_config, $config);
 
         return $this;
     }
 
     /**
-     * @return string
+     * @return bool
      */
-    public function getBashUrl()
+    public function isDebug()
     {
-        return $this->bashUrl;
-    }
-
-    /**
-     * @param string $bashUrl
-     * @return $this
-     */
-    public function setBashUrl($bashUrl)
-    {
-        $this->bashUrl = trim($bashUrl);
-
-        return $this;
+        return (bool)$this->_config['debug'];
     }
 
     /**
@@ -815,8 +938,31 @@ class Curl
      */
     public function setDebug($debug)
     {
-        $this->debug = (bool)$debug;
+        $this->_config['debug'] = (bool)$debug;
 
         return $this;
     }
+
+    /**
+     * @param int $retry
+     * @return $this
+     */
+    public function setRetry($retry)
+    {
+        $this->_config['retry'] = (int)$retry;
+
+        return $this;
+    }
+
+    /**
+     * @param string $baseUri
+     * @return $this
+     */
+    public function setBashUrl($baseUri)
+    {
+        $this->_config['baseUri'] = trim($baseUri);
+
+        return $this;
+    }
+
 }

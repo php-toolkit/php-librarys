@@ -323,8 +323,8 @@ class Curl implements CurlInterface
             return $imgFile;
         }
 
-        // set Referer
-        $this->setReferer('http://www.baidu.com');
+        // set Referrer
+        $this->setReferrer('http://www.baidu.com');
 
         $imgData = $this->request($imgUrl)->getResponseBody();
 
@@ -808,12 +808,12 @@ class Curl implements CurlInterface
     }
 
     /**
-     * @param $referer
+     * @param $referrer
      * @return $this
      */
-    public function setReferer($referer)
+    public function setReferrer($referrer)
     {
-        $this->_options[CURLOPT_REFERER] = $referer;
+        $this->_options[CURLOPT_REFERER] = $referrer;
 
         return $this;
     }
@@ -844,7 +844,7 @@ class Curl implements CurlInterface
     public function setSSLAuth($pwd, $file, $authType = self::SSL_TYPE_CERT)
     {
         if ( $authType !== self::SSL_TYPE_CERT && $authType !== self::SSL_TYPE_KEY ) {
-            throw new \InvalidArgumentException("The SSL auth type only allow: cert|key");
+            throw new \InvalidArgumentException('The SSL auth type only allow: cert|key');
         }
 
         if ( !file_exists($file) ) {

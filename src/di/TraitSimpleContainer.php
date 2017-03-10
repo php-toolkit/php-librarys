@@ -150,11 +150,13 @@ trait TraitSimpleContainer
 
     /**
      * allow register a app service by property
+     *
      * ```
      * $app->logger = function(){
      *     return new xx\yy\Logger;
      * };
      * ```
+     *
      * @param string $name
      * @param mixed $service
      * @return bool
@@ -166,9 +168,11 @@ trait TraitSimpleContainer
 
     /**
      * allow call service by property
+     *
      * ```
-     * $logger = Micro::$me->logger;
+     * $logger = $app->logger;
      * ```
+     *
      * @param  string $name service name
      * @return mixed
      */

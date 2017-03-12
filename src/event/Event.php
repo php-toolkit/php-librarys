@@ -18,7 +18,6 @@ use inhere\librarys\StdBase;
  */
 class Event extends StdBase implements InterfaceEvent, \ArrayAccess, \Serializable,\Countable
 {
-
     /**
      * @var string 当前的事件名称
      */

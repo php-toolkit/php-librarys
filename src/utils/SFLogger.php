@@ -228,7 +228,7 @@ class SFLogger
     private function __construct(array $config = [])
     {
         $this->name = $config['name'];
-        $canSetting = ['logConsole','logThreshold','debug','channel','basePath','showUri','subFolder','format','splitFile'];
+        $canSetting = ['logConsole','logThreshold','debug','channel','basePath','showUri','subFolder','format','splitFile', 'levels'];
 
         foreach ($canSetting as $name) {
             if ( isset($config[$name]) ) {

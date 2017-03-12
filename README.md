@@ -22,7 +22,7 @@ RUN: `composer update`
 
 - `inhere\librarys\asset` 资源(css,js)管理,加载,发布 
 - `inhere\librarys\collections` 数据收集器. 通常用于全局配置
-- `inhere\librarys\console` 控制台的一些简单交互 
+- `inhere\librarys\console` 控制台的一些简单交互. **removed** please use `inhere\console` [github](https://github.com/inhere/php-console)
 - `inhere\librarys\di` 依赖注入容器，提供服务管理 
 - `inhere\librarys\env` 环境信息收集, `Server`: 服务端信息. `Client`: 客户端信息 
 - `inhere\librarys\files` 文件系统操作(文件(夹)读取，检查，创建)；文件上传/下载，图片处理(缩略图/水印)，图片验证码生成 

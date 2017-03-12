@@ -158,7 +158,7 @@ class Dispatcher extends StdBase implements InterfaceDispatcher
 
     /**
      * 添加监听器 并关联到 某一个(多个)事件
-     * @param object|\Closure|callback $listener 监听器
+     * @param \Closure|callback $listener 监听器
      * @param array|string|int $definition 事件名，优先级设置
      * @return $this
      * @throws \InvalidArgumentException
@@ -185,13 +185,14 @@ class Dispatcher extends StdBase implements InterfaceDispatcher
         } elseif (is_string($definition)) { // 仅是个 事件名称
             $definition = [ $definition => $defaultLevel];
         } elseif ( $definition instanceof Event) { // 仅是个 事件对象,取出名称
-            $definition = [ $definition->name => $defaultLevel];
+            $definition = [ $definition->getName() => $defaultLevel];
         }
 
         // 1. is a Closure or callback(String|Array)
         if ( is_callable($listener) ) {
             if (!$definition) {
-                throw new \InvalidArgumentException('请设置要将监听器关联到什么事件。');
+                // 设置要将监听器关联到什么事件?
+                throw new \InvalidArgumentException('Please set the listener to events associated with?');
             }
 
             // 循环: 将 监听器 关联到 各个事件
@@ -237,7 +238,7 @@ class Dispatcher extends StdBase implements InterfaceDispatcher
 
     /**
      * 是否存在 对事件的 监听队列
-     * @param  object|string  $event
+     * @param  InterfaceEvent|string  $event
      * @return boolean
      */
     public function hasListenerQueue($event)
@@ -251,7 +252,7 @@ class Dispatcher extends StdBase implements InterfaceDispatcher
 
     /**
      * @see self::hasListenerQueue() alias method
-     * @param  object|string  $event
+     * @param  InterfaceEvent|string  $event
      * @return boolean
      */
     public function hasListeners($event)
@@ -262,7 +263,7 @@ class Dispatcher extends StdBase implements InterfaceDispatcher
     /**
      * 是否存在(对事件的)监听器
      * @param $listener
-     * @param  object|string $event
+     * @param  InterfaceEvent|string $event
      * @return bool
      */
     public function hasListener($listener, $event = null)
@@ -291,7 +292,7 @@ class Dispatcher extends StdBase implements InterfaceDispatcher
     /**
      * 获取事件的一个监听器的优先级别
      * @param $listener
-     * @param  string|object $event
+     * @param  string|InterfaceEvent $event
      * @return int|null
      */
     public function getListenerLevel($listener, $event)
@@ -310,7 +311,7 @@ class Dispatcher extends StdBase implements InterfaceDispatcher
 
     /**
      * 获取事件的所有监听器
-     * @param  string|object $event
+     * @param  string|InterfaceEvent $event
      * @return array ListenersQueue[]
      */
     public function getListeners($event)
@@ -329,7 +330,7 @@ class Dispatcher extends StdBase implements InterfaceDispatcher
 
     /**
      * 统计获取事件的监听器数量
-     * @param  string|object $event
+     * @param  string|InterfaceEvent $event
      * @return int
      */
     public function countListeners($event)
@@ -344,7 +345,7 @@ class Dispatcher extends StdBase implements InterfaceDispatcher
     /**
      * 移除对某个事件的监听
      * @param $listener
-     * @param null|string|object $event
+     * @param null|string|InterfaceEvent $event
      * $event 为空时，移除监听者队列中所有名为 $listener 的监听者
      * 否则，则移除对事件 $event 的监听者
      * @return $this
@@ -375,7 +376,7 @@ class Dispatcher extends StdBase implements InterfaceDispatcher
 
     /**
      * 清除(对事件的)所有监听器
-     * @param  null|string|object $event
+     * @param  null|string|InterfaceEvent $event
      * @return self
      */
     public function clearListeners($event=null)
@@ -429,14 +430,14 @@ class Dispatcher extends StdBase implements InterfaceDispatcher
                 }
 
                 /**
-                 * @var object|\Closure|Callback $listener
+                 * @var callable|\Closure|Callback $listener
                  */
                 if ( $listener instanceof \StdClass ) {
                     call_user_func($listener->callback, $event);
                 } elseif ( is_callable($listener) ) {
-                    call_user_func($listener, $event);
+                    $listener($event);
                 } else {
-                    call_user_func([$listener, $event->name], $event);
+                    $listener->{$event->name}($event);
                 }
             }
         }

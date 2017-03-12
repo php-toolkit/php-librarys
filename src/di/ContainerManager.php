@@ -26,9 +26,9 @@ abstract class ContainerManager
      */
     static protected $containers = [
         'di' =>    [
-                'base'      => null,// 'container name'=> a base Container instance
-                'children'  => []
-            ]
+            'base'      => null,// 'container name'=> a base Container instance
+            'children'  => []
+        ]
     ];
 
     /**
@@ -67,10 +67,8 @@ abstract class ContainerManager
         $profile = $profile ?: static::$profile;
 
         // No name, return default's base container.
-        if (!$name)
-        {
-            if (empty(self::$containers[$profile]['base']))
-            {
+        if (!$name) {
+            if (empty(self::$containers[$profile]['base'])) {
                 $container = new Container;
 
                 $container->name = 'di.base';
@@ -82,15 +80,12 @@ abstract class ContainerManager
         }
 
         // Has name, we return children container.
-        if (empty(self::$containers[$profile][$name]) || !(self::$containers[$profile][$name] instanceof Container))
-        {
+        if (empty(self::$containers[$profile][$name]) || !(self::$containers[$profile][$name] instanceof Container)) {
             self::$containers[$profile][$name] = new Container(static::getContainer());
-
             self::$containers[$profile][$name]->name = $name;
         }
 
         return self::$containers[$profile][$name];
-
     }
 
     /**
@@ -102,8 +97,7 @@ abstract class ContainerManager
     {
         $profile = strtolower(trim($profile));
 
-        if (!isset(static::$containers[$profile]))
-        {
+        if (!isset(static::$containers[$profile])) {
             static::$containers[$profile] = array(
                 'root'      => null,
                 'children'  => []
@@ -129,8 +123,7 @@ abstract class ContainerManager
      */
     public static function reset($profile = null)
     {
-        if (!$profile)
-        {
+        if (!$profile) {
             static::$containers = array();
 
             return;
@@ -173,7 +166,6 @@ abstract class ContainerManager
         $container = self::getContainer($name);
 
         return $container->get($id, (array) $params, $bindType);
-
     }
 
     /**

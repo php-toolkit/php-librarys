@@ -37,13 +37,13 @@ class ListenersQueue implements \IteratorAggregate, \Countable
 
     public function __construct()
     {
-        $this->queue = new \SplPriorityQueue();
         $this->store = new \SplObjectStorage();
+        $this->queue = new \SplPriorityQueue();
     }
 
     /**
      * 添加一个监听器, 增加了添加 callback(string|array)
-     * @param $listener \Closure|object|callback 监听器
+     * @param $listener \Closure|callback 监听器
      * @param $priority integer 优先级
      * @return $this
      */
@@ -94,8 +94,8 @@ class ListenersQueue implements \IteratorAggregate, \Countable
 
     /**
      * Get the priority of the given listener. 得到指定监听器的优先级
-     * @param   object  $listener  The listener.
-     * @param   mixed            $default   The default value to return if the listener doesn't exist.
+     * @param   mixed  $listener  The listener.
+     * @param   mixed  $default   The default value to return if the listener doesn't exist.
      * @return  mixed  The listener priority if it exists, null otherwise.
      */
     public function getPriority($listener, $default = null)

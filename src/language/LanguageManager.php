@@ -331,6 +331,7 @@ class LanguageManager extends StdBase
      * Allow quick access default file translate by `$lang->key`,
      * is equals to `$lang->tl('key')`.
      * @param string $name
+     * @return mixed|string
      */
     public function __get($name)
     {
@@ -342,6 +343,7 @@ class LanguageManager extends StdBase
      * is equals to `$lang->tl('key')`.
      * @param string $name
      * @param array $args
+     * @return mixed|string
      */
     public function __call($name, $args)
     {

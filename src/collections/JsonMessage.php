@@ -6,10 +6,9 @@
  * Time: 上午11:49
  */
 
-namespace inhere\librarys\utils;
+namespace inhere\librarys\collections;
 
-use inhere\librarys\collections\ActiveData;
-use inhere\librarys\exceptions\PropertyException;
+use inhere\exceptions\PropertyException;
 
 /**
  * Class JsonMessage

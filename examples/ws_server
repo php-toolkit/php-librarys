@@ -1,0 +1,29 @@
+#!/bin/env php
+<?php
+/**
+ * Created by PhpStorm.
+ * User: Inhere
+ * Date: 2017/3/23 0023
+ * Time: 23:52
+ * RUN  `php -S 127.0.0.1:9501 -t server`
+ */
+
+defined('STDIN') || define('STDIN', fopen('php://stdin', 'rb'));
+defined('STDOUT') ||define('STDOUT', fopen('php://stdout', 'wb'));
+
+use inhere\librarys\server\WebSocket;
+
+require dirname(__DIR__) . '/../../autoload.php';
+
+require __DIR__ . '/WebSocketHandler.php';
+
+$ws = new WebSocket('', 9501);
+$handler = new WebSocketHandler();
+
+// events
+$ws->on(WebSocket::ON_CONNECT, [$handler, 'onConnect']);
+$ws->on(WebSocket::ON_MESSAGE, [$handler, 'onMessage']);
+$ws->on(WebSocket::ON_CLOSE, [$handler, 'onClose']);
+
+// start
+$ws->start();

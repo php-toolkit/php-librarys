@@ -8,7 +8,7 @@
 
 namespace inhere\librarys\files\compress;
 
-use inhere\librarys\exceptions\InvalidArgumentException;
+use inhere\exceptions\InvalidArgumentException;
 use inhere\librarys\files\FileFinder;
 use inhere\librarys\helpers\ObjectHelper;
 use inhere\librarys\StdBase;

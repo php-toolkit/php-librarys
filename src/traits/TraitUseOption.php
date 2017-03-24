@@ -10,6 +10,8 @@
 
 namespace inhere\librarys\traits;
 
+use inhere\librarys\helpers\ArrayHelper;
+
 /**
  * Class TraitUseOption
  * @package inhere\librarys\traits
@@ -104,7 +106,8 @@ trait TraitUseOption
     public function setOptions($options, $merge = false)
     {
         if ( $merge ) {
-            $this->options = array_merge($this->options, (array)$options);
+            // $this->options = array_merge($this->options, (array)$options);
+            $this->options = ArrayHelper::merge($this->options, (array)$options);
         } else {
             $this->options = $options;
         }

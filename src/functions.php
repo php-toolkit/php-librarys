@@ -21,31 +21,57 @@ if ( !function_exists('html_minify') ) {
     }
 }
 
+if ( !function_exists('value') ) {
+    /**
+     * @param $value
+     * @return mixed
+     *
+     * value(new Class)->xxx
+     */
+    function value($value) {
+        return $value;
+    }
+}
+
+if ( !function_exists('tap') ) {
+    function tap($value, callable $callback) {
+
+        $callback($value);
+
+        return $value;
+    }
+}
+
 if ( !function_exists('cookie') ) {
     /**
      * cookie get or set
      * @param  string|array $name
      * @param  mixed $default
-     * @param array $params
      * @return mixed
      */
-    function cookie($name, $default=null, array $params = [])
+    function cookie($name, $default=null)
     {
         // set, when $name is array
         if ($name && is_array($name) ) {
-            $p = array_merge([
-                'expire'   => null,
-                'path'     => null,
-                'domain'   => null,
-                'secure'   => null,
-                'httponly' => null
-            ],$params);
+            $d = [
+                'value' => '', 'expire' => null, 'path' => null, 'domain' => null, 'secure' => null, 'httpOnly' => null
+            ];
 
-            foreach ($name as $key => $value) {
-                if ($key && $value && is_string($key) && is_scalar($value)) {
-                    $_COOKIE[$key] = $value;
-                    setcookie($key, $value, $p['expire'], $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+            foreach ($name as $n => $value) {
+                if ( !$n || !is_string($n) ) {
+                    continue;
                 }
+
+                if ( is_array($value) ) {
+                    $d = array_merge($d, $value);
+                } elseif (is_scalar($value)) {
+                    $d['value'] = $value;
+                } else {
+                    continue;
+                }
+
+                $_COOKIE[$n] = $d['value'];
+                setcookie($n, $d['value'], $d['expire'], $d['path'], $d['domain'], $d['secure'], $d['httpOnly']);
             }
 
             return $name;

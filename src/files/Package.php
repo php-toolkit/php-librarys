@@ -9,6 +9,7 @@
 namespace inhere\librarys\files;
 
 use inhere\librarys\exceptions\NotFoundException;
+use inhere\librarys\files\compress\AbstractCompressor;
 use inhere\librarys\helpers\ObjectHelper;
 use inhere\librarys\StdBase;
 use ZipArchive;
@@ -18,7 +19,7 @@ use ZipArchive;
  * Class Compress
  * @package inhere\librarys\files
  */
-class Compress extends FileFinder
+class Package
 {
     /**
      * dir path, wait compress ...
@@ -35,6 +36,11 @@ class Compress extends FileFinder
     const TYPE_ZIP = 'zip';
 
     protected $type = 'zip';
+
+    /**
+     * @var AbstractCompressor
+     */
+    protected $compressor;
 
     /**
      * 包含的可发布的 文件 文件扩展匹配 目录
@@ -60,19 +66,12 @@ class Compress extends FileFinder
 //    public function __construct(array $config = [])
 //    {}
 
-    public function reset()
-    {
-        $this->compressedFile = '';
-
-        return parent::reset();
-    }
-
-    public function compress($sourcePath, $compressedFile, $type = self::TYPE_ZIP)
+    public function pack($sourcePath, $saveTo, $type = self::TYPE_ZIP)
     {
 
     }
 
-    public function uncompress()
+    public function unpack($pack, $extractTo)
     {
 
     }

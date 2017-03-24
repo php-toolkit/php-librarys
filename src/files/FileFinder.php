@@ -62,11 +62,11 @@ class FileFinder extends StdBase
     protected $include = [
         'file' => ['README.md'],
         'ext' => [
-            'js','css',
-            'ttf','svg', 'eot', 'woff', 'woff2',
-            'png', 'jpg', 'jpeg', 'gif', 'ico',
+            // 'js','css',
+            // 'ttf','svg', 'eot', 'woff', 'woff2',
+            // 'png', 'jpg', 'jpeg', 'gif', 'ico',
         ],
-        'dir' => [], // ['dist'],
+        'dir' => [], // ['dir'],
     ];
 
     /**

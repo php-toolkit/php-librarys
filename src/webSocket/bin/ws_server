@@ -1,0 +1,65 @@
+#!/bin/env php
+<?php
+/**
+ * Created by PhpStorm.
+ * User: Inhere
+ * Date: 2017/3/23 0023
+ * Time: 23:52
+ * RUN  `server/ws_server`
+ */
+
+require __DIR__ . '/autoload.php';
+
+use inhere\librarys\webSocket\Application;
+use inhere\librarys\webSocket\server\WebSocketServer;
+
+$app = new Application('', 9501);
+
+$app->onOpen(function (WebSocketServer $ws, Application $app) {
+    $ws->send($app->respond([
+        'total' => $ws->count()
+    ]));
+});
+
+$app->onClose(function (WebSocketServer $ws, Application $app) {
+    $ws->send($app->respond([
+        'total' => $ws->count()
+    ]));
+});
+
+$app->setDataParser($app->jsonDataParser());
+
+// commands
+$app->add('test', function ($data, $index, Application $app) {
+
+    return 'hello';
+});
+
+// if use `$app->jsonDataParser()` client send: {"cmd":"login","name":"john","pwd":123456}
+// if use `$app->complexDataParser()` client send: [@login]{"name":"john","pwd":123456}
+$app->add('login', function ($data, $index, Application $app) {
+
+    $name = $data['name'] ?? 'Please input your name.';
+
+    $app->target($index)->respond("hello, $name. you login success");
+
+    // 1. will return text
+    // return "hello, $name";
+
+    // 2. will return formatted json
+    // return $app->fmtJson("hello, $name");
+
+    // 3. will return data type by `Application::isJsonType()`.
+    // `Application::isJsonType() === true`  return formatted json.
+    // `Application::isJsonType() === false` return raw text.
+    // **it is recommended**
+    $app->respond("welcome new friend: $name join us.");
+});
+
+$app->add('logout', function ($data, $index, Application $app) {
+
+    return $app->respond("hello, $name");
+});
+
+// start
+$app->run();

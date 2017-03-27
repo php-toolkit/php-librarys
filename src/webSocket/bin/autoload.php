@@ -12,11 +12,14 @@ defined('STDOUT') ||define('STDOUT', fopen('php://stdout', 'wb'));
 $prefix = 'inhere\\librarys\\webSocket';
 
 spl_autoload_register(function($name) use ($prefix) {
+    if (false === strpos($name, $prefix)) {
+        return false;
+    }
 
+    $name = str_replace($prefix, '', $name);
     $path = str_replace('\\', DIRECTORY_SEPARATOR ,$name);
-    // $path = str_replace('PHPSocketIO', '', $path);
 
-    if(is_file($file = __DIR__ . "/$path.php")) {
+    if(is_file($file = dirname(__DIR__) . "$path.php")) {
         require_once $file;
 
         if( class_exists($name, false) ) {

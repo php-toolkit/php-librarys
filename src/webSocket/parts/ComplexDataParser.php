@@ -6,14 +6,13 @@
  * Time: 9:27
  */
 
-namespace inhere\librarys\webSocket\app;
-
+namespace inhere\librarys\webSocket\parts;
 
 use inhere\librarys\webSocket\Application;
 
 /**
  * Class ComplexDataParser
- * @package inhere\librarys\webSocket\app
+ * @package inhere\librarys\webSocket\parts
  */
 class ComplexDataParser implements IDataParser
 {
@@ -29,6 +28,9 @@ class ComplexDataParser implements IDataParser
         // eg:
         // [@test]hello
         // [@login]{"name":"john","pwd":123456}
+
+        $command = '';
+
         if (preg_match('/^\[@([\w-]+)\](.+)/', $data, $matches)) {
             array_shift($matches);
             [$command, $realData] = $matches;
@@ -36,14 +38,13 @@ class ComplexDataParser implements IDataParser
             // access default command
         } else {
             $realData = $data;
-            $command = $app->getOption('defaultCmd') ?: Application::DEFAULT_CMD;
         }
 
         $app->log("The #{$index} request command: $command, data: $realData");
-        $to = $app->getOption('jsonParseTo') ?: Application::JSON_TO_RAW;
+        $to = $app->getOption('jsonParseTo') ?: self::JSON_TO_RAW;
 
-        if ( $app->isJsonType() && $to !== Application::JSON_TO_RAW ) {
-            $realData = json_decode(trim($realData), $to === Application::JSON_TO_ARRAY);
+        if ( $app->isJsonType() && $to !== self::JSON_TO_RAW ) {
+            $realData = json_decode(trim($realData), $to === self::JSON_TO_ARRAY);
 
             // parse error
             if ( json_last_error() > 0 ) {

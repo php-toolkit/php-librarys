@@ -16,28 +16,28 @@ use inhere\librarys\webSocket\server\WebSocketServer;
 $app = new Application('', 9501);
 
 $app->onOpen(function (WebSocketServer $ws, Application $app) {
-    $ws->send($app->respond([
+    $app->respond([
         'total' => $ws->count()
-    ]));
+    ]);
 });
 
 $app->onClose(function (WebSocketServer $ws, Application $app) {
-    $ws->send($app->respond([
+    $app->respond([
         'total' => $ws->count()
-    ]));
+    ]);
 });
 
-$app->setDataParser($app->jsonDataParser());
+$rootHandler = $app->route('/', new \inhere\librarys\webSocket\parts\RootHandler());
 
 // commands
-$app->add('test', function ($data, $index, Application $app) {
+$rootHandler->add('test', function ($data, $index, Application $app) {
 
     return 'hello';
 });
 
 // if use `$app->jsonDataParser()` client send: {"cmd":"login","name":"john","pwd":123456}
 // if use `$app->complexDataParser()` client send: [@login]{"name":"john","pwd":123456}
-$app->add('login', function ($data, $index, Application $app) {
+$rootHandler->add('login', function ($data, $index, Application $app) {
 
     $name = $data['name'] ?? 'Please input your name.';
 
@@ -56,9 +56,10 @@ $app->add('login', function ($data, $index, Application $app) {
     $app->respond("welcome new friend: $name join us.");
 });
 
-$app->add('logout', function ($data, $index, Application $app) {
+$rootHandler->add('logout', function ($data, $index, Application $app) {
+    $user = $app->getUser($index);
 
-    return $app->respond("hello, $name");
+    return $app->respond("goodbye, {$user['name']}");
 });
 
 // start

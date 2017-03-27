@@ -6,17 +6,22 @@
  * Time: 15:35
  */
 
-namespace inhere\librarys\webSocket\app;
+namespace inhere\librarys\webSocket\parts;
 
 use inhere\librarys\webSocket\Application;
 
 /**
  * Interface IDataParser
- * @package inhere\librarys\webSocket\app
+ * @package inhere\librarys\webSocket\parts
  *
  */
 interface IDataParser
 {
+    //
+    const JSON_TO_RAW = 1;
+    const JSON_TO_ARRAY = 2;
+    const JSON_TO_OBJECT = 3;
+
     /**
      * @param string $data
      * @param int $index

@@ -3,18 +3,19 @@
 namespace inhere\librarys\io;
 
 /**
- *
+ * Class Input
+ * @package inhere\librarys\io
  */
 class Input
 {
-    protected $bodyParsed = false;
+    protected $parsedBody = false;
 
     /**
      * @param null $name
      * @param mixed $default
      * @return mixed
      */
-    public function get($name=null, $default = null)
+    public function param($name=null, $default = null)
     {
         if (null === $name) {
             return $_GET + $this->getParsedBody();
@@ -28,7 +29,7 @@ class Input
      * @param mixed $default
      * @return mixed
      */
-    public function query($name=null, $default = null)
+    public function get($name=null, $default = null)
     {
         if (null === $name) {
             return $_GET;
@@ -58,20 +59,20 @@ class Input
      */
     public function getParsedBody()
     {
-        if ($this->bodyParsed === false) {
+        if ($this->parsedBody === false) {
             // post data is json
             if (
                 isset($_SERVER['HTTP_CONTENT_TYPE']) &&
                 ($type = $_SERVER['HTTP_CONTENT_TYPE']) &&
                 strpos($type, '/json') > 0
             ) {
-                $this->bodyParsed = json_decode(file_get_contents('php://input'), true);
+                $this->parsedBody = json_decode(file_get_contents('php://input'), true);
             } else {
-                $this->bodyParsed = &$_POST;
+                $this->parsedBody = &$_POST;
             }
         }
 
-        return $this->bodyParsed;
+        return $this->parsedBody;
     }
 
     /**
@@ -95,10 +96,10 @@ class Input
 
         foreach ($needKeys as $key => $val) {
             if ( is_int($key) ) {
-                $needed[$val] = $this->get($val);
+                $needed[$val] = $this->param($val);
             } else {
                 $type = gettype($val);
-                $value = $this->get($key, $val);
+                $value = $this->param($key, $val);
 
                 if( $type === 'integer' ) {
                     $value = (int)$value;

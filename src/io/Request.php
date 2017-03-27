@@ -6,7 +6,7 @@
  * Time: 18:02
  */
 
-namespace inhere\librarys\webSocket\app;
+namespace inhere\librarys\io;
 
 /**
  * Class Request
@@ -28,39 +28,39 @@ class Request
     /**
      * @var string
      */
-    private $method = 'GET';
+    private $method;
 
     /**
      * eg: site.com 127.0.0.1:9501
      * @var string
      */
-    private $host = '';
+    private $host;
 
     /**
      * eg: /home
      * @var string
      */
-    private $path = '/';
+    private $path;
 
     /**
      * @var string
      */
-    private $protocol = 'HTTP';
+    private $protocol;
 
     /**
      * @var string
      */
-    private $protocolVersion = '1.1';
+    private $protocolVersion;
 
     /**
      * @var array
      */
-    private $headers = [];
+    private $headers;
 
     /**
      * @var string
      */
-    private $body = '';
+    private $body;
 
     /**
      * Request constructor.
@@ -74,13 +74,13 @@ class Request
      */
     public function __construct(string $host = '', string $method = 'GET', string $path = '/', string $protocol = 'HTTP', string $protocolVersion = '1.1', array $headers = [], string $body = '')
     {
-        $this->method = $method;
+        $this->method = $method ?: 'GET';
         $this->host = $host;
-        $this->path = $path;
-        $this->protocol = $protocol;
-        $this->protocolVersion = $protocolVersion;
+        $this->path = $path ?: '/';
+        $this->protocol = $protocol ?: 'HTTP';
+        $this->protocolVersion = $protocolVersion ?: '1.1';
         $this->headers = $headers;
-        $this->body = $body;
+        $this->body = $body ?: '';
     }
 
     /**

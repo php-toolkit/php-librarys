@@ -8,8 +8,9 @@
 
 namespace inhere\librarys\webSocket;
 
-use inhere\librarys\webSocket\app\Request;
-use inhere\librarys\webSocket\app\IRouteHandler;
+use inhere\librarys\webSocket\parts\Request;
+use inhere\librarys\webSocket\parts\IRouteHandler;
+use inhere\librarys\webSocket\parts\RootHandler;
 use inhere\librarys\webSocket\server\WebSocketServer;
 
 /**
@@ -44,6 +45,14 @@ use inhere\librarys\webSocket\server\WebSocketServer;
  */
 class Application
 {
+    // custom ws handler position
+    const OPEN_HANDLER = 0;
+    const MESSAGE_HANDLER = 1;
+    const CLOSE_HANDLER = 2;
+    const ERROR_HANDLER = 3;
+    // route not found
+    const ROUTE_NOT_FOUND = 4;
+
     const PING = 'ping';
     const NOT_FOUND = 'notFound';
     const PARSE_ERROR = 'error';
@@ -51,34 +60,27 @@ class Application
     const DATA_JSON = 'json';
     const DATA_TEXT = 'text';
 
-    //
-    const JSON_TO_RAW = 1;
-    const JSON_TO_ARRAY = 2;
-    const JSON_TO_OBJECT = 3;
-
-    // default cmd key in the request json data.
-    const DEFAULT_CMD_KEY = 'cmd';
-
-    // default command name, if request data not define command name.
-    const DEFAULT_CMD = 'index';
+    /**
+     * default is '0.0.0.0'
+     * @var string
+     */
+    private $host;
+    /**
+     * default is 8080
+     * @var int
+     */
+    private $port;
 
     /**
      * @var WebSocketServer
      */
     private $ws;
 
-    private $host = '0.0.0.0';
-    private $port = 8080;
-
-    private $openHandler;
-    private $messageHandler;
-    private $closeHandler;
-    private $errorHandler;
-
     /**
-     * @var callable
+     * save four custom ws handler
+     * @var \SplFixedArray
      */
-    private $_dataParser;
+    private $wsHandlers;
 
     /**
      * @var array
@@ -91,18 +93,16 @@ class Application
     protected $options = [
         // request and response data type: json text
         'dataType' => 'json',
-
-        // It is valid when `'dataType' => 'json'`, allow: 1 raw 2 array 3 object
-        'jsonParseTo'    => self::JSON_TO_ARRAY,
-
-        'defaultCmd'     => self::DEFAULT_CMD,
-        'cmdKey'         => self::DEFAULT_CMD_KEY,
-
-        // allowed request Origins. e.g: [ 'localhost', 'site.com' ]
-        'allowedOrigins' => [],
     ];
 
-    protected $routes;
+    /**
+     * @var IRouteHandler[]
+     * [
+     *  // path => IRouteHandler,
+     *  '/'  => RootHandler,
+     * ]
+     */
+    private $routesHandlers;
 
     /**
      * @var Request
@@ -118,9 +118,11 @@ class Application
      */
     public function __construct(string $host = '0.0.0.0', $port = 8080, array $options = [])
     {
-        $this->host = $host;
-        $this->port = $port;
+        $this->host = $host ?: '0.0.0.0';
+        $this->port = $port ?: 8080;
         $this->options = array_merge($this->options, $options);
+
+        $this->wsHandlers = new \SplFixedArray(5);
 
         $this->routes = new \SplObjectStorage();
     }
@@ -139,14 +141,9 @@ class Application
         $this->ws->on(WebSocketServer::ON_MESSAGE, [$this, 'handleMessage']);
         $this->ws->on(WebSocketServer::ON_CLOSE, [$this, 'handleClose']);
 
-        $this->add('ping', [$this, 'pingHandler']);
-
-        if (!$this->hasCommand('error')) {
-            $this->add('error', [$this, 'parseErrorHandler']);
-        }
-
-        if (!$this->hasCommand('notFound')) {
-            $this->add('notFound', [$this, 'notFoundHandler']);
+        // if not register route, add root path route handler
+        if ( 0 === count($this->routesHandlers) ) {
+            $this->route('/', new RootHandler);
         }
 
         $this->ws->start();
@@ -204,18 +201,24 @@ EOF;
     /**
      * @param WebSocketServer $ws
      * @param string $rawData
+     * @param int $index
      */
-    public function handleOpen(WebSocketServer $ws, string $rawData)
+    public function handleOpen(WebSocketServer $ws, string $rawData, int $index)
     {
         $this->log('A new user connection. Now, connected user count: ' . $ws->count());
         // $this->log("SERVER Data: \n" . var_export($_SERVER, 1), 'info');
         $this->log( "Raw data: \n". $rawData);
 
-        $this->request = Request::makeByParseData($rawData);
-        // $this->log("Parsed data:\n" . var_export($this->request,1));
+        $this->request = $request = Request::makeByParseData($rawData);
+        $this->log("Parsed data:\n" . var_export($request,1));
 
-        if ( $openHandler = $this->openHandler ) {
+        if ( $openHandler = $this->wsHandlers[self::OPEN_HANDLER] ) {
+            // $openHandler($request, $this);
             $openHandler($ws, $this);
+        }
+
+        if ( $rHandler = $this->activeRouteHandler($request, $index) ) {
+            $rHandler->onOpen($request);
         }
     }
 
@@ -226,9 +229,11 @@ EOF;
     {
         $this->log('A user disconnected. Now, connected user count: ' . $ws->count());
 
-        if ( $closeHandler = $this->closeHandler ) {
+        if ( $closeHandler = $this->wsHandlers[self::CLOSE_HANDLER] ) {
             $closeHandler($ws, $this);
         }
+
+        $this->getRouteHandler()->onClose($this->request);
     }
 
     /**
@@ -239,9 +244,11 @@ EOF;
     {
         $this->log('Accepts a connection on a socket error: ' . $msg, 'error');
 
-        if ( $closeHandler = $this->closeHandler ) {
-            $closeHandler($ws, $this);
+        if ( $errHandler = $this->wsHandlers[self::ERROR_HANDLER] ) {
+            $errHandler($ws, $this);
         }
+
+        $this->getRouteHandler()->onError($this, $msg);
     }
 
     /**
@@ -256,13 +263,14 @@ EOF;
         $this->log("Received user [$index] sent message. MESSAGE: $data, LENGTH: " . mb_strlen($data));
 
         // call custom message handler
-        if ( $messageHandler = $this->messageHandler ) {
-            $goon = $messageHandler($ws, $this);
+        if ( $msgHandler = $this->wsHandlers[self::MESSAGE_HANDLER] ) {
+            $goon = $msgHandler($ws, $this);
         }
 
         // go on handle
         if ( false !== $goon ) {
-            $result = $this->dispatch($data, $index);
+            $rHandler = $this->getRouteHandler();
+            $result = $rHandler->dispatch($data, $index);
 
             if ( $result && is_string($result) ) {
                 $this->log("Response message: $result");
@@ -278,7 +286,7 @@ EOF;
      */
     public function onOpen(callable $openHandler)
     {
-        $this->openHandler = $openHandler;
+        $this->wsHandlers[self::OPEN_HANDLER] = $openHandler;
     }
 
     /**
@@ -286,7 +294,7 @@ EOF;
      */
     public function onClose(callable $closeHandler)
     {
-        $this->closeHandler = $closeHandler;
+        $this->wsHandlers[self::CLOSE_HANDLER] = $closeHandler;
     }
 
     /**
@@ -294,7 +302,7 @@ EOF;
      */
     public function onError(callable $errorHandler)
     {
-        $this->errorHandler = $errorHandler;
+        $this->wsHandlers[self::ERROR_HANDLER] = $errorHandler;
     }
 
     /**
@@ -302,93 +310,87 @@ EOF;
      */
     public function onMessage(callable $messageHandler)
     {
-        $this->messageHandler = $messageHandler;
+        $this->wsHandlers[self::MESSAGE_HANDLER] = $messageHandler;
     }
 
-    public function route($path, IRouteHandler $routeHandler)
+    public function onRouteNotFound($index, $path)
     {
-        // $path = trim($path, '/');
+        $this->target($index)->respond('', "you request route path [$path] not found!");
+
+        $this->ws->close($index);
+
+        return null;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+    /// handle request route
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * register a route and it's handler
+     * @param string        $path           route path
+     * @param IRouteHandler $routeHandler   the route path handler
+     * @param bool          $replace        replace exists's route
+     * @return IRouteHandler
+     */
+    public function route(string $path, IRouteHandler $routeHandler, $replace = false)
+    {
+        $path = trim($path) ?: '/';
+        $pattern = '/^\/[a-zA-Z][\w-]+$/';
+
+        if ( $path !== '/' && preg_match($pattern, $path) ) {
+            throw new \InvalidArgumentException("The route path format must be match: $pattern");
+        }
+
+        if ( $this->hasRoute($path) && !$replace ) {
+            throw new \InvalidArgumentException("The route path [$path] have been registered!");
+        }
+
+        $this->routesHandlers[$path] = $routeHandler;
+
+        return $routeHandler;
     }
 
     /**
-     * parse and dispatch command
-     * @param string $data
+     * @param Request $request
      * @param int $index
-     * @return mixed
+     * @return IRouteHandler|null
      */
-    public function dispatch(string $data, int $index)
+    protected function activeRouteHandler(Request $request, int $index)
     {
-        $dataParser = $this->getDataParser();
+        $path = $request->getPath();
 
-        // parse: get command and real data
-        if ( $matches = $dataParser($data, $index, $this) ) {
-            [$command, $data] = $matches;
+        if ( !$this->hasRoute($path) ) {
+            $this->log("The route handler not exists for the path: $path", 'error');
 
-            // not found
-            if ( !$this->hasCommand($command) ) {
-                $this->log("The #{$index} request command: $command not found");
-                $data = $command;
-                $command = self::NOT_FOUND;
+            // call custom route-not-found handler
+            if ( $rnfHandler = $this->wsHandlers[self::MESSAGE_HANDLER] ) {
+                return $rnfHandler($index, $path, $this);
             }
-        } else {
-            $command = self::PARSE_ERROR;
-            $this->log("The #{$index} request data parse failed! Data: $data", 'error');
+
+            return $this->onRouteNotFound($index, $path);
         }
 
-        $handler = $this->getHandler($command);
+        $rHandler = $this->routesHandlers[$path];
+        $rHandler->setApp($this);
+        $rHandler->setRequest($request);
 
-        return call_user_func_array($handler, [$data, $index, $this]);
+        return $rHandler;
     }
 
     /**
-     * register a command handler
-     * @param string $command
-     * @param callable $handler
-     * @return self
+     * @param string $path
+     * @return IRouteHandler
      */
-    public function register(string $command, callable $handler)
+    public function getRouteHandler(string $path = ''): IRouteHandler
     {
-        return $this->add($command, $handler);
-    }
-    public function add(string $command, $handler)
-    {
-        if ( $command && preg_match('/^[a-z][\w-]+$/', $command)) {
-            $this->handlers[$command] = $handler;
+        $path = $path ?: $this->request->getPath();
+
+        if ( !$this->hasRoute($path) ) {
+            throw new \RuntimeException("The route handler not exists for the path: $path");
         }
 
-        return $this;
-    }
-
-    /**
-     * @param $data
-     * @param int $index
-     * @return int
-     */
-    public function pingHandler(string $data, int $index)
-    {
-        return $this->target($index)->respond($data . '+PONG');
-    }
-
-    /**
-     * @param $data
-     * @param int $index
-     * @return int
-     */
-    public function parseErrorHandler(string $data, int $index)
-    {
-        return $this->target($index)->respond($data, 'you send data format is error!', -200);
-    }
-
-    /**
-     * @param string $command
-     * @param int $index
-     * @return int
-     */
-    public function notFoundHandler(string $command, int $index)
-    {
-        $msg = 'You request command [' . $command . '] not found.';
-
-        return $this->target($index)->respond('', $msg, -404);
+        return $this->routesHandlers[$path];
     }
 
     /**
@@ -405,139 +407,6 @@ EOF;
             'code' => (int)$code,
             'time' => time(),
         ]);
-    }
-
-    /**
-     * @return callable
-     */
-    public function getDataParser(): callable
-    {
-        // if not set, use default parser.
-        return $this->_dataParser ?: $this->complexDataParser();
-    }
-
-    public function complexDataParser()
-    {
-        return function ($data, $index) {
-            // default format: [@command]data
-            // eg:
-            // [@test]hello
-            // [@login]{"name":"john","pwd":123456}
-            if (preg_match('/^\[@([\w-]+)\](.+)/', $data, $matches)) {
-                array_shift($matches);
-                [$command, $realData] = $matches;
-
-                // access default command
-            } else {
-                $realData = $data;
-                $command = $this->getOption('defaultCmd') ?: Application::DEFAULT_CMD;
-            }
-
-            $this->log("The #{$index} request command: $command, data: $realData");
-            $to = $this->getOption('jsonParseTo') ?: Application::JSON_TO_RAW;
-
-            if ( $this->isJsonType() && $to !== self::JSON_TO_RAW ) {
-                $realData = json_decode(trim($realData), $to === self::JSON_TO_ARRAY);
-
-                // parse error
-                if ( json_last_error() > 0 ) {
-                    // revert
-                    $realData = trim($matches[2]);
-                    $command = self::PARSE_ERROR;
-                    $errMsg = json_last_error_msg();
-
-                    $this->log("Request data parse to json failed! MSG: {$errMsg}, JSON: {$realData}", 'error');
-                }
-            }
-
-            return [ $command, $realData ];
-        };
-    }
-
-    public function jsonDataParser()
-    {
-        return function($data, $index, self $app) {
-            // json parser
-            $temp = $data;
-            $to = $app->getOption('jsonParseTo') ?: Application::JSON_TO_RAW;
-            $cmdKey = $app->getOption('cmdKey') ?: Application::DEFAULT_CMD_KEY;
-            $command = $app->getOption('defaultCmd') ?: Application::DEFAULT_CMD;
-
-            $this->log("The #{$index} request command: $command, data: $data");
-
-            $data = json_decode(trim($data), $toAssoc = $to === Application::JSON_TO_ARRAY);
-
-            // parse error
-            if ( json_last_error() > 0 ) {
-                // revert
-                $data = $temp;
-                $command = Application::PARSE_ERROR;
-                $errMsg = json_last_error_msg();
-
-                $app->log("The #{$index} request data parse to json failed! MSG: $errMsg Data: {$temp}", 'error');
-            } elseif ($toAssoc) {
-                if ( isset($data[$cmdKey]) && $data[$cmdKey]) {
-                    $command = $data[$cmdKey];
-                    unset($data[$cmdKey]);
-                }
-            } elseif ($to === Application::JSON_TO_OBJECT) {
-                if ( isset($data->{$cmdKey}) && $data->{$cmdKey}) {
-                    $command = $data->{$cmdKey};
-                    unset($data->{$cmdKey});
-                }
-            } else {
-                // revert
-                $data = $temp;
-            }
-
-            return [$command, $data];
-        };
-    }
-
-    /**
-     * @param callable $dataParser
-     */
-    public function setDataParser(callable $dataParser)
-    {
-        $this->_dataParser = $dataParser;
-    }
-
-    /**
-     * @param string $command
-     * @return bool
-     */
-    public function hasCommand(string $command): bool
-    {
-        return array_key_exists($command, $this->handlers);
-    }
-
-    /**
-     * @return array
-     */
-    public function getCommands(): array
-    {
-        return array_keys($this->handlers);
-    }
-
-    /**
-     * @param string $command
-     * @return callable|null
-     */
-    public function getHandler(string $command)//: ?callable
-    {
-        if ( !$this->hasCommand($command) ) {
-            return null;
-        }
-
-        return $this->handlers[$command];
-    }
-
-    /**
-     * @return array
-     */
-    public function getHandlers(): array
-    {
-        return $this->handlers;
     }
 
     /**
@@ -578,7 +447,7 @@ EOF;
     /// response
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    private $sender = null;
+    private $sender;
     private $targets = [];
     private $excepted = [];
 
@@ -591,7 +460,7 @@ EOF;
     }
 
     /**
-     * @param $indexes
+     * @param int|array $indexes
      * @return $this
      */
     public function target($indexes)
@@ -617,7 +486,7 @@ EOF;
     }
 
     /**
-     * @param $data
+     * @param mixed $data
      * @param string $msg
      * @param int $code
      * @return int
@@ -633,6 +502,11 @@ EOF;
                 'time' => time(),
             ]);
         } else {
+
+            if ( $data && is_array($data) ) {
+                $data =json_encode($data);
+            }
+
             // text
             $data = $data ?: $msg;
         }
@@ -675,6 +549,37 @@ EOF;
     public function userLogout($index, $data)
     {
 
+    }
+
+    public function hasRoute($path)
+    {
+        return isset($this->routesHandlers[$path]);
+    }
+
+    /**
+     * @return array
+     */
+    public function getRoutes(): array
+    {
+        return array_keys($this->routesHandlers);
+    }
+
+    /**
+     * @return array
+     */
+    public function getRoutesHandlers(): array
+    {
+        return $this->routesHandlers;
+    }
+
+    /**
+     * @param array $routesHandlers
+     */
+    public function setRoutesHandlers(array $routesHandlers)
+    {
+        foreach ($routesHandlers as $route => $handler) {
+            $this->route($route, $handler);
+        }
     }
 
     /**

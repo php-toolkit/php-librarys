@@ -6,17 +6,25 @@
  * Time: 9:27
  */
 
-namespace inhere\librarys\webSocket\app;
+namespace inhere\librarys\webSocket\parts;
 
 
 use inhere\librarys\webSocket\Application;
 
 /**
  * Class JsonDataParser
- * @package inhere\librarys\webSocket\app
+ * @package inhere\librarys\webSocket\parts
  */
 class JsonDataParser implements IDataParser
 {
+    // default cmd key in the request json data.
+    const DEFAULT_CMD_KEY = 'cmd';
+
+    /**
+     * @var string
+     */
+    public $cmdKey = 'cmd';
+
     /**
      * @param string $data
      * @param int $index
@@ -28,7 +36,7 @@ class JsonDataParser implements IDataParser
         // json parser
         $temp = $data;
         $to = $app->getOption('jsonParseTo') ?: Application::JSON_TO_RAW;
-        $cmdKey = $app->getOption('cmdKey') ?: Application::DEFAULT_CMD_KEY;
+        $cmdKey = $this->cmdKey ?: self::DEFAULT_CMD_KEY;
         $command = $app->getOption('defaultCmd') ?: Application::DEFAULT_CMD;
 
         $app->log("The #{$index} request command: $command, data: $data");

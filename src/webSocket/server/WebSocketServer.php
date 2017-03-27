@@ -178,9 +178,17 @@ class WebSocketServer
         $this->handed[$index] = false;
     }
 
-    // 关闭一个连接
-    public function close($accept, $index)
+    /**
+     * 关闭一个连接
+     * @param $index
+     * @param null|resource $accept
+     */
+    public function close($index, $accept = null)
     {
+        if (null === $accept) {
+            $accept = $this->accepted[$index];
+        }
+
         // $index = array_search($accept, $this->accepted, true);
         socket_close($accept);
 

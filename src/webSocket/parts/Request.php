@@ -20,6 +20,7 @@ namespace inhere\librarys\webSocket\parts;
  * @property string $protocolVersion
  *
  * @property array $headers
+ * @property array $cookies
  *
  * @property string $body
  */
@@ -58,6 +59,11 @@ class Request
     private $headers;
 
     /**
+     * @var array
+     */
+    private $cookies;
+
+    /**
      * @var string
      */
     private $body;
@@ -71,15 +77,19 @@ class Request
      * @param string $protocolVersion
      * @param array $headers
      * @param string $body
+     * @param array $cookies
      */
-    public function __construct(string $host = '', string $method = 'GET', string $path = '/', string $protocol = 'HTTP', string $protocolVersion = '1.1', array $headers = [], string $body = '')
-    {
+    public function __construct(
+        string $host = '', string $method = 'GET', string $path = '/', string $protocol = 'HTTP',
+        string $protocolVersion = '1.1', array $headers = [], array $cookies = [], string $body = ''
+    ) {
         $this->method = $method ?: 'GET';
-        $this->host = $host;
+        $this->host = $host ?: '';
         $this->path = $path ?: '/';
         $this->protocol = $protocol ?: 'HTTP';
         $this->protocolVersion = $protocolVersion ?: '1.1';
         $this->headers = $headers;
+        $this->cookies = $cookies;
         $this->body = $body ?: '';
     }
 
@@ -123,13 +133,53 @@ class Request
             $headers[$name] = $value;
         }
 
+        $cookies = [];
+        if (isset($headers['Cookie'])) {
+            $cookieData = $headers['Cookie'];
+            unset($headers['Cookie']);
+            $cookies = self::parseHeaderCookie($cookieData);
+        }
+
         $host = '';
         if (isset($headers['Host'])) {
             $host = $headers['Host'];
             unset($headers['Host']);
         }
 
-        return new self($host, $method, $path, $protocol, $protocolVersion, $headers, $body);
+        return new self($host, $method, $path, $protocol, $protocolVersion, $headers, $cookies, $body);
+    }
+
+    /**
+     * Parse HTTP request `Cookie:` header and extract
+     * into a PHP associative array.
+     * @param  string $cookieData The raw HTTP request `Cookie:` header
+     * @return array Associative array of cookie names and values
+     * @throws \InvalidArgumentException if the cookie data cannot be parsed
+     */
+    public static function parseHeaderCookie($cookieData)
+    {
+        if (is_string($cookieData) === false) {
+            throw new \InvalidArgumentException('Cannot parse Cookie data. Header value must be a string.');
+        }
+
+        $cookieData = rtrim($cookieData, "\r\n");
+        $pieces = preg_split('@[;]\s*@', $cookieData);
+        $cookies = [];
+
+        foreach ($pieces as $cookie) {
+            $cookie = explode('=', $cookie, 2);
+
+            if (count($cookie) === 2) {
+                $key = urldecode($cookie[0]);
+                $value = urldecode($cookie[1]);
+
+                if (!isset($cookies[$key])) {
+                    $cookies[$key] = $value;
+                }
+            }
+        }
+
+        return $cookies;
     }
 
     /**

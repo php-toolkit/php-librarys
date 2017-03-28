@@ -8,6 +8,9 @@
 
 namespace inhere\librarys\webSocket\server;
 
+use inhere\librarys\webSocket\parts\Cookies;
+use inhere\librarys\webSocket\parts\Response;
+
 /**
  * Class WebSocketServer
  *
@@ -70,18 +73,11 @@ class WebSocketServer
     ];
 
     /**
-     * supported Events
-     * @var array
+     * 5个事件(@see $supportedEvents)的回调函数
+     * 分别在新用户连接、连接成功、有消息到达、用户断开、发生错误时触发
+     * @var \SplFixedArray
      */
-    protected $supportedEvents = [
-        'handshake', 'open', 'message', 'close', 'error'
-    ];
-
-    /**
-     * 4个事件(@see $supportedEvents)的回调函数，分别在新用户连接、有消息到达、用户断开、发生错误时触发
-     * @var array
-     */
-    private $callbacks = [];
+    private $callbacks;
 
     /**
      * 连接的客户端列表
@@ -93,12 +89,6 @@ class WebSocketServer
     public $clients = [];
 
     /**
-     * 循环连接池
-     * @var array
-     */
-    private $cycle = [];
-
-    /**
      * 连接的客户端握手状态列表
      * @var array
      * [
@@ -106,7 +96,6 @@ class WebSocketServer
      * ]
      */
     private $hands = [];
-
 
     /**
      * WebSocket constructor.
@@ -117,13 +106,13 @@ class WebSocketServer
     public function __construct(string $host = '0.0.0.0', int $port = 80, array $settings = array())
     {
         if ( !extension_loaded('sockets') ) {
-            throw new \InvalidArgumentException("the extension [sockets] is required for run the server.");
+            throw new \InvalidArgumentException('the extension [sockets] is required for run the server.');
         }
 
         $this->host = $host ?: self::DEFAULT_HOST;
         $this->port = $port ?: self::DEFAULT_PORT;
 
-        $this->wsHandlers = new \SplFixedArray( count($this->supportedEvents) );
+        $this->callbacks = new \SplFixedArray( count($this->getSupportedEvents()) );
         $this->setSettings($settings);
     }
 
@@ -134,85 +123,132 @@ class WebSocketServer
     protected function beforeStart()
     {
         if ( count($this->callbacks) < 1 ) {
-            $sup = implode(',', $this->supportedEvents);
+            $sup = implode(',', $this->getSupportedEvents());
             $this->print('[ERROR] Please register event handle callback before start. supported events: ' . $sup, true, -500);
         }
     }
 
-    // 挂起socket
+    /**
+     * create and prepare socket resource
+     */
+    protected function prepareSocket()
+    {
+        // reset
+        socket_clear_error();
+        $this->clients = $this->hands = [];
+
+        // AF_INET: IPv4 网络协议。TCP 和 UDP 都可使用此协议。
+        // AF_UNIX: 使用 Unix 套接字. 例如 /tmp/my.sock
+        // more see http://php.net/manual/en/function.socket-create.php
+        $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+
+        if ( !is_resource($this->socket) ) {
+            $this->print('[ERROR] Unable to create socket: '. $this->getSocketError(), true, socket_last_error());
+        }
+
+        // 允许使用本地地址 set the option to reuse the port
+        socket_set_option($this->socket, SOL_SOCKET, SO_REUSEADDR, TRUE);
+        // socket_set_option($this->socket,SOL_SOCKET, SO_RCVTIMEO, ['sec' =>0, 'usec' =>100]);
+
+        // 给套接字绑定名字
+        socket_bind($this->socket, $this->getHost(), $this->getPort());
+
+        $max = $this->getSetting('max_conn');
+
+        // 监听套接字上的连接. 最多允许 $max 个连接，超过的客户端连接会返回 WSAECONNREFUSED 错误
+        socket_listen($this->socket, $max);
+
+        $this->log("Started WebSocket server on {$this->host}:{$this->port} (max allow connection: $max)");
+    }
+
+    /**
+     * start server
+     */
     public function start()
     {
         $this->beforeStart();
 
-        // AF_INET: IPv4 网络协议。TCP 和 UDP 都可使用此协议。
-        // more see http://php.net/manual/en/function.socket-create.php
-        $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-
-        // 允许使用本地地址
-        socket_set_option($this->socket, SOL_SOCKET, SO_REUSEADDR, TRUE);
-        socket_bind($this->socket, $this->getHost(), $this->getPort());
-
-        $max = $this->getSetting('max_conn');
-        $this->log("Started WebSocket server on {$this->host}:{$this->port} (max allow connection: $max)");
-
-        // 最多 $this->maxUser 个人连接，超过的客户端连接会返回 WSAECONNREFUSED 错误
-        socket_listen($this->socket, $max);
+        // create and prepare
+        $this->prepareSocket();
 
         // interval time
         $setTime = (int)$this->getSetting('sleep_ms', 800);
         $sleepTime = $setTime > 50 ? $setTime : 800;
-        $sleepTime = $sleepTime* 1000; // ms -> us
+        $sleepTime *= 1000; // ms -> us
 
-        while(TRUE) {
-            $this->cycle = $this->clients;
-            $this->cycle[] = $this->socket;
+        while(true) {
+            // copy， 防止 $this->clients 的变动被 socket_select() 接收到
+            $read = $this->clients;
+            $read[] = $this->socket;
 
-            // 阻塞用，有新连接时才会结束
-            socket_select($this->cycle, $write, $except, null);
-
-            foreach ($this->cycle as $k => $v) {
-
-                // 每次循环检查到 $this->socket 时，都会用 socket_accept() 去检查是否有新的连接进入，有就加入连接列表
-                if($v === $this->socket) {
-                    // Accepts a connection on a socket
-                    if ( false === ($sock = socket_accept($v)) ) {
-                        $msg = socket_strerror(socket_last_error());
-
-                        $this->trigger(self::ON_ERROR, [$msg, $this]);
-                        continue;
-                    }
-
-                    // 如果请求来自监听端口那个 socket，则创建一个新的 socket 用于通信
-                    $this->addClient($sock);
-                    continue;
-                }
-
-                $index = array_search($v, $this->clients, true);
-
-                // 不在已经记录的client列表中
-                if ($index === false) {
-                    continue;
-                }
-
-                // 没消息的socket就跳过
-                if (!@socket_recv($v, $data, 1024, 0) || !$data) {
-                    $this->close($v, $index);
-                    continue;
-                }
-
-                // 是否已经握手
-                if ( !$this->hands[$index] ) {
-                    $this->upgrade($v, $data, $index);
-                    continue;
-                }
-
-                // call on message handler
-                $this->trigger(self::ON_MESSAGE, [$this->decode($data), $this, $index]);
+            // 会监控 $reads 中的 socket 是否有变动
+            // 将会阻塞程序执行，直到有新连接时才会继续向下执行
+            if ( false === socket_select($read, $write, $except, 0) ) {
+                $this->log('socket_select() failed, reason: ' . $this->getSocketError(), 'error');
+                continue;
             }
 
-            // sleep(1);
-            usleep($sleepTime);
+            // handle ...
+            foreach ($read as $k => $sock) {
+                $this->handleSocket($sock, $k);
+            }
+
+             sleep(1);
+            //usleep($sleepTime);
         }
+    }
+
+    /**
+     * @param resource $sock
+     * @param int $k
+     * @return bool
+     */
+    protected function handleSocket($sock, $k)
+    {
+        // 每次循环检查到 $this->socket 时，都会用 socket_accept() 去检查是否有新的连接进入，有就加入连接列表
+        if($sock === $this->socket) {
+            // 从已经监控的socket中接受新的客户端请求
+            if ( false === ($newSock = socket_accept($sock)) ) {
+                $msg = $this->getSocketError();
+                $this->log($msg);
+                $this->trigger(self::ON_ERROR, [$msg, $this]);
+                return false;
+            }
+
+            // 将接受到的 $newSock 加入到客户端列表
+            $this->addClient($newSock);
+            return true;
+        }
+
+        // 不在已经记录的client列表中
+        if (false === ($index = array_search($sock, $this->clients, true))) {
+            $this->log(__LINE__ . ', count: ' . $this->count() );
+            return false;
+        }
+
+        $data = null;
+
+        // socket_recv — 从已连接的socket接收数据， 这里长度最多为 1024 字节的数据将被接收。
+        // 接收失败 || 没消息的socket 就关闭跳过处理
+        if (false === socket_recv($sock, $data, 1024, 0) || !$data) {
+            $this->log("Failed to receive data from #$index client or not received data, will close socket connection.");
+            $this->close($index, $sock);
+            return false;
+        }
+
+        // 是否已经握手
+        if ( !$this->hands[$index] ) {
+            $this->log("Ready to shake hands with the #$index client");
+            $this->handshake($sock, $data, $index);
+            return true;
+        }
+
+        $this->log("Received a message from $index, Data: $data");
+
+        // call on message handler
+        $this->trigger(self::ON_MESSAGE, [$this, $this->decode($data), $index]);
+
+        return true;
     }
 
     /**
@@ -221,24 +257,42 @@ class WebSocketServer
      */
     private function addClient($socket)
     {
+        $this->hands[] = false;
         $this->clients[] = $socket;
+
+        $this->log('add new client, count: ' . $this->count(), 'info', $this->hands );
 
 //        $index = array_keys($this->clients);
 //        $index = end($index);
-        $index = count($this->clients) - 1;
+//        $this->hands[$index] = false;
+    }
 
-        $this->hands[$index] = false;
+    /**
+     * alias method of the `close()`
+     * @param int $index
+     * @param null|resource $socket
+     * @return mixed
+     */
+    public function closeConnection(int $index, $socket = null)
+    {
+        return $this->close($index, $socket);
     }
 
     /**
      * 关闭一个连接
-     * @param $index
+     * @param int $index
      * @param null|resource $socket
      * @return mixed
      */
-    public function close($index, $socket = null)
+    public function close(int $index, $socket = null)
     {
-        if (null === $socket) {
+        if ( !is_resource($socket)  ) {
+            if ( !isset($this->clients[$index]) ) {
+                $this->log("Close the client socket connection failed! #$index client not exists", 'error');
+
+                return false;
+            }
+
             $socket = $this->clients[$index];
         }
 
@@ -248,7 +302,11 @@ class WebSocketServer
         unset($this->clients[$index], $this->hands[$index]);
 
         // call close handler
-        return $this->trigger(self::ON_CLOSE, [$this, $index]);
+        $this->trigger(self::ON_CLOSE, [$this, $index]);
+
+        $this->log("The #$index client connection has been closed! client count:" . $this->count());
+
+        return true;
     }
 
     /**
@@ -259,67 +317,81 @@ class WebSocketServer
      * @param int $index
      * @return bool|mixed
      */
-    private function upgrade($socket, string $data, int $index)
+    private function handshake($socket, string $data, int $index)
     {
-        if ( preg_match("/Sec-WebSocket-Key: (.*)\r\n/",$data, $match) ) {
+        $response = new Response();
 
-            // call handshake handler
-            if ( false === $this->trigger(self::ON_HANDSHAKE, [$this, $data, $socket, $index]) ) {
-                return $this->close($socket, $index);
-            }
+        if ( !preg_match("/Sec-WebSocket-Key: (.*)\r\n/",$data, $match) ) {
+            $this->log("handle handshake failed! DATA: \n $data", 'error');
 
-            $key = base64_encode(sha1($match[1] . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11', true));
+            $output = $response
+                ->setStatusCode(404)
+                ->setBody(
+                    '<b>400 Bad Request</b><br>Sec-WebSocket-Key not found.<br>This is a WebSocket service and can not be accessed via HTTP.'
+                )->toString();
 
+            $this->writeTo($socket, $output);
+
+            return $this->close($index, $socket);
+        }
+
+        // call handshake handler
+        if ( false === $this->trigger(self::ON_HANDSHAKE, [$this, $data, $socket, $index]) ) {
+            $this->log("The #$index handshake's callback return false, will close the connection", 'notice');
+            return $this->close($index, $socket);
+        }
+
+        $key = base64_encode(sha1($match[1] . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11', true));
 //            $upgrade  = "HTTP/1.1 101 Switching Protocol\r\n" .
 //                "Upgrade: websocket\r\n" .
 //                "Connection: Upgrade\r\n" .
 //                "Server: web-socket-server\r\n" .
 //                "Sec-WebSocket-Accept: {$key}\r\n\r\n";  //必须以两个回车结尾
-            $upgrade  = $this->buildResponse(101, 'Switching Protocol', '', [
-                'Upgrade' => 'websocket',
-                'Connection' => 'Upgrade',
-                'Sec-WebSocket-Accept' => $key,
-            ]);
+        $upgrade = $this->buildResponse(101, 'Switching Protocol', '', [
+            'Upgrade' => 'websocket',
+            'Connection' => 'Upgrade',
+            'Sec-WebSocket-Accept' => $key,
+        ] );
 
-            // response data to client
-            $this->writeTo($socket, $upgrade);
+        // response data to client
+        $this->writeTo($socket, $upgrade);
+        $this->hands[$index] = true;
 
-            $this->hands[$index] = true;
+        $this->log("The #$index client connection handshake successful! client count:" . $this->count());
 
-            // call open handler
-            return $this->trigger(self::ON_OPEN, [$this, $data, $index]);
-        }
-
-        $this->log("handle handshake failed! DATA: \n $data", 'error');
-
-        $this->sendTo($index,
-            "HTTP/1.1 400 Bad Request" . self::HEADER_END .
-            "<b>400 Bad Request</b><br>Sec-WebSocket-Key not found.<br>This is a WebSocket service and can not be accessed via HTTP.",
-            -1);
-
-        return $this->close($socket, $index);
+        // call open handler
+        return $this->trigger(self::ON_OPEN, [$this, $data, $index]);
     }
 
     /**
      * build response data
-     * @param $httpCode
-     * @param $httpCodeMsg
+     * @param int    $httpCode
+     * @param string $httpCodeMsg
      * @param string $body
-     * @param array $headers
+     * @param array  $headers
+     * @param array  $cookies
      * @return string
      */
-    public function buildResponse($httpCode, $httpCodeMsg, $body = '', array $headers = [])
+    public function buildResponse(int $httpCode, string $httpCodeMsg, string $body = '', array $headers = [], array $cookies = [])
     {
-        $response = "HTTP/1.1 {$httpCode} {$httpCodeMsg}" . self::HEADER_LINE_END;
+        // first line
+        $header = "HTTP/1.1 $httpCode $httpCodeMsg" . self::HEADER_LINE_END;
 
+        // set headers
         foreach ($headers as $name => $value) {
-            $response .= "$name: $value" . self::HEADER_LINE_END;
+            $header .= "$name: $value" . self::HEADER_LINE_END;
         }
 
-        $response = trim($response) . self::HEADER_END;
-        $response .= $body;
+        // set cookies
+        if ($cookies) {
+            foreach (Cookies::make($cookies)->toHeaders() as $value) {
+                $header .= "Set-Cookie: $value" . self::HEADER_LINE_END;
+            }
+        }
 
-        return $response;
+        $header = trim($header) . self::HEADER_END;
+
+        return $header . $body;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -347,7 +419,7 @@ class WebSocketServer
         // 父进程和子进程都会执行下面代码
         if ( $pid === -1) {
             /* fork failed */
-            $this->print("fork sub-process failure!", true, - __LINE__);
+            $this->print('fork sub-process failure!', true, - __LINE__);
 
         } elseif ($pid) {
             // 父进程会得到子进程号，所以这里是父进程执行的逻辑
@@ -448,8 +520,8 @@ class WebSocketServer
      */
     public function on(string $event, callable $cb, bool $replace = false): self
     {
-        if ( false === ($key = array_search($event, $this->supportedEvents, true)) ) {
-            $sup = implode(',', $this->supportedEvents);
+        if ( false === ($key = array_search($event, $this->getSupportedEvents(), true)) ) {
+            $sup = implode(',', $this->getSupportedEvents());
 
             throw new \InvalidArgumentException("The want registered event is not supported. Supported: $sup");
         }
@@ -458,7 +530,7 @@ class WebSocketServer
             throw new \InvalidArgumentException("The want registered event [$event] have been registered! don't allow replace.");
         }
 
-        $this->callbacks[$event] = $cb;
+        $this->callbacks[$key] = $cb;
 
         return $this;
     }
@@ -470,7 +542,7 @@ class WebSocketServer
      */
     protected function trigger(string $event, array $args = [])
     {
-        if ( false === ($key = array_search($event, $this->supportedEvents, true)) ) {
+        if ( false === ($key = array_search($event, $this->getSupportedEvents(), true)) ) {
             throw new \InvalidArgumentException("Trigger a not exists's event: $event.");
         }
 
@@ -487,7 +559,7 @@ class WebSocketServer
      */
     public function isSupportedEvent(string $event): bool
     {
-        return in_array($event, $this->supportedEvents);
+        return in_array($event, $this->getSupportedEvents(), true);
     }
 
     /**
@@ -495,7 +567,7 @@ class WebSocketServer
      */
     public function getSupportedEvents(): array
     {
-        return $this->supportedEvents;
+        return [ self::ON_HANDSHAKE, self::ON_OPEN, self::ON_MESSAGE, self::ON_CLOSE, self::ON_ERROR];
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -506,21 +578,21 @@ class WebSocketServer
      * @param string $data
      * @param null|int $from
      * @param int|array|null $target
-     * @param array $expected
+     * @param int[] $expected
      * @return bool|int
      */
-    public function send(string $data, $from = null, $target = null, array $expected = [])
+    public function send(string $data, int $from = -1, $target = null, array $expected = [])
     {
-        return is_int($target) ?
+        return is_int($target) && $target >= 0 ?
             $this->sendTo($target, $data, $from) :
             $this->broadcast($data, $from, (array)$target,  $expected);
     }
 
     /**
-     * @param int $target 发送目标
+     * @param int    $target 发送目标
      * @param string $data
-     * @param int $from 发送者
-     * @return bool|int
+     * @param int    $from 发送者
+     * @return int
      */
     public function sendTo(int $target, string $data, int $from = -1)
     {
@@ -532,36 +604,36 @@ class WebSocketServer
 
         $res = $this->frame($data);
         $socket = $this->clients[$target];
+        $fromUser = $from < 0 ? 'SYSTEM' : '#' . $from;
 
-        $this->log("The #{$from} send message to #{$target}. Data: {$data}");
+        $this->log("The #{$fromUser} send message to #{$target}. Data: {$data}");
 
         return $this->writeTo($socket, $res);
     }
 
     /**
      * @param string $data
-     * // param int $group
-     * @param null|string $from
-     * @param array $expected
-     * @param array $targets
+     * @param int    $from
+     * @param int[]  $expected
+     * @param int[]  $targets
      * @return int
      */
-    public function broadcast(string $data, $from = null, array $targets = [], array $expected = []): int
+    public function broadcast(string $data, int $from = -1, array $targets = [], array $expected = []): int
     {
         $res = $this->frame($data);
         $len = strlen($res);
-        $from = $from === null ? 'SYSTEM' : '#' . $from;
+        $fromUser = $from < 0 ? 'SYSTEM' : '#' . $from;
 
         // to all
         if ( !$expected && !$targets) {
-            $this->log("(broadcast)The {$from} send message to all users. Data: {$data}");
+            $this->log("(broadcast)The {$fromUser} send message to all users. Data: {$data}");
 
             foreach ($this->clients as $socket) {
                 $this->writeTo($socket, $res, $len);
             }
 
         } else {
-            $this->log("(broadcast)The {$from} gave some specified user sending a message. Data: {$data}");
+            $this->log("(broadcast)The {$fromUser} gave some specified user sending a message. Data: {$data}");
             foreach ($this->clients as $index => $socket) {
                 if ( isset($expected[$index]) ) {
                     continue;
@@ -581,15 +653,24 @@ class WebSocketServer
 
     /**
      * response data to client by socket connection
-     * @param resource $socket
-     * @param string $data
-     * @param int $length
+     * @param resource  $socket
+     * @param string    $data
+     * @param int       $length
      * @return int
      */
     public function writeTo($socket, string $data, int $length = 0)
     {
         // response data to client
         return socket_write($socket, $data, $length > 0 ? $length : strlen($data));
+    }
+
+    /**
+     * @param null|resource $socket
+     * @return string
+     */
+    public function getSocketError($socket = null)
+    {
+        return socket_strerror(socket_last_error($socket));
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -712,7 +793,7 @@ class WebSocketServer
     }
 
     /**
-     *  check it is a accepted client 
+     *  check it is a accepted client
      * @notice maybe don't complete handshake
      * @param $index
      * @return bool
@@ -723,14 +804,23 @@ class WebSocketServer
     }
 
     /**
-     * check it is a accepted client 
+     * check it is a accepted client
      * @notice maybe don't complete handshake
      * @param  resource $socket
      * @return bool
      */
     public function isClientSocket($socket)
     {
-        return false !== array_search($socket, $this->clients, true);
+        return in_array($socket, $this->clients, true);
+    }
+
+    /**
+     * @param $socket
+     * @return mixed
+     */
+    public function getClientIndex($socket)
+    {
+        return array_search($socket, $this->clients, true);
     }
 
     /**
@@ -764,6 +854,14 @@ class WebSocketServer
     }
 
     /**
+     * @return resource
+     */
+    public function getSocket(): resource
+    {
+        return $this->socket;
+    }
+
+    /**
      * @return string
      */
     public function getHost(): string
@@ -785,6 +883,14 @@ class WebSocketServer
         }
 
         return $this->port;
+    }
+
+    /**
+     * @return \SplFixedArray
+     */
+    public function getCallbacks(): \SplFixedArray
+    {
+        return $this->callbacks;
     }
 
     /**

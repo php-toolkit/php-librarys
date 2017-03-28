@@ -1,0 +1,24 @@
+#!/bin/env php
+<?php
+/**
+ * Created by PhpStorm.
+ * User: Inhere
+ * Date: 2017/3/28 0028
+ * Time: 22:41
+ */
+
+require __DIR__ . '/autoload.php';
+
+use inhere\librarys\webSocket\server\WebSocketServer;
+
+$ws = new WebSocketServer('', 9501);
+
+$ws->on('open', function (WebSocketServer $ws, $data) {
+    $ws->send('welcome!');
+});
+
+$ws->on('message', function (WebSocketServer $ws, $data) {
+    $ws->send("you input: $data");
+});
+
+$ws->start();

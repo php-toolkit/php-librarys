@@ -18,6 +18,11 @@ interface IRouteHandler
     /**
      * @param Request $request
      */
+    public function onHandshake(Request $request);
+
+    /**
+     * @param Request $request
+     */
     public function onOpen(Request $request);
 
     /**

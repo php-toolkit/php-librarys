@@ -11,13 +11,11 @@ if ( !function_exists('local_env') ) {
 }
 
 if ( !function_exists('html_minify') ) {
-    function html_minify($body)
-    {
+    function html_minify($body) {
         $search = array('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\')\/\/.*))/', '/\n/','/\>[^\S ]+/s','/[^\S ]+\</s','/(\s)+/s');
         $replace = array(' ', ' ','>','<','\\1');
-        $squeezedHTML = preg_replace($search, $replace, $body);
 
-        return $squeezedHTML;
+        return preg_replace($search, $replace, $body);
     }
 }
 
@@ -54,7 +52,7 @@ if ( !function_exists('cookie') ) {
         // set, when $name is array
         if ($name && is_array($name) ) {
             $d = [
-                'value' => '', 'expire' => null, 'path' => null, 'domain' => null, 'secure' => null, 'httpOnly' => null
+                'value' => '', 'expire' => null, 'path' => null, 'domain' => null, 'secure' => false, 'httpOnly' => false
             ];
 
             foreach ($name as $n => $value) {

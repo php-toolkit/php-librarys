@@ -136,6 +136,7 @@ class Application
         $this->ws->on(WebSocketServer::ON_OPEN, [$this, 'handleOpen']);
         $this->ws->on(WebSocketServer::ON_MESSAGE, [$this, 'handleMessage']);
         $this->ws->on(WebSocketServer::ON_CLOSE, [$this, 'handleClose']);
+        $this->ws->on(WebSocketServer::ON_ERROR, [$this, 'handleError']);
 
         // if not register route, add root path route handler
         if ( 0 === count($this->routesHandlers) ) {
@@ -203,23 +204,24 @@ EOF;
      */
     public function handleHandshake(WebSocketServer $ws, string $rawData, $socket, int $index)
     {
-        $this->log( "Raw data: \n". $rawData);
-
+        $this->log( "Raw request data: \n". $rawData);
         $this->request = $request = Request::makeByParseData($rawData);
-
-        $this->log("Parsed data:\n");
+        $this->log('Parsed request data:');
         var_dump($request);
 
         // route not exists, response 404 error
         if ( !$rHandler = $this->activeRouteHandler($request, $index) ) {
             $resp = $ws->buildResponse(404, 'Not Found', 'You request path not found!', [
                 // headers
+                'Connection' => 'close',
             ]);
 
             $ws->writeTo($socket, $resp);
 
             return false;
         }
+
+        $rHandler->onHandshake($request);
 
         return true;
     }
@@ -268,16 +270,14 @@ EOF;
         if ( $errHandler = $this->wsHandlers[self::ERROR_HANDLER] ) {
             $errHandler($ws, $this);
         }
-
-        $this->getRouteHandler()->onError($this, $msg);
     }
 
     /**
-     * @param string $data
-     * @param int $index
+     * @param string          $data
      * @param WebSocketServer $ws
+     * @param int             $index
      */
-    public function handleMessage(string $data, WebSocketServer $ws, int $index)
+    public function handleMessage(WebSocketServer $ws, string $data, int $index)
     {
         $goon = true;
         $this->request->setBody($data);

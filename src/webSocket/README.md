@@ -39,7 +39,7 @@ Sec-WebSocket-Key: BmMdv63hr1D/eS7eTD59Vw==
 Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
 ```
 
-### webSocket response header
+### webSocket response header(handshake success)
 
 ```
 // parsed code

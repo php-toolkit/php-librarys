@@ -10,7 +10,6 @@
 namespace inhere\librarys\utils;
 
 use inhere\exceptions\NotFoundException;
-use inhere\exceptions\ConnectException;
 use inhere\librarys\traits\TraitUseOption;
 
 /**
@@ -27,12 +26,13 @@ class MemcacheClient // extends AbstractCacheDriver
 {
     use TraitUseOption;
 
-    const KEYS_MAP_PREFIX       = '_keys_map_';
+    const KEYS_MAP_PREFIX      = '_keys_map_';
 
-    const LIST_KEYS_MAP_PREFIX  = '_listKeys_map_';
+    const LIST_KEYS_MAP_PREFIX = '_listKeys_map_';
 
-    private $_runCache  = [];
-
+    /**
+     * @var string
+     */
     private $driverName;
 
     /**
@@ -46,109 +46,150 @@ class MemcacheClient // extends AbstractCacheDriver
     private $refresh = false;
 
     /**
+     * @var array
+     */
+    protected $options  = [
+        'servers' => [
+            'name1' => [
+                'host' => '127.0.0.1',
+                'port' => 11211,
+                'weight' => 0,
+                'timeout' => 1,
+            ]
+        ]
+    ];
+
+    /**
      * MemcacheDriver constructor.
      * @param array $options
      * @throws NotFoundException
      */
-    public function __construct(array $options=[])
+    public function __construct(array $options = [])
     {
         $this->setOptions($options, 1);
 
-        $this->_clientType  = class_exists('Memcache',false) ?
-            'Memcache' :
-            (class_exists('Memcached',false) ? "Memcached" : false);
-
-        if ( ! $this->_clientType ){
-            throw new NotFoundException("Please install the corresponding 'Memcache' extension.");
+        if (class_exists('Memcached',false)) {
+            $this->driver = new \Memcached();
+            $this->driverName = 'Memcached';
+        } elseif (class_exists('Memcached',false)) {
+            $this->driver = new \Memcache();
+            $this->driverName = 'Memcache';
+        } else {
+            throw new NotFoundException("Please install the corresponding memcache extension, 'memcached'(recommended) or 'memcache'.");
         }
 
-        # 判断引入类型
-        $this->driver = $this->_clientType=='Memcached' ? new \Memcached() : new \Memcache();
-
+        // do connection
         $this->connection();
     }
 
+    /**
+     * @return bool
+     */
     public function connection()
     {
-        $servers =$this->getOption('server');
+        $servers = $this->getOption('servers');
 
-        if ( !$servers ) {
-            \Trigger::error('请配置(array) cache.'.$this->_clientType.'.server');
+        if ( $this->isMemcached() ) {
+            return $this->driver->addServers($servers);
         }
 
-        # code...
-        if ( count($servers)==1 ) {
-            $server = $servers[0];
-
-            $this->pconnect($server['host'], $server['port']);
-        } else {
-            foreach ($servers as $server) {
-                $this->addServer( $server);
-            }
+        foreach ($servers as $server) {
+            $this->driver->addServer($server);
         }
+
+        return true;
     }
 
     /**
-     * 添加一个要缓存的数据如果作为这个缓存的数据在键在服务器上还不存在的情况下
+     * @param array $config
+     * @return bool
+     */
+    public function addServerByConfig(array $config)
+    {
+        $cfg = array_merge([
+            'host' => '127.0.0.1',
+            'port' => 11211,
+            'weight' => 0,
+            'timeout' => 1,
+        ], $config);
+
+        // for Memcached
+        if ($this->isMemcached()) {
+            return $this->driver->addServer($cfg['host'], $cfg['port'], $cfg['weight']);
+        }
+
+        // for Memcache
+        $cfg = array_merge([
+            'persistent' => true,
+            'retry_interval' => 15,
+            'status' => true,
+            'failure_callback' => null,
+            'timeoutMs' => 0,
+        ], $cfg);
+
+        return $this->driver->addServer(
+            $cfg['host'], $cfg['port'], $cfg['persistent'], $cfg['weight'], $cfg['timeout'],
+            $cfg['retry_interval'], $cfg['status'], $cfg['failure_callback'], $cfg['timeoutMs']
+        );
+    }
+
+    public function addServer (
+        $host, $port = 11211, $weight = 0, $persistent = true, $timeout = 1,
+        $retry_interval = 15, $status = true, callable $failure_callback = null, $timeoutMs = 0
+    ) {
+        // for Memcached
+        if ($this->isMemcached()) {
+            return $this->driver->addServer($host, $port, $weight);
+        }
+
+        // for Memcache
+        return $this->driver->addServer(
+            $host, $port, $persistent, $weight, $timeout,
+            $retry_interval, $status, $failure_callback, $timeoutMs
+        );
+    }
+
+    /**
+     * 添加一个要缓存的数据
      * 对于已存在的 key 会跳过，而不覆盖内容
-     *
-     * @param array|string $key
-     * @param string $value 值
+     * @param string $key  cache key
+     * @param mixed $value cache data
      * @param int $expire 过期时间
-     * @param int $flag
+     * @param int $flag  当 driver is 'Memcache' 表示是否用MEMCACHE_COMPRESSED来压缩存储的值，true表示压缩，false表示不压缩。
      * @return bool
      */
     public function add($key, $value, $expire = 0, $flag = 0)
     {
+        if ( !$key ) {
+            return false;
+        }
+
         if ( $this->isMemcached() ) {
-            return $this->driver->add( $this->_keyName($key), $value, $expire );
+            return $this->driver->add($key, $value, $expire);
         }
 
         return $this->driver->add( $key, $value, $flag, $expire);
     }
 
     /**
-     * 设置一个指定key的缓存变量内容。对于已存在的 key 会覆盖内容
-     * @param $key string key
-     * @param $value string 值
-     * @internal 当 $this->_clientType == 'Memcache' 时候 $this->getOption('compress') 值
-     *           表示是否用MEMCACHE_COMPRESSED来压缩存储的值，true表示压缩，false表示不压缩。
-     * @param $expire int 过期时间
-     * @return   TRUE or FALSE
+     * 设置一个指定key 缓存内容。对于已存在的 key 会覆盖内容
+     * @param string $key  cache key
+     * @param mixed $value cache data
+     * @param int $expire 过期时间
+     * @param int $flag  当 driver is 'Memcache' 表示是否用MEMCACHE_COMPRESSED来压缩存储的值，true表示压缩，false表示不压缩。
+     * @return bool
      */
-    public function set($key, $value, $expire = null)
+    public function set($key, $value, $expire = 0, $flag = 0)
     {
-        if (is_null($expire)){
-            $expire =  (int) $this->getOption('expire',0);
+        if ( !$key ) {
+            return false;
         }
 
-        if (is_array($key)) {
-            foreach($key as $multi)
-            {
-                if (!isset($multi['expire']) || $multi['expire'] == ''){
-                    $multi['expire'] =  (int) $this->getOption('expire',0);
-                }
-
-                $this->set($this->_keyName($multi['key']), $multi['value'], $multi['expire']);
-            }
-
-            return true;
-        } else {
-            $this->_runCache[$this->_keyName($key)] = $value;
-
-            switch($this->_clientType){
-                case 'Memcache':
-                    $setStatus = $this->driver->set( $this->_keyName($key), $value, $this->getOption('compress'), $expire );
-                    break;
-
-                default:
-                case 'Memcached':
-                    $setStatus = $this->driver->set( $this->_keyName($key), $value, $expire );
-                    break;
-            }
-
-            return $setStatus;
+        if ( $this->isMemcached() ) {
+            $this->driver->set($key, $value, $expire);
         }
+
+        return $this->driver->set($key, $value, $flag, $expire);
     }
 
     public function exists($key)
@@ -157,64 +198,37 @@ class MemcacheClient // extends AbstractCacheDriver
     }
 
     /**
-     * @param $key
-     * @param string $default
+     * @param string|array $key
      * @return array|bool|string
      */
-    public function get($key, $default='')
+    public function get($key)
     {
-        if ( !$key || !$this->driver) {
+        if ( !$key || !$this->refresh ) {
             return false;
         }
 
-        $realKey = $this->_keyName($key);
-
-        if (isset($this->_runCache[$realKey])) {
-            return $this->_runCache[$realKey];
+        if ( $this->isMemcached() ) {
+            return is_array($key) ? $this->driver->getMulti($key) : $this->driver->get($key);
         }
 
-
-        if (is_array($key)) {
-            return $this->gets($key);
-        }
-
-        return $this->driver->get($this->_keyName($key));
+        return $this->driver->get($key);
     }
 
     /**
-     * @param $keys
-     * @return array
+     * replace 替换一个指定已存在key的缓存变量内容 与 set() 类似
+     * @param string $key
+     * @param mixed  $value
+     * @param int    $expire
+     * @param int    $flag  use @see \Memcache::MEMCACHE_COMPRESSED
+     * @return bool
      */
-    public function gets($keys)
+    public function replace($key, $value, $expire = 0, $flag = 0)
     {
-        foreach($keys as $n=>$k) {
-            $keys[$n] = $this->_keyName($k);
+        if ( $this->isMemcached() ) {
+            return $this->driver->replace ($key, $value, $expire);
         }
 
-        if (method_exists($this->driver, 'getMulti') ) {
-            return $this->driver->getMulti($keys);
-        } else {
-            $result = [];
-
-            foreach ($keys as $key) {
-                $result[] = $this->get($key);
-            }
-
-            return $result;
-        }
-    }
-
-    /**
-     * [replace 替换一个指定已存在key的缓存变量内容 与 set() 类似 ]
-     * @param string|string $key [description]
-     * @param  mixed $var [description]
-     * @param int|int $flag [description]
-     * @param int|int $expire [description]
-     * @return void [type]         [description]
-     */
-    public function replace($key , $var , $flag , $expire )
-    {
-        # code...
+        return $this->driver->replace($key, $value, $flag, $expire);
     }
 
     /**
@@ -225,35 +239,28 @@ class MemcacheClient // extends AbstractCacheDriver
      */
     public function delete($key)
     {
-        if (empty($key)) {
+        if ( !$key ) {
             throw new \InvalidArgumentException('The key value cannot be empty');
         }
 
-        if (is_array($key)) {
-            foreach($key as $multi) {
-                $this->delete($multi);
+        if ( is_array($key) ) {
+            foreach($key as $k) {
+                $this->driver->delete($k);
             }
 
             return true;
         }
 
-        $realKey = $this->_keyName($key);
-        unset($this->_runCache[$realKey]);
-
-        return $this->driver->delete( $realKey);
+        return $this->driver->delete($key);
     }
 
     /**
      * 清空所有缓存
      * @return bool
      */
-    public function flush()
-    {
-        return $this->driver->flush();
-    }
     public function clear()
     {
-        return $this->flush();
+        return $this->driver->flush();
     }
 
     /**
@@ -264,7 +271,7 @@ class MemcacheClient // extends AbstractCacheDriver
      */
     public function increment($key, $value)
     {
-        return $this->driver->increment($key,(int)$value);
+        return $this->driver->increment($key, (int)$value);
     }
 
     /**
@@ -276,7 +283,7 @@ class MemcacheClient // extends AbstractCacheDriver
      */
     public function decrement($key,$value)
     {
-        return $this->driver->decrement($key,(int)$value);
+        return $this->driver->decrement($key, (int)$value);
     }
 
     /////////////////////////////////////////////////////////////////////////
@@ -300,27 +307,6 @@ class MemcacheClient // extends AbstractCacheDriver
     }
 
     /**
-     * [setCompressThreshold 对大于某一大小的数据进行压缩]
-     * @param int $threshold [表示处理数据大小的临界点]
-     * @param float $min_savings [参数表示压缩的比例，默认为0.2。]
-     * @return bool
-     */
-    public function setCompressThreshold( $threshold , $min_savings=0.2)
-    {
-        switch($this->_clientType) {
-            case 'Memcache':
-                $setcompressthreshold_status = $this->driver->setCompressThreshold($threshold, $min_savings);
-                break;
-
-            default:
-                $setcompressthreshold_status = TRUE;
-                break;
-        }
-
-        return $setcompressthreshold_status;
-    }
-
-    /**
      * [setServerParams description]
      * @param string   $host             [服务器的地址]
      * @param int      $port             [服务器端口]
@@ -336,8 +322,29 @@ class MemcacheClient // extends AbstractCacheDriver
 
     /////////////////////////////////////////////////////////////////////////
     /// 针对列表/分页等数据量较大的数据
-    /// 使用示例参考 app\models\dal\users\CollectionDAL::getUnreadedProductList()
     /////////////////////////////////////////////////////////////////////////
+
+    /*
+     * 使用示例
+     *
+     * $baseKey = 'user_product_list_' . "{$uid}_{$categoryId}";
+     * $cacheKey = $baseKey . "$page_$pageSize";
+     *
+     * $productList = [...];
+     *
+     * // set
+     * $cache->setListData($cacheKey, $productList, $expire, $baseKey);
+     *
+     * // get
+     * $cache->getListData($cacheKey);
+     *
+     * // del
+     * // if we known $cacheKey
+     * $cache->delListData($cacheKey);
+     * // but we most of the time don't get '$cacheKey'
+     * // now, you can by $baseKey del all page cache data.
+     * $cache->delListKeys($baseKey);
+     */
 
     /**
      * get List Data
@@ -352,10 +359,10 @@ class MemcacheClient // extends AbstractCacheDriver
 
         $listKey = self::KEYS_MAP_PREFIX . $cacheKey;
 
-        if ( $keys = $this->cache->get($listKey) ) {
+        if ( $keys = $this->driver->get($listKey) ) {
             $list = [];
             foreach ($keys as $key) {
-                $list[] = $this->cache->get($key);
+                $list[] = $this->driver->get($key);
             }
 
             return $list;
@@ -403,7 +410,7 @@ class MemcacheClient // extends AbstractCacheDriver
 
         foreach ($data as $item) {
             $keys[] = $key = $cacheKey . ":$i";
-            $this->cache->set($key, $item, $expire);
+            $this->driver->set($key, $item, $expire);
             $i++;
         }
 
@@ -411,7 +418,7 @@ class MemcacheClient // extends AbstractCacheDriver
         $listKey = self::KEYS_MAP_PREFIX . $cacheKey;
 
         // you can delete list data cache by self::delDataMap($cacheKey)
-        $this->cache->set($listKey, $keys, $expire);
+        $this->driver->set($listKey, $keys, $expire);
 
         if ($baseKey) {
             // you can delete all page data cache by self::delListKeys($baseKey)
@@ -425,13 +432,13 @@ class MemcacheClient // extends AbstractCacheDriver
         $listKeysKey = self::LIST_KEYS_MAP_PREFIX  . $baseKey;
 
         // init
-        if ( !$listKeys = $this->cache->get($listKeysKey) ) {
-            $this->cache->set($listKeysKey, [$listKey]);
+        if ( !$listKeys = $this->driver->get($listKeysKey) ) {
+            $this->driver->set($listKeysKey, [$listKey]);
 
             // add
         } elseif (!in_array($listKey, $listKeys)) {
             $listKeys[] = $listKey;
-            $this->cache->set($listKeysKey, $listKeys);
+            $this->driver->set($listKeysKey, $listKeys);
         }
     }
 
@@ -444,12 +451,12 @@ class MemcacheClient // extends AbstractCacheDriver
     {
         $listKey = self::KEYS_MAP_PREFIX . $cacheKey;
 
-        if ( $keys = $this->cache->get($listKey) ) {
+        if ( $keys = $this->driver->get($listKey) ) {
             foreach ($keys as $key) {
-                $this->cache->delete($key);
+                $this->driver->delete($key);
             }
 
-            $this->cache->delete($listKey);
+            $this->driver->delete($listKey);
         }
 
         return $keys;
@@ -463,13 +470,13 @@ class MemcacheClient // extends AbstractCacheDriver
     {
         $listKeysKey = self::LIST_KEYS_MAP_PREFIX  . $baseKey;
 
-        if ( $listKeys = $this->cache->get($listKeysKey) ) {
+        if ( $listKeys = $this->driver->get($listKeysKey) ) {
             foreach ($listKeys as $listKey) {
-                $this->cache->delete($listKey);
+                $this->driver->delete($listKey);
             }
 
             // NOTICE: delete $listKeysKey
-            $this->cache->delete($listKeysKey);
+            $this->driver->delete($listKeysKey);
         }
 
         return $listKeys;
@@ -553,8 +560,6 @@ class MemcacheClient // extends AbstractCacheDriver
 
         if ( method_exists($this, $getter) ) {
             return $this->$getter();
-        } elseif (method_exists($this->driver, $name)) {
-            return 
         }
 
         return null;

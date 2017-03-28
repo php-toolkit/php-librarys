@@ -9,7 +9,6 @@
 namespace inhere\librarys\webSocket\parts;
 
 use inhere\librarys\webSocket\Application;
-use inhere\librarys\webSocket\server\WebSocketServer;
 
 /**
  * Class ARouteHandler

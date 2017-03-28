@@ -85,11 +85,6 @@ class Application
     /**
      * @var array
      */
-    protected $handlers = [];
-
-    /**
-     * @var array
-     */
     protected $options = [
         // request and response data type: json text
         'dataType' => 'json',
@@ -137,6 +132,7 @@ class Application
         }
 
         // register events
+        $this->ws->on(WebSocketServer::ON_HANDSHAKE, [$this, 'handleHandshake']);
         $this->ws->on(WebSocketServer::ON_OPEN, [$this, 'handleOpen']);
         $this->ws->on(WebSocketServer::ON_MESSAGE, [$this, 'handleMessage']);
         $this->ws->on(WebSocketServer::ON_CLOSE, [$this, 'handleClose']);
@@ -200,6 +196,36 @@ EOF;
 
     /**
      * @param WebSocketServer $ws
+     * @param string          $rawData
+     * @param resource        $socket
+     * @param int             $index
+     * @return bool
+     */
+    public function handleHandshake(WebSocketServer $ws, string $rawData, $socket, int $index)
+    {
+        $this->log( "Raw data: \n". $rawData);
+
+        $this->request = $request = Request::makeByParseData($rawData);
+
+        $this->log("Parsed data:\n");
+        var_dump($request);
+
+        // route not exists, response 404 error
+        if ( !$rHandler = $this->activeRouteHandler($request, $index) ) {
+            $resp = $ws->buildResponse(404, 'Not Found', 'You request path not found!', [
+                // headers
+            ]);
+
+            $ws->writeTo($socket, $resp);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param WebSocketServer $ws
      * @param string $rawData
      * @param int $index
      */
@@ -207,19 +233,14 @@ EOF;
     {
         $this->log('A new user connection. Now, connected user count: ' . $ws->count());
         // $this->log("SERVER Data: \n" . var_export($_SERVER, 1), 'info');
-        $this->log( "Raw data: \n". $rawData);
-
-        $this->request = $request = Request::makeByParseData($rawData);
-        $this->log("Parsed data:\n" . var_export($request,1));
 
         if ( $openHandler = $this->wsHandlers[self::OPEN_HANDLER] ) {
             // $openHandler($request, $this);
             $openHandler($ws, $this);
         }
 
-        if ( $rHandler = $this->activeRouteHandler($request, $index) ) {
-            $rHandler->onOpen($request);
-        }
+        $this->getRouteHandler()->onClose($this->request);
+
     }
 
     /**
@@ -624,7 +645,7 @@ EOF;
         $date = date('Y-m-d H:i:s');
         $type = strtoupper(trim($type));
 
-        $this->write("[$date] [$type] $message " . ( $data ? json_encode($data) : '' ) );
+        $this->print("[$date] [$type] $message " . ( $data ? json_encode($data) : '' ) );
     }
 
     /**
@@ -632,7 +653,7 @@ EOF;
      * @param bool $nl
      * @param null|int $exit
      */
-    public function write($messages, $nl = true, $exit = null)
+    public function print($messages, $nl = true, $exit = null)
     {
         $text = is_array($messages) ? implode(($nl ? "\n" : ''), $messages) : $messages;
 

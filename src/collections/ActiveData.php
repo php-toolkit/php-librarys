@@ -24,12 +24,12 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
      * @param bool|false $recursive
      * @return static
      */
-    public static function create($data=[], $recursive = false)
+    public static function create(array $data=[], $recursive = false)
     {
         return new static($data, $recursive);
     }
 
-    public function __construct($data=[], $recursive = false)
+    public function __construct(array $data=[], $recursive = false)
     {
         if ($data) {
             $this->load($data, $recursive);
@@ -87,7 +87,7 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
 
     /**
      * 以点连接 快速获取子级节点的值
-     * @param array|string $name
+     * @param string $name
      * @return ActiveData|null
      */
     public function get($name)
@@ -96,7 +96,7 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
             $names = explode('.', $name);
             $node = $this;
 
-            foreach ($names as $name) {
+            foreach ((array)$names as $name) {
                 if($node instanceof self && property_exists($node, $name) ) {
                     $node = $node->$name;
                 } else {

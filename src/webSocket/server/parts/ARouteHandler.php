@@ -6,13 +6,13 @@
  * Time: 22:51
  */
 
-namespace inhere\librarys\webSocket\parts;
+namespace inhere\librarys\webSocket\server\parts;
 
-use inhere\librarys\webSocket\Application;
+use inhere\librarys\webSocket\server\Application;
 
 /**
  * Class ARouteHandler
- * @package inhere\librarys\webSocket\parts
+ * @package inhere\librarys\webSocket\server\parts
  */
 abstract class ARouteHandler implements IRouteHandler
 {
@@ -21,10 +21,6 @@ abstract class ARouteHandler implements IRouteHandler
     const MESSAGE_HANDLER = 1;
     const CLOSE_HANDLER = 2;
     const ERROR_HANDLER = 3;
-
-    const PING = 'ping';
-    const NOT_FOUND = 'notFound';
-    const PARSE_ERROR = 'error';
 
     const DATA_JSON = 'json';
     const DATA_TEXT = 'text';
@@ -59,8 +55,6 @@ abstract class ARouteHandler implements IRouteHandler
     // default command suffix
     public $cmdSuffix = 'Command';
 
-    public $defaultCmd = 'index';
-
     /**
      * @var array
      */
@@ -90,24 +84,31 @@ abstract class ARouteHandler implements IRouteHandler
     }
 
     /**
-     * @param Request $request
+     * @inheritdoc
      */
-    public function onOpen(Request $request)
+    public function onHandshake(Request $request, Response $response)
     {
         $this->log('A new user connection. join the path(route): ' . $request->getPath());
     }
 
     /**
-     * @param Request $request
+     * @inheritdoc
      */
-    public function onClose(Request $request)
+    public function onOpen(int $id)
     {
-        $this->log('A user disconnected. route path: ' . $request->getPath());
+        $this->log('A new user open connection. route path: ' . $this->request->getPath());
     }
 
     /**
-     * @param Application $app
-     * @param string $msg
+     * @inheritdoc
+     */
+    public function onClose(int $id)
+    {
+        $this->log('A user has been disconnected. route path: ' . $this->request->getPath());
+    }
+
+    /**
+     * @inheritdoc
      */
     public function onError(Application $app, string $msg)
     {
@@ -121,43 +122,41 @@ abstract class ARouteHandler implements IRouteHandler
     /**
      * parse and dispatch command
      * @param string $data
-     * @param int $index
+     * @param int $id
      * @return mixed
      */
-    public function dispatch(string $data, int $index)
+    public function dispatch(string $data, int $id)
     {
-        // parse: get command and real data
-        if ( $results = $this->getDataParser()->parse($data, $index, $this->app) ) {
-            [$command, $data] = $results;
+        $route = $this->request->path;
 
-            // not found
-            if ( !array_key_exists($command, $this->cmdHandlers) ) {
-                $this->log("The #{$index} request command: $command not found");
-                $data = $command;
-                $command = self::NOT_FOUND;
-            }
+        // parse: get command and real data
+        if ( $results = $this->getDataParser()->parse($data, $id, $this->app) ) {
+            [$command, $data] = $results;
+            $command = $command ?: $this->getOption('defaultCmd') ?? self::DEFAULT_CMD;
+            $this->log("The #{$id} request command is: $command in route [$route]");
         } else {
             $command = self::PARSE_ERROR;
-            $this->log("The #{$index} request data parse failed! Data: $data", 'error');
+            $this->log("The #{$id} request data parse failed in route [$route]! Data: $data", 'error');
         }
 
         // dispatch command
 
-
         // is a outside command `by add()`
         if ( $this->isCommandName($command) ) {
             $handler = $this->getCmdHandler($command);
-            return call_user_func_array($handler, [$data, $index, $this]);
+            return call_user_func_array($handler, [$data, $id, $this]);
         }
 
         $suffix = 'Command';
         $method = $command . $suffix;
 
+        // not found
         if ( !method_exists( $this, $method) ) {
+            $this->log("The #{$id} request command: $command not found, run 'notFound' command", 'notice');
             $method = self::NOT_FOUND . $suffix;
         }
 
-        return $this->$method($data, $index);
+        return $this->$method($data, $id);
     }
 
     /**
@@ -181,34 +180,34 @@ abstract class ARouteHandler implements IRouteHandler
 
     /**
      * @param $data
-     * @param int $index
+     * @param int $id
      * @return int
      */
-    public function pingCommand(string $data, int $index)
+    public function pingCommand(string $data, int $id)
     {
-        return $this->target($index)->respond($data . '+PONG');
+        return $this->target($id)->respond($data . '+PONG');
     }
 
     /**
      * @param $data
-     * @param int $index
+     * @param int $id
      * @return int
      */
-    public function parseErrorCommand(string $data, int $index)
+    public function parseErrorCommand(string $data, int $id)
     {
-        return $this->target($index)->respond($data, 'you send data format is error!', -200);
+        return $this->target($id)->respond($data, 'you send data format is error!', -200);
     }
 
     /**
      * @param string $command
-     * @param int $index
+     * @param int $id
      * @return int
      */
-    public function notFoundCommand(string $command, int $index)
+    public function notFoundCommand(string $command, int $id)
     {
         $msg = "You request command [$command] not found in the route [{$this->request->getPath()}].";
 
-        return $this->target($index)->respond('', $msg, -404);
+        return $this->target($id)->respond('', $msg, -404);
     }
 
     /**
@@ -253,9 +252,9 @@ abstract class ARouteHandler implements IRouteHandler
     /// helper method
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    public function target($indexes)
+    public function target($ids)
     {
-        $this->app->target($indexes);
+        $this->app->target($ids);
 
         return $this;
     }

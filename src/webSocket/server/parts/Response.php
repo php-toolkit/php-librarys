@@ -4,25 +4,27 @@
  * User: Inhere
  * Date: 2017/3/29 0029
  * Time: 00:19
+ *
+ * @from Slim 3
  */
 
-namespace inhere\librarys\webSocket\parts;
+namespace inhere\librarys\webSocket\server\parts;
 
 /**
  * Class Response
  * response for handshake
- * @package inhere\librarys\webSocket\parts
+ * @package inhere\librarys\webSocket\server\parts
  *
  * @property string $protocol
  * @property string $protocolVersion
  *
  * @property int    $statusCode
- * @property string $statusCodeMsg
+ * @property string $statusMsg
  *
  * @property array $headers
  * @property Cookies $cookies
  *
- * @property string $body
+ * @property array $body
  */
 class Response
 {
@@ -36,11 +38,12 @@ class Response
      * @var int
      */
     private $statusCode;
+
     /**
-     * eg: 'Not Found'
+     * eg: 'OK'
      * @var string
      */
-    private $statusCodeMsg;
+    private $reasonPhrase;
 
     /**
      * @var string
@@ -63,10 +66,14 @@ class Response
     private $cookies;
 
     /**
-     * @var string
+     * @var array
      */
     private $body;
 
+    /**
+     * @var resource
+     */
+    private $stream;
 
     /**
      * Status codes and reason phrases
@@ -145,35 +152,84 @@ class Response
         599 => 'Network Connect Timeout Error',
     ];
 
+    public static function make(
+        int $statusCode = 200, array $headers = [], array $cookies = [], $body = '',
+        string $protocol = 'HTTP', string $protocolVersion = '1.1'
+    ) {
+        return new self($statusCode, $headers, $cookies, $body, $protocol, $protocolVersion);
+    }
+
     /**
      * Request constructor.
      * @param int $statusCode
-     * @param string $statusCodeMsg
-     * @param string $protocol
-     * @param string $protocolVersion
      * @param array $headers
      * @param array $cookies
-     * @param string $body
-     * @internal param string $host
+     * @param string|array $body
+     * @param string $protocol
+     * @param string $protocolVersion
      */
     public function __construct(
-        int $statusCode = 200, string $statusCodeMsg = 'OK', string $protocol = 'HTTP',
-        string $protocolVersion = '1.1', array $headers = [], array $cookies = [], string $body = ''
+        int $statusCode = 200, array $headers = [], array $cookies = [], $body = '',
+        string $protocol = 'HTTP', string $protocolVersion = '1.1'
     ) {
-        $this->protocol = $protocol ?: 'HTTP';
-        $this->protocolVersion = $protocolVersion ?: '1.1';
+        $this->setStatus($statusCode);
+
         $this->headers = $headers;
         $this->cookies = new Cookies($cookies);
-        $this->statusCode = $statusCode ?: 200;
-        $this->statusCodeMsg = $statusCodeMsg ?: 'OK';
-        $this->body = $body ?: '';
+
+        $this->protocol = $protocol ?: 'HTTP';
+        $this->protocolVersion = $protocolVersion ?: '1.1';
+
+//        $stream = fopen('php://temp', 'w+');
+//        stream_copy_to_stream(fopen('php://input', 'r'), $stream);
+//        rewind($stream);
+//
+//        $this->stream = $stream;
+
+        $this->setBody($body);
     }
 
-    public function build(
-        int $statusCode = 200, string $statusCodeMsg = 'OK', string $protocol = 'HTTP',
-        string $protocolVersion = '1.1', array $headers = [], array $cookies = [], string $body = ''
-    ) {
+    /**
+     * @param $code
+     * @param string $reasonPhrase
+     * @return Response
+     */
+    public function setStatus($code, $reasonPhrase = '')
+    {
+        $code = $this->filterStatus($code);
 
+        if (!is_string($reasonPhrase) && !method_exists($reasonPhrase, '__toString')) {
+            throw new \InvalidArgumentException('ReasonPhrase must be a string');
+        }
+
+        $this->statusCode = $code;
+        if ($reasonPhrase === '' && isset(static::$messages[$code])) {
+            $reasonPhrase = static::$messages[$code];
+        }
+
+        if ($reasonPhrase === '') {
+            throw new \InvalidArgumentException('ReasonPhrase must be supplied for this code');
+        }
+
+        $this->reasonPhrase = $reasonPhrase;
+
+        return $this;
+    }
+
+    /**
+     * Filter HTTP status code.
+     *
+     * @param  int $status HTTP status code.
+     * @return int
+     * @throws \InvalidArgumentException If an invalid HTTP status code is provided.
+     */
+    protected function filterStatus($status)
+    {
+        if (!is_integer($status) || $status<100 || $status>599) {
+            throw new \InvalidArgumentException('Invalid HTTP status code');
+        }
+
+        return $status;
     }
 
     /**
@@ -188,7 +244,7 @@ class Response
             $this->getProtocol(),
             $this->getProtocolVersion(),
             $this->getStatusCode(),
-            $this->getStatusCodeMsg()
+            $this->getReasonPhrase()
         );
         $output .= self::EOL;
 
@@ -205,11 +261,6 @@ class Response
         $output .= self::EOL;
 
         return $output . $this->getBody(true);
-    }
-
-    public function __toString()
-    {
-        return $this->toString();
     }
 
     /**
@@ -258,33 +309,31 @@ class Response
     }
 
     /**
-     * @param int $statusCode
-     * @return $this
-     */
-    public function setStatusCode(int $statusCode)
-    {
-        $this->statusCode = $statusCode;
-
-        return $this;
-    }
-
-    /**
      * @return string
      */
-    public function getStatusCodeMsg(): string
+    public function getReasonPhrase(): string
     {
-        return $this->statusCodeMsg;
+        return $this->reasonPhrase;
     }
 
     /**
-     * @param string $statusCodeMsg
-     * @return $this
+     * @return array
      */
-    public function setStatusCodeMsg(string $statusCodeMsg)
+    public static function getMessages(): array
     {
-        $this->statusCodeMsg = $statusCodeMsg;
+        return self::$messages;
+    }
 
-        return $this;
+    /**
+     * @param $name
+     * @param $value
+     * @param bool $replace
+     */
+    public function setHeader($name, $value, $replace = true)
+    {
+        if ($replace || !isset($this->headers[$name])) {
+            $this->headers[$name] = $value;
+        }
     }
 
     /**
@@ -297,13 +346,27 @@ class Response
 
     /**
      * @param array $headers
+     * @param bool $replace
      * @return $this
      */
-    public function setHeaders(array $headers)
+    public function setHeaders(array $headers, $replace = false)
     {
-        $this->headers = $headers;
+        if ($replace) {
+            $this->headers = array_merge($this->headers, $headers);
+        } else {
+            $this->headers = $headers;
+        }
 
         return $this;
+    }
+
+    /**
+     * @param string $name
+     * @param string|array $value
+     */
+    public function setCookie(string $name, $value)
+    {
+        $this->cookies->set($name, $value);
     }
 
     /**
@@ -326,23 +389,43 @@ class Response
     }
 
     /**
+     * @param string $content
+     * @return $this
+     */
+    public function addContent(string $content)
+    {
+        if ( $this->body === null ) {
+            $this->body = [];
+        }
+
+        $this->body[] = $content;
+
+        return $this;
+    }
+
+    /**
      * @param bool $toString
      * @return array|string
      */
     public function getBody(bool $toString = false)
     {
-        return $this->body;
+        return $toString ? implode('', $this->body) :$this->body;
     }
 
     /**
-     * @param string $body
+     * @param string|array $body
      * @return $this
      */
-    public function setBody(string $body)
+    public function setBody($body)
     {
-        $this->body = $body;
+        $this->body = is_array($body) ? $body : [$body];
 
         return $this;
+    }
+
+    public function __toString()
+    {
+        return $this->toString();
     }
 
     /**

@@ -10,7 +10,7 @@
 
 require __DIR__ . '/autoload.php';
 
-use inhere\librarys\webSocket\Application;
+use inhere\librarys\webSocket\server\Application;
 use inhere\librarys\webSocket\server\WebSocketServer;
 
 $app = new Application('', 9501);
@@ -27,7 +27,7 @@ $app->onClose(function (WebSocketServer $ws, Application $app) {
     ]);
 });
 
-$rootHandler = $app->route('/', new \inhere\librarys\webSocket\parts\RootHandler());
+$rootHandler = $app->route('/', new \inhere\librarys\webSocket\server\parts\RootHandler());
 
 // commands
 $rootHandler->add('test', function ($data, $index, Application $app) {

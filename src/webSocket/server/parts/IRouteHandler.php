@@ -6,29 +6,35 @@
  * Time: 15:35
  */
 
-namespace inhere\librarys\webSocket\parts;
-use inhere\librarys\webSocket\Application;
+namespace inhere\librarys\webSocket\server\parts;
+
+use inhere\librarys\webSocket\server\Application;
 
 /**
  * Interface IRouteHandler
- * @package inhere\librarys\webSocket\parts
+ * @package inhere\librarys\webSocket\server\parts
  */
 interface IRouteHandler
 {
-    /**
-     * @param Request $request
-     */
-    public function onHandshake(Request $request);
+    const PING = 'ping';
+    const NOT_FOUND = 'notFound';
+    const PARSE_ERROR = 'error';
 
     /**
      * @param Request $request
+     * @param Response $response
      */
-    public function onOpen(Request $request);
+    public function onHandshake(Request $request, Response $response);
 
     /**
-     * @param Request $request
+     * @param int $id
      */
-    public function onClose(Request $request);
+    public function onOpen(int $id);
+
+    /**
+     * @param int $id
+     */
+    public function onClose(int $id);
 
     /**
      * @param Application $app
@@ -38,10 +44,10 @@ interface IRouteHandler
 
     /**
      * @param string $data
-     * @param int $index
+     * @param int $id
      * @return mixed
      */
-    public function dispatch(string $data, int $index);
+    public function dispatch(string $data, int $id);
 
     /**
      * @param string $command

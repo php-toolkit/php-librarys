@@ -6,12 +6,12 @@
  * Time: 23:13
  */
 
-namespace inhere\librarys\webSocket;
+namespace inhere\librarys\webSocket\server;
 
-use inhere\librarys\webSocket\parts\Request;
-use inhere\librarys\webSocket\parts\IRouteHandler;
-use inhere\librarys\webSocket\parts\RootHandler;
-use inhere\librarys\webSocket\server\WebSocketServer;
+use inhere\librarys\webSocket\server\parts\Request;
+use inhere\librarys\webSocket\server\parts\IRouteHandler;
+use inhere\librarys\webSocket\server\parts\Response;
+use inhere\librarys\webSocket\server\parts\RootHandler;
 
 /**
  * Class Application
@@ -53,8 +53,6 @@ class Application
     // route not found
     const ROUTE_NOT_FOUND = 4;
 
-    const PING = 'ping';
-    const NOT_FOUND = 'notFound';
     const PARSE_ERROR = 'error';
 
     const DATA_JSON = 'json';
@@ -98,11 +96,6 @@ class Application
      * ]
      */
     private $routesHandlers;
-
-    /**
-     * @var Request
-     */
-    private $request;
 
     /**
      * WebSocketServerHandler constructor.
@@ -196,32 +189,28 @@ EOF;
     }
 
     /**
-     * @param WebSocketServer $ws
-     * @param string          $rawData
-     * @param resource        $socket
-     * @param int             $index
+     * webSocket 只会在连接握手时会有 request, response
+     * @param Request   $request
+     * @param Response  $response
+     * @param resource  $socket
+     * @param int       $id
      * @return bool
      */
-    public function handleHandshake(WebSocketServer $ws, string $rawData, $socket, int $index)
+    public function handleHandshake(Request $request, Response $response, $socket, int $id)
     {
-        $this->log( "Raw request data: \n". $rawData);
-        $this->request = $request = Request::makeByParseData($rawData);
         $this->log('Parsed request data:');
         var_dump($request);
 
-        // route not exists, response 404 error
-        if ( !$rHandler = $this->activeRouteHandler($request, $index) ) {
-            $resp = $ws->buildResponse(404, 'Not Found', 'You request path not found!', [
-                // headers
-                'Connection' => 'close',
-            ]);
-
-            $ws->writeTo($socket, $resp);
+        // check route. if not exists, response 404 error
+        if ( !$handler = $this->activeRouteHandler($request, $id) ) {
+            $response->setStatus(404)->setHeaders(['Connection' => 'close']);
 
             return false;
         }
 
-        $rHandler->onHandshake($request);
+        $response->setHeader('Server', 'websocket-server');
+
+        $handler->onHandshake($request, $response);
 
         return true;
     }
@@ -229,34 +218,65 @@ EOF;
     /**
      * @param WebSocketServer $ws
      * @param string $rawData
-     * @param int $index
+     * @param int $id
      */
-    public function handleOpen(WebSocketServer $ws, string $rawData, int $index)
+    public function handleOpen(WebSocketServer $ws, string $rawData, int $id)
     {
         $this->log('A new user connection. Now, connected user count: ' . $ws->count());
         // $this->log("SERVER Data: \n" . var_export($_SERVER, 1), 'info');
 
         if ( $openHandler = $this->wsHandlers[self::OPEN_HANDLER] ) {
             // $openHandler($request, $this);
-            $openHandler($ws, $this);
+            $openHandler($ws, $this, $id);
         }
 
-        $this->getRouteHandler()->onClose($this->request);
+        $path = $ws->getClient($id)['path'];
+        $this->getRouteHandler($path)->onOpen($id);
+    }
 
+    /**
+     * @param string          $data
+     * @param WebSocketServer $ws
+     * @param int             $id
+     */
+    public function handleMessage(WebSocketServer $ws, string $data, int $id)
+    {
+        $goon = true;
+        $this->log("Received user [$id] sent message. MESSAGE: $data, LENGTH: " . mb_strlen($data));
+
+        // call custom message handler
+        if ( $msgHandler = $this->wsHandlers[self::MESSAGE_HANDLER] ) {
+            $goon = $msgHandler($ws, $this);
+        }
+
+        // go on handle
+        if ( false !== $goon ) {
+            $path = $ws->getClient($id)['path'];
+            $rHandler = $this->getRouteHandler($path);
+            $result = $rHandler->dispatch($data, $id);
+
+            if ( $result && is_string($result) ) {
+                $this->log("Response message: $result");
+                $this->beforeSend($result);
+
+                $ws->send($result, $id);
+            }
+        }
     }
 
     /**
      * @param WebSocketServer $ws
+     * @param int $id
      */
-    public function handleClose(WebSocketServer $ws)
+    public function handleClose(WebSocketServer $ws, int $id)
     {
-        $this->log('A user disconnected. Now, connected user count: ' . $ws->count());
+        $this->log("The #$id user disconnected. Now, connected user count: " . $ws->count());
 
         if ( $closeHandler = $this->wsHandlers[self::CLOSE_HANDLER] ) {
             $closeHandler($ws, $this);
         }
 
-        $this->getRouteHandler()->onClose($this->request);
+        $this->getRouteHandler()->onClose($id);
     }
 
     /**
@@ -272,35 +292,6 @@ EOF;
         }
     }
 
-    /**
-     * @param string          $data
-     * @param WebSocketServer $ws
-     * @param int             $index
-     */
-    public function handleMessage(WebSocketServer $ws, string $data, int $index)
-    {
-        $goon = true;
-        $this->request->setBody($data);
-        $this->log("Received user [$index] sent message. MESSAGE: $data, LENGTH: " . mb_strlen($data));
-
-        // call custom message handler
-        if ( $msgHandler = $this->wsHandlers[self::MESSAGE_HANDLER] ) {
-            $goon = $msgHandler($ws, $this);
-        }
-
-        // go on handle
-        if ( false !== $goon ) {
-            $rHandler = $this->getRouteHandler();
-            $result = $rHandler->dispatch($data, $index);
-
-            if ( $result && is_string($result) ) {
-                $this->log("Response message: $result");
-                $this->beforeSend($result);
-
-                $ws->send($result, $index);
-            }
-        }
-    }
 
     /**
      * @param callable $openHandler
@@ -403,10 +394,8 @@ EOF;
      * @param string $path
      * @return IRouteHandler
      */
-    public function getRouteHandler(string $path = ''): IRouteHandler
+    public function getRouteHandler(string $path = '/'): IRouteHandler
     {
-        $path = $path ?: $this->request->getPath();
-
         if ( !$this->hasRoute($path) ) {
             throw new \RuntimeException("The route handler not exists for the path: $path");
         }
@@ -468,7 +457,7 @@ EOF;
     /// response
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    private $sender;
+    private $sender = -1;
     private $targets = [];
     private $excepted = [];
 
@@ -538,7 +527,7 @@ EOF;
         $status = $this->ws->send($data, $this->sender, $this->targets, $this->excepted);
 
         // reset data
-        $this->sender = null;
+        $this->sender = -1;
         $this->targets = $this->excepted = [];
 
         return $status;

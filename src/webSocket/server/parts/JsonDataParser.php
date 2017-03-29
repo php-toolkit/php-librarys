@@ -6,14 +6,14 @@
  * Time: 9:27
  */
 
-namespace inhere\librarys\webSocket\parts;
+namespace inhere\librarys\webSocket\server\parts;
 
 
-use inhere\librarys\webSocket\Application;
+use inhere\librarys\webSocket\server\Application;
 
 /**
  * Class JsonDataParser
- * @package inhere\librarys\webSocket\parts
+ * @package inhere\librarys\webSocket\server\parts
  */
 class JsonDataParser implements IDataParser
 {
@@ -29,34 +29,34 @@ class JsonDataParser implements IDataParser
      * @param string $data
      * @param int $index
      * @param Application $app
-     * @return array
+     * @return array|false
      */
-    public function parse(string $data, int $index, Application $app): array
+    public function parse(string $data, int $index, Application $app)
     {
         // json parser
         $temp = $data;
-        $to = $app->getOption('jsonParseTo') ?: Application::JSON_TO_RAW;
+        $command = '';
+        $to = $app->getOption('jsonParseTo') ?: self::JSON_TO_RAW;
         $cmdKey = $this->cmdKey ?: self::DEFAULT_CMD_KEY;
-        $command = $app->getOption('defaultCmd') ?: Application::DEFAULT_CMD;
 
         $app->log("The #{$index} request command: $command, data: $data");
 
-        $data = json_decode(trim($data), $toAssoc = $to === Application::JSON_TO_ARRAY);
+        $data = json_decode(trim($data), $toAssoc = $to === self::JSON_TO_ARRAY);
 
         // parse error
         if ( json_last_error() > 0 ) {
             // revert
-            $data = $temp;
-            $command = Application::PARSE_ERROR;
             $errMsg = json_last_error_msg();
 
             $app->log("The #{$index} request data parse to json failed! MSG: $errMsg Data: {$temp}", 'error');
+
+            return false;
         } elseif ($toAssoc) {
             if ( isset($data[$cmdKey]) && $data[$cmdKey]) {
                 $command = $data[$cmdKey];
                 unset($data[$cmdKey]);
             }
-        } elseif ($to === Application::JSON_TO_OBJECT) {
+        } elseif ($to === self::JSON_TO_OBJECT) {
             if ( isset($data->{$cmdKey}) && $data->{$cmdKey}) {
                 $command = $data->{$cmdKey};
                 unset($data->{$cmdKey});

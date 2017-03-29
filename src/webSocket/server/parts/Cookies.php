@@ -8,11 +8,11 @@
  * @from slim3
  */
 
-namespace inhere\librarys\webSocket\parts;
+namespace inhere\librarys\webSocket\server\parts;
 
 /**
  * Class Cookies
- * @package inhere\librarys\webSocket\parts
+ * @package inhere\librarys\webSocket\server\parts
  */
 class Cookies
 {

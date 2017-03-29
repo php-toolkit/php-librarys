@@ -6,13 +6,13 @@
  * Time: 9:27
  */
 
-namespace inhere\librarys\webSocket\parts;
+namespace inhere\librarys\webSocket\server\parts;
 
-use inhere\librarys\webSocket\Application;
+use inhere\librarys\webSocket\server\Application;
 
 /**
  * Class ComplexDataParser
- * @package inhere\librarys\webSocket\parts
+ * @package inhere\librarys\webSocket\server\parts
  */
 class ComplexDataParser implements IDataParser
 {
@@ -20,9 +20,9 @@ class ComplexDataParser implements IDataParser
      * @param string $data
      * @param int $index
      * @param Application $app
-     * @return array
+     * @return array|false
      */
-    public function parse(string $data, int $index, Application $app): array
+    public function parse(string $data, int $index, Application $app)
     {
         // default format: [@command]data
         // eg:
@@ -50,10 +50,11 @@ class ComplexDataParser implements IDataParser
             if ( json_last_error() > 0 ) {
                 // revert
                 $realData = trim($matches[2]);
-                $command = Application::PARSE_ERROR;
                 $errMsg = json_last_error_msg();
 
                 $app->log("Request data parse to json failed! MSG: {$errMsg}, JSON: {$realData}", 'error');
+
+                return false;
             }
         }
 

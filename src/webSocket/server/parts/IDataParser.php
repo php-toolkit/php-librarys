@@ -6,13 +6,13 @@
  * Time: 15:35
  */
 
-namespace inhere\librarys\webSocket\parts;
+namespace inhere\librarys\webSocket\server\parts;
 
-use inhere\librarys\webSocket\Application;
+use inhere\librarys\webSocket\server\Application;
 
 /**
  * Interface IDataParser
- * @package inhere\librarys\webSocket\parts
+ * @package inhere\librarys\webSocket\server\parts
  *
  */
 interface IDataParser
@@ -26,7 +26,7 @@ interface IDataParser
      * @param string $data
      * @param int $index
      * @param Application $app
-     * @return array
+     * @return array|false
      */
-    public function parse(string $data, int $index, Application $app): array ;
+    public function parse(string $data, int $index, Application $app);
 }

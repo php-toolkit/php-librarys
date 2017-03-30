@@ -6,13 +6,13 @@
  * Time: 19:02
  */
 
-namespace inhere\librarys\http;
+namespace inhere\library\http;
 
-use inhere\librarys\collections\SimpleCollection;
+use inhere\library\collections\SimpleCollection;
 
 /**
  * Class Headers
- * @package inhere\librarys\http
+ * @package inhere\library\http
  */
 class Headers extends SimpleCollection
 {

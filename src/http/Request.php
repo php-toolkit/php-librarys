@@ -6,7 +6,7 @@
  * Time: 18:02
  */
 
-namespace inhere\librarys\http;
+namespace inhere\library\http;
 
 /**
  * Class Request

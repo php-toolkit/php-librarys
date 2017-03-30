@@ -8,7 +8,7 @@
  * @from Slim 3
  */
 
-namespace inhere\librarys\http;
+namespace inhere\library\http;
 
 /**
  * Class Response

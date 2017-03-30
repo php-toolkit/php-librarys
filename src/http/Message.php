@@ -6,9 +6,9 @@
  * Time: 13:12
  */
 
-namespace inhere\librarys\http;
+namespace inhere\library\http;
 
-use inhere\librarys\traits\TraitGetterSetterAccess;
+use inhere\library\traits\TraitGetterSetterAccess;
 
 /**
  * Class BaseRequestResponse

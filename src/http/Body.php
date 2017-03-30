@@ -6,11 +6,11 @@
  * Time: 19:28
  */
 
-namespace inhere\librarys\http;
+namespace inhere\library\http;
 
 /**
  * Class Body
- * @package inhere\librarys\http
+ * @package inhere\library\http
  */
 class Body
 {

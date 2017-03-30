@@ -8,7 +8,7 @@
  * @from slim3
  */
 
-namespace inhere\librarys\http;
+namespace inhere\library\http;
 
 /**
  * Class Cookies

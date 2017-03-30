@@ -9,66 +9,44 @@
 
 namespace inhere\library\env;
 
-use inhere\library\StdBase;
+use inhere\library\collections\SimpleCollection;
 
 /**
  * 环境信息
  * Class Environment
  * @package inhere\library\env
  */
-class Environment extends StdBase
+class Environment extends SimpleCollection
 {
-    /**
-     * @var Server
-     */
-    protected $server;
 
     /**
-     * @var Client
+     * Create mock environment
+     *
+     * @param  array $userData Array of custom environment keys and values
+     *
+     * @return self
      */
-    protected $client;
-
-    public static function make(Server $server=null, Client $client=null)
+    public static function mock(array $userData = [])
     {
-        return new static($server, $client);
-    }
+        $data = array_merge([
+            'SERVER_PROTOCOL'      => 'HTTP/1.1',
+            'REQUEST_METHOD'       => 'GET',
+            'SCRIPT_NAME'          => '',
+            'REQUEST_URI'          => '',
+            'QUERY_STRING'         => '',
+            'SERVER_NAME'          => 'localhost',
+            'SERVER_PORT'          => 80,
+            'HTTP_HOST'            => 'localhost',
+            'HTTP_ACCEPT'          => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'HTTP_ACCEPT_LANGUAGE' => 'en-US,en;q=0.8',
+            'HTTP_ACCEPT_CHARSET'  => 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+            'HTTP_USER_AGENT'      => 'Slim Framework',
+            'REMOTE_ADDR'          => '127.0.0.1',
+            'REQUEST_TIME'         => time(),
+            'REQUEST_TIME_FLOAT'   => microtime(true),
+        ], $userData);
 
-    public function __construct(Server $server=null, Client $client=null)
-    {
-        $this->server = $server ? : new Server;
-        $this->client = $client ? : new Client;
-    }
-
-    /**
-     * @return Server
-     */
-    public function getServer()
-    {
-        return $this->server;
-    }
-
-    /**
-     * @param Server $server
-     */
-    public function setServer(Server $server)
-    {
-        $this->server = $server;
-    }
-
-    /**
-     * @return Client
-     */
-    public function getClient()
-    {
-        return $this->client;
-    }
-
-    /**
-     * @param Client $client
-     */
-    public function setClient(Client $client)
-    {
-        $this->client = $client;
+        return new static($data);
     }
 
 }// end class Environment

@@ -21,7 +21,7 @@ class Input
             return $_GET + $this->getParsedBody();
         }
 
-        return isset($_GET[$name]) ? $_GET[$name] : $this->post($name, $default);
+        return $_GET[$name] ?? $this->post($name, $default);
     }
 
     /**
@@ -35,7 +35,7 @@ class Input
             return $_GET;
         }
 
-        return isset($_GET[$name]) ? $_GET[$name] : $default;
+        return $_GET[$name] ?? $default;
     }
 
     /**
@@ -51,7 +51,7 @@ class Input
             return $body;
         }
 
-        return isset($body[$name]) ? $body[$name] : $default;
+        return $body[$name] ?? $default;
     }
 
     /**
@@ -62,13 +62,11 @@ class Input
         if ($this->parsedBody === false) {
             // post data is json
             if (
-                isset($_SERVER['HTTP_CONTENT_TYPE']) &&
-                ($type = $_SERVER['HTTP_CONTENT_TYPE']) &&
-                strpos($type, '/json') > 0
+                !isset($_SERVER['HTTP_CONTENT_TYPE']) || !($type = $_SERVER['HTTP_CONTENT_TYPE']) || strpos($type, '/json') <= 0
             ) {
-                $this->parsedBody = json_decode(file_get_contents('php://input'), true);
-            } else {
                 $this->parsedBody = &$_POST;
+            } else {
+                $this->parsedBody = json_decode(file_get_contents('php://input'), true);
             }
         }
 

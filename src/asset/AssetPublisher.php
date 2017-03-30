@@ -6,21 +6,21 @@
  * Time: 下午9:53
  */
 
-namespace inhere\librarys\asset;
+namespace inhere\library\asset;
 
-use inhere\librarys\exceptions\FileSystemException;
-use inhere\librarys\exceptions\InvalidArgumentException;
-use inhere\librarys\files\Directory;
-use inhere\librarys\files\File;
-use inhere\librarys\files\FileFinder;
-use inhere\librarys\helpers\ArrHelper;
-use inhere\librarys\helpers\ObjectHelper;
-use inhere\librarys\StdBase;
+use inhere\library\exceptions\FileSystemException;
+use inhere\library\exceptions\InvalidArgumentException;
+use inhere\library\files\Directory;
+use inhere\library\files\File;
+use inhere\library\files\FileFinder;
+use inhere\library\helpers\ArrHelper;
+use inhere\library\helpers\ObjectHelper;
+use inhere\library\StdBase;
 
 /**
  * 资源发布 -- 将资源发布到可访问目录(e.g. from vendor to web dir)
  * Class AssetPublisher
- * @package inhere\librarys\asset
+ * @package inhere\library\asset
  */
 class AssetPublisher extends StdBase
 {

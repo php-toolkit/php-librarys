@@ -4,7 +4,7 @@
 
 ```php
 
-use inhere\librarys\collections\SimpleCollection;
+use inhere\library\collections\SimpleCollection;
 
 /**
  * Class BaseModel

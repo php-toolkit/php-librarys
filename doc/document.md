@@ -1,31 +1,31 @@
 # php-librarys
 
 
-## `inhere\librarys\collections` 
+## `inhere\library\collections` 
 
 数据收集器 
 
-## `inhere\librarys\console` 
+## `inhere\library\console` 
 
 控制台的一些简单交互 
 
-## `inhere\librarys\di` 
+## `inhere\library\di` 
 
 依赖注入容器，提供服务管理 
 
-## `inhere\librarys\env` 
+## `inhere\library\env` 
 
 环境信息收集, `Server`: 服务端信息. `Client`: 客户端信息 
 
-## `inhere\librarys\files` 
+## `inhere\library\files` 
 
 文件系统操作(文件(夹)读取，检查，创建)；文件上传/下载，图片处理(缩略图/水印)，图片验证码生成 
 
-## `inhere\librarys\helpers` 
+## `inhere\library\helpers` 
 
 辅助类库(`string array object date url php`)
 
-## `inhere\librarys\language` 
+## `inhere\library\language` 
 
 语言包处理类 [detail document](language.md)
 

@@ -6,7 +6,7 @@
  * Time: 下午4:29
  */
 
-namespace inhere\librarys\auth;
+namespace inhere\library\auth;
 
 /**
  * IdentityInterface is the interface that should be implemented by a class providing identity information.

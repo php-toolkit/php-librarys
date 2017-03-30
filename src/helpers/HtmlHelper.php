@@ -6,11 +6,11 @@
  * Time: 00:44
  */
 
-namespace inhere\librarys\helpers;
+namespace inhere\library\helpers;
 
 /**
  * Class HtmlHelper
- * @package inhere\librarys\helpers
+ * @package inhere\library\helpers
  */
 class HtmlHelper
 {

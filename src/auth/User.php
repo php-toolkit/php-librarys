@@ -6,10 +6,10 @@
  * Time: 21:57
  */
 
-namespace inhere\librarys\auth;
+namespace inhere\library\auth;
 
-use inhere\librarys\collections\SimpleCollection;
-use inhere\librarys\helpers\ObjectHelper;
+use inhere\library\collections\SimpleCollection;
+use inhere\library\helpers\ObjectHelper;
 use inhere\exceptions\InvalidArgumentException;
 use inhere\exceptions\InvalidConfigException;
 

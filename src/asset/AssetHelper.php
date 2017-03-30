@@ -6,11 +6,11 @@
  * Time: 上午12:33
  */
 
-namespace inhere\librarys\asset;
+namespace inhere\library\asset;
 
 /**
  * Class AssetHelper
- * @package inhere\librarys\asset
+ * @package inhere\library\asset
  */
 class AssetHelper
 {

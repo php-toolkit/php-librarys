@@ -1,10 +1,10 @@
 <?php
 
-namespace inhere\librarys\io;
+namespace inhere\library\io;
 
 /**
  * Class Input
- * @package inhere\librarys\io
+ * @package inhere\library\io
  */
 class Input
 {

@@ -6,11 +6,11 @@
  * Time: 10:35
  * Uesd: 主要功能是 hi
  */
-namespace inhere\librarys\helpers;
+namespace inhere\library\helpers;
 
 /**
  * Class ObjectHelper
- * @package inhere\librarys\helpers
+ * @package inhere\library\helpers
  */
 class ObjectHelper
 {

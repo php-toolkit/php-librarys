@@ -6,18 +6,18 @@
  * Time: 下午3:21
  */
 
-namespace inhere\librarys\files;
+namespace inhere\library\files;
 
-use inhere\librarys\exceptions\NotFoundException;
-use inhere\librarys\files\compress\AbstractCompressor;
-use inhere\librarys\helpers\ObjectHelper;
-use inhere\librarys\StdBase;
+use inhere\library\exceptions\NotFoundException;
+use inhere\library\files\compress\AbstractCompressor;
+use inhere\library\helpers\ObjectHelper;
+use inhere\library\StdBase;
 use ZipArchive;
 
 /**
  * dir compress | file uncompressed
  * Class Compress
- * @package inhere\librarys\files
+ * @package inhere\library\files
  */
 class Package
 {

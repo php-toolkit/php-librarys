@@ -6,11 +6,11 @@
  * Time: 9:22
  */
 
-namespace inhere\librarys\di;
+namespace inhere\library\di;
 
 /**
  * Class TraitStaticContainer
- * @package inhere\librarys\di
+ * @package inhere\library\di
  */
 trait TraitStaticContainer
 {

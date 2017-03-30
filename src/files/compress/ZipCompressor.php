@@ -6,16 +6,16 @@
  * Time: 下午6:23
  */
 
-namespace inhere\librarys\files\compress;
+namespace inhere\library\files\compress;
 
-use inhere\librarys\exceptions\FileSystemException;
-use inhere\librarys\exceptions\NotFoundException;
-use inhere\librarys\files\FileSystem;
+use inhere\library\exceptions\FileSystemException;
+use inhere\library\exceptions\NotFoundException;
+use inhere\library\files\FileSystem;
 use ZipArchive;
 
 /**
  * Class ZipCompressor
- * @package inhere\librarys\files\compress
+ * @package inhere\library\files\compress
  */
 class ZipCompressor extends AbstractCompressor
 {
@@ -33,8 +33,8 @@ class ZipCompressor extends AbstractCompressor
      * @return bool
      * @throws FileSystemException
      * @throws NotFoundException
-     * @throws \inhere\librarys\exceptions\IOException
-     * @throws \inhere\librarys\exceptions\InvalidArgumentException
+     * @throws \inhere\library\exceptions\IOException
+     * @throws \inhere\library\exceptions\InvalidArgumentException
      */
     public function encode($sourcePath, $archiveFile, $override = true)
     {

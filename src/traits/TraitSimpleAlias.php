@@ -6,11 +6,11 @@
  * Time: 9:20
  */
 
-namespace inhere\librarys\traits;
+namespace inhere\library\traits;
 
 /**
  * Class TraitSimpleAlias
- * @package inhere\librarys\traits
+ * @package inhere\library\traits
  */
 trait TraitSimpleAlias
 {

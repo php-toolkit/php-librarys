@@ -8,14 +8,14 @@
  * use :    1. $captcha = new Captcha(....); $captcha->show()
  *          2. Captcha::make(...)->show()
  */
-namespace inhere\librarys\files;
+namespace inhere\library\files;
 
-use inhere\librarys\exceptions\NotFoundException;
-use inhere\librarys\exceptions\ExtensionMissException;
+use inhere\library\exceptions\NotFoundException;
+use inhere\library\exceptions\ExtensionMissException;
 
 /**
  * Class Captcha
- * @package inhere\librarys\files
+ * @package inhere\library\files
  */
 class Captcha
 {

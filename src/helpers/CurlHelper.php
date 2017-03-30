@@ -6,14 +6,14 @@
  * Time: 10:35
  */
 
-namespace inhere\librarys\helpers;
+namespace inhere\library\helpers;
 
-use inhere\librarys\files\Directory;
-use inhere\librarys\files\File;
+use inhere\library\files\Directory;
+use inhere\library\files\File;
 
 /**
  * Class CurlHelper
- * @package inhere\librarys\helpers
+ * @package inhere\library\helpers
  */
 class CurlHelper
 {

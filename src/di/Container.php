@@ -10,14 +10,14 @@
  * File: Container.php
  */
 
-namespace inhere\librarys\di;
+namespace inhere\library\di;
 
 use inhere\exceptions\NotFoundException;
 use inhere\exceptions\DependencyResolutionException;
 
 /**
  * Class Container
- * @package inhere\librarys\di
+ * @package inhere\library\di
  */
 class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
 {

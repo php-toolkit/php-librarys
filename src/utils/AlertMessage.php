@@ -6,9 +6,9 @@
  * Time: 上午11:49
  */
 
-namespace inhere\librarys\utils;
+namespace inhere\library\utils;
 
-use inhere\librarys\collections\FixedData;
+use inhere\library\collections\FixedData;
 
 /**
  * Class AlertMessage

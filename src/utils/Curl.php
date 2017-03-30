@@ -6,13 +6,13 @@
  * Time: 16:40
  */
 
-namespace inhere\librarys\utils;
+namespace inhere\library\utils;
 
-use inhere\librarys\helpers\UrlHelper;
+use inhere\library\helpers\UrlHelper;
 
 /**
  * Class Curl
- * @package inhere\librarys\utils
+ * @package inhere\library\utils
  *
  * ```
  * $curl = Curl::make('http://my-site.com');

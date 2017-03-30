@@ -8,9 +8,9 @@
  * @From : [windwalker framework](https://github.com/ventoviro/windwalker)
  */
 
-namespace inhere\librarys\event;
+namespace inhere\library\event;
 
-use inhere\librarys\StdBase;
+use inhere\library\StdBase;
 
 class Dispatcher extends StdBase implements InterfaceDispatcher
 {

@@ -8,11 +8,11 @@
  * Service.php
  */
 
-namespace inhere\librarys\di;
+namespace inhere\library\di;
 
 /**
  * Class Service
- * @package inhere\librarys\di
+ * @package inhere\library\di
  */
 class Service
 {

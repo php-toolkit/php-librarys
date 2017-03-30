@@ -7,11 +7,11 @@
  * File: FormatHelper.php
  */
 
-namespace inhere\librarys\helpers;
+namespace inhere\library\helpers;
 
 /**
  * Class FormatHelper
- * @package inhere\librarys\helpers
+ * @package inhere\library\helpers
  */
 class FormatHelper
 {

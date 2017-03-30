@@ -6,7 +6,7 @@
  * Time: 上午11:49
  */
 
-namespace inhere\librarys\collections;
+namespace inhere\library\collections;
 
 use inhere\exceptions\PropertyException;
 

@@ -7,7 +7,7 @@
  * Use : 监听器优先级级别 部分常量
  */
 
-namespace inhere\librarys\event;
+namespace inhere\library\event;
 
 abstract class ListenerLevel
 {

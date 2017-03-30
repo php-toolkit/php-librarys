@@ -22,16 +22,16 @@
  *
  */
 
-namespace inhere\librarys\files;
+namespace inhere\library\files;
 
-use inhere\librarys\exceptions\InvalidArgumentException;
-use inhere\librarys\exceptions\InvalidConfigException;
-use inhere\librarys\exceptions\ExtensionMissException;
-use inhere\librarys\exceptions\FileSystemException;
+use inhere\library\exceptions\InvalidArgumentException;
+use inhere\library\exceptions\InvalidConfigException;
+use inhere\library\exceptions\ExtensionMissException;
+use inhere\library\exceptions\FileSystemException;
 
 /**
  * Class Picture
- * @package inhere\librarys\files
+ * @package inhere\library\files
  */
 class Picture
 {

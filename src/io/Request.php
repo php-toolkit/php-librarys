@@ -6,7 +6,7 @@
  * Time: 18:02
  */
 
-namespace inhere\librarys\io;
+namespace inhere\library\io;
 
 /**
  * Class Request

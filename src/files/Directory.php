@@ -7,15 +7,15 @@
  * Uesd: 主要功能是 hi
  */
 
-namespace inhere\librarys\files;
+namespace inhere\library\files;
 
 use DirectoryIterator;
-use inhere\librarys\exceptions\FileSystemException;
-use inhere\librarys\exceptions\NotFoundException;
+use inhere\library\exceptions\FileSystemException;
+use inhere\library\exceptions\NotFoundException;
 
 /**
  * Class Directory
- * @package inhere\librarys\files
+ * @package inhere\library\files
  */
 class Directory extends FileSystem
 {
@@ -173,7 +173,7 @@ class Directory extends FileSystem
 
     /**
      * @param $dir
-     * @param array $options more {@see \inhere\librarys\files\DirectoryFiles}
+     * @param array $options more {@see \inhere\library\files\DirectoryFiles}
      * @param bool|false $recursive
      *
      * @return array|\ArrayObject

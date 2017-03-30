@@ -6,11 +6,11 @@
  * Time: 上午2:14
  */
 
-namespace inhere\librarys\files\compress;
+namespace inhere\library\files\compress;
 
 /**
  * Class PharCompressor
- * @package inhere\librarys\files\compress
+ * @package inhere\library\files\compress
  */
 class PharCompressor extends AbstractCompressor
 {

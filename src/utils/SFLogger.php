@@ -6,14 +6,14 @@
  * Time: 14:17
  */
 
-namespace inhere\librarys\utils;
+namespace inhere\library\utils;
 
-use inhere\librarys\helpers\PhpHelper;
+use inhere\library\helpers\PhpHelper;
 
 /**
  * simple file logger handler
  * Class SFLogger
- * @package inhere\librarys\utils
+ * @package inhere\library\utils
  * ```
  * $config = [...];
  * $logger = SFLogger::make($config);

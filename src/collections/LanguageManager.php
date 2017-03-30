@@ -6,19 +6,19 @@
  * Time: 15:04
  */
 
-namespace inhere\librarys\language;
+namespace inhere\library\language;
 
-use inhere\librarys\collections\DataCollector;
-use inhere\librarys\exceptions\InvalidArgumentException;
-use inhere\librarys\exceptions\NotFoundException;
-use inhere\librarys\files\FileSystem;
-use inhere\librarys\helpers\ObjectHelper;
-use inhere\librarys\helpers\StrHelper;
-use inhere\librarys\StdBase;
+use inhere\library\collections\DataCollector;
+use inhere\library\exceptions\InvalidArgumentException;
+use inhere\library\exceptions\NotFoundException;
+use inhere\library\files\FileSystem;
+use inhere\library\helpers\ObjectHelper;
+use inhere\library\helpers\StrHelper;
+use inhere\library\StdBase;
 
 /**
  * Class LanguageManager
- * @package inhere\librarys\base
+ * @package inhere\library\base
  *
  */
 class LanguageManager extends StdBase

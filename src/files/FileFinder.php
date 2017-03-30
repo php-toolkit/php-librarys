@@ -6,16 +6,16 @@
  * Time: 下午3:46
  */
 
-namespace inhere\librarys\files;
+namespace inhere\library\files;
 
 use ArrayObject;
-use inhere\librarys\exceptions\InvalidArgumentException;
-use inhere\librarys\helpers\ObjectHelper;
-use inhere\librarys\StdBase;
+use inhere\library\exceptions\InvalidArgumentException;
+use inhere\library\helpers\ObjectHelper;
+use inhere\library\StdBase;
 
 /**
  * Class FileFinder
- * @package inhere\librarys\files
+ * @package inhere\library\files
  *
  *  $finder = new FileFinder([
  *       'sourcePath'  => '/var/xxx/vendor/bower/jquery'),

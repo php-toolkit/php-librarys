@@ -6,7 +6,7 @@
  * Time: 19:44
  */
 
-namespace inhere\librarys\collections;
+namespace inhere\library\collections;
 
 use RuntimeException;
 

@@ -8,11 +8,11 @@
  * File: TraitUseAlias.php
  */
 
-namespace inhere\librarys\traits;
+namespace inhere\library\traits;
 
 /**
  * Class TraitUseAlias
- * @package inhere\librarys\traits
+ * @package inhere\library\traits
  * 
  * @property $aliases
  */

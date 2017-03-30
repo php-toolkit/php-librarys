@@ -7,14 +7,14 @@
  * File: Environment.php
  */
 
-namespace inhere\librarys\env;
+namespace inhere\library\env;
 
-use inhere\librarys\StdBase;
+use inhere\library\StdBase;
 
 /**
  * 环境信息
  * Class Environment
- * @package inhere\librarys\env
+ * @package inhere\library\env
  */
 class Environment extends StdBase
 {

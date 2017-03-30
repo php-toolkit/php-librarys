@@ -1,12 +1,12 @@
 <?php
 
-namespace inhere\librarys\io;
+namespace inhere\library\io;
 
-use inhere\librarys\helpers\ObjectHelper;
+use inhere\library\helpers\ObjectHelper;
 
 /**
  * Class Output
- * @package inhere\librarys\io
+ * @package inhere\library\io
  */
 class Output
 {

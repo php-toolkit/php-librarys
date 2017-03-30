@@ -8,16 +8,16 @@
  * Uesd: 主要功能是 hi
  */
 
-namespace inhere\librarys\files;
+namespace inhere\library\files;
 
-use inhere\librarys\exceptions\IOException;
-use inhere\librarys\exceptions\NotFoundException;
-use inhere\librarys\helpers\ArrHelper;
-use inhere\librarys\helpers\StrHelper;
+use inhere\library\exceptions\IOException;
+use inhere\library\exceptions\NotFoundException;
+use inhere\library\helpers\ArrHelper;
+use inhere\library\helpers\StrHelper;
 
 /**
  * Class FileSystem
- * @package inhere\librarys\files
+ * @package inhere\library\files
  */
 abstract class FileSystem
 {

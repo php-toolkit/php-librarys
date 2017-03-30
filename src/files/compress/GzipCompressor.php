@@ -6,18 +6,18 @@
  * Time: 上午1:45
  */
 
-namespace inhere\librarys\files\compress;
+namespace inhere\library\files\compress;
 
-use inhere\librarys\exceptions\FileNotFoundException;
-use inhere\librarys\exceptions\FileSystemException;
-use inhere\librarys\exceptions\NotFoundException;
-use inhere\librarys\files\FileSystem;
+use inhere\library\exceptions\FileNotFoundException;
+use inhere\library\exceptions\FileSystemException;
+use inhere\library\exceptions\NotFoundException;
+use inhere\library\files\FileSystem;
 use Phar;
 use PharData;
 
 /**
  * Class GzipCompressor
- * @package inhere\librarys\files\compress
+ * @package inhere\library\files\compress
  */
 class GzipCompressor extends AbstractCompressor
 {
@@ -35,8 +35,8 @@ class GzipCompressor extends AbstractCompressor
      * @return bool
      * @throws FileSystemException
      * @throws NotFoundException
-     * @throws \inhere\librarys\exceptions\IOException
-     * @throws \inhere\librarys\exceptions\InvalidArgumentException
+     * @throws \inhere\library\exceptions\IOException
+     * @throws \inhere\library\exceptions\InvalidArgumentException
      */
     public function encode($sourcePath, $archiveFile, $override = true)
     {

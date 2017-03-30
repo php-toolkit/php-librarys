@@ -8,10 +8,10 @@
  * file: Element.php
  */
 
-namespace inhere\librarys\html;
+namespace inhere\library\html;
 
-use inhere\librarys\StdBase;
-use inhere\librarys\exceptions\InvalidConfigException;
+use inhere\library\StdBase;
+use inhere\library\exceptions\InvalidConfigException;
 
 /*
 
@@ -32,7 +32,7 @@ var_dump((string)$form);
 
 /**
  * Class Element
- * @package inhere\librarys\html
+ * @package inhere\library\html
  */
 class Element extends StdBase
 {
@@ -229,9 +229,9 @@ class Element extends StdBase
         } else {
             $child = new static($name, $content, $attrs);
         }
-    
+
         $rule = $this->isValidRule($rule) ? $rule : $this->defaultAddRule;
-        
+
         $this->childs[$rule][] = $child;
 
         return $child;
@@ -287,7 +287,7 @@ class Element extends StdBase
     {
         return $this->defaultAddRule;
     }
-    
+
     /**
      * @return string
      */
@@ -371,7 +371,7 @@ class Element extends StdBase
 
         return $this->content;
     }
-    
+
 ///////////////////////////////////////// element attr /////////////////////////////////////////
 
     /**

@@ -8,11 +8,11 @@
  * File: ListenersQueue.php
  */
 
-namespace inhere\librarys\event;
+namespace inhere\library\event;
 
 /**
  * Class ListenersQueue
- * @package inhere\librarys\event
+ * @package inhere\library\event
  */
 class ListenersQueue implements \IteratorAggregate, \Countable
 {

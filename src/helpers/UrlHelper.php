@@ -6,11 +6,11 @@
  * Use : ...
  */
 
-namespace inhere\librarys\helpers;
+namespace inhere\library\helpers;
 
 /**
  * Class UrlHelper
- * @package inhere\librarys\helpers
+ * @package inhere\library\helpers
  */
 class UrlHelper
 {

@@ -6,10 +6,10 @@
  * Time: 10:35
  * Uesd: 主要功能是 数组处理
  */
-namespace inhere\librarys\helpers;
+namespace inhere\library\helpers;
 
 /**
  * Class ArrHelper
- * @package inhere\librarys\helpers
+ * @package inhere\library\helpers
  */
 class ArrHelper extends ArrayHelper {}

@@ -6,11 +6,11 @@
  * Time: 10:33
  */
 
-namespace inhere\librarys\files;
+namespace inhere\library\files;
 
 /**
  * Class Backup
- * @package inhere\librarys\files
+ * @package inhere\library\files
  *
  * ```
  * $bk = new Backup;

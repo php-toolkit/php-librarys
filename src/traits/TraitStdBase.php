@@ -6,16 +6,16 @@
  * Time: 下午2:25
  */
 
-namespace inhere\librarys\traits;
+namespace inhere\library\traits;
 
-use inhere\librarys\exceptions\SetPropertyException;
-use inhere\librarys\exceptions\GetPropertyException;
-use inhere\librarys\exceptions\NotFoundException;
-use inhere\librarys\exceptions\UnknownCalledException;
+use inhere\library\exceptions\SetPropertyException;
+use inhere\library\exceptions\GetPropertyException;
+use inhere\library\exceptions\NotFoundException;
+use inhere\library\exceptions\UnknownCalledException;
 
 /**
  * Class TraitStaBase
- * @package inhere\librarys\traits
+ * @package inhere\library\traits
  */
 trait TraitStdBase
 {

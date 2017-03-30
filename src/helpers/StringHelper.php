@@ -2,13 +2,13 @@
 /**
  *
  */
-namespace inhere\librarys\helpers;
+namespace inhere\library\helpers;
 
-use inhere\librarys\traits\TraitStringFormat;
+use inhere\library\traits\TraitStringFormat;
 
 /**
  * Class StringHelper
- * @package inhere\librarys\helpers
+ * @package inhere\library\helpers
  */
 abstract class StringHelper
 {

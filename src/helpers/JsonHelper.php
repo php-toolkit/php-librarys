@@ -5,13 +5,13 @@
  * Date: 2016/8/10 0010
  * Time: 00:41
  */
-namespace inhere\librarys\helpers;
+namespace inhere\library\helpers;
 
-use inhere\librarys\exceptions\NotFoundException;
+use inhere\library\exceptions\NotFoundException;
 
 /**
  * Class JsonHelper
- * @package inhere\librarys\helpers
+ * @package inhere\library\helpers
  */
 class JsonHelper
 {

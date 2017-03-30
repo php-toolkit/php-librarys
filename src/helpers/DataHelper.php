@@ -7,11 +7,11 @@
  *  数据操作 转码 序列化
  */
 
-namespace inhere\librarys\helpers;
+namespace inhere\library\helpers;
 
 /**
  * Class DataHelper
- * @package inhere\librarys\helpers
+ * @package inhere\library\helpers
  */
 abstract class DataHelper
 {

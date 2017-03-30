@@ -3,7 +3,7 @@
 /**
  * @deprecated Please use 'inhere\exceptions\*' instead of it.
  */
-namespace inhere\librarys\exceptions
+namespace inhere\library\exceptions
 {
     abstract class BaseException extends \Exception
     {

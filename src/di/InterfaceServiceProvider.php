@@ -5,7 +5,7 @@
  * Use : InterfaceServiceProvider.php
  * Date : 2014-7-10
  */
-namespace inhere\librarys\di;
+namespace inhere\library\di;
 
 interface InterfaceServiceProvider
 {

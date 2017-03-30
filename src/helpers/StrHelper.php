@@ -6,11 +6,11 @@
  * Time: 21:12
  */
 
-namespace inhere\librarys\helpers;
+namespace inhere\library\helpers;
 
 /**
  * Class StrHelper
- * @package inhere\librarys\helpers
+ * @package inhere\library\helpers
  */
 class StrHelper extends StringHelper
 {

@@ -6,11 +6,11 @@
  * Time: 9:22
  */
 
-namespace inhere\librarys\di;
+namespace inhere\library\di;
 
 /**
  * Class TraitSimpleContainer
- * @package inhere\librarys\traits
+ * @package inhere\library\traits
  */
 trait TraitSimpleContainer
 {

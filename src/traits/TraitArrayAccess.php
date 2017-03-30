@@ -6,11 +6,11 @@
  * Time: 22:03
  */
 
-namespace inhere\librarys\traits;
+namespace inhere\library\traits;
 
 /**
  * Class TraitArrayAccess
- * @package inhere\librarys\traits
+ * @package inhere\library\traits
  *
  * ```
  * class A implements \ArrayAccess

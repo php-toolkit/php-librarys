@@ -6,13 +6,13 @@
  * Time: 10:35
  */
 
-namespace inhere\librarys;
+namespace inhere\library;
 
-use inhere\librarys\traits\TraitStdBase;
+use inhere\library\traits\TraitStdBase;
 
 /**
  * Class StdBase
- * @package inhere\librarys
+ * @package inhere\library
  */
 abstract class StdBase
 {

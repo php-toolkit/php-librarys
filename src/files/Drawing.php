@@ -3,7 +3,7 @@
  * 画图
  */
 
-namespace inhere\librarys\files;
+namespace inhere\library\files;
 
 class Drawing
 {

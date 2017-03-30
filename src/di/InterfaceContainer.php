@@ -4,10 +4,10 @@
  * Date : 2015-1-10
  * InterfaceContainer.php
  */
-namespace inhere\librarys\di;
+namespace inhere\library\di;
 
-use inhere\librarys\exceptions\NotFoundException;
-use inhere\librarys\exceptions\ContainerException;
+use inhere\library\exceptions\NotFoundException;
+use inhere\library\exceptions\ContainerException;
 
 interface InterfaceContainer
 {

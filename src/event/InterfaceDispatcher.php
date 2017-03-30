@@ -6,11 +6,11 @@
  * Time: 下午12:35
  */
 
-namespace inhere\librarys\event;
+namespace inhere\library\event;
 
 /**
  * Interface InterfaceDispatcher
- * @package inhere\librarys\event
+ * @package inhere\library\event
  */
 interface InterfaceDispatcher
 {

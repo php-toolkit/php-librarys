@@ -2,13 +2,13 @@
 /**
  *
  */
-namespace inhere\librarys\helpers;
+namespace inhere\library\helpers;
 
 use inhere\exceptions\ExtensionMissException;
 
 /**
  * Class PhpHelper
- * @package inhere\librarys\helpers
+ * @package inhere\library\helpers
  */
 class PhpHelper
 {

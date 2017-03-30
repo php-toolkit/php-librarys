@@ -215,6 +215,7 @@ class Response  extends Message
 
         // set headers
         foreach ($this->headers as $name => $value) {
+            $name = ucwords($name);
             $output .= "$name: $value" . self::EOL;
         }
 

@@ -30,8 +30,8 @@ abstract class Message
      */
     const EOL = "\r\n";
 
-
     /**
+     * protocol/schema
      * @var string
      */
     protected $protocol;
@@ -111,10 +111,13 @@ abstract class Message
     /**
      * @param $name
      * @param $value
+     * @return $this
      */
     public function setHeader($name, $value)
     {
         $this->headers->set($name, $value);
+
+        return $this;
     }
 
     /**
@@ -139,10 +142,13 @@ abstract class Message
     /**
      * @param string $name
      * @param string|array $value
+     * @return $this
      */
     public function setCookie(string $name, $value)
     {
         $this->cookies->set($name, $value);
+
+        return $this;
     }
 
     /**
@@ -154,12 +160,12 @@ abstract class Message
     }
 
     /**
-     * @param Cookies $cookies
+     * @param array $cookies
      * @return $this
      */
-    public function setCookies(Cookies $cookies)
+    public function setCookies(array $cookies)
     {
-        $this->cookies = $cookies;
+        $this->cookies = new Cookies($cookies);
 
         return $this;
     }

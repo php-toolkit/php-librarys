@@ -54,7 +54,7 @@ trait TraitUseOption
      * @param   null|bool $strict
      * @return  mixed
      */
-    public function getOption($name, $default = null, $strict = null)
+    public function getOption(string $name, $default = null, $strict = null)
     {
         if (array_key_exists($name, $this->options)) {
             $value = $this->options[$name];

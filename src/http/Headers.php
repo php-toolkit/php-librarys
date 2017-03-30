@@ -27,6 +27,14 @@ class Headers extends SimpleCollection
     /**
      * @inheritdoc
      */
+    public function get($key, $default = null)
+    {
+        return parent::get($this->normalizeKey($key), $default);
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function add($key, $value)
     {
         return parent::add($this->normalizeKey($key), $value);
@@ -54,11 +62,54 @@ class Headers extends SimpleCollection
      */
     public function normalizeKey($key)
     {
-        $key = strtr(strtolower($key), '_', '-');
+        $key = str_replace('_', '-', strtolower($key));
+
         if (strpos($key, 'http-') === 0) {
             $key = substr($key, 5);
         }
 
         return $key;
+    }
+
+    /**
+     * get client supported languages from header
+     * eg: `Accept-Language:zh-CN,zh;q=0.8`
+     * @return array
+     */
+    public function getAcceptLanguages()
+    {
+        $ls = [];
+
+        if ( $value = $this->get('Accept-Language') ) {
+            if ( strpos($value, ';') ) {
+                [$value,] = explode(';', $value,2);
+            }
+
+            $value = str_replace(' ', '', $value);
+            $ls = explode(',', $value);
+        }
+
+        return $ls;
+    }
+
+    /**
+     * get client supported languages from header
+     * eg: `Accept-Encoding:gzip, deflate, sdch, br`
+     * @return array
+     */
+    public function getAcceptEncodes()
+    {
+        $ens = [];
+
+        if ( $value = $this->get('Accept-Encoding') ) {
+            if ( strpos($value, ';') ) {
+                [$value,] = explode(';', $value,2);
+            }
+
+            $value = str_replace(' ', '', $value);
+            $ens = explode(',', $value);
+        }
+
+        return $ens;
     }
 }

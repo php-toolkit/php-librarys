@@ -42,13 +42,9 @@ trait TraitUseSimpleOption
      * @param   mixed $default
      * @return  mixed
      */
-    public function getOption($name, $default = null)
+    public function getOption(string $name, $default = null)
     {
-        if (array_key_exists($name, $this->options)) {
-            $value = $this->options[$name];
-        } else {
-            $value = $default;
-        }
+        $value = array_key_exists($name, $this->options) ? $this->options[$name] : $default;
 
         if ($value && is_callable($value) && ($value instanceof \Closure)) {
             $value = $value();
@@ -87,12 +83,7 @@ trait TraitUseSimpleOption
      */
     public function setOptions($options, $merge = false)
     {
-        if ( $merge ) {
-            // $this->options = array_merge($this->options, $options);
-            $this->options = ArrayHelper::merge($this->options, (array)$options);
-        } else {
-            $this->options = $options;
-        }
+        $this->options = $merge ? ArrayHelper::merge($this->options, (array)$options) : $options;
 
         return $this;
     }

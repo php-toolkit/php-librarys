@@ -15,6 +15,7 @@ namespace inhere\library\http;
  *
  * @property string $host
  * @property string $path
+ * @property-read string $origin
  *
  * @property string $body
  */
@@ -57,7 +58,6 @@ class Request extends Message
         string $host = '', string $method = 'GET', string $path = '/', string $protocol = 'HTTP',
         string $protocolVersion = '1.1', array $headers = [], array $cookies = [], string $body = ''
     ) {
-
         parent::__construct($protocol, $protocolVersion, $headers, $cookies);
 
         $this->method = $method ?: 'GET';
@@ -104,7 +104,7 @@ class Request extends Message
             }
 
             [$name, $value] = explode(': ', trim($item));
-            $headers[$name] = $value;
+            $headers[$name] = trim($value);
         }
 
         $cookies = [];
@@ -121,6 +121,15 @@ class Request extends Message
         }
 
         return new self($host, $method, $path, $protocol, $protocolVersion, $headers, $cookies, $body);
+    }
+
+    /**
+     * `Origin: http://foo.example`
+     * @return mixed
+     */
+    public function getOrigin()
+    {
+        return $this->headers->get('Origin');
     }
 
     /**

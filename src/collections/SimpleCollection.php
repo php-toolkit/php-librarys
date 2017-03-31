@@ -22,7 +22,7 @@ class SimpleCollection implements CollectionInterface
      * @param array $items
      * @return static
      */
-    public static function make($items = [])
+    public static function make(array $items = [])
     {
         return new static($items);
     }
@@ -31,7 +31,7 @@ class SimpleCollection implements CollectionInterface
      * Create new collection
      * @param array $items Pre-populate collection with this key-value array
      */
-    public function __construct($items = [])
+    public function __construct(array $items = [])
     {
         foreach ($items as $key => $value) {
             $this->set($key, $value);
@@ -46,7 +46,7 @@ class SimpleCollection implements CollectionInterface
      * Set collection item
      * @param string $key   The data key
      * @param mixed  $value The data value
-     * @return static
+     * @return $this
      */
     public function set($key, $value)
     {

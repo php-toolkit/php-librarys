@@ -27,6 +27,7 @@
   "suggest": {
     "inhere/simple-print-tool": "Very lightweight data printing tools",
     "inhere/php-validate": "Very lightweight data validate tool",
+    "slim/http": "Very lightweight PSR-7 implements http message component",
     "matthiasmullie/minify" : "compress css and js. if you want to compress assets."
   }
 }

@@ -1,198 +1,258 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: Inhere
- * Date: 2017/3/26 0026
- * Time: 18:02
+ * User: inhere
+ * Date: 2017-03-31
+ * Time: 14:05
  */
 
 namespace inhere\library\http;
 
+use inhere\validate\StrainerList;
+use inhere\library\DataType;
+
 /**
  * Class Request
+ * @package inhere\library\http
  *
- * @property string $method
+ * @method      string   getRaw($name, $default = null)      Get raw data
+ * @method      integer  getInt($name, $default = null)      Get a signed integer.
+ * @method      integer  getNumber($name, $default = null)   Get an unsigned integer.
+ * @method      float    getFloat($name, $default = null)    Get a floating-point number.
+ * @method      boolean  getBool($name, $default = null)     Get a boolean.
+ * @method      boolean  getBoolean($name, $default = null)  Get a boolean.
+ * @method      string   getString($name, $default = null)
+ * @method      string   getTrimmed($name, $default = null)
+ * @method      string   getSafe($name, $default = null)
+ * @method      string   getEmail($name, $default = null)
+ * @method      string   getUrl($name, $default = null)      Get URL
  *
- * @property string $host
- * @property string $path
- * @property-read string $origin
- *
- * @property string $body
+ * @property  \Slim\Http\Uri $uri;
  */
-class Request extends Message
+class Request extends \Slim\Http\Request
 {
     /**
-     * @var string
+     * return raw data
      */
-    private $method;
+    const FILTER_RAW = 'raw';
 
     /**
-     * eg: site.com 127.0.0.1:9501
-     * @var string
+     * @var array
      */
-    private $host;
+    protected $filterList = [
+        // return raw
+        'raw'     => '',
+
+        // (int)$var
+        'int'     => 'int',
+        // (float)$var or floatval($var)
+        'float'   => 'float',
+        // (bool)$var
+        'bool'    => 'bool',
+        // (bool)$var
+        'boolean' => 'bool',
+        // (string)$var
+        'string'  => 'string',
+
+        // trim($var)
+        'trimmed'  => StrainerList::class . '::trim',
+
+        // safe data
+        'safe'  => 'htmlspecialchars',
+
+        // abs((int)$var)
+        'number'  => StrainerList::class . '::abs',
+        // will use filter_var($var ,FILTER_SANITIZE_EMAIL)
+        'email'   => StrainerList::class . '::email',
+        // will use filter_var($var ,FILTER_SANITIZE_URL)
+        'url'     => StrainerList::class . '::url',
+
+        // will use filter_var($var ,FILTER_SANITIZE_ENCODED, $settings);
+        'encoded'     => StrainerList::class . '::encoded',
+    ];
 
     /**
-     * eg: /home
-     * @var string
+     * getParams() alias method
+     * @return array
      */
-    private $path;
-
-    /**
-     * @var string
-     */
-    private $body;
-
-    /**
-     * Request constructor.
-     * @param string $host
-     * @param string $method
-     * @param string $path
-     * @param string $protocol
-     * @param string $protocolVersion
-     * @param array $headers
-     * @param string $body
-     * @param array $cookies
-     */
-    public function __construct(
-        string $host = '', string $method = 'GET', string $path = '/', string $protocol = 'HTTP',
-        string $protocolVersion = '1.1', array $headers = [], array $cookies = [], string $body = ''
-    ) {
-        parent::__construct($protocol, $protocolVersion, $headers, $cookies);
-
-        $this->method = $method ?: 'GET';
-        $this->host = $host ?: '';
-        $this->path = $path ?: '/';
-
-        $this->body = $body ?: '';
-    }
-
-    /**
-     * @param string $rawData
-     * @return self
-     */
-    public static function makeByParseData(string $rawData): self
+    public function all()
     {
-        if (!$rawData) {
-            return new self();
-        }
-
-        // $rawData = trim($rawData);
-        $two = explode("\r\n\r\n", $rawData,2);
-
-        if ( !$rawHeader = $two[0] ?? '' ) {
-            return new self();
-        }
-
-        $body = $two[1] ?? '';
-
-        /** @var array $list */
-        $list = explode("\n", trim($rawHeader));
-
-        // e.g: `GET / HTTP/1.1`
-        $first = array_shift($list);
-        $data = array_map('trim', explode(' ', trim($first)) );
-
-        [$method, $path, $protoStr] = $data;
-        [$protocol, $protocolVersion] = explode('/', $protoStr);
-
-        // other header info
-        $headers = [];
-        foreach ($list as $item) {
-            if (!$item) {
-                continue;
-            }
-
-            [$name, $value] = explode(': ', trim($item));
-            $headers[$name] = trim($value);
-        }
-
-        $cookies = [];
-        if (isset($headers['Cookie'])) {
-            $cookieData = $headers['Cookie'];
-            unset($headers['Cookie']);
-            $cookies = Cookies::parseFromRawHeader($cookieData);
-        }
-
-        $host = '';
-        if (isset($headers['Host'])) {
-            $host = $headers['Host'];
-            unset($headers['Host']);
-        }
-
-        return new self($host, $method, $path, $protocol, $protocolVersion, $headers, $cookies, $body);
+        return $this->getParams();
     }
 
     /**
-     * `Origin: http://foo.example`
+     * @return array|null|object
+     */
+    public function post()
+    {
+        return $this->getParsedBody();
+    }
+
+    /**
+     * @param $name
+     * @return \Slim\Http\UploadedFile
+     */
+    public function getUploadedFile($name)
+    {
+        return isset($this->getUploadedFiles()[$name]) ? $this->getUploadedFiles()[$name] : null;
+    }
+
+    /**
+     * @param string $name
+     * @param mixed $default
+     * @param string $filter
      * @return mixed
      */
-    public function getOrigin()
+    public function get($name, $default = null, $filter = 'raw')
     {
-        return $this->headers->get('Origin');
+        $value = !isset($this->getParams()[$name]) ? $default : $this->getParams()[$name];
+
+        return $this->filtering($value, $filter);
     }
 
     /**
+     * Get Multi - 获取多个, 可以设置过滤
+     * @param array $needKeys
+     * $needKeys = [
+     *     'name',
+     *     'password',
+     *     'status' => 'int'
+     * ]
+     * @return array
+     */
+    public function getMulti(array $needKeys=[])
+    {
+        $needed = [];
+
+        foreach ($needKeys as $key => $value) {
+            if ( is_int($key) ) {
+                $needed[$value] = $this->getParam($value);
+            } else {
+                $needed[$key] = $this->filtering($key, $value);
+            }
+        }
+
+        return $needed;
+    }
+
+    /**
+     * e.g: `http://xxx.com`
      * @return string
      */
-    public function getMethod(): string
+    public function getBaseUrl()
     {
-        return $this->method;
+        return $this->uri->getBaseUrl();
     }
 
     /**
-     * @param string $method
-     */
-    public function setMethod(string $method)
-    {
-        $this->method = $method;
-    }
-
-    /**
+     * path + queryString
+     * e.g. `/content/add?type=blog`
      * @return string
      */
-    public function getHost(): string
+    public function getRequestUri()
     {
-        return $this->host;
+        return $this->getRequestTarget();
     }
 
     /**
-     * @param string $host
+     * Is this an XHR request?
+     *
+     * @return bool
      */
-    public function setHost(string $host)
+    public function isAjax()
     {
-        $this->host = $host;
+        return $this->isXhr();
     }
 
     /**
-     * @return string
+     * Is this an pjax request?
+     * pjax = pushState + ajax
+     * @return bool
      */
-    public function getPath(): string
+    public function isPjax()
     {
-        return $this->path;
+        return $this->isAjax() && ($this->getHeaderLine('X-PJAX') === 'true');
+    }
+
+    public function getPjaxContainer()
+    {
+        return $this->getHeaderLine('X-PJAX-Container');
     }
 
     /**
-     * @param string $path
+     * @param $name
+     * @param array $arguments
+     * @return mixed
      */
-    public function setPath(string $path)
+    public function __call($name, array $arguments)
     {
-        $this->path = $path;
+        if (substr($name, 0, 3) === 'get' && $arguments) {
+            $filter = substr($name, 3);
+            $default = isset($arguments[1]) ? $arguments[1] : null;
+
+            return $this->get($arguments[0], $default, lcfirst($filter));
+        }
+
+        throw new \BadMethodCallException("Method $name is not a valid method");
     }
 
     /**
-     * @return string
+     * @param $value
+     * @param $filter
+     * @return mixed|null
      */
-    public function getBody(): string
+    public function filtering($value, $filter)
     {
-        return $this->body;
-    }
+        if ( $filter === static::FILTER_RAW) {
+            return $value;
+        }
 
-    /**
-     * @param string $body
-     */
-    public function setBody(string $body)
-    {
-        $this->body = $body;
+        // is a custom filter
+        if ( !is_string($filter) || !isset($this->filterList[$filter]) ) {
+            $result = $value;
+
+            // is custom callable filter
+            if ( is_callable($filter) ) {
+                $result = call_user_func($filter, $value);
+            }
+
+            return $result;
+        }
+
+        // is a defined filter
+        $filter = $this->filterList[$filter];
+
+        if ( !in_array($filter, DataType::types()) ) {
+            $result = call_user_func($filter, $value);
+        } else {
+            switch ( lcfirst(trim($filter)) ) {
+                case DataType::T_BOOL :
+                case DataType::T_BOOLEAN :
+                    $result = (bool)$value;
+                    break;
+                case DataType::T_DOUBLE :
+                case DataType::T_FLOAT :
+                    $result = (float)$value;
+                    break;
+                case DataType::T_INT :
+                case DataType::T_INTEGER :
+                    $result = (int)$value;
+                    break;
+                case DataType::T_STRING :
+                    $result = (string)$value;
+                    break;
+                case DataType::T_ARRAY :
+                    $result = (array)$value;
+                    break;
+                case DataType::T_OBJECT :
+                    $result = (object)$value;
+                    break;
+                default:
+                    $result = $value;
+                    break;
+            }
+        }
+
+        return $result;
     }
 }

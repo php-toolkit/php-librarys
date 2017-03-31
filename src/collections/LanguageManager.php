@@ -6,11 +6,10 @@
  * Time: 15:04
  */
 
-namespace inhere\library\language;
+namespace inhere\library\collections;
 
-use inhere\library\collections\DataCollector;
-use inhere\library\exceptions\InvalidArgumentException;
-use inhere\library\exceptions\NotFoundException;
+use inhere\exceptions\InvalidArgumentException;
+use inhere\exceptions\NotFoundException;
 use inhere\library\files\FileSystem;
 use inhere\library\helpers\ObjectHelper;
 use inhere\library\helpers\StrHelper;

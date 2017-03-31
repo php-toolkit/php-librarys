@@ -38,6 +38,14 @@ trait TraitSimpleFixedEvent
         return in_array($event, $this->getSupportedEvents(), true);
     }
 
+    /**
+     * @return \SplFixedArray
+     */
+    public function getCallbacks(): \SplFixedArray
+    {
+        return $this->callbacks;
+    }
+
     /////////////////////////////////////////////////////////////////////////////////////////
     /// events method
     /////////////////////////////////////////////////////////////////////////////////////////

@@ -20,7 +20,7 @@ class UrlHelper
      */
     public static function isRelative($url)
     {
-        return strncmp($url, '//', 2) && strpos($url, '://') === false;
+        return false === strpos($url, '//') && strpos($url, '://') === false;
     }
 
     /**
@@ -95,7 +95,7 @@ class UrlHelper
 
         // Now, decode each value of the resulting array
         if ($encodedParts) {
-            foreach ($encodedParts as $key => $value) {
+            foreach ((array)$encodedParts as $key => $value) {
                 $result[$key] = urldecode(str_replace(self::$replacements, self::$entities, $value));
             }
         }

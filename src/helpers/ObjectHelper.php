@@ -28,7 +28,7 @@ class ObjectHelper
 
     /**
      * php对象转换成为数组
-     * @param mixed $data
+     * @param iterable|array $data
      * @param bool $recursive
      * @return array|bool
      */

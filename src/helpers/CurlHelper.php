@@ -41,7 +41,7 @@ class CurlHelper
     {
         // e.g. http://static.oschina.net/uploads/user/277/554046_50.jpg?t=34512323
         if ( strpos($imgUrl, '?')) {
-            list($real,) = explode('?', $imgUrl, 2);
+            [$real,] = explode('?', $imgUrl, 2);
         } else {
             $real = $imgUrl;
         }
@@ -113,7 +113,7 @@ class CurlHelper
      * @param array         $headers HEADER info
      * @return string
      */
-    public static function post($url, $data = [], array $headers = [])
+    public static function post($url, array $data = [], array $headers = [])
     {
         // $headers = [ 'Content-Type: application/json' ];
 

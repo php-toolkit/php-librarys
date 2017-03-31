@@ -81,7 +81,7 @@ class Request extends \Slim\Http\Request
     }
 
     /**
-     * @return array|null|object
+     * @return array|null
      */
     public function post()
     {
@@ -94,7 +94,7 @@ class Request extends \Slim\Http\Request
      */
     public function getUploadedFile($name)
     {
-        return isset($this->getUploadedFiles()[$name]) ? $this->getUploadedFiles()[$name] : null;
+        return $this->getUploadedFiles()[$name] ?? null;
     }
 
     /**
@@ -105,7 +105,7 @@ class Request extends \Slim\Http\Request
      */
     public function get($name, $default = null, $filter = 'raw')
     {
-        $value = !isset($this->getParams()[$name]) ? $default : $this->getParams()[$name];
+        $value = $this->getParams()[$name] ?? $default;
 
         return $this->filtering($value, $filter);
     }
@@ -186,9 +186,9 @@ class Request extends \Slim\Http\Request
      */
     public function __call($name, array $arguments)
     {
-        if (substr($name, 0, 3) === 'get' && $arguments) {
+        if (0 === strpos($name, 'get') && $arguments) {
             $filter = substr($name, 3);
-            $default = isset($arguments[1]) ? $arguments[1] : null;
+            $default = $arguments[1] ?? null;
 
             return $this->get($arguments[0], $default, lcfirst($filter));
         }
@@ -222,7 +222,7 @@ class Request extends \Slim\Http\Request
         // is a defined filter
         $filter = $this->filterList[$filter];
 
-        if ( !in_array($filter, DataType::types()) ) {
+        if ( !in_array($filter, DataType::types(), true) ) {
             $result = call_user_func($filter, $value);
         } else {
             switch ( lcfirst(trim($filter)) ) {

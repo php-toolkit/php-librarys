@@ -50,11 +50,11 @@ echo strtotime("last Monday"), "\n";
             return $date ? : false;
 
             //@example date 2015/04/05
-        } else {
-            $time = strtotime($strTime);
-
-            return $time ? date($format,$time) : false;
         }
+
+        $time = strtotime($strTime);
+
+        return $time ? date($format,$time) : false;
     }
 
     //获取指定日期所在月的第一天和最后一天

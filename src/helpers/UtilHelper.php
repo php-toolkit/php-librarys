@@ -21,7 +21,7 @@ abstract class UtilHelper
         }
 
         // 获取要查看的目录，没有则检测当前目录
-        $dir = !empty($_GET['d']) ? $_GET['d'] : ( !empty($_GET['dir']) ? $_GET['dir'] : __DIR__);
+        $dir = $_GET['d'] ?? ( $_GET['dir'] ?? __DIR__);
 
         if ( !is_dir($dir) ) {
             trigger_error($dir);
@@ -31,7 +31,7 @@ abstract class UtilHelper
         system("cd $dir && git branch -v");
         $c = ob_get_clean();
 
-        $result = preg_match('#\* (?<brName>[^\s]+)(?:\s+)(?<logNum>[0-9a-z]{7})(?<ciText>.*)#i',$c, $data);
+        $result = preg_match('#\* (?<brName>[\S]+)(?:\s+)(?<logNum>[0-9a-z]{7})(?<ciText>.*)#i',$c, $data);
         $data['projectName'] = basename($dir);
 
         // var_dump($c,$result, $data);
@@ -48,15 +48,13 @@ abstract class UtilHelper
     {
         $types = array('log', 'debug', 'info', 'warn', 'error', 'assert');
 
-        if (!in_array($type, $types)) {
+        if (!in_array($type, $types, true)) {
             $type = 'log';
         }
 
         $data = json_encode($object);
 
-        echo <<<EOF
-    <script type="text/javascript">console.$type($data);</script>
-EOF;
+        echo '<script type="text/javascript">console.' . $type . '('. $data . ');</script>';
     }
 
 }

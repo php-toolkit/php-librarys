@@ -173,7 +173,7 @@ abstract class DataHelper
 
         // $arrData 中的 奇数位--变为键，偶数位---变为前一个奇数 键的值 array('前一个奇数'=>'偶数位')
         for( $i=0; $i<$count; $i+=2 ) {
-            $newArr[$arrData[$i]] = isset($arrData[$i+1]) ? $arrData[$i+1] : '';
+            $newArr[$arrData[$i]] = $arrData[$i + 1] ?? '';
         }
 
         unset($arrData);
@@ -270,7 +270,7 @@ abstract class DataHelper
     public static function slashes($data , $escape=1, $level=0 )
     {
         if (is_array($data)){
-            foreach ($data as $key => $value) {
+            foreach ((array)$data as $key => $value) {
                 $data[$key] = self::slashes($value ,$escape,$level);
             }
 
@@ -298,7 +298,7 @@ abstract class DataHelper
         return strtr($str, array(
             "\0" => "",
             "'"  => '&#39;',
-            "\"" => '&#34;',
+            '"' => '&#34;',
             "\\" => '&#92;',
             // more secure
             '<' => '&lt;',

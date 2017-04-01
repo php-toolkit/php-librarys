@@ -111,7 +111,7 @@ trait TraitSimpleFixedEvent
         }
 
         if ( !isset($this->callbacks[$key]) || !($cb = $this->callbacks[$key]) ) {
-            return false;
+            return null;
         }
 
         return call_user_func_array($cb, $args);

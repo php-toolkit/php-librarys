@@ -103,14 +103,9 @@ trait TraitUseOption
      * @param  bool $merge
      * @return static Return self to support chaining.
      */
-    public function setOptions($options, $merge = false)
+    public function setOptions(array $options, $merge = false)
     {
-        if ( $merge ) {
-            // $this->options = array_merge($this->options, (array)$options);
-            $this->options = ArrayHelper::merge($this->options, (array)$options);
-        } else {
-            $this->options = $options;
-        }
+        $this->options = $merge ? ArrayHelper::merge($this->options, (array)$options) : $options;
 
         return $this;
     }

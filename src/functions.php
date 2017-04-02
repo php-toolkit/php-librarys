@@ -58,6 +58,48 @@ if ( !function_exists('cookie') ) {
     }
 }
 
+if ( !function_exists('random_token') ) {
+    function random_token($length = 32){
+        if(!isset($length) || (int)$length <= 8 ){
+            $length = 32;
+        }
+
+        if (function_exists('random_bytes')) {
+            return bin2hex(random_bytes($length));
+        }
+
+        if ( function_exists('mcrypt_create_iv') ) {
+            // return bin2hex(mcrypt_create_iv($length, MCRYPT_DEV_URANDOM));
+
+            $random = mcrypt_create_iv($length, MCRYPT_DEV_RANDOM);
+            if (false === $random) {
+                throw new \RuntimeException('IV generation failed');
+            }
+
+            return $random;
+        }
+
+        if ( function_exists('openssl_random_pseudo_bytes') ) {
+            //return bin2hex(openssl_random_pseudo_bytes($length));
+            $random = openssl_random_pseudo_bytes($length, $isSourceStrong);
+
+            if (false === $isSourceStrong || false === $random) {
+                throw new \RuntimeException('IV generation failed');
+            }
+
+            return $random;
+        }
+
+        return md5(microtime(true));
+    }
+}
+
+if ( !function_exists('create_salt') ) {
+    function create_salt() {
+        return substr(str_replace('+', '.', base64_encode(hex2bin(random_token(32)))), 0, 44);
+    }
+}
+
 if ( !function_exists('session') ) {
     /**
      * session get or set

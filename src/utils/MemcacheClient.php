@@ -18,7 +18,7 @@ use inhere\library\traits\TraitUseOption;
  * support \Memcache and \Memcached extension
  *
  * @package inhere\library\utils
- * 
+ *
  * @method connect()
  * @method string getVersion() 获取服务器池中所有服务器的版本信息
  */
@@ -87,13 +87,13 @@ class MemcacheClient // extends AbstractCacheDriver
      */
     public function connection()
     {
-        $servers = $this->getOption('servers');
+        $servers = $this->getOption('servers', []);
 
         if ( $this->isMemcached() ) {
             return $this->driver->addServers($servers);
         }
 
-        foreach ($servers as $server) {
+        foreach ((array)$servers as $server) {
             $this->driver->addServer($server);
         }
 
@@ -233,7 +233,7 @@ class MemcacheClient // extends AbstractCacheDriver
 
     /**
      * delete
-     * @param  $key string key
+     * @param  $key string|array key
      *   $expire int 服务端等待删除该元素的时间, 被设置后，那么存储的值会在设置的秒数以后过期
      * @return true OR false
      */
@@ -244,7 +244,7 @@ class MemcacheClient // extends AbstractCacheDriver
         }
 
         if ( is_array($key) ) {
-            foreach($key as $k) {
+            foreach((array)$key as $k) {
                 $this->driver->delete($k);
             }
 
@@ -361,7 +361,7 @@ class MemcacheClient // extends AbstractCacheDriver
 
         if ( $keys = $this->driver->get($listKey) ) {
             $list = [];
-            foreach ($keys as $key) {
+            foreach ((array)$keys as $key) {
                 $list[] = $this->driver->get($key);
             }
 
@@ -436,7 +436,7 @@ class MemcacheClient // extends AbstractCacheDriver
             $this->driver->set($listKeysKey, [$listKey]);
 
             // add
-        } elseif (!in_array($listKey, $listKeys)) {
+        } elseif (!in_array($listKey, $listKeys, true)) {
             $listKeys[] = $listKey;
             $this->driver->set($listKeysKey, $listKeys);
         }
@@ -452,7 +452,7 @@ class MemcacheClient // extends AbstractCacheDriver
         $listKey = self::KEYS_MAP_PREFIX . $cacheKey;
 
         if ( $keys = $this->driver->get($listKey) ) {
-            foreach ($keys as $key) {
+            foreach ((array)$keys as $key) {
                 $this->driver->delete($key);
             }
 
@@ -471,7 +471,7 @@ class MemcacheClient // extends AbstractCacheDriver
         $listKeysKey = self::LIST_KEYS_MAP_PREFIX  . $baseKey;
 
         if ( $listKeys = $this->driver->get($listKeysKey) ) {
-            foreach ($listKeys as $listKey) {
+            foreach ((array)$listKeys as $listKey) {
                 $this->driver->delete($listKey);
             }
 
@@ -526,7 +526,7 @@ class MemcacheClient // extends AbstractCacheDriver
     {
         $this->driver = $driver;
     }
-    
+
     /**
      * @param $method
      * @param $args

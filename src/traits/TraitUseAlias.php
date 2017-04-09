@@ -13,7 +13,7 @@ namespace inhere\library\traits;
 /**
  * Class TraitUseAlias
  * @package inhere\library\traits
- * 
+ *
  * @property $aliases
  */
 trait TraitUseAlias
@@ -65,7 +65,7 @@ trait TraitUseAlias
     {
         $default === null && $default = $alias;
 
-        return isset($this->aliases[$alias]) ? $this->aliases[$alias] : $default;
+        return $this->aliases[$alias] ?? $default;
     }
 
     /**
@@ -83,7 +83,7 @@ trait TraitUseAlias
 
         $alias = trim($alias);
 
-        if ( in_array($alias, $this->lockedAliases)) {
+        if ( in_array($alias, $this->lockedAliases, true)) {
             throw new \RuntimeException(sprintf('别名：%s , 已被锁定。请设置其他名称。',$alias));
         }
     }

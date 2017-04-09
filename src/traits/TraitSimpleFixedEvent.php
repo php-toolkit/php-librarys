@@ -46,6 +46,23 @@ trait TraitSimpleFixedEvent
         return $this->callbacks;
     }
 
+    /**
+     * @param $event
+     * @return callable
+     */
+    public function getCallback($event)
+    {
+        if ( false === ($key = array_search($event, $this->getSupportedEvents(), true)) ) {
+            return null;
+        }
+
+        if (!isset($this->callbacks[$key])) {
+            return null;
+        }
+
+        return $this->callbacks[$key];
+    }
+
     /////////////////////////////////////////////////////////////////////////////////////////
     /// events method
     /////////////////////////////////////////////////////////////////////////////////////////

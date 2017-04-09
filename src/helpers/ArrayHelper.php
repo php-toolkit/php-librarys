@@ -365,7 +365,7 @@ class ArrayHelper
     public static function existsAll($need,$arr,$type=false)
     {
         if (is_array($need)) {
-            foreach($need as $v) {
+            foreach((array)$need as $v) {
                 self::existsAll($v,$arr,$type);
             }
 
@@ -400,7 +400,7 @@ class ArrayHelper
     public static function existsOne($need,$arr,$type=false)
     {
         if (is_array($need)) {
-            foreach($need as $v) {
+            foreach((array)$need as $v) {
                 $result = self::existsOne($v,$arr,$type);
                 if ($result) {
                     return true;

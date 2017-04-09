@@ -34,7 +34,7 @@ class PhpHelper
      * @param array $extensions
      * @return array|bool
      */
-    public static function checkExtList($extensions=[])
+    public static function checkExtList(array $extensions = array())
     {
         $allTotal = [];
 
@@ -69,12 +69,12 @@ class PhpHelper
     public static function getMaxUploadSize($max_size = 0)
     {
         $post_max_size = StrHelper::convertBytes(ini_get('post_max_size'));
-        $upload_max_filesize = StrHelper::convertBytes(ini_get('upload_max_filesize'));
+        $upload_max_fileSize = StrHelper::convertBytes(ini_get('upload_max_filesize'));
 
         if ($max_size > 0) {
-            $result = min($post_max_size, $upload_max_filesize, $max_size);
+            $result = min($post_max_size, $upload_max_fileSize, $max_size);
         } else {
-            $result = min($post_max_size, $upload_max_filesize);
+            $result = min($post_max_size, $upload_max_fileSize);
         }
 
         return $result;
@@ -86,11 +86,7 @@ class PhpHelper
      */
     public static function getVersion()
     {
-        if ( defined('HHVM_VERSION') ) {
-            return HHVM_VERSION;
-        } else {
-            return PHP_VERSION;
-        }
+        return defined('HHVM_VERSION') ? HHVM_VERSION : PHP_VERSION;
     }
 
     /**
@@ -119,9 +115,9 @@ class PhpHelper
      */
     public static function isUnix()
     {
-        $unames = array('CYG', 'DAR', 'FRE', 'HP-', 'IRI', 'LIN', 'NET', 'OPE', 'SUN', 'UNI');
+        $uNames = array('CYG', 'DAR', 'FRE', 'HP-', 'IRI', 'LIN', 'NET', 'OPE', 'SUN', 'UNI');
 
-        return in_array( strtoupper(substr(PHP_OS, 0, 3)) , $unames);
+        return in_array(strtoupper(substr(PHP_OS, 0, 3)), $uNames, true);
     }
 
     /**
@@ -182,8 +178,7 @@ class PhpHelper
     public static function isWeb()
     {
         return in_array(
-            PHP_SAPI,
-            array(
+            PHP_SAPI, [
                 'apache',
                 'cgi',
                 'fast-cgi',
@@ -191,7 +186,7 @@ class PhpHelper
                 'fpm-fcgi',
                 'srv',
                 'cli-server'
-            )
+        ], true
         );
     }
 
@@ -263,7 +258,7 @@ class PhpHelper
     {
         if ( function_exists('apache_get_modules') )
         {
-            return in_array( 'mod_rewrite', apache_get_modules() );
+            return in_array('mod_rewrite', apache_get_modules(), true);
         }
         // de(\apache_get_version() ,\apache_get_modules());
 

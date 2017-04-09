@@ -101,12 +101,12 @@ class LanguageManager extends StdBase
      *
      * how to use language translate ? please see '/doc/language.md'
      *
-     * @param string $key
+     * @param string|bool $key
      * @param array $args
      * @param string $default
      * @return string
      */
-    public function translate($key, $args = [], $default = '')
+    public function translate($key, array $args = [], $default = '')
     {
         $key = trim($key, $this->fileSeparator . ' ');
 
@@ -138,13 +138,13 @@ class LanguageManager extends StdBase
             array_unshift($args, $value);
         }
 
-        return $hasArgs ? call_user_func_array('sprintf', $args) : $value;
+        return $hasArgs ? sprintf(...$args) : $value;
     }
-    public function tran($key, $args = [], $default = '')
+    public function tran($key, array $args = [], $default = '')
     {
         return $this->translate($key, $args, $default);
     }
-    public function tl($key, $args = [], $default = '')
+    public function tl($key, array $args = [], $default = '')
     {
         return $this->translate($key, $args, $default);
     }
@@ -213,7 +213,7 @@ class LanguageManager extends StdBase
             }
         }
 
-        return isset($this->fallbackData[$fileKey]) ? $this->fallbackData[$fileKey] : null;
+        return $this->fallbackData[$fileKey] ?? null;
     }
 
     /*********************************************************************************
@@ -246,7 +246,7 @@ class LanguageManager extends StdBase
             $this->langFiles[$fileKey] = $this->buildLangFilePath($this->defaultFile.'.'.$this->fileType);
         }
 
-        return isset($this->langFiles[$fileKey]) ? $this->langFiles[$fileKey] : null;
+        return $this->langFiles[$fileKey] ?? null;
     }
 
     /**
@@ -455,7 +455,7 @@ class LanguageManager extends StdBase
      */
     public function setFileType($fileType)
     {
-        if ( in_array($fileType, DataCollector::getFormats()) ) {
+        if ( in_array($fileType, DataCollector::getFormats(), true) ) {
             $this->fileType = $fileType;
         }
     }

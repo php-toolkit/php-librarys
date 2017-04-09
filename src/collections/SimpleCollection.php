@@ -19,12 +19,12 @@ class SimpleCollection implements CollectionInterface
     protected $data = [];
 
     /**
-     * @param array $items
+     * @param array|null $items
      * @return static
      */
-    public static function make(array $items = [])
+    public static function make($items = null)
     {
-        return new static($items);
+        return new static((array)$items);
     }
 
     /**
@@ -259,7 +259,7 @@ class SimpleCollection implements CollectionInterface
      */
     public function unserialize($serialized)
     {
-        $this->data = unserialize($serialized);
+        $this->data = unserialize($serialized, null);
     }
 
     /********************************************************************************

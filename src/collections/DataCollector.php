@@ -88,7 +88,7 @@ class DataCollector extends SimpleCollection
      * @param string $name
      * @return static
      */
-    public static function make($data = [], $format = 'php', $name = 'box1')
+    public static function make($data = null, $format = 'php', $name = 'box1')
     {
         return new static($data, $format, $name);
     }
@@ -120,7 +120,7 @@ class DataCollector extends SimpleCollection
     {
         $result = static::getByPath($this->data, $path, $this->separator);
 
-        return $result !== null ? $result : $default;
+        return $result ?? $default;
     }
 
     public function exists($path)
@@ -212,9 +212,9 @@ class DataCollector extends SimpleCollection
      * @return static
      * @throws \RangeException
      */
-    public function load( $data, $format = 'php')
+    public function load($data, $format = 'php')
     {
-        if ( is_string($data) && in_array($format, static::$formats) ) {
+        if ( is_string($data) && in_array($format, static::$formats, true) ) {
             switch ( $format ) {
                 case static::FORMAT_YML:
                     $this->loadYaml($data);
@@ -236,8 +236,6 @@ class DataCollector extends SimpleCollection
 
         } else if ( is_array($data) || is_object($data) ) {
             $this->bindData($this->data, $data);
-        } else {
-            throw new \RangeException('params error!!');
         }
 
         return $this;
@@ -376,7 +374,7 @@ class DataCollector extends SimpleCollection
 
     public function __clone()
     {
-        $this->data = unserialize(serialize($this->data));
+        $this->data = unserialize(serialize($this->data), null);
     }
 
 //////
@@ -547,16 +545,16 @@ class DataCollector extends SimpleCollection
         $data = json_decode(trim($data), true);
         if ( json_last_error() === JSON_ERROR_NONE ) {
             return $data;
-        } else {
-            throw new DataParseException('json config data parse error :'.json_last_error_msg());
         }
+
+        throw new DataParseException('json config data parse error :'.json_last_error_msg());
     }
 
     const IMPORT_KEY = 'import';
 
     /**
      * parse YAML
-     * @param string $data              Waiting for the parse data
+     * @param string|bool $data              Waiting for the parse data
      * @param bool $supportImport       Simple support import other config by tag 'import'. must is bool.
      * @param callable $pathHandler     When the second param is true, this param is valid.
      * @param string $fileDir           When the second param is true, this param is valid.

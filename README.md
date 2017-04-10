@@ -5,7 +5,7 @@
 - at command
 
 ```
-composer require inhere/php-librarys
+composer require inhere/library@dev-php5
 ```
 
 - at composer.json
@@ -13,7 +13,7 @@ composer require inhere/php-librarys
 at "require" add 
 
 ```
-"inhere/php-librarys": "~1.0"
+"inhere/library": "~1.0"
 ```
 
 RUN: `composer update`

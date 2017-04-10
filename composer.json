@@ -1,5 +1,5 @@
 {
-  "name": "inhere/php-librarys",
+  "name": "inhere/library",
   "type": "library",
   "description": "some useful library of the php",
   "keywords": ["library","tool","php"],

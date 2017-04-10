@@ -1,5 +1,9 @@
 # php-librarys
 
+> this is for php5
+
+If you are using a php7, please see [master](https://github.com/inhere/php-librarys/tree/master)
+
 ## install
 
 - at command
@@ -10,9 +14,11 @@ composer require inhere/library@dev-php5
 
 - at composer.json
 
-at "require" add 
+at "require" add:
 
 ```
+"inhere/library": "dev-php5" // recommended
+// OR
 "inhere/library": "~1.0"
 ```
 

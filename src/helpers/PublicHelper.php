@@ -20,16 +20,19 @@ class PublicHelper
     {
         if ( (bool) $float ) {
             return $_SERVER['REQUEST_TIME_FLOAT'];
-        } else {
-            return $_SERVER['REQUEST_TIME'];
         }
+
+        return $_SERVER['REQUEST_TIME'];
     }
 
-    static public function getUserConsts()
+    /**
+     * @return array
+     */
+    static public function userConstants()
     {
         $const = get_defined_constants(true);
 
-        return isset($const['user']) ? $const['user'] : [];
+        return $const['user'] ?? [];
     }
 
 

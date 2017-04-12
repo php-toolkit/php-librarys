@@ -171,7 +171,7 @@ class File extends FileSystem
     /**
      * @param string $file a file path or url path
      * @param bool|false $useIncludePath
-     * @param null $streamContext
+     * @param null|resource $streamContext
      * @param int $curlTimeout
      * @return bool|mixed|string
      * @throws FileNotFoundException
@@ -183,7 +183,7 @@ class File extends FileSystem
             $streamContext = @stream_context_create(array('http' => array('timeout' => $curlTimeout)));
         }
 
-        if (in_array(ini_get('allow_url_fopen'), ['On', 'on', '1']) || !preg_match('/^https?:\/\//', $file)) {
+        if (in_array(ini_get('allow_url_fopen'), ['On', 'on', '1'], true) || !preg_match('/^https?:\/\//', $file)) {
             if ( !file_exists($file) ) {
                 throw new FileNotFoundException("File [{$file}] don't exists!");
             }
@@ -337,8 +337,8 @@ class File extends FileSystem
             }#不删除注释、空白
             else {
                 $o_data = file_get_contents($v);
-                $o_data = substr($o_data,0,5) === "<?php" ? substr($o_data,5) : $o_data ;
-                $data  .= substr($o_data,-2) === "?>" ? substr($o_data,0,-2) : $o_data ;
+                $o_data = substr($o_data,0,5) === '<?php' ? substr($o_data,5) : $o_data ;
+                $data  .= substr($o_data,-2) === '?>' ? substr($o_data,0,-2) : $o_data ;
             }
         }
 

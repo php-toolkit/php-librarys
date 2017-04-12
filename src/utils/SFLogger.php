@@ -8,6 +8,7 @@
 
 namespace inhere\library\utils;
 
+use inhere\exceptions\FileSystemException;
 use inhere\library\helpers\PhpHelper;
 
 /**
@@ -36,7 +37,7 @@ class SFLogger
 
     /**
      * log text records list
-     * @var array
+     * @var array[]
      */
     private $_records = [];
 
@@ -358,7 +359,7 @@ class SFLogger
     public function log($level, $message, array $context = [])
     {
         // 不在记录的级别内
-        if ( $this->levels && !in_array($level, $this->levels)) {
+        if ( $this->levels && !in_array($level, $this->levels, true)) {
             return null;
         }
 
@@ -366,7 +367,7 @@ class SFLogger
 
         // serve is running in php build in server env.
         if ( $this->logConsole && (PhpHelper::isBuiltInServer() || PhpHelper::isCli()) ) {
-            defined('STDOUT') or define('STDOUT', fopen('php://stdout', 'w'));
+            defined('STDOUT') or define('STDOUT', fopen('php://stdout', 'wb'));
             fwrite(STDOUT, $string . PHP_EOL);
         }
 
@@ -450,14 +451,15 @@ class SFLogger
      * write log info to file
      * @param string $str
      * @return bool
+     * @throws FileSystemException
      */
     protected function write($str)
     {
         $file = $this->getLogPath() . $this->getFilename();
         $dir  = dirname($file);
 
-        if ( !is_dir($dir) ) {
-            mkdir($dir, 0775, true);
+        if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir) ) {
+            throw new FileSystemException("Create directory failed. $dir");
         }
 
         // check file size
@@ -465,7 +467,8 @@ class SFLogger
             rename($file, substr($file, 0, -3) . time(). '.log');
         }
 
-        return error_log($str, 3, $file);
+        // return error_log($str, 3, $file);
+        return file_put_contents($file, $str, FILE_APPEND);
     }
 
     /**
@@ -558,7 +561,7 @@ class SFLogger
     {
         $name = strtoupper($name);
 
-        return isset($_SERVER[$name]) ? $_SERVER[$name] : $default;
+        return $_SERVER[$name] ?? $default;
     }
 
     /**

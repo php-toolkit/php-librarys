@@ -67,6 +67,24 @@ trait TraitSimpleOption
     }
 
     /**
+     * delete a option
+     * @param $name
+     * @return mixed|null
+     */
+    public function delOption($name)
+    {
+        $value = null;
+
+        if ($this->hasOption($name)) {
+            $value = $this->getOption($name);
+
+            unset($this->options[$name]);
+        }
+
+        return $value;
+    }
+
+    /**
      * Method to get property Options
      * @return  array
      */

@@ -77,21 +77,19 @@ trait TraitStringFormat
      *
      * @return string [type]                [description]
      */
-    static public function format($string,array $replaceParams=[],array $pregParams=[])
+    static public function format($string, array $replaceParams=[], array $pregParams=[])
     {
         if ( !is_string($string) || !$string || (!$replaceParams && !$pregParams) ) {
             return $string;
         }
 
-        if ( $replaceParams && count($replaceParams)===2 )
-        {
-            list($search,$replace) = $replaceParams;
+        if ( $replaceParams && count($replaceParams)===2 ) {
+            [$search,$replace] = $replaceParams;
             $string = str_replace($search,$replace,$string);
         }
 
-        if ( $pregParams && count($pregParams)===2 )
-        {
-            list($pattern,$replace) = $pregParams;
+        if ( $pregParams && count($pregParams)===2 ) {
+            [$pattern,$replace] = $pregParams;
             $string = preg_replace($pattern,$replace,$string);
         }
 
@@ -132,21 +130,21 @@ trait TraitStringFormat
             , '/\#.*?[\r\n]/is'      // 去掉所有单行注释 #....
             );
             return preg_replace($preg_arr, '', $data);
-        } else {
-            $preg_arr = array(
-                '/\/\*.*?\*\/\s*/is'    // 去掉所有多行注释 /* .... */
-                ,'/\/\/.*?[\r\n]/is'    // 去掉所有单行注释 //....
-                ,'/\#.*?[\r\n]/is'      // 去掉所有单行注释 #....
-                ,'/(?!\w)\s*?(?!\w)/is' //去掉空白行
-            );
-            $data = preg_replace($preg_arr,'',$data);
-            //保留 HEREDOC 标记
-            return preg_replace(
-                array('/<<<EOF/is','/EOF;/is'),
-                array('<<<EOF'.PHP_EOL,'EOF;'.PHP_EOL),
-                $data
-            );
         }
+
+        $preg_arr = array(
+            '/\/\*.*?\*\/\s*/is'    // 去掉所有多行注释 /* .... */
+            ,'/\/\/.*?[\r\n]/is'    // 去掉所有单行注释 //....
+            ,'/\#.*?[\r\n]/is'      // 去掉所有单行注释 #....
+            ,'/(?!\w)\s*?(?!\w)/is' //去掉空白行
+        );
+        $data = preg_replace($preg_arr,'',$data);
+        //保留 HEREDOC 标记
+        return preg_replace(
+            array('/<<<EOF/is','/EOF;/is'),
+            array('<<<EOF'.PHP_EOL,'EOF;'.PHP_EOL),
+            $data
+        );
     }//todo 已修正影响到 HEREDOC 标记
 
     /**
@@ -158,7 +156,7 @@ trait TraitStringFormat
      */
     static public function phpFormat($content, $headDoc='EOF')
     {
-        $str = ""; //合并后的字符串
+        $str = ''; //合并后的字符串
         $data = token_get_all($content);
         $end = false; //没结束如$v = "php"中的等号;
 

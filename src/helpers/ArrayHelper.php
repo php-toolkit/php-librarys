@@ -75,7 +75,7 @@ class ArrayHelper
      */
     public static function get($key, $arr, $default = null)
     {
-        return isset($arr[$key]) ? $arr[$key]: $default;
+        return $arr[$key] ?? $default;
     }
 
     /**
@@ -410,56 +410,16 @@ class ArrayHelper
             if ( strpos($need,',')!==false ) {
                 $need = explode(',',$need);
                 return self::existsOne($need,$arr,$type);
-            } else {
-                $arr  = self::changeValueCase($arr);//小写
-                $need = strtolower($need);//小写
+            }
 
-                if ( in_array($need,$arr,$type) ) {
-                    return true;
-                }
+            $arr  = self::changeValueCase($arr);//小写
+            $need = strtolower($need);//小写
+
+            if ( in_array($need,$arr,$type) ) {
+                return true;
             }
         }
         return false;
-    }
-
-    /**
-     * 取出出所有子数组的相同列（单元）组成新的一位数组(array_column)
-     * @param array $input 原始数组
-     * @param string $columnKey 要获取的列 键名
-     * @param null $indexKey 可选 用相同的列的值作为新数组的键值
-     * @return array
-     */
-    public static function columns($input, $columnKey, $indexKey=null)
-    {
-        if ( function_exists('array_column') ) {
-            return array_column($input, $columnKey, $indexKey);
-        }
-
-        $columnKeyIsNumber  = is_numeric($columnKey);
-        $indexKeyIsNull     = null === $indexKey;
-        $indexKeyIsNumber   = is_numeric($indexKey);
-        $result             = array();
-
-        foreach((array)$input as $key=>$row) {
-            if ($columnKeyIsNumber) {
-                $tmp            = array_slice($row, $columnKey, 1);
-                $tmp            = (is_array($tmp) && $tmp) ? current($tmp) : null;
-            } else {
-                $tmp            = isset($row[$columnKey]) ? $row[$columnKey] : null;
-            }
-            if (!$indexKeyIsNull) {
-                if ($indexKeyIsNumber) {
-                    $key            = array_slice($row, $indexKey, 1);
-                    $key            = (is_array($key) && !empty($key)) ? current($key) : null;
-                    $key            = null === $key ? 0 : $key;
-                } else {
-                    $key            = isset($row[$indexKey]) ? $row[$indexKey] : 0;
-                }
-            }
-            $result[$key]       = $tmp;
-        }
-
-        return $result;
     }
 
     /**

@@ -29,7 +29,7 @@ abstract class DataHelper
             return false;
         }
 
-        $ret = (isset($_POST[$key]) ? $_POST[$key] : (isset($_GET[$key]) ? $_GET[$key] : $default_value));
+        $ret = $_POST[$key] ?? $_GET[$key] ?? $default_value;
 
         if (is_string($ret)) {
             return stripslashes(urldecode(preg_replace('/((\%5C0+)|(\%00+))/i', '', urlencode($ret))));
@@ -58,7 +58,7 @@ abstract class DataHelper
             return false;
         }
 
-        return isset($_POST[$key]) ? true : (isset($_GET[$key]) ? true : false);
+        return isset($_POST[$key]) ? true : isset($_GET[$key]);
     }
 
     public static function safePostVars()
@@ -296,7 +296,7 @@ abstract class DataHelper
     public static function escape_query($str)
     {
         return strtr($str, array(
-            "\0" => "",
+            "\0" => '',
             "'"  => '&#39;',
             '"' => '&#34;',
             "\\" => '&#92;',

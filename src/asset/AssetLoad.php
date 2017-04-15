@@ -181,13 +181,14 @@ class AssetLoad extends StdBase
         // is string
         if ( $assets && is_string($assets) ) {
             // 是否是以逗号连接的多个文件名
-            $assets = (strpos($assets, ',') && !strstr($assets, 'http')) ? explode(',', $assets) : [$assets];
+            $assets = (strpos($assets, ',') && false === strpos($assets, 'http')) ? explode(',', $assets) : [$assets];
         }
 
         if ( !is_array($assets) ) {
             throw new InvalidArgumentException('The param $asset type only allow string or array.');
         }
 
+        /** @var array $assets */
         foreach ($assets as $path) {
             $this->assets[] = trim($path);
         }
@@ -403,8 +404,10 @@ class AssetLoad extends StdBase
         if ( UrlHelper::isUrl( $path ) ) {
             return $path;
 
+        }
+
         // 是url绝对路径
-        } else if ( $path{0} == '/' ) {
+        if ($path{0} === '/') {
             return $hostUrl ? $hostUrl . $path :  $path;
         }
 
@@ -464,7 +467,7 @@ class AssetLoad extends StdBase
     {
         $types = [self::TYPE_CSS, self::TYPE_JS];
 
-        if (!in_array($assetType, $types)) {
+        if (!in_array($assetType, $types, true)) {
             throw new InvalidArgumentException('param must be is in array('. implode(',', $types) .')');
         }
 

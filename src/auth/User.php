@@ -153,11 +153,11 @@ class User extends SimpleCollection
      * @param bool|true $caching
      * @return bool
      */
-    public function can($permission, $params = [], $caching = true)
+    public function can($permission, array $params = [], $caching = true)
     {
         return $this->canAccess($permission, $params, $caching);
     }
-    public function canAccess($permission, $params = [], $caching = true)
+    public function canAccess($permission, array $params = [], $caching = true)
     {
         if ( isset($this->_accesses[$permission]) ) {
             return $this->_accesses[$permission];
@@ -165,7 +165,7 @@ class User extends SimpleCollection
 
         $access = false;
 
-        if ( $checker = $this->getAccessChecker() ) {
+        if ($checker = $this->getAccessChecker()) {
             $access = $checker->checkAccess($this->getId(), $permission, $params);
 
             if ($caching) {
@@ -255,7 +255,7 @@ class User extends SimpleCollection
     }
 
     /**
-     * @return mixed
+     * @return CheckAccessInterface
      */
     public function getAccessChecker()
     {

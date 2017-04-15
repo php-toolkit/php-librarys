@@ -209,13 +209,11 @@ class AssetManager extends StdBase
         $pos = trim($options['position']);
         $this->checkTypeAndPosition($type, $pos);
 
-        $assets = (array) $assets;
-
-        foreach ($assets as $name => $asset) {
+        foreach ((array)$assets as $name => $asset) {
             $asset = trim($asset);
 
             // check asset url
-            if ( in_array($type, [self::ASSET_JS_FILE, self::ASSET_CSS_FILE]) ) {
+            if ( in_array($type, [self::ASSET_JS_FILE, self::ASSET_CSS_FILE], true) ) {
                 $asset = AssetLoad::buildUrl( $asset, $this->getBaseUrl(), $this->basePath, false);
             }
 
@@ -282,11 +280,11 @@ class AssetManager extends StdBase
         $positions = $this->getPositions();
         $types     = $this->getAssetTypes();
 
-        if ( !in_array($pos, $positions ) ) {
+        if (!in_array($pos, $positions, true)) {
             throw new InvalidArgumentException('资源注册位置允许设置 ['.implode(', ', $positions).'] 中的一个。');
         }
 
-        if ( !in_array($type, $types ) ) {
+        if (!in_array($type, $types, true)) {
             throw new InvalidArgumentException('资源类型可选 ['.implode(', ', $types).'] 中的一个。');
         }
     }
@@ -333,7 +331,7 @@ class AssetManager extends StdBase
             foreach ( $this->getAssetTypes() as $type ) {
                 $assets = $this->getAssetsByPos($type);
 
-                if ( isset($assets[$name]) ) {
+                if (isset($assets[$name])) {
                     return true;
                 }
             }
@@ -391,7 +389,7 @@ class AssetManager extends StdBase
             $html       = preg_replace( "/$bodyNode/i", $assetBody, $html, 1 , $count);
 
             // 没找到节点，注入失败时，直接加入开始位置
-            if ($count==0) {
+            if ($count===0) {
                 $html = $assetBody.$html;
             }
         }
@@ -401,7 +399,7 @@ class AssetManager extends StdBase
             $headNode = str_replace('/', '\/', $this->headNode);
             $html     = preg_replace( "/$headNode/i", $assetHead, $html, 1 , $count);
 
-            if ($count==0) {
+            if ($count===0) {
                 $html = $assetHead.$html;
             }
         }
@@ -413,8 +411,8 @@ class AssetManager extends StdBase
             $html       = preg_replace( "/$endNode/i", $assetEnd, $html, 1 , $count);
 
             // 没找到节点，注入失败时，直接加入末尾位置
-            if ($count==0) {
-                $html = $html.$assetEnd;
+            if ($count===0) {
+                $html .= $assetEnd;
             }
         }
 

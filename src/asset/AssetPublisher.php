@@ -37,7 +37,7 @@ class AssetPublisher extends StdBase
     protected $publishPath = '';
 
     /**
-     * @var array
+     * @var array[]
      */
     protected $publishAssets = [
         'files' => [
@@ -122,16 +122,15 @@ class AssetPublisher extends StdBase
             return $this;
         }
 
-        if ( is_array($from) ) {
-            array_walk($from,function($f,$t)
-            {
+        if (is_array($from)) {
+            array_walk($from,function($f,$t) {
                 $this->add($f, $t);
             });
 
             return $this;
         }
 
-        $to = is_integer($to) || !$to ? $from : $to;
+        $to = !$to ? $from : $to;
         $fullPath = Directory::isAbsPath($from) || file_exists($from) ?
                     $from :
                     $this->sourcePath . '/' . trim($from, '/\\ ');

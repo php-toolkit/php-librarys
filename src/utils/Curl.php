@@ -148,14 +148,20 @@ class Curl implements CurlInterface
     ];
 
     /**
-     * @param array|string $config
+     * @param array|string|null $config
      * @return Curl
      */
-    public static function make($config = [])
+    public static function make($config = null)
     {
         return new self($config);
     }
-    public function __construct($config = [])
+
+    /**
+     * Curl constructor.
+     * @param array|string|null $config
+     * @throws \ErrorException
+     */
+    public function __construct($config = null)
     {
         if (!extension_loaded('curl')) {
             throw new \ErrorException('The cURL extensions is not loaded, make sure you have installed the cURL extension: https://php.net/manual/curl.setup.php');
@@ -300,7 +306,7 @@ class Curl implements CurlInterface
     {
         // e.g. http://static.oschina.net/uploads/user/277/554046_50.jpg?t=34512323
         if ( strpos($imgUrl, '?')) {
-            list($real,) = explode('?', $imgUrl, 2);
+            [$real,] = explode('?', $imgUrl, 2);
         } else {
             $real = $imgUrl;
         }
@@ -532,7 +538,7 @@ class Curl implements CurlInterface
     public function getResponseMeta($key = null)
     {
         if ($key) {
-            return isset($this->_responseMeta[$key]) ? $this->_responseMeta[$key] : null;
+            return $this->_responseMeta[$key] ?? null;
         }
 
         return $this->_responseMeta;
@@ -589,7 +595,7 @@ class Curl implements CurlInterface
     {
         $this->parseResponse();
 
-        return isset($this->_responseHeaders[$name]) ? $this->_responseHeaders[$name] : $default;
+        return $this->_responseHeaders[$name] ?? $default;
     }
 
     /**
@@ -895,7 +901,7 @@ class Curl implements CurlInterface
      */
     public function getOption($name, $default = null)
     {
-        return isset($this->_options[$name]) ? $this->_options[$name] : $default;
+        return $this->_options[$name] ?? $default;
     }
 
 ///////////////////////////////////////////////////////////////////////
@@ -911,7 +917,7 @@ class Curl implements CurlInterface
             return $this->_config;
         }
 
-        return isset($this->_config[$name]) ? $this->_config[$name] : $default;
+        return $this->_config[$name] ?? $default;
     }
 
     /**

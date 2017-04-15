@@ -239,11 +239,11 @@ class MemcacheClient // extends AbstractCacheDriver
      */
     public function delete($key)
     {
-        if ( !$key ) {
+        if (!$key) {
             throw new \InvalidArgumentException('The key value cannot be empty');
         }
 
-        if ( is_array($key) ) {
+        if (is_array($key)) {
             foreach((array)$key as $k) {
                 $this->driver->delete($k);
             }
@@ -534,7 +534,7 @@ class MemcacheClient // extends AbstractCacheDriver
      */
     public function __call($method, $args)
     {
-        if ( method_exists($this->driver, $method) ) {
+        if (method_exists($this->driver, $method)) {
             return call_user_func_array([$this->driver, $method], $args);
         }
 
@@ -558,7 +558,7 @@ class MemcacheClient // extends AbstractCacheDriver
     {
         $getter = 'get' . ucfirst($name);
 
-        if ( method_exists($this, $getter) ) {
+        if (method_exists($this, $getter)) {
             return $this->$getter();
         }
 
@@ -574,7 +574,7 @@ class MemcacheClient // extends AbstractCacheDriver
     {
         $setter = 'set' . ucfirst($name);
 
-        if ( method_exists($this, $setter) ) {
+        if (method_exists($this, $setter)) {
             $this->$setter($name, $value);
         }
 

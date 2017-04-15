@@ -54,6 +54,25 @@ class FormatHelper
         return $text;
     }
 
+    /**
+     * Format a number into a human readable format
+     * e.g. 24962496 => 23.81M
+     * @param     $size
+     * @param int $precision
+     * @return string
+     */
+    public static function formatBytes($size, $precision = 2)
+    {
+        if (!$size) {
+            return '0';
+        }
+
+        $base     = log($size) / log(1024);
+        $suffixes = array('b', 'k', 'M', 'G', 'T');
+        $floorBase = floor($base);
+
+        return round(1024 ** ($base - $floorBase), $precision) . $suffixes[(int)$floorBase];
+    }
 
     /**
      * @param int $size
@@ -77,5 +96,35 @@ class FormatHelper
         }
 
         return sprintf('%d b', $size);
+    }
+
+
+    /**
+     * Convert a shorthand byte value from a PHP configuration directive to an integer value
+     * @param string $value value to convert
+     * @return int
+     */
+    public static function convertBytes($value)
+    {
+        if (is_numeric($value)) {
+            return $value;
+        }
+
+        $value_length = strlen($value);
+        $qty = (int)substr($value, 0, $value_length - 1 );
+        $unit = StringHelper::strtolower(substr($value, $value_length - 1));
+        switch ($unit) {
+            case 'k':
+                $qty *= 1024;
+                break;
+            case 'm':
+                $qty *= 1048576;
+                break;
+            case 'g':
+                $qty *= 1073741824;
+                break;
+        }
+
+        return $qty;
     }
 }// end class FormatHelper

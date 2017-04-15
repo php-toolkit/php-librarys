@@ -46,16 +46,6 @@ abstract class StringHelper
     }
 
     /**
-     * 检查字符串是否是正确的变量名
-     * @param $string
-     * @return bool
-     */
-    public static function isVarName($string)
-    {
-        return preg_match('@^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*@i', $string)===1;
-    }
-
-    /**
      * 计算字符长度
      * @param  [type] $str
      * @return int|string [type]
@@ -72,11 +62,11 @@ abstract class StringHelper
 
         if (function_exists('mb_strlen')){
             return mb_strlen($str,'utf-8');
-        } else {
-            preg_match_all('/./u', $str, $arr);
-
-            return count($arr[0]);
         }
+
+        preg_match_all('/./u', $str, $arr);
+
+        return count($arr[0]);
     }
 
     /**
@@ -94,12 +84,14 @@ abstract class StringHelper
 
         if (function_exists('mb_strwidth')){
             return mb_strwidth($str,'utf-8');
-        } else if (function_exists('mb_strlen')){
-            return mb_strlen($str,'utf-8');
-        } else {
-            preg_match_all('/./u', $str, $ar);
-            return count($ar[0]);
         }
+
+        if (function_exists('mb_strlen')){
+            return mb_strlen($str,'utf-8');
+        }
+
+        preg_match_all('/./u', $str, $ar);
+        return count($ar[0]);
     }
 
     /**
@@ -121,24 +113,24 @@ abstract class StringHelper
                 $end = func_get_arg(2);
 
                 return mb_substr($str,$start,$end,'utf-8');
-            } else {
-                mb_internal_encoding('UTF-8');
-
-                return mb_substr($str,$start);
             }
 
-        } else {
-            $null = "";
-            preg_match_all('/./u', $str, $ar);
+            mb_internal_encoding('UTF-8');
 
-            if (func_num_args() >= 3) {
-                $end = func_get_arg(2);
+            return mb_substr($str,$start);
 
-                return implode($null, array_slice($ar[0],$start,$end));
-            } else {
-                return implode($null, array_slice($ar[0],$start));
-            }
         }
+
+        $null = '';
+        preg_match_all('/./u', $str, $ar);
+
+        if (func_num_args() >= 3) {
+            $end = func_get_arg(2);
+
+            return implode($null, array_slice($ar[0],$start,$end));
+        }
+
+        return implode($null, array_slice($ar[0],$start));
     }
 
 
@@ -172,7 +164,7 @@ abstract class StringHelper
                 return $str;
             }
 
-            $slice = implode("",array_slice($match[0], $start, $length));
+            $slice = implode('',array_slice($match[0], $start, $length));
         }
 
         return (bool)$suffix ? $slice. '…' : $slice;
@@ -202,7 +194,7 @@ abstract class StringHelper
         $str = '';
 
         for($i = 0; $i < $length; $i++){
-            $str .= $chars[mt_rand(0, $max)];
+            $str .= $chars[random_int(0, $max)];
         }
 
         return $param['prefix'].$str.$param['suffix'];
@@ -247,8 +239,10 @@ abstract class StringHelper
     ** For other purposes use the smarty function instead */
     public static function truncate($str, $max_length, $suffix = '...')
     {
-        if (self::strlen($str) <= $max_length)
+        if (self::strlen($str) <= $max_length) {
             return $str;
+        }
+
         $str = utf8_decode($str);
         return utf8_encode(substr($str, 0, $max_length - self::strlen($suffix)).$suffix);
     }
@@ -275,7 +269,7 @@ abstract class StringHelper
     }
 
     /*Copied from CakePHP String utility file*/
-    public static function truncateString($text, $length = 120, $options = array())
+    public static function truncateString($text, $length = 120, array $options = array())
     {
         $default = array(
             'ellipsis' => '...', 'exact' => true, 'html' => true
@@ -288,62 +282,55 @@ abstract class StringHelper
 
         /**
          * @var string $ellipsis
-         * @var bool   $exact
-         * @var bool   $html
+         * @var bool $exact
+         * @var bool $html
          */
 
         if ($html) {
-            if (self::strlen(preg_replace('/<.*?>/', '', $text)) <= $length)
+            if (self::strlen(preg_replace('/<.*?>/', '', $text)) <= $length) {
                 return $text;
+            }
 
             $total_length = self::strlen(strip_tags($ellipsis));
-            $open_tags = array();
+            $open_tags = $tags = [];
             $truncate = '';
             preg_match_all('/(<\/?([\w+]+)[^>]*>)?([^<>]*)/', $text, $tags, PREG_SET_ORDER);
 
-            foreach ($tags as $tag)
-            {
-                if (!preg_match('/img|br|input|hr|area|base|basefont|col|frame|isindex|link|meta|param/s', $tag[2]))
-                {
-                    if (preg_match('/<[\w]+[^>]*>/s', $tag[0]))
+            foreach ($tags as $tag) {
+                if (!preg_match('/img|br|input|hr|area|base|basefont|col|frame|isindex|link|meta|param/', $tag[2])) {
+                    if (preg_match('/<[\w]+[^>]*>/', $tag[0])) {
                         array_unshift($open_tags, $tag[2]);
-                    elseif (preg_match('/<\/([\w]+)[^>]*>/s', $tag[0], $close_tag))
-                    {
-                        $pos = array_search($close_tag[1], $open_tags);
-                        if ($pos !== false)
+                    } elseif (preg_match('/<\/([\w]+)[^>]*>/', $tag[0], $close_tag)) {
+                        $pos = array_search($close_tag[1], $open_tags, true);
+                        if ($pos !== false) {
                             array_splice($open_tags, $pos, 1);
+                        }
                     }
                 }
                 $truncate .= $tag[1];
-                $content_length = self::strlen(preg_replace('/&[0-9a-z]{2,8};|&#[0-9]{1,7};|&#x[0-9a-f]{1,6};/i', ' ', $tag[3]));
+                $content_length = self::strlen(preg_replace('/&[0-9a-z]{2,8};|&#[\d]{1,7};|&#x[0-9a-f]{1,6};/i', ' ', $tag[3]));
 
-                if ($content_length + $total_length > $length)
-                {
+                if ($content_length + $total_length > $length) {
                     $left = $length - $total_length;
                     $entities_length = 0;
 
-                    if (preg_match_all('/&[0-9a-z]{2,8};|&#[0-9]{1,7};|&#x[0-9a-f]{1,6};/i', $tag[3], $entities, PREG_OFFSET_CAPTURE))
-                    {
-                        foreach ($entities[0] as $entity)
-                        {
-                            if ($entity[1] + 1 - $entities_length <= $left)
-                            {
+                    if (preg_match_all('/&[0-9a-z]{2,8};|&#[\d]{1,7};|&#x[0-9a-f]{1,6};/i', $tag[3], $entities, PREG_OFFSET_CAPTURE)) {
+                        foreach ((array)$entities[0] as $entity) {
+                            if ($entity[1] + 1 - $entities_length <= $left) {
                                 $left--;
                                 $entities_length += self::strlen($entity[0]);
-                            }
-                            else
+                            } else {
                                 break;
+                            }
                         }
                     }
 
                     $truncate .= self::substr($tag[3], 0, $left + $entities_length);
                     break;
                 }
-                else
-                {
-                    $truncate .= $tag[3];
-                    $total_length += $content_length;
-                }
+
+                $truncate .= $tag[3];
+                $total_length += $content_length;
 
                 if ($total_length >= $length) {
                     break;
@@ -365,7 +352,7 @@ abstract class StringHelper
                 $last_close_tag = self::strrpos($truncate_check, '>');
 
                 if ($last_open_tag > $last_close_tag) {
-                    preg_match_all('/<[\w]+[^>]*>/s', $truncate, $last_tag_matches);
+                    preg_match_all('/<[\w]+[^>]*>/', $truncate, $last_tag_matches);
                     $last_tag = array_pop($last_tag_matches[0]);
                     $spacepos = self::strrpos($truncate, $last_tag) + self::strlen($last_tag);
                 }
@@ -373,14 +360,18 @@ abstract class StringHelper
                 $bits = self::substr($truncate, $spacepos);
                 preg_match_all('/<\/([a-z]+)>/', $bits, $dropped_tags, PREG_SET_ORDER);
 
+                /** @var array $dropped_tags */
                 if (!empty($dropped_tags)) {
                     if (!empty($open_tags)) {
-                        foreach ($dropped_tags as $closing_tag)
-                            if (!in_array($closing_tag[1], $open_tags))
+                        foreach ($dropped_tags as $closing_tag) {
+                            if (!in_array($closing_tag[1], $open_tags, true)) {
                                 array_unshift($open_tags, $closing_tag[1]);
+                            }
+                        }
                     } else {
-                        foreach ($dropped_tags as $closing_tag)
+                        foreach ($dropped_tags as $closing_tag) {
                             $open_tags[] = $closing_tag[1];
+                        }
                     }
                 }
             }
@@ -390,9 +381,11 @@ abstract class StringHelper
 
         $truncate .= $ellipsis;
 
-        if ($html && isset($open_tags))
-            foreach ($open_tags as $tag)
-                $truncate .= '</'.$tag.'>';
+        if ($html && isset($open_tags)) {
+            foreach ($open_tags as $tag) {
+                $truncate .= '</' . $tag . '>';
+            }
+        }
 
         return $truncate;
     }
@@ -526,52 +519,5 @@ abstract class StringHelper
         return self::strtolower(trim(preg_replace('/([A-Z][a-z])/', $sep . '$1', $string), $sep));
     }
 
-    /**
-     * Convert a shorthand byte value from a PHP configuration directive to an integer value
-     * @param string $value value to convert
-     * @return int
-     */
-    public static function convertBytes($value)
-    {
-        if (is_numeric($value)) {
-            return $value;
-        }
 
-        $value_length = strlen($value);
-        $qty = (int)substr($value, 0, $value_length - 1 );
-        $unit = self::strtolower(substr($value, $value_length - 1));
-        switch ($unit) {
-            case 'k':
-                $qty *= 1024;
-                break;
-            case 'm':
-                $qty *= 1048576;
-                break;
-            case 'g':
-                $qty *= 1073741824;
-                break;
-        }
-
-        return $qty;
-    }
-
-    /**
-     * Format a number into a human readable format
-     * e.g. 24962496 => 23.81M
-     * @param     $size
-     * @param int $precision
-     * @return string
-     */
-    public static function formatBytes($size, $precision = 2)
-    {
-        if (!$size) {
-            return '0';
-        }
-
-        $base     = log($size) / log(1024);
-        $suffixes = array('b', 'k', 'M', 'G', 'T');
-        $floorBase = floor($base);
-
-        return round(pow(1024, $base - $floorBase), $precision).$suffixes[(int)$floorBase];
-    }
 }

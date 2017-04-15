@@ -68,8 +68,8 @@ class PhpHelper
      */
     public static function getMaxUploadSize($max_size = 0)
     {
-        $post_max_size = StrHelper::convertBytes(ini_get('post_max_size'));
-        $upload_max_fileSize = StrHelper::convertBytes(ini_get('upload_max_filesize'));
+        $post_max_size = FormatHelper::convertBytes(ini_get('post_max_size'));
+        $upload_max_fileSize = FormatHelper::convertBytes(ini_get('upload_max_filesize'));
 
         if ($max_size > 0) {
             $result = min($post_max_size, $upload_max_fileSize, $max_size);

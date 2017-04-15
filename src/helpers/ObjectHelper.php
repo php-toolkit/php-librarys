@@ -28,7 +28,7 @@ class ObjectHelper
 
     /**
      * php对象转换成为数组
-     * @param iterable|array $data
+     * @param iterable|array|object $data
      * @param bool $recursive
      * @return array|bool
      */
@@ -63,6 +63,6 @@ class ObjectHelper
     //反序列化
     public static function decode($txt)
     {
-        return unserialize(gzuncompress(base64_decode($txt)));
+        return unserialize(gzuncompress(base64_decode($txt)), null);
     }
 }

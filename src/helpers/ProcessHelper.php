@@ -125,16 +125,22 @@ class ProcessHelper
     /**
      * Set process title.
      * @param string $title
-     * @return void
+     * @return bool
      */
     public static function setProcessTitle($title)
     {
+        if (PhpHelper::isMac()) {
+            return false;
+        }
+
         // >=php 5.5
-        if (function_exists('cli_set_process_title') && !PhpHelper::isMac()) {
+        if (function_exists('cli_set_process_title')) {
             cli_set_process_title($title);
             // Need process title when php<=5.5
         } else {
             swoole_set_process_name($title);
         }
+
+        return true;
     }
 }

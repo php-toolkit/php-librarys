@@ -125,7 +125,7 @@ class PhpHelper
      */
     public static function isLinux()
     {
-        return strstr(PHP_OS, 'LIN') ? true : false;
+        return stripos(PHP_OS, 'LIN') !== false;
     }
 
     /**
@@ -133,7 +133,7 @@ class PhpHelper
      */
     public static function isWin()
     {
-        return strstr(PHP_OS, 'WIN') ? true : false;
+        return stripos(PHP_OS, 'WIN') !== false;
     }
 
     /**
@@ -141,7 +141,7 @@ class PhpHelper
      */
     public static function isMac()
     {
-        return strstr(PHP_OS, 'Darwin') ? true : false;
+        return stripos(PHP_OS, 'Darwin') !== false;
     }
 
     /**
@@ -149,7 +149,7 @@ class PhpHelper
      */
     public static function isCgi()
     {
-        return strpos(PHP_SAPI, 'cgi') !== false;   #  cgi环境
+        return stripos(PHP_SAPI, 'cgi') !== false;   #  cgi环境
     }
 
     /**

@@ -107,11 +107,6 @@ class SFLogger
     protected $debug = false;
 
     /**
-     * @var bool
-     */
-    protected $showUri = false;
-
-    /**
      * 日志写入阀值
      *  即是除了手动调用 self::flushAll() 之外，当 self::$_records 存储到了阀值时，就会自动写入一次
      *  设为 0 则是每次记录都立即写入文件
@@ -167,10 +162,10 @@ class SFLogger
     }
 
     /**
-     * @param $name
+     * @param string $name
      * @return bool
      */
-    public static function has($name)
+    public static function has(string $name)
     {
         return isset(self::$loggers[$name]);
     }
@@ -189,7 +184,7 @@ class SFLogger
      * @param bool $make
      * @return static|null
      */
-    public static function get($name, $make = true)
+    public static function get(string $name, bool $make = true)
     {
         if ( self::has($name) ) {
             return self::$loggers[$name];
@@ -199,12 +194,29 @@ class SFLogger
     }
 
     /**
+     * del logger
+     * @param  string       $name
+     * @param  bool|boolean $flush
+     * @return bool
+     */
+    public static function del(string $name, bool $flush = true)
+    {
+        if (isset(self::$loggers[$name])) {
+            $logger = self::$loggers[$name];
+
+            return $logger->save();
+        }
+
+        return false;
+    }
+
+    /**
      * fast get logger instance
-     * @param $name
-     * @param $args
+     * @param string $name
+     * @param array $args
      * @return SFLogger
      */
-    public static function __callStatic($name, $args)
+    public static function __callStatic(string $name, array $args)
     {
         $args['name'] = $name;
 
@@ -229,7 +241,7 @@ class SFLogger
     private function __construct(array $config = [])
     {
         $this->name = $config['name'];
-        $canSetting = ['logConsole','logThreshold','debug','channel','basePath','showUri','subFolder','format','splitFile', 'levels'];
+        $canSetting = ['logConsole','logThreshold','debug','channel','basePath','subFolder','format','splitFile', 'levels'];
 
         foreach ($canSetting as $name) {
             if ( isset($config[$name]) ) {
@@ -378,7 +390,7 @@ class SFLogger
         }
 
         // 检查阀值
-        if ( count($this->_records) >= $this->logThreshold ) {
+        if (count($this->_records) >= $this->logThreshold) {
             $this->save();
         }
 
@@ -395,14 +407,13 @@ class SFLogger
         }
 
         $written = false;
-        $uri = $this->getServer('REQUEST_URI', 'Unknown');
-        $str = !$this->showUri ? '' : "------------- REQUEST URI [$uri]  ------------- \n";
+        $str = '';
 
         foreach ($this->_records as $key => $record) {
             $this->levelName = $key;
 
-            if ( $this->splitFile ) {
-                $str = !$this->showUri ? '' : "------------- REQUEST URI [$uri]  ------------- \n";
+            if ($this->splitFile) {
+                $str = '';
 
                 foreach ($record as $text) {
                     $str .= $text . "\n";

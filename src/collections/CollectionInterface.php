@@ -15,7 +15,7 @@ interface CollectionInterface extends \Serializable, \ArrayAccess, \Countable, \
 
     public function all();
 
-    public function has($key);
+    public function has(string $key);
 
     public function remove($key);
 

@@ -132,7 +132,7 @@ class DataCollector extends SimpleCollection
      * @param string $path
      * @return bool
      */
-    public function has($path)
+    public function has(string $path)
     {
         return $this->exists($path);
     }

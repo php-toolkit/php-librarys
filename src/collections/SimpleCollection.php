@@ -146,7 +146,7 @@ class SimpleCollection implements CollectionInterface
      * @param string $key The data key
      * @return bool
      */
-    public function has($key)
+    public function has(string $key)
     {
         return array_key_exists($key, $this->data);
     }

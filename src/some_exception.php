@@ -5,6 +5,9 @@
  */
 namespace inhere\library\exceptions
 {
+    /**
+     * {@inheritDoc}
+     */
     abstract class BaseException extends \Exception
     {
         /**
@@ -28,6 +31,7 @@ namespace inhere\library\exceptions
     }
 
 //////////////////////////////////// Http exception ////////////////////////////////////
+
 
     class HttpException extends BaseException
     {
@@ -298,6 +302,10 @@ namespace inhere\exceptions
     }
 
     class ConnectException extends RuntimeException
+    {
+    }
+
+    class ConnectionException extends RuntimeException
     {
     }
 

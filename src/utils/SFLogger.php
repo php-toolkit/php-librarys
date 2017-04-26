@@ -186,7 +186,7 @@ class SFLogger
      */
     public static function get(string $name, bool $make = true)
     {
-        if ( self::has($name) ) {
+        if (self::has($name)) {
             return self::$loggers[$name];
         }
 
@@ -204,7 +204,7 @@ class SFLogger
         if (isset(self::$loggers[$name])) {
             $logger = self::$loggers[$name];
 
-            return $logger->save();
+            return $flush ? $logger->save() : true;
         }
 
         return false;
@@ -378,7 +378,7 @@ class SFLogger
         $string = $this->dataFormatter($level, $message, $context);
 
         // serve is running in php build in server env.
-        if ( $this->logConsole && (PhpHelper::isBuiltInServer() || PhpHelper::isCli()) ) {
+        if ($this->logConsole && (PhpHelper::isBuiltInServer() || PhpHelper::isCli())) {
             defined('STDOUT') or define('STDOUT', fopen('php://stdout', 'wb'));
             fwrite(STDOUT, $string . PHP_EOL);
         }

@@ -110,48 +110,50 @@ class LanguageManager extends StdBase
     {
         $key = trim($key, $this->fileSeparator . ' ');
 
-        if ( !$key || !is_string($key) ) {
+        if (!$key || !is_string($key)) {
             throw new \InvalidArgumentException('A lack of parameters or type error.');
         }
 
         // No separator, get value form default language file.
-        if ( ($pos = strpos($key, $this->fileSeparator)) === false ) {
+        if (($pos = strpos($key, $this->fileSeparator)) === false) {
             $fileKey = static::DEFAULT_FILE_KEY;
 
-        // Will try to get the value from the other config file
+            // Will try to get the value from the other config file
         } else {
             $fileKey = substr($key, 0, $pos);
-            $key     = substr($key,$pos+1);
+            $key = substr($key, $pos + 1);
         }
 
         // translate form current language. if not found, translate form fallback language.
         $value = $this->findTranslationText($fileKey, $key) ?: $this->tranByFallbackLang($fileKey, $key, $default);
 
         if (!$value) {
-            $value = ucfirst(StrHelper::toUnderscoreCase(str_replace(['-','_'],' ', $key), ' '));
+            $value = ucfirst(StrHelper::toUnderscoreCase(str_replace(['-', '_'], ' ', $key), ' '));
         }
 
         $args = $args ? (array)$args : [];
 
         // $args is not empty?
-        if ( $hasArgs = count($args) ) {
+        if ($hasArgs = count($args)) {
             array_unshift($args, $value);
         }
 
         return $hasArgs ? sprintf(...$args) : $value;
     }
+
     public function tran($key, array $args = [], $default = '')
     {
         return $this->translate($key, $args, $default);
     }
+
     public function tl($key, array $args = [], $default = '')
     {
         return $this->translate($key, $args, $default);
     }
 
     /*********************************************************************************
-    * handle current language translate
-    *********************************************************************************/
+     * handle current language translate
+     *********************************************************************************/
 
     /**
      * @param string $fileKey
@@ -170,8 +172,8 @@ class LanguageManager extends StdBase
     }
 
     /*********************************************************************************
-    * fallback language translate handle
-    *********************************************************************************/
+     * fallback language translate handle
+     *********************************************************************************/
 
     /**
      * @param string $fileKey
@@ -179,14 +181,14 @@ class LanguageManager extends StdBase
      * @param string $default
      * @return mixed
      */
-    protected function tranByFallbackLang($fileKey, $key, $default='')
+    protected function tranByFallbackLang($fileKey, $key, $default = '')
     {
-        if ( $this->lang === $this->fallbackLang ) {
+        if ($this->lang === $this->fallbackLang) {
             return $default;
         }
 
         // check exists
-        if ( $collector = $this->getFallbackFileData($fileKey) ) {
+        if ($collector = $this->getFallbackFileData($fileKey)) {
             return $collector->get($key, $default);
         }
 
@@ -199,17 +201,17 @@ class LanguageManager extends StdBase
      */
     public function getFallbackFileData($fileKey)
     {
-        if ( isset($this->fallbackData[$fileKey]) ) {
+        if (isset($this->fallbackData[$fileKey])) {
             return $this->fallbackData[$fileKey];
         }
 
         // the first time fetch, instantiate it
-        if ( $langFile = $this->getLangFile($fileKey)) {
-            $file = str_replace("/{$this->lang}/","/{$this->fallbackLang}/", $langFile);
+        if ($langFile = $this->getLangFile($fileKey)) {
+            $file = str_replace("/{$this->lang}/", "/{$this->fallbackLang}/", $langFile);
 
-            if ( is_file($file) ) {
+            if (is_file($file)) {
                 $this->loadedFiles[] = $file;
-                $this->fallbackData[$fileKey] = DataCollector::make($file, $this->fileType, $this->fallbackLang.'.'.$fileKey);
+                $this->fallbackData[$fileKey] = DataCollector::make($file, $this->fileType, $this->fallbackLang . '.' . $fileKey);
             }
         }
 
@@ -242,8 +244,8 @@ class LanguageManager extends StdBase
      */
     public function getLangFile($fileKey)
     {
-        if ( static::DEFAULT_FILE_KEY === $fileKey && !$this->hasLangFile($fileKey)) {
-            $this->langFiles[$fileKey] = $this->buildLangFilePath($this->defaultFile.'.'.$this->fileType);
+        if (static::DEFAULT_FILE_KEY === $fileKey && !$this->hasLangFile($fileKey)) {
+            $this->langFiles[$fileKey] = $this->buildLangFilePath($this->defaultFile . '.' . $this->fileType);
         }
 
         return $this->langFiles[$fileKey] ?? null;
@@ -266,11 +268,11 @@ class LanguageManager extends StdBase
      */
     public function addLangFile($file, $fileKey = '')
     {
-        if ( !FileSystem::isAbsPath($file) ) {
+        if (!FileSystem::isAbsPath($file)) {
             $file = $this->buildLangFilePath($file);
         }
 
-        if ( !is_file($file) ) {
+        if (!is_file($file)) {
             throw new NotFoundException("The language file don't exists. FILE: $file");
         }
 
@@ -280,7 +282,7 @@ class LanguageManager extends StdBase
             throw new InvalidArgumentException("language file key [$fileKey] naming format error!!");
         }
 
-        if ( $this->hasLangFile($fileKey) ) {
+        if ($this->hasLangFile($fileKey)) {
             throw new InvalidArgumentException("language file key [$fileKey] have been exists, don't allow override!!");
         }
 
@@ -294,18 +296,18 @@ class LanguageManager extends StdBase
      */
     public function getLangFileData($fileKey)
     {
-        if ( isset($this->data[$fileKey]) ) {
+        if (isset($this->data[$fileKey])) {
             return $this->data[$fileKey];
         }
 
         // at first, load language data, create data collector.
         if ($file = $this->getLangFile($fileKey)) {
 
-            if ( !is_file($file) ) {
+            if (!is_file($file)) {
                 throw new NotFoundException("The language file don't exists. FILE: $file");
             }
 
-            $this->data[$fileKey] = DataCollector::make($file, $this->fileType, $this->lang.'.'.$fileKey);
+            $this->data[$fileKey] = DataCollector::make($file, $this->fileType, $this->lang . '.' . $fileKey);
             $this->loadedFiles[] = $file;
 
             return $this->data[$fileKey];
@@ -413,7 +415,7 @@ class LanguageManager extends StdBase
      * @param bool $full
      * @return string
      */
-    public function getDefaultFile($full= false)
+    public function getDefaultFile($full = false)
     {
         return $full ? $this->getLangFile(static::DEFAULT_FILE_KEY) : $this->defaultFile;
     }
@@ -455,7 +457,7 @@ class LanguageManager extends StdBase
      */
     public function setFileType($fileType)
     {
-        if ( in_array($fileType, DataCollector::getFormats(), true) ) {
+        if (in_array($fileType, DataCollector::getFormats(), true)) {
             $this->fileType = $fileType;
         }
     }

@@ -138,7 +138,7 @@ class FixedArray implements \ArrayAccess, \IteratorAggregate
 
     /**
      * Checks whether an offset exists in the iterator.
-     * @param   mixed  $offset  The array offset.
+     * @param   mixed $offset The array offset.
      * @return  boolean  True if the offset exists, false otherwise.
      */
     public function offsetExists($offset)
@@ -148,7 +148,7 @@ class FixedArray implements \ArrayAccess, \IteratorAggregate
 
     /**
      * Gets an offset in the iterator.
-     * @param   mixed  $offset  The array offset.
+     * @param   mixed $offset The array offset.
      * @return  mixed  The array value if it exists, null otherwise.
      */
     public function offsetGet($offset)
@@ -164,8 +164,8 @@ class FixedArray implements \ArrayAccess, \IteratorAggregate
 
     /**
      * Sets an offset in the iterator.
-     * @param   mixed  $offset  The array offset.
-     * @param   mixed  $value   The array value.
+     * @param   mixed $offset The array offset.
+     * @param   mixed $value The array value.
      * @return  void
      */
     public function offsetSet($offset, $value)
@@ -173,7 +173,7 @@ class FixedArray implements \ArrayAccess, \IteratorAggregate
         $index = $this->getSize();
 
         // change size.
-        $this->values->setSize($index+1);
+        $this->values->setSize($index + 1);
 
         $this->values[] = $value;
         $this->keys[$offset] = $index;
@@ -181,7 +181,7 @@ class FixedArray implements \ArrayAccess, \IteratorAggregate
 
     /**
      * Unset an offset in the iterator.
-     * @param   mixed  $offset  The array offset.
+     * @param   mixed $offset The array offset.
      * @return  void
      */
     public function offsetUnset($offset)
@@ -190,7 +190,7 @@ class FixedArray implements \ArrayAccess, \IteratorAggregate
 
         if ($index >= 0) {
             // change size.
-            $this->values->setSize($index-1);
+            $this->values->setSize($index - 1);
 
             unset($this->keys[$offset], $this->values[$index]);
         }

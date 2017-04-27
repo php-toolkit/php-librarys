@@ -52,16 +52,16 @@ class Local
     public static function env($name = null, $default = null)
     {
         // init loading ...
-        if ( self::$_local === null ) {
+        if (self::$_local === null) {
             self::$_local = [];
 
-            if ( ($file = self::getConfigFile()) && is_file($file) ) {
+            if (($file = self::getConfigFile()) && is_file($file)) {
                 self::$_local = array_merge(self::$_local, parse_ini_file($file, true));
             }
         }
 
         // get all
-        if ( null === $name ) {
+        if (null === $name) {
             return self::$_local;
         }
 
@@ -75,7 +75,7 @@ class Local
      */
     public static function setConfigFile($file)
     {
-        if ( $file ) {
+        if ($file) {
             self::$configFile = $file;
         }
     }
@@ -86,7 +86,7 @@ class Local
      */
     public static function getConfigFile()
     {
-        if ( !self::$configFile && defined('PROJECT_PATH')) {
+        if (!self::$configFile && defined('PROJECT_PATH')) {
             self::$configFile = PROJECT_PATH . '/.env';
         }
 

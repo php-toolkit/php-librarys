@@ -214,8 +214,8 @@ class DataCollector extends SimpleCollection
      */
     public function load($data, $format = 'php')
     {
-        if ( is_string($data) && in_array($format, static::$formats, true) ) {
-            switch ( $format ) {
+        if (is_string($data) && in_array($format, static::$formats, true)) {
+            switch ($format) {
                 case static::FORMAT_YML:
                     $this->loadYaml($data);
                     break;
@@ -234,7 +234,7 @@ class DataCollector extends SimpleCollection
                     break;
             }
 
-        } else if ( is_array($data) || is_object($data) ) {
+        } else if (is_array($data) || is_object($data)) {
             $this->bindData($this->data, $data);
         }
 
@@ -249,7 +249,7 @@ class DataCollector extends SimpleCollection
      */
     public function loadYaml($data)
     {
-        $array  = static::parseYaml(trim($data));
+        $array = static::parseYaml(trim($data));
 
         return $this->bindData($this->data, $array);
     }
@@ -261,11 +261,11 @@ class DataCollector extends SimpleCollection
      */
     public function loadArray($data)
     {
-        if ( is_string($data) && is_file($data) ) {
+        if (is_string($data) && is_file($data)) {
             $data = require $data;
         }
 
-        if ( !is_array($data) ) {
+        if (!is_array($data)) {
             throw new \InvalidArgumentException('param type error! must is array.');
         }
 
@@ -279,7 +279,7 @@ class DataCollector extends SimpleCollection
      */
     public function loadObject($data)
     {
-        if ( !is_object($data) ) {
+        if (!is_object($data)) {
             throw new \InvalidArgumentException('param type error! must is object.');
         }
 
@@ -293,11 +293,11 @@ class DataCollector extends SimpleCollection
      */
     public function loadIni($data)
     {
-        if ( !is_string($data) ) {
+        if (!is_string($data)) {
             throw new \InvalidArgumentException('param type error! must is string.');
         }
 
-        if ( file_exists($data) ) {
+        if (file_exists($data)) {
             $data = file_get_contents($data);
         }
 
@@ -314,7 +314,7 @@ class DataCollector extends SimpleCollection
      */
     public function loadJson($data)
     {
-         return $this->bindData($this->data, static::parseJson($data));
+        return $this->bindData($this->data, static::parseJson($data));
     }
 
     /**
@@ -364,7 +364,7 @@ class DataCollector extends SimpleCollection
 
     /**
      * Unsets an offset in the iterator.
-     * @param   mixed  $offset  The array offset.
+     * @param   mixed $offset The array offset.
      * @return  void
      */
     public function offsetUnset($offset)
@@ -381,13 +381,13 @@ class DataCollector extends SimpleCollection
 ///////////////////////////// helper /////////////////////////
 //////
 
-/**
+    /**
      * Get data from array or object by path.
      *
      * Example: `DataCollector::getByPath($array, 'foo.bar.yoo')` equals to $array['foo']['bar']['yoo'].
      *
-     * @param mixed  $data      An array or object to get value.
-     * @param mixed  $path      The key path.
+     * @param mixed $data An array or object to get value.
+     * @param mixed $path The key path.
      * @param string $separator Separator of paths.
      *
      * @return  mixed Found value, null if not exists.
@@ -406,8 +406,8 @@ class DataCollector extends SimpleCollection
             if (is_object($dataTmp) && isset($dataTmp->$arg)) {
                 $dataTmp = $dataTmp->$arg;
             } elseif (
-                ( is_array($dataTmp) || $dataTmp instanceof \ArrayAccess)
-                 && isset($dataTmp[$arg])
+                (is_array($dataTmp) || $dataTmp instanceof \ArrayAccess)
+                && isset($dataTmp[$arg])
             ) {
                 $dataTmp = $dataTmp[$arg];
             } else {
@@ -421,9 +421,9 @@ class DataCollector extends SimpleCollection
     /**
      * setByPath
      *
-     * @param mixed  &$data
+     * @param mixed &$data
      * @param string $path
-     * @param mixed  $value
+     * @param mixed $value
      * @param string $separator
      *
      * @return  boolean
@@ -481,7 +481,7 @@ class DataCollector extends SimpleCollection
         } elseif (is_object($data)) {
             $data = get_object_vars($data);
         } else {
-            $data = (array) $data;
+            $data = (array)$data;
         }
 
         if ($recursive) {
@@ -518,15 +518,15 @@ class DataCollector extends SimpleCollection
      */
     public static function parseJson($data)
     {
-        if ( !is_string($data) ) {
+        if (!is_string($data)) {
             throw new \InvalidArgumentException('param type error! must is string.');
         }
 
-        if ( !$data ) {
+        if (!$data) {
             return [];
         }
 
-        if ( file_exists($data) ) {
+        if (file_exists($data)) {
             $data = file_get_contents($data);
             $pattern = [
                 //去除文件中的注释
@@ -538,46 +538,46 @@ class DataCollector extends SimpleCollection
                 // 多个空格 换成一个
                 "/(?!\w)\s*?(?!\w)/is"
             ];
-            $replace = ['','',''];
+            $replace = ['', '', ''];
             $data = preg_replace($pattern, $replace, $data);
         }
 
         $data = json_decode(trim($data), true);
-        if ( json_last_error() === JSON_ERROR_NONE ) {
+        if (json_last_error() === JSON_ERROR_NONE) {
             return $data;
         }
 
-        throw new DataParseException('json config data parse error :'.json_last_error_msg());
+        throw new DataParseException('json config data parse error :' . json_last_error_msg());
     }
 
     const IMPORT_KEY = 'import';
 
     /**
      * parse YAML
-     * @param string|bool $data              Waiting for the parse data
-     * @param bool $supportImport       Simple support import other config by tag 'import'. must is bool.
-     * @param callable $pathHandler     When the second param is true, this param is valid.
-     * @param string $fileDir           When the second param is true, this param is valid.
+     * @param string|bool $data Waiting for the parse data
+     * @param bool $supportImport Simple support import other config by tag 'import'. must is bool.
+     * @param callable $pathHandler When the second param is true, this param is valid.
+     * @param string $fileDir When the second param is true, this param is valid.
      * @return array
      */
-    public static function parseYaml($data, $supportImport=false, callable $pathHandler=null, $fileDir = '')
+    public static function parseYaml($data, $supportImport = false, callable $pathHandler = null, $fileDir = '')
     {
-        if ( !is_string($data) ) {
+        if (!is_string($data)) {
             throw new \InvalidArgumentException('param type error! must is string.');
         }
 
-        if ( !$data ) {
+        if (!$data) {
             return [];
         }
 
         $parserClass = '\Symfony\Component\Yaml\Parser';
 
-        if ( !class_exists($parserClass) ) {
+        if (!class_exists($parserClass)) {
             throw new \UnexpectedValueException("yml format parser Class $parserClass don't exists! please install package 'symfony/yaml'.");
         }
 
-        if ( is_file($data) ) {
-            $fileDir = $fileDir ? : dirname($data);
+        if (is_file($data)) {
+            $fileDir = $fileDir ?: dirname($data);
             $data = file_get_contents($data);
         }
 
@@ -587,26 +587,26 @@ class DataCollector extends SimpleCollection
 //        $array  = json_decode(json_encode($array));
 
         // import other config by tag 'import'
-        if ( $supportImport===true && !empty($array[static::IMPORT_KEY]) && is_string($array[static::IMPORT_KEY]) ) {
+        if ($supportImport === true && !empty($array[static::IMPORT_KEY]) && is_string($array[static::IMPORT_KEY])) {
             $importFile = trim($array[static::IMPORT_KEY]);
 
             // if needed custom handle $importFile path. e.g: Maybe it uses custom alias path
-            if ( $pathHandler && is_callable($pathHandler) ) {
+            if ($pathHandler && is_callable($pathHandler)) {
                 $importFile = $pathHandler($importFile);
             }
 
             // if $importFile is not exists AND $importFile is not a absolute path AND have $parentFile
-            if ( $fileDir && !file_exists($importFile) && $importFile[0] !== '/') {
+            if ($fileDir && !file_exists($importFile) && $importFile[0] !== '/') {
                 $importFile = $fileDir . '/' . trim($importFile, './');
             }
 
             // $importFile is file
-            if ( is_file($importFile) ) {
+            if (is_file($importFile)) {
 
                 unset($array['import']);
-                $data     = file_get_contents($importFile);
+                $data = file_get_contents($importFile);
                 $imported = $parser->parse(trim($data));
-                $array    = array_merge($imported, $array);
+                $array = array_merge($imported, $array);
             } else {
                 throw new \UnexpectedValueException("needed imported file $importFile don't exists!");
             }

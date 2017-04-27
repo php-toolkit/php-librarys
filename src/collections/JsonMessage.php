@@ -96,13 +96,13 @@ class JsonMessage extends ActiveData
         return $this;
     }
 
-    public function all($toArray=true)
+    public function all($toArray = true)
     {
         // add a new alert message
         return [
-            'code'  => (int)$this->code,
-            'msg'   => $this->msg,
-            'data'  => (array)$this->data
+            'code' => (int)$this->code,
+            'msg' => $this->msg,
+            'data' => (array)$this->data
         ];
     }
 
@@ -124,10 +124,10 @@ class JsonMessage extends ActiveData
 
     public function __get($name)
     {
-        if ( isset($this->data[$name]) ) {
+        if (isset($this->data[$name])) {
             return $this->data[$name];
         }
 
-        throw new PropertyException(sprintf('获取不存在的属性 %s ！',$name));
+        throw new PropertyException(sprintf('获取不存在的属性 %s ！', $name));
     }
 }

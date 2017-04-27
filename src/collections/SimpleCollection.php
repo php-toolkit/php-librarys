@@ -44,8 +44,8 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * Set collection item
-     * @param string $key   The data key
-     * @param mixed  $value The data value
+     * @param string $key The data key
+     * @param mixed $value The data value
      * @return $this
      */
     public function set($key, $value)
@@ -62,7 +62,7 @@ class SimpleCollection implements CollectionInterface
      */
     public function add($name, $value)
     {
-        if ( !$this->has($name) ) {
+        if (!$this->has($name)) {
             $this->set($name, $value);
         }
 
@@ -71,8 +71,8 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * Get collection item for key
-     * @param string $key     The data key
-     * @param mixed  $default The default value to return if data key does not exist
+     * @param string $key The data key
+     * @param mixed $default The default value to return if data key does not exist
      * @return mixed The key's value, or the default value
      */
     public function get($key, $default = null)
@@ -99,7 +99,7 @@ class SimpleCollection implements CollectionInterface
     {
         $values = [];
 
-        foreach ($names as $name ) {
+        foreach ($names as $name) {
             $values[] = $this->get($name);
         }
 
@@ -127,6 +127,7 @@ class SimpleCollection implements CollectionInterface
     {
         return $this->data;
     }
+
     public function toArray()
     {
         return $this->all();
@@ -202,8 +203,8 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * Set collection item
-     * @param string $key   The data key
-     * @param mixed  $value The data value
+     * @param string $key The data key
+     * @param mixed $value The data value
      */
     public function offsetSet($key, $value)
     {

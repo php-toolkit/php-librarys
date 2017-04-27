@@ -24,12 +24,12 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
      * @param bool|false $recursive
      * @return static
      */
-    public static function create(array $data=[], $recursive = false)
+    public static function create(array $data = [], $recursive = false)
     {
         return new static($data, $recursive);
     }
 
-    public function __construct(array $data=[], $recursive = false)
+    public function __construct(array $data = [], $recursive = false)
     {
         if ($data) {
             $this->load($data, $recursive);
@@ -44,18 +44,18 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
      */
     public function load($data, $recursive = false)
     {
-        foreach ($data as $name=>$value) {
+        foreach ($data as $name => $value) {
             $name = trim($name);
 
-            if( is_numeric($name) ) {
-                $name = 'attr_'.$name;
+            if (is_numeric($name)) {
+                $name = 'attr_' . $name;
             }
 
             if (!$name) {
                 $name = 'attr_';
             }
 
-            $this->$name = $recursive && is_array($value) ? static::create($value,$recursive) :$value;
+            $this->$name = $recursive && is_array($value) ? static::create($value, $recursive) : $value;
         }
 
         return $this;
@@ -75,8 +75,8 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
         $class = new \ReflectionClass($this);
         $attrs = [];
 
-        foreach($class->getProperties() as $property) {
-            if($property->isPublic() && !$property->isStatic()) {
+        foreach ($class->getProperties() as $property) {
+            if ($property->isPublic() && !$property->isStatic()) {
                 $attrs[$property->getName()] = $property->getValue($this);
             }
         }
@@ -92,16 +92,16 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
      */
     public function get($name)
     {
-        if (strpos($name,'.')) {
+        if (strpos($name, '.')) {
             $names = explode('.', $name);
             $node = $this;
 
             foreach ((array)$names as $name) {
-                if($node instanceof self && property_exists($node, $name) ) {
+                if ($node instanceof self && property_exists($node, $name)) {
                     $node = $node->$name;
                 } else {
                     if ($this->isStrict()) {
-                        exit("Stored data don't exists node '$name'\n") ;
+                        exit("Stored data don't exists node '$name'\n");
                     }
 
                     $node = null;
@@ -127,7 +127,7 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
 
     /**
      * Checks whether an offset exists in the iterator.
-     * @param   mixed  $offset  The array offset.
+     * @param   mixed $offset The array offset.
      * @return  boolean  True if the offset exists, false otherwise.
      */
     public function offsetExists($offset)
@@ -137,7 +137,7 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
 
     /**
      * Gets an offset in the iterator.
-     * @param   mixed  $offset  The array offset.
+     * @param   mixed $offset The array offset.
      * @return  mixed  The array value if it exists, null otherwise.
      */
     public function offsetGet($offset)
@@ -147,8 +147,8 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
 
     /**
      * Sets an offset in the iterator.
-     * @param   mixed  $offset  The array offset.
-     * @param   mixed  $value   The array value.
+     * @param   mixed $offset The array offset.
+     * @param   mixed $value The array value.
      * @return  void
      */
     public function offsetSet($offset, $value)
@@ -158,7 +158,7 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
 
     /**
      * Unset an offset in the iterator.
-     * @param   mixed  $offset  The array offset.
+     * @param   mixed $offset The array offset.
      * @return  void
      */
     public function offsetUnset($offset)

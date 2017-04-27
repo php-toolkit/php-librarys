@@ -10,6 +10,7 @@
  *     仅允许通过实例化时 或 调用load() 载入数据
  * File: FixedData.php StrictData.php
  */
+
 namespace inhere\library\collections;
 
 use inhere\exceptions\UnknownCalledException;
@@ -27,7 +28,7 @@ class FixedData extends ActiveData
 
     /**
      * Unset 操作 (与 ActiveData::offsetUnset()不同的是) 仅会将属性值设置为 null, 并不会真的删除属性
-     * @param   mixed  $offset  The array offset.
+     * @param   mixed $offset The array offset.
      * @return  void
      */
     public function offsetUnset($offset)
@@ -37,8 +38,8 @@ class FixedData extends ActiveData
 
     public function __set($name, $value)
     {
-        if ( !property_exists($this, $name) ) {
-            throw new UnknownCalledException(sprintf('设置不存在的属性 %s ！',$name));
+        if (!property_exists($this, $name)) {
+            throw new UnknownCalledException(sprintf('设置不存在的属性 %s ！', $name));
         }
 
         $this->$name = $value;
@@ -46,11 +47,11 @@ class FixedData extends ActiveData
 
     public function __get($name)
     {
-        if ( $value=$this->get($name) ) {
+        if ($value = $this->get($name)) {
             return $value;
         }
 
-        throw new UnknownCalledException(sprintf('获取不存在的属性 %s ！',$name));
+        throw new UnknownCalledException(sprintf('获取不存在的属性 %s ！', $name));
     }
 
 }// end class FixedData

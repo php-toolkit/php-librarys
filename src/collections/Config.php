@@ -54,23 +54,23 @@ class Config extends DataCollector
     public function __construct($data = [], $options = [], $name = 'config')
     {
         if (is_string($options)) {
-            $options = [ 'format' => $options ];
+            $options = ['format' => $options];
         }
 
         $options = array_merge([
-            'format'     => 'php',
-            'readonly'   => true,
-            'mode'       => 'data', // 'data'
+            'format' => 'php',
+            'readonly' => true,
+            'mode' => 'data', // 'data'
         ], $options);
 
         $this->mode = $options['mode'];
         $this->readonly = (bool)$options['readonly'];
 
-        if ( is_string($data) && is_dir($data) ) {
+        if (is_string($data) && is_dir($data)) {
             $this->mode = self::MODE_FOLDER;
             $this->folderPath = $data;
             $data = [];
-        } elseif ( $this->mode === self::MODE_FOLDER && !is_dir($data)) {
+        } elseif ($this->mode === self::MODE_FOLDER && !is_dir($data)) {
             throw new RuntimeException("Config mode is 'folder'. the first arg must is a folder path!");
         }
 
@@ -103,12 +103,12 @@ class Config extends DataCollector
      */
     public function get($path, $default = null)
     {
-        if ( $this->mode === self::MODE_FOLDER ) {
+        if ($this->mode === self::MODE_FOLDER) {
             $nodes = static::getPathNodes($path, $this->separator);
             $name = array_shift($nodes);// config file name
 
             // if config file not load. load it.
-            if ( !isset($this->data[$name]) ) {
+            if (!isset($this->data[$name])) {
                 $file = $this->folderPath . "/{$name}.{$this->defaultFormat}";
                 $this->load($file, $this->defaultFormat);
             }

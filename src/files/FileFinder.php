@@ -74,9 +74,9 @@ class FileFinder extends StdBase
      * @var array
      */
     protected $exclude = [
-        'file' => [ '.gitignore', 'LICENSE', 'LICENSE.txt' ],
-        'ext' => [ 'swp', 'json'],
-        'dir' => ['.git' , 'src'],
+        'file' => ['.gitignore', 'LICENSE', 'LICENSE.txt'],
+        'ext' => ['swp', 'json'],
+        'dir' => ['.git', 'src'],
     ];
 
     /**
@@ -120,7 +120,7 @@ class FileFinder extends StdBase
     public function reset()
     {
         $this->sourcePath = '';
-        $this->files  = [];
+        $this->files = [];
         $this->include = $this->exclude = [
             'file' => [],
             'ext' => [],
@@ -147,7 +147,7 @@ class FileFinder extends StdBase
         }
 
         // have been find
-        if ( $this->_relatedFile === $path && ($this->files instanceof ArrayObject) ) {
+        if ($this->_relatedFile === $path && ($this->files instanceof ArrayObject)) {
             return $this;
         }
 
@@ -216,15 +216,15 @@ class FileFinder extends StdBase
         $pathPrefix = $pathPrefix ? $pathPrefix . '/' : '';
 
         //glob()寻找与模式匹配的文件路径
-        foreach( glob($dir.'*') as $file) {
+        foreach (glob($dir . '*') as $file) {
             $name = basename($file);
 
             // 匹配文件
-            if ( is_file($file) && $this->doFilterFile($name) ) {
-                $list[] = $pathPrefix .  $name;
+            if (is_file($file) && $this->doFilterFile($name)) {
+                $list[] = $pathPrefix . $name;
 
-            // 是否遍历子目录 并检查子目录是否在查找列表
-            } elseif ( $recursive && is_dir($file) && $this->doFilterDir($name) ){
+                // 是否遍历子目录 并检查子目录是否在查找列表
+            } elseif ($recursive && is_dir($file) && $this->doFilterDir($name)) {
                 $list = array_merge($list, $this->findFiles($file, $recursive, $pathPrefix . $name));
             }
         }
@@ -241,21 +241,21 @@ class FileFinder extends StdBase
     protected function doFilterFile($name /*, $file*/)
     {
         // have bee set custom file Filter
-        if ( ($fileFilter = $this->fileFilter) && is_callable($fileFilter) ) {
+        if (($fileFilter = $this->fileFilter) && is_callable($fileFilter)) {
             return call_user_func($fileFilter, $name, $this);
         }
 
         // use default filter handle
-        $ext   = implode('|',$this->getInclude('ext'));
-        $noExt = implode('|',$this->getExclude('ext'));
+        $ext = implode('|', $this->getInclude('ext'));
+        $noExt = implode('|', $this->getExclude('ext'));
 
-        if ( $ext || $this->include['file'] ) {
+        if ($ext || $this->include['file']) {
             // check include ...
             return in_array($name, $this->include['file']) || preg_match("/\.($ext)$/i", $name);
         }
 
         // check exclude ...
-        return  !in_array($name, $this->exclude['file']) && !preg_match("/\.($noExt)$/i", $name);
+        return !in_array($name, $this->exclude['file']) && !preg_match("/\.($noExt)$/i", $name);
     }
 
     /**
@@ -267,7 +267,7 @@ class FileFinder extends StdBase
     protected function doFilterDir($name /*, $dir*/)
     {
         // have bee set custom dir Filter
-        if ( ($fileFilter = $this->fileFilter) && is_callable($fileFilter) ) {
+        if (($fileFilter = $this->fileFilter) && is_callable($fileFilter)) {
             return $fileFilter($name, $this);
         }
 
@@ -346,7 +346,7 @@ class FileFinder extends StdBase
      */
     public function getInclude($key = '')
     {
-        if ( !$key || !is_string($key)) {
+        if (!$key || !is_string($key)) {
             return $this->include;
         }
 
@@ -367,7 +367,7 @@ class FileFinder extends StdBase
      */
     public function getExclude($key = '')
     {
-        if ( !$key || !is_string($key)) {
+        if (!$key || !is_string($key)) {
             return $this->exclude;
         }
 

@@ -46,7 +46,7 @@ abstract class Read extends File
     {
         $ini = trim($ini);
 
-        if (is_file($ini) && self::getSuffix($ini,true)==='ini') {
+        if (is_file($ini) && self::getSuffix($ini, true) === 'ini') {
             return parse_ini_file($ini, (bool)$process_sections, (int)$scanner_mode);
         }
 
@@ -62,13 +62,13 @@ abstract class Read extends File
      * @param bool|true $toArray
      * @return mixed
      */
-    public static function json($file, $toArray=true)
+    public static function json($file, $toArray = true)
     {
         $content = self::getContents($file);
 
         $content = preg_replace('/\/\/.*?[\r\n]/is', '', trim($content));
 
-        return (bool)$toArray ? json_decode($content,true) : $content;
+        return (bool)$toArray ? json_decode($content, true) : $content;
     }
 
     /**
@@ -76,7 +76,7 @@ abstract class Read extends File
      * @param bool|true $filter
      * @return array|string
      */
-    public static function allLine($file, $filter=true)
+    public static function allLine($file, $filter = true)
     {
         $contents = self::getContents($file);
 
@@ -104,25 +104,25 @@ abstract class Read extends File
 
         // 判断php版本（因为要用到SplFileObject，PHP>=5.1.0）
         if (version_compare(PHP_VERSION, '5.1.0', '>=')) {
-            $count    = $endLine - $startLine;
+            $count = $endLine - $startLine;
 
-            try{
-                  $obj_file = new \SplFileObject($fileName, $method);
-                  $obj_file->seek($startLine - 1); // 转到第N行, seek方法参数从0开始计数
+            try {
+                $obj_file = new \SplFileObject($fileName, $method);
+                $obj_file->seek($startLine - 1); // 转到第N行, seek方法参数从0开始计数
 
-                  for ($i = 0; $i <= $count; ++$i) {
-                      $content[] = $obj_file->current(); // current()获取当前行内容
-                      $obj_file->next(); // 下一行
-                  }
-            }catch(\Exception $e) {
+                for ($i = 0; $i <= $count; ++$i) {
+                    $content[] = $obj_file->current(); // current()获取当前行内容
+                    $obj_file->next(); // 下一行
+                }
+            } catch (\Exception $e) {
                 throw new FileSystemException("读取文件--{$fileName} 发生错误！");
             }
 
         } else { //PHP<5.1
-            $openFile   = fopen($fileName, $method);
+            $openFile = fopen($fileName, $method);
 
             if (!$openFile) {
-                throw new FileSystemException('error:can not read file--'.$fileName);
+                throw new FileSystemException('error:can not read file--' . $fileName);
             }
 
             # 移动指针 跳过前$startLine行
@@ -149,14 +149,14 @@ abstract class Read extends File
      * @throws FileSystemException
      * @return array
      */
-    public static function symmetry($fileName,$current=1,$lineNum=3)
+    public static function symmetry($fileName, $current = 1, $lineNum = 3)
     {
-        $startLine  = $current-$lineNum;
-        $endLine    = $current+$lineNum;
+        $startLine = $current - $lineNum;
+        $endLine = $current + $lineNum;
 
-        if ((int)$current< ($lineNum+1) ) {
-            $startLine  = 1;
-            $endLine    = 9;
+        if ((int)$current < ($lineNum + 1)) {
+            $startLine = 1;
+            $endLine = 9;
         }
 
         return self::lines($fileName, $startLine, $endLine);
@@ -168,14 +168,14 @@ abstract class Read extends File
      * @param string $current 基准行数
      * @return array
      */
-    public static function getLines5u3d($fileName,$current='1')
+    public static function getLines5u3d($fileName, $current = '1')
     {
-        $startLine  = 1;
-        $endLine    = 9;
+        $startLine = 1;
+        $endLine = 9;
 
-        if ((int)$current<6) {
-            $startLine  = 1;
-            $endLine    = 9;
+        if ((int)$current < 6) {
+            $startLine = 1;
+            $endLine = 9;
         }
 
         return self::lines($fileName, $startLine, $endLine);

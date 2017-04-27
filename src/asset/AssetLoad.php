@@ -47,7 +47,7 @@ class AssetLoad extends StdBase
      * 资源文件的基础url
      * @var string
      */
-    public $baseUrl  = '';
+    public $baseUrl = '';
 
     /**
      * 资源文件的基础路径
@@ -78,7 +78,7 @@ class AssetLoad extends StdBase
      */
     protected $resolvePath;
 
-    const TYPE_JS  = 'js';
+    const TYPE_JS = 'js';
     const TYPE_CSS = 'css';
 
     /**
@@ -107,11 +107,11 @@ class AssetLoad extends StdBase
     public $compressOptions = [
         'alwaysGen' => false,     // always new generate file. default(`false`) if compressed file is exists, will skip it.
 
-        'mergeFile'     => false, // if true, will merge all file to one file.
+        'mergeFile' => false, // if true, will merge all file to one file.
         'mergeFilePath' => '',    // merged file output path. depend option mergeFile is true.
 
-        'outPath'   => '',       // default output to old file path.
-        'webPath'   => '',       // web access path.
+        'outPath' => '',       // default output to old file path.
+        'webPath' => '',       // web access path.
     ];
 
     private function __construct(array $config = [])
@@ -135,7 +135,7 @@ class AssetLoad extends StdBase
      * @param  array $options
      * @return self
      */
-    public static function css($asset, array $options=[])
+    public static function css($asset, array $options = [])
     {
         return static::make($options)->handleLoad($asset, self::TYPE_CSS);
     }
@@ -146,7 +146,7 @@ class AssetLoad extends StdBase
      * @param array $options
      * @return $this|AssetLoad
      */
-    public static function js($asset, array $options =[])
+    public static function js($asset, array $options = [])
     {
         return static::make($options)->handleLoad($asset, self::TYPE_JS);
     }
@@ -179,12 +179,12 @@ class AssetLoad extends StdBase
         $this->compressed = false;
 
         // is string
-        if ( $assets && is_string($assets) ) {
+        if ($assets && is_string($assets)) {
             // 是否是以逗号连接的多个文件名
             $assets = (strpos($assets, ',') && false === strpos($assets, 'http')) ? explode(',', $assets) : [$assets];
         }
 
-        if ( !is_array($assets) ) {
+        if (!is_array($assets)) {
             throw new InvalidArgumentException('The param $asset type only allow string or array.');
         }
 
@@ -203,8 +203,8 @@ class AssetLoad extends StdBase
      */
     public function dump()
     {
-        $assets  = $this->compressedAssets ?: $this->assets;
-        $tags    = [];
+        $assets = $this->compressedAssets ?: $this->assets;
+        $tags = [];
         $hostUrl = $this->useFullUrl ? $this->getHostUrl() : '';
 
         // create asset html tag
@@ -235,14 +235,14 @@ class AssetLoad extends StdBase
 
         $this->compressOptions = array_merge($this->compressOptions, $options);
 
-        if ( !class_exists('MatthiasMullie\Minify\JS') ) {
+        if (!class_exists('MatthiasMullie\Minify\JS')) {
             throw new NotFoundException('Class [MatthiasMullie\Minify\JS] not found. compress is require package "matthiasmullie/minify"');
         }
 
         $webPath = trim($this->compressOptions['webPath']);
 
         // compress add merged
-        if ( $this->compressOptions['mergeFile'] ) {
+        if ($this->compressOptions['mergeFile']) {
             if (!$this->compressOptions['mergeFilePath']) {
                 throw new InvalidOptionException(sprintf(
                     'If want to merge asset files, please set [mergeFilePath]. e.g like "/var/xx/zz/web/app.min.%s"',
@@ -253,7 +253,7 @@ class AssetLoad extends StdBase
             $saveFile = $this->compressOptions['mergeFilePath'];
             $this->compressedAssets[] = $this->compressAndMerge($this->assets, $saveFile, $webPath);
 
-        // only compress
+            // only compress
         } else {
             foreach ($this->assets as $url) {
                 $this->compressedAssets[] = $this->compressAndSave($url, '', $webPath);
@@ -279,12 +279,12 @@ class AssetLoad extends StdBase
         $oldKey = '';
 
         // create path.
-        if ( !Directory::create($saveDir) ) {
+        if (!Directory::create($saveDir)) {
             throw new FileSystemException("Create dir path [$saveDir] failure!!");
         }
 
         // check target file exists
-        if ( file_exists($saveFile) ) {
+        if (file_exists($saveFile)) {
             $oldKey = md5(file_get_contents($saveFile));
         }
 
@@ -299,7 +299,7 @@ class AssetLoad extends StdBase
         foreach ($assets as $url) {
 
             // is full url, have http ...
-            if ( !UrlHelper::isRelative($url) ) {
+            if (!UrlHelper::isRelative($url)) {
                 $this->compressedAssets[] = $url;
 
                 continue;
@@ -341,7 +341,7 @@ class AssetLoad extends StdBase
     public function compressAndSave($url, $saveFile = '', $webPath = '')
     {
         // is full url, have http ...
-        if ( !UrlHelper::isRelative($url) ) {
+        if (!UrlHelper::isRelative($url)) {
             return $url;
         }
 
@@ -354,19 +354,19 @@ class AssetLoad extends StdBase
         }
 
         // maybe need create directory.
-        if ( $saveFile ) {
+        if ($saveFile) {
             $saveDir = dirname($saveFile);
 
             // create path.
-            if ( !Directory::create($saveDir) ) {
+            if (!Directory::create($saveDir)) {
                 throw new FileSystemException("Create dir path [$saveDir] failure!!");
             }
         } else {
-            $saveFile = substr($sourceFile, 0, - strlen($this->assetType)) . 'min.' .$this->assetType;
+            $saveFile = substr($sourceFile, 0, -strlen($this->assetType)) . 'min.' . $this->assetType;
         }
 
         // check target file exists
-        if ( file_exists($saveFile) ) {
+        if (file_exists($saveFile)) {
             $oldKey = md5(file_get_contents($saveFile));
         }
 
@@ -396,29 +396,29 @@ class AssetLoad extends StdBase
 
     //资源路径检查，返回可用的 url
     // $useFullUrl 返回 url path 是: true 绝对  | false 相对
-    public static function buildUrl($path, $baseUrl = '', $basePath = '', $hostUrl='')
+    public static function buildUrl($path, $baseUrl = '', $basePath = '', $hostUrl = '')
     {
-        $path = str_replace( '\\','/', trim($path) );
+        $path = str_replace('\\', '/', trim($path));
 
         //是完整的url路径
-        if ( UrlHelper::isUrl( $path ) ) {
+        if (UrlHelper::isUrl($path)) {
             return $path;
 
         }
 
         // 是url绝对路径
         if ($path{0} === '/') {
-            return $hostUrl ? $hostUrl . $path :  $path;
+            return $hostUrl ? $hostUrl . $path : $path;
         }
 
         // 相对路径
         $baseUrl = $baseUrl ? rtrim($baseUrl, '/') . '/' : '/';
 
-        if ( $basePath ) {
+        if ($basePath) {
             $basePath = rtrim($basePath, '/') . '/';
 
             if (!file_exists($basePath . $path)) {
-                throw new \RuntimeException('资源 ['. $basePath . $path .'] 不存在 !!');
+                throw new \RuntimeException('资源 [' . $basePath . $path . '] 不存在 !!');
             }
         }
 
@@ -443,7 +443,7 @@ class AssetLoad extends StdBase
     public function getHostUrl()
     {
         if (!$this->hostUrl) {
-            $this->hostUrl = $_SERVER['REQUEST_SCHEME'] . '/'.'/'.$_SERVER['HTTP_HOST'];
+            $this->hostUrl = $_SERVER['REQUEST_SCHEME'] . '/' . '/' . $_SERVER['HTTP_HOST'];
         }
 
         return $this->hostUrl;
@@ -468,7 +468,7 @@ class AssetLoad extends StdBase
         $types = [self::TYPE_CSS, self::TYPE_JS];
 
         if (!in_array($assetType, $types, true)) {
-            throw new InvalidArgumentException('param must be is in array('. implode(',', $types) .')');
+            throw new InvalidArgumentException('param must be is in array(' . implode(',', $types) . ')');
         }
 
         $this->assetType = $assetType;
@@ -528,7 +528,7 @@ class AssetLoad extends StdBase
     /**
      * @param \Closure|null $resolvePath
      */
-    public function setResolvePath(\Closure $resolvePath=null)
+    public function setResolvePath(\Closure $resolvePath = null)
     {
         $this->resolvePath = $resolvePath;
     }

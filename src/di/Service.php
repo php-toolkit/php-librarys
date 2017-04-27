@@ -40,12 +40,12 @@ class Service
      */
     protected $shared = false;
 
-    public function __construct($callback, array $arguments=[], $shared=false, $locked=false)
+    public function __construct($callback, array $arguments = [], $shared = false, $locked = false)
     {
         $this->setCallback($callback);
         $this->arguments = $arguments;
-        $this->shared    = $shared;
-        $this->locked    = $locked;
+        $this->shared = $shared;
+        $this->locked = $locked;
     }
 
     /**
@@ -53,7 +53,7 @@ class Service
      * @param bool $getNew
      * @return mixed|null
      */
-    public function get( Container $container, $getNew=false )
+    public function get(Container $container, $getNew = false)
     {
         if ($this->shared) {
             if (!$this->instance || $getNew) {
@@ -88,7 +88,7 @@ class Service
         }
 
         // 第二次进入时...
-        if($this->locked) {
+        if ($this->locked) {
             return $this;
         }
 
@@ -117,19 +117,19 @@ class Service
      * @throws \InvalidArgumentException
      * @return $this
      */
-    public function setArguments( array $params, $bindType=Container::OVERLOAD_PARAM)
+    public function setArguments(array $params, $bindType = Container::OVERLOAD_PARAM)
     {
-        if ( ! $this->arguments ) {
-            $this->arguments = (array) $params;
+        if (!$this->arguments) {
+            $this->arguments = (array)$params;
         } else {
             $oldParams = $this->arguments;
 
             switch (trim($bindType)) {
                 case Container::REPLACE_PARAM:
-                    $nowParams = array_replace((array) $oldParams, (array) $params);
+                    $nowParams = array_replace((array)$oldParams, (array)$params);
                     break;
                 case Container::APPEND_PARAM: {
-                    $nowParams = (array) $oldParams;
+                    $nowParams = (array)$oldParams;
 
                     foreach ($params as $param) {
                         $nowParams[] = $param;
@@ -138,11 +138,11 @@ class Service
                     break;
                 }
                 default:
-                    $nowParams = (array) $params;
+                    $nowParams = (array)$params;
                     break;
             }
 
-            $this->arguments = (array) $nowParams;
+            $this->arguments = (array)$nowParams;
         }
 
         return $this;
@@ -152,7 +152,7 @@ class Service
      * @param bool $value
      * @return $this
      */
-    public function shared($value=true)
+    public function shared($value = true)
     {
         $this->shared = (bool)$value;
 

@@ -8,6 +8,7 @@
  * use :    1. $captcha = new Captcha(....); $captcha->show()
  *          2. Captcha::make(...)->show()
  */
+
 namespace inhere\library\files;
 
 use inhere\library\exceptions\NotFoundException;
@@ -27,8 +28,8 @@ class Captcha
     public $font;               // 字体
 
     public $pixelNum;           // 干扰点数量
-    public $lineNum =0;            // 干扰线条数量
-    public $aecNum  =0;             // 干扰弧线数量
+    public $lineNum = 0;            // 干扰线条数量
+    public $aecNum = 0;             // 干扰弧线数量
     public $fontNum;            // 干扰字体数量
 
     public $fontSize;           // 产生验证码字体大小
@@ -46,7 +47,7 @@ class Captcha
      * @param array $config
      * @return static
      */
-    public static function make($config=[])
+    public static function make($config = [])
     {
         return new static($config);
     }
@@ -56,17 +57,17 @@ class Captcha
      * @throws ExtensionMissException
      * @throws NotFoundException
      */
-    public function __construct(array $config=[])
+    public function __construct(array $config = [])
     {
-        if ( !$this->checkGd() ) {
+        if (!$this->checkGd()) {
             throw new ExtensionMissException('This tool required extension [gd].');
         }
 
-        $defaultConfig  = $this->defaultConfig();
-        $config = $config ? array_merge( $defaultConfig, $config) : $defaultConfig;
+        $defaultConfig = $this->defaultConfig();
+        $config = $config ? array_merge($defaultConfig, $config) : $defaultConfig;
 
         $this->config = $config;
-        $this->font   = $config['font'];
+        $this->font = $config['font'];
 
         if (!is_file($this->font)) {
             throw new NotFoundException('验证码字体文件不存在');
@@ -78,52 +79,52 @@ class Captcha
 
         $this->codeStr = $config['randStr'];
         $this->fontSize = $config['fontSize'];
-        $this->charNum  = $config['length'];
-        $this->width    = $config['width'];
-        $this->height   = $config['height'];
-        $this->bgColor  = $config['bgColor'];
-        $this->bgImage  = $config['bgImage'];
+        $this->charNum = $config['length'];
+        $this->width = $config['width'];
+        $this->height = $config['height'];
+        $this->bgColor = $config['bgColor'];
+        $this->bgImage = $config['bgImage'];
         $this->pixelNum = $config['pixelNum'];
-        $this->fontNum  = $config['fontNum'];
+        $this->fontNum = $config['fontNum'];
     }
 
     public function defaultConfig()
     {
-       return [
+        return [
             // 字体文件
-            'font'         => dirname(__DIR__) . '/resources/fonts/Montserrat-Bold.ttf',
-            'randStr'     => '23456789abcdefghigkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ',
-            'width'        => '120',
-            'height'       => '45',
-            'bgColor'      => '#eeeeee',
-            'bgImage'      => dirname(__DIR__) . '/resources/images/backgrounds/06.png',
-            'length'       => '4',
-            'fontColor'    => '',
+            'font' => dirname(__DIR__) . '/resources/fonts/Montserrat-Bold.ttf',
+            'randStr' => '23456789abcdefghigkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ',
+            'width' => '120',
+            'height' => '45',
+            'bgColor' => '#eeeeee',
+            'bgImage' => dirname(__DIR__) . '/resources/images/backgrounds/06.png',
+            'length' => '4',
+            'fontColor' => '',
             //  验证码字体大小
-            'fontSize'    => '24',
+            'fontSize' => '24',
             // 干扰点数量
-            'pixelNum'    => '10',
+            'pixelNum' => '10',
             // 干扰字符数量
-            'fontNum'     => '50',
-       ];
+            'fontNum' => '50',
+        ];
     }
 
     // 画干扰点-可选 imagesetpixel($this->img,x坐标,y坐标,颜色)
+
     /**
      * @return $this
      */
     public function drawPixel()
     {
-        for($i=1; $i<=$this->pixelNum;$i++)
-        {
+        for ($i = 1; $i <= $this->pixelNum; $i++) {
             //$pixelColor = imagecolorallocate( $this->img,rand(100,240), mt_rand(100,240), mt_rand(100,
             //240) );//点颜色
             //imagesetpixel($this->img,rand(0,$this->width),rand(0,$this->height),$pixelColor);
-            $char ='.';
-            $pixelColor = imagecolorallocate($this->img, mt_rand(140,200),mt_rand(140,200),mt_rand(140,200));
+            $char = '.';
+            $pixelColor = imagecolorallocate($this->img, mt_rand(140, 200), mt_rand(140, 200), mt_rand(140, 200));
             imagefttext(
-                $this->img, 8 , mt_rand(-30,30), mt_rand(6, $this->width), mt_rand(6,$this->height - 5),
-                $pixelColor,    $this->font,  $char
+                $this->img, 8, mt_rand(-30, 30), mt_rand(6, $this->width), mt_rand(6, $this->height - 5),
+                $pixelColor, $this->font, $char
             );
         }
 
@@ -136,13 +137,12 @@ class Captcha
      */
     public function drawLine()
     {
-        for($i=1;$i<=$this->lineNum;$i++)
-        {
-            $lineColor = imagecolorallocate($this->img, mt_rand(150,250), mt_rand(150,250), mt_rand(150,250) );
+        for ($i = 1; $i <= $this->lineNum; $i++) {
+            $lineColor = imagecolorallocate($this->img, mt_rand(150, 250), mt_rand(150, 250), mt_rand(150, 250));
             //($this->img,起点坐标x.y，终点坐标x.y，颜色)
             imageline(
-                $this->img,           mt_rand(0,$this->width),  mt_rand(0,$this->height),
-                mt_rand(0,$this->width), mt_rand(0,$this->height), $lineColor
+                $this->img, mt_rand(0, $this->width), mt_rand(0, $this->height),
+                mt_rand(0, $this->width), mt_rand(0, $this->height), $lineColor
             );
         }
 
@@ -155,12 +155,11 @@ class Captcha
      */
     public function drawAec()
     {
-        for($i=1;$i<=$this->aecNum;$i++)
-        {
-            $arcColor = imagecolorallocate($this->img, mt_rand(150,250), mt_rand(150,250), mt_rand(150,250));
+        for ($i = 1; $i <= $this->aecNum; $i++) {
+            $arcColor = imagecolorallocate($this->img, mt_rand(150, 250), mt_rand(150, 250), mt_rand(150, 250));
             imagearc(
-                $this->img,  mt_rand(0,$this->width), mt_rand(0,$this->height), mt_rand(0,100),
-                mt_rand(0,100), mt_rand(-90,90),     mt_rand(70,360),          $arcColor
+                $this->img, mt_rand(0, $this->width), mt_rand(0, $this->height), mt_rand(0, 100),
+                mt_rand(0, 100), mt_rand(-90, 90), mt_rand(70, 360), $arcColor
             );
         }
 
@@ -170,42 +169,40 @@ class Captcha
     // 产生随机字符,验证码,并写入图像
     public function drawChar()
     {
-        $x          = ($this->width - 10) / $this->charNum;
+        $x = ($this->width - 10) / $this->charNum;
         $captchaStr = '';//保存产生的字符串
 
-        for($i=0;$i<$this->charNum;$i++)
-        {
-            $char = $this->codeStr[ mt_rand( 0,strlen($this->codeStr)-1) ];
-            $captchaStr .=$char;
-            $fontColor = imagecolorallocate($this->img, mt_rand(80,200), mt_rand(80,200), mt_rand(80,200));
+        for ($i = 0; $i < $this->charNum; $i++) {
+            $char = $this->codeStr[mt_rand(0, strlen($this->codeStr) - 1)];
+            $captchaStr .= $char;
+            $fontColor = imagecolorallocate($this->img, mt_rand(80, 200), mt_rand(80, 200), mt_rand(80, 200));
             imagefttext(
-                $this->img, $this->fontSize ,  mt_rand(-30,30), $i*$x + mt_rand(6, 10),
-                mt_rand($this->height / 1.3,   $this->height - 5),   $fontColor,
-                $this->font,  $char
+                $this->img, $this->fontSize, mt_rand(-30, 30), $i * $x + mt_rand(6, 10),
+                mt_rand($this->height / 1.3, $this->height - 5), $fontColor,
+                $this->font, $char
             );
         }
 
         $this->captcha = strtolower($captchaStr);
 
         //把纯的验证码字符串放置到SESSION中进行保存，便于后面进行验证对比
-        $_SESSION[static::$sessionKey] = md5( $this->captcha );
+        $_SESSION[static::$sessionKey] = md5($this->captcha);
 
         //设置cookie到前端浏览器，可用于前端验证
-        setcookie(static::$sessionKey, md5( $this->captcha ));
+        setcookie(static::$sessionKey, md5($this->captcha));
     }
 
     //填充干扰字符-可选
     public function drawChars()
     {
-       for($i=0;$i<$this->fontNum;$i++)
-       {
-            $char      = $this->codeStr[ mt_rand( 0,strlen($this->codeStr)-1) ];
-            $fontColor = imagecolorallocate($this->img, mt_rand(180,240), mt_rand(180,240), mt_rand(180,240));
+        for ($i = 0; $i < $this->fontNum; $i++) {
+            $char = $this->codeStr[mt_rand(0, strlen($this->codeStr) - 1)];
+            $fontColor = imagecolorallocate($this->img, mt_rand(180, 240), mt_rand(180, 240), mt_rand(180, 240));
             imagefttext(
-                $this->img, mt_rand(4,8) , mt_rand(-30,40), mt_rand(8,$this->width-10),
-                mt_rand(10,$this->height-10), $fontColor, $this->font, $char
+                $this->img, mt_rand(4, 8), mt_rand(-30, 40), mt_rand(8, $this->width - 10),
+                mt_rand(10, $this->height - 10), $fontColor, $this->font, $char
             );
-       }
+        }
     }
 
     // 生成图像资源，Captcha-验证码
@@ -216,18 +213,18 @@ class Captcha
             $this->img = imagecreatefrompng($this->bgImage);
         } else {
             // 手动建立背景画布,图像资源
-            $this->img = imagecreatetruecolor($this->width,$this->height);
+            $this->img = imagecreatetruecolor($this->width, $this->height);
 
             //给画布填充矩形的背景色rgb(230, 255, 230);
             $bgColor = $this->bgColor;
 
             //背景色
-            $bgColor=imagecolorallocate(
-                 $this->img,                    hexdec(substr($bgColor, 1,2)),
-                 hexdec(substr($bgColor, 3,2)), hexdec(substr($bgColor, 5,2))
+            $bgColor = imagecolorallocate(
+                $this->img, hexdec(substr($bgColor, 1, 2)),
+                hexdec(substr($bgColor, 3, 2)), hexdec(substr($bgColor, 5, 2))
             );
 
-            imagefilledrectangle($this->img,0,0,$this->width,$this->height,$bgColor);
+            imagefilledrectangle($this->img, 0, 0, $this->width, $this->height, $bgColor);
         }
 
         //给资源画上边框-可选 rgb(153, 153, 255)

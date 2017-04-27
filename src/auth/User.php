@@ -76,15 +76,15 @@ class User extends SimpleCollection
      */
     private $_accesses = [];
 
-    const AFTER_LOGGED_TO_KEY  = '_after_logged_to';
-    const AFTER_LOGOUT_TO_KEY  = '_after_logout_to';
+    const AFTER_LOGGED_TO_KEY = '_after_logged_to';
+    const AFTER_LOGOUT_TO_KEY = '_after_logout_to';
 
     /**
      * don't allow set attribute
      * @param array $options
      * @throws InvalidConfigException
      */
-    public function __construct($options=[])
+    public function __construct($options = [])
     {
         parent::__construct();
 
@@ -95,7 +95,7 @@ class User extends SimpleCollection
         }
 
         // if have already login
-        if ( isset($_SESSION[static::$saveKey]) ) {
+        if (isset($_SESSION[static::$saveKey])) {
             $this->refreshIdentity();
         }
     }
@@ -157,9 +157,10 @@ class User extends SimpleCollection
     {
         return $this->canAccess($permission, $params, $caching);
     }
+
     public function canAccess($permission, array $params = [], $caching = true)
     {
-        if ( isset($this->_accesses[$permission]) ) {
+        if (isset($this->_accesses[$permission])) {
             return $this->_accesses[$permission];
         }
 
@@ -208,7 +209,7 @@ class User extends SimpleCollection
     /**
      * @param bool|false $force
      */
-    public function refreshIdentity($force=false)
+    public function refreshIdentity($force = false)
     {
         $id = $this->getId();
         $this->clear();
@@ -216,9 +217,9 @@ class User extends SimpleCollection
         /* @var $class IdentityInterface */
         $class = $this->identityClass;
 
-        if (!$force && ($data = session(self::$saveKey)) ) {
+        if (!$force && ($data = session(self::$saveKey))) {
             $this->sets($data);
-        } elseif ( $user = $class::findIdentity($id) ) {
+        } elseif ($user = $class::findIdentity($id)) {
             $this->setIdentity($user);
         } else {
             throw new \RuntimeException('The refresh auth data is failure!!');
@@ -233,7 +234,7 @@ class User extends SimpleCollection
     {
         if ($identity instanceof IdentityInterface) {
             $this->sets((array)$identity);
-            session([ self::$saveKey => $identity->all()]);
+            session([self::$saveKey => $identity->all()]);
             $this->_accesses = [];
         } elseif ($identity === null) {
             $this->data = [];
@@ -246,7 +247,7 @@ class User extends SimpleCollection
     {
         // except column at set.
         foreach ($this->excepted as $column) {
-            if ( isset($data[$column])) {
+            if (isset($data[$column])) {
                 unset($data[$column]);
             }
         }
@@ -302,7 +303,7 @@ class User extends SimpleCollection
     {
         $getter = 'get' . ucfirst($name);
 
-        if ( method_exists($this, $getter) ) {
+        if (method_exists($this, $getter)) {
             return $this->$getter();
         }
 

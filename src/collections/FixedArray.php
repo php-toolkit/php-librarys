@@ -43,11 +43,12 @@ class FixedArray implements \ArrayAccess, \IteratorAggregate
 
     /**
      * reset
+     * @param int $size
      */
-    public function reset()
+    public function reset(int $size = 0)
     {
         $this->keys = [];
-        $this->values = new \SplFixedArray();
+        $this->values = new \SplFixedArray($size);
     }
 
     /**

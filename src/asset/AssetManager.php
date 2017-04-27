@@ -39,7 +39,7 @@ class AssetManager extends StdBase
      *  ],
      * ]
      */
-    protected $bags  = []; //static
+    protected $bags = []; //static
 
     /**
      * asset file list
@@ -52,7 +52,7 @@ class AssetManager extends StdBase
      * css or js code
      * @var array
      */
-    protected $codes   = []; //
+    protected $codes = []; //
 
     /**
      * @var bool
@@ -62,7 +62,7 @@ class AssetManager extends StdBase
     /**
      * @var bool
      */
-    protected $mergeJsCode  = true;
+    protected $mergeJsCode = true;
 
     /**
      * 资源基础URL
@@ -82,7 +82,7 @@ class AssetManager extends StdBase
     protected $basePath = '';
 
     public $cdn = [
-        'jquery'    => 'http://libs.useso.com/js/jquery/2.1.0/jquery.min.js'
+        'jquery' => 'http://libs.useso.com/js/jquery/2.1.0/jquery.min.js'
     ];
 
     public $local = [
@@ -99,23 +99,23 @@ class AssetManager extends StdBase
      * 给资源管理类输出的资源添加标记
      * @var boolean
      */
-    public $markSource  = true;
-    public $markAttr  = [
+    public $markSource = true;
+    public $markAttr = [
         'data-source' => 'app-shell-load',
     ];
 
-    const POS_HEAD      = 1;       # 在解析视图数据时放到</head>之前的位置
-    const POS_BODY      = 2;       # 在解析视图数据时放到<body>之后的位置
-    const POS_END       = 3;       # 在解析视图数据时放到</body>之前的位置
+    const POS_HEAD = 1;       # 在解析视图数据时放到</head>之前的位置
+    const POS_BODY = 2;       # 在解析视图数据时放到<body>之后的位置
+    const POS_END = 3;       # 在解析视图数据时放到</body>之前的位置
 
     protected $headNode = '</head>';
     protected $bodyNode = '<body>';
-    protected $endNode  = '</body>';
+    protected $endNode = '</body>';
 
-    const ASSET_JS_FILE  = 'js-file';
-    const ASSET_JS       = 'js';
+    const ASSET_JS_FILE = 'js-file';
+    const ASSET_JS = 'js';
     const ASSET_CSS_FILE = 'css-file';
-    const ASSET_CSS      = 'css';
+    const ASSET_CSS = 'css';
 
     public function __construct(array $config = [])
     {
@@ -168,11 +168,11 @@ class AssetManager extends StdBase
      */
     public function addJsFile($asset, array $options = [], $key = null)
     {
-        if ( !isset($options['position']) ) {
+        if (!isset($options['position'])) {
             $options['position'] = self::POS_END;
         }
 
-        return $this->loggingFileAsset($asset, self::ASSET_JS_FILE , $options, $key);
+        return $this->loggingFileAsset($asset, self::ASSET_JS_FILE, $options, $key);
     }
 
     /**
@@ -184,7 +184,7 @@ class AssetManager extends StdBase
      */
     public function addCssFile($asset, array $options = [], $key = null)
     {
-        if ( !isset($options['position']) ) {
+        if (!isset($options['position'])) {
             $options['position'] = self::POS_HEAD;
         }
 
@@ -200,7 +200,7 @@ class AssetManager extends StdBase
      * @return AssetManager
      * @throws InvalidArgumentException
      */
-    protected function loggingFileAsset($assets, $type=self::ASSET_CSS_FILE, array $options = [], $key = null)
+    protected function loggingFileAsset($assets, $type = self::ASSET_CSS_FILE, array $options = [], $key = null)
     {
         if (!$assets) {
             throw new InvalidArgumentException('The 1th param [$assets] is can\'t empty.');
@@ -213,8 +213,8 @@ class AssetManager extends StdBase
             $asset = trim($asset);
 
             // check asset url
-            if ( in_array($type, [self::ASSET_JS_FILE, self::ASSET_CSS_FILE], true) ) {
-                $asset = AssetLoad::buildUrl( $asset, $this->getBaseUrl(), $this->basePath, false);
+            if (in_array($type, [self::ASSET_JS_FILE, self::ASSET_CSS_FILE], true)) {
+                $asset = AssetLoad::buildUrl($asset, $this->getBaseUrl(), $this->basePath, false);
             }
 
             $tag = $this->buildTag($asset, $type);
@@ -241,7 +241,7 @@ class AssetManager extends StdBase
      */
     public function addJs($scriptCode, array $options = [])
     {
-        if ( !isset($options['position']) ) {
+        if (!isset($options['position'])) {
             $options['position'] = self::POS_END;
         }
 
@@ -256,7 +256,7 @@ class AssetManager extends StdBase
      */
     public function addCss($styleCode, array $options = [])
     {
-        if ( !isset($options['position']) ) {
+        if (!isset($options['position'])) {
             $options['position'] = self::POS_HEAD;
         }
 
@@ -270,7 +270,7 @@ class AssetManager extends StdBase
      * @param array $options
      * @return $this
      */
-    protected function loggingCodeAsset($assets, $type=self::ASSET_CSS_FILE, array $options = [])
+    protected function loggingCodeAsset($assets, $type = self::ASSET_CSS_FILE, array $options = [])
     {
         return $this;
     }
@@ -278,14 +278,14 @@ class AssetManager extends StdBase
     protected function checkTypeAndPosition($type, $pos)
     {
         $positions = $this->getPositions();
-        $types     = $this->getAssetTypes();
+        $types = $this->getAssetTypes();
 
         if (!in_array($pos, $positions, true)) {
-            throw new InvalidArgumentException('资源注册位置允许设置 ['.implode(', ', $positions).'] 中的一个。');
+            throw new InvalidArgumentException('资源注册位置允许设置 [' . implode(', ', $positions) . '] 中的一个。');
         }
 
         if (!in_array($type, $types, true)) {
-            throw new InvalidArgumentException('资源类型可选 ['.implode(', ', $types).'] 中的一个。');
+            throw new InvalidArgumentException('资源类型可选 [' . implode(', ', $types) . '] 中的一个。');
         }
     }
 
@@ -295,7 +295,7 @@ class AssetManager extends StdBase
      * @param  string $type
      * @return string
      */
-    public function buildTag($asset, $type )
+    public function buildTag($asset, $type)
     {
         $attrs = $this->markSource ? $this->markAttr : [];
 
@@ -321,14 +321,14 @@ class AssetManager extends StdBase
      * check asset has exists
      * @author inhere
      * @date   2015-08-02
-     * @param  string     $name
-     * @param  null|string     $pos
+     * @param  string $name
+     * @param  null|string $pos
      * @return bool
      */
     public function exists($name, $pos = null)
     {
         if (!$pos) {
-            foreach ( $this->getAssetTypes() as $type ) {
+            foreach ($this->getAssetTypes() as $type) {
                 $assets = $this->getAssetsByPos($type);
 
                 if (isset($assets[$name])) {
@@ -378,45 +378,45 @@ class AssetManager extends StdBase
     {
         $html = trim($html);
 
-        if ( !($assets = $this->assets) ) {
+        if (!($assets = $this->assets)) {
             return $html;
         }
 
         if (!empty($assets[self::POS_BODY])) {
 
-            $assetBody  = $this->bodyNode . implode('', $assets[self::POS_BODY]);
-            $bodyNode   = str_replace('/', '\/', $this->bodyNode);
-            $html       = preg_replace( "/$bodyNode/i", $assetBody, $html, 1 , $count);
+            $assetBody = $this->bodyNode . implode('', $assets[self::POS_BODY]);
+            $bodyNode = str_replace('/', '\/', $this->bodyNode);
+            $html = preg_replace("/$bodyNode/i", $assetBody, $html, 1, $count);
 
             // 没找到节点，注入失败时，直接加入开始位置
-            if ($count===0) {
-                $html = $assetBody.$html;
+            if ($count === 0) {
+                $html = $assetBody . $html;
             }
         }
 
         if (!empty($assets[self::POS_HEAD])) {
-            $assetHead= implode('', $assets[self::POS_HEAD]) . $this->headNode;
+            $assetHead = implode('', $assets[self::POS_HEAD]) . $this->headNode;
             $headNode = str_replace('/', '\/', $this->headNode);
-            $html     = preg_replace( "/$headNode/i", $assetHead, $html, 1 , $count);
+            $html = preg_replace("/$headNode/i", $assetHead, $html, 1, $count);
 
-            if ($count===0) {
-                $html = $assetHead.$html;
+            if ($count === 0) {
+                $html = $assetHead . $html;
             }
         }
 
         if (!empty($assets[self::POS_END])) {
 
-            $assetEnd   = implode('', $assets[self::POS_END]) . $this->endNode;
-            $endNode    = str_replace('/', '\/', $this->endNode);
-            $html       = preg_replace( "/$endNode/i", $assetEnd, $html, 1 , $count);
+            $assetEnd = implode('', $assets[self::POS_END]) . $this->endNode;
+            $endNode = str_replace('/', '\/', $this->endNode);
+            $html = preg_replace("/$endNode/i", $assetEnd, $html, 1, $count);
 
             // 没找到节点，注入失败时，直接加入末尾位置
-            if ($count===0) {
+            if ($count === 0) {
                 $html .= $assetEnd;
             }
         }
 
-        unset($bodyNode,$headNode,$endNode,$assetHead,$assetBody,$assetEnd,$count);
+        unset($bodyNode, $headNode, $endNode, $assetHead, $assetBody, $assetEnd, $count);
 
         return $html;
     }
@@ -475,7 +475,7 @@ class AssetManager extends StdBase
      */
     public function getAssetsByPos($pos = self::POS_HEAD)
     {
-        if (isset( $this->assets[$pos])) {
+        if (isset($this->assets[$pos])) {
             return $this->assets[$pos];
         }
 
@@ -490,10 +490,10 @@ class AssetManager extends StdBase
     public function setBaseUrl($baseUrl)
     {
         if ($baseUrl) {
-            if ( UrlHelper::isUrl($baseUrl) ) {
-                $this->baseUrl = rtrim($baseUrl, '/') .'/';
+            if (UrlHelper::isUrl($baseUrl)) {
+                $this->baseUrl = rtrim($baseUrl, '/') . '/';
             } else {
-                $this->baseUrl = rtrim($baseUrl, '/') .'/';
+                $this->baseUrl = rtrim($baseUrl, '/') . '/';
             }
         }
 

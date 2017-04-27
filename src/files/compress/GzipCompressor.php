@@ -40,19 +40,19 @@ class GzipCompressor extends AbstractCompressor
      */
     public function encode($sourcePath, $archiveFile, $override = true)
     {
-        if( !class_exists('ZipArchive') ){
+        if (!class_exists('ZipArchive')) {
             throw new NotFoundException('The method is require class ZipArchive (by zip extension)');
         }
 
         // 是一些指定文件
-        if ( is_array($sourcePath) ) {
+        if (is_array($sourcePath)) {
             $files = new \ArrayObject($sourcePath);
         } else {
             $files = $this->finder->findAll(true, $sourcePath)->getFiles();
         }
 
         // no file
-        if( !$files->count() ){
+        if (!$files->count()) {
             return false;
         }
 
@@ -65,7 +65,7 @@ class GzipCompressor extends AbstractCompressor
             $pd = $this->driver = new PharData($archiveFileDir . '/temp-archive.tar');
 
             // ADD FILES TO archive.tar FILE
-            foreach($files as $file){
+            foreach ($files as $file) {
                 $file = FileSystem::isAbsPath($file) ? $file : $this->sourcePath . '/' . $file;
                 $pd->addFile($file);
 //                $pd->addFile($this->sourcePath . $path, $path);
@@ -96,7 +96,7 @@ class GzipCompressor extends AbstractCompressor
         $res = $za->open($archiveFile);
 
         if ($res !== true) {
-            throw new FileNotFoundException('Open the zip file ['.$archiveFile.'] failure!!');
+            throw new FileNotFoundException('Open the zip file [' . $archiveFile . '] failure!!');
         }
 
         $za->extractTo($extractTo ?: dirname($archiveFile));

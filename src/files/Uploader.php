@@ -79,7 +79,7 @@ class Uploader
      */
     public $thumbConfig = [];
 
-    protected static $imageTypes = [ 'jpg','jpeg','gif','bmp','png'];
+    protected static $imageTypes = ['jpg', 'jpeg', 'gif', 'bmp', 'png'];
 
     /**
      * @param array $config
@@ -141,7 +141,7 @@ class Uploader
         $result = [];
         !$targetPath && ($targetPath = $this->config['path']);
 
-        foreach($this->_data as $key => $file){
+        foreach ($this->_data as $key => $file) {
             if ($keys && !in_array($key, $keys)) {
                 continue;
             }
@@ -166,7 +166,7 @@ class Uploader
 
         $filename = $sourceFile['name'];
 
-        if ( is_array($filename) ) {
+        if (is_array($filename)) {
             $result = [];
             $file = $this->_decodeData([
                 $filename,
@@ -185,14 +185,14 @@ class Uploader
             $file['ext'] = pathinfo($file['name'], PATHINFO_EXTENSION);
 
             //没有文件 || 文件不合法，跳过
-            if ( !$this->_checkFile($file) ){
+            if (!$this->_checkFile($file)) {
                 return [];
             }
 
             $result = $isDir ? $this->moveToDir($file, $targetPath) : $this->moveToFile($file, $targetPath);
 
             //判断文件是图片，
-            if ( in_array($file['ext'], static::$imageTypes) && getimagesize($result['newFile']) ) {
+            if (in_array($file['ext'], static::$imageTypes) && getimagesize($result['newFile'])) {
                 //缩略图处理
                 if ($this->config['thumbOn']) {
                     $this->makeThumb($result['newFile']);
@@ -210,7 +210,7 @@ class Uploader
 
     /**
      * Method to decode a data array.
-     * @param   array  $data  The data array to decode.
+     * @param   array $data The data array to decode.
      * @return  array
      */
     protected function _decodeData(array $data)
@@ -246,12 +246,12 @@ class Uploader
     {
         $dir = dirname($targetFile);
 
-        if ( !$this->_makeDir($dir) ) {
+        if (!$this->_makeDir($dir)) {
             $this->error = "目录创建失败或者不可写.[$dir]";
             return false;
         }
 
-        if ( !move_uploaded_file($file['tmp_name'],$targetFile) ){
+        if (!move_uploaded_file($file['tmp_name'], $targetFile)) {
             $this->error = '移动上传文件失败！';
             return false;
         }
@@ -280,19 +280,19 @@ class Uploader
         if ($nameHandler) {
             $nowName = $nameHandler($file);
         } else {
-            $nowName = time().'_'.mt_rand(1000,9999). '.' .$file['ext'];
+            $nowName = time() . '_' . mt_rand(1000, 9999) . '.' . $file['ext'];
         }
 
-        $filePath = ($targetDir ? : $this->config['path']) . DIRECTORY_SEPARATOR . $nowName;
+        $filePath = ($targetDir ?: $this->config['path']) . DIRECTORY_SEPARATOR . $nowName;
 
         $dir = dirname($filePath);
 
-        if ( !$this->_makeDir($dir) ) {
+        if (!$this->_makeDir($dir)) {
             $this->error = "目录创建失败或者不可写.[$dir]";
             return false;
         }
 
-        if ( !move_uploaded_file($file['tmp_name'],$filePath) ){
+        if (!move_uploaded_file($file['tmp_name'], $filePath)) {
             $this->error = '移动上传文件失败！';
             return false;
         }
@@ -312,7 +312,7 @@ class Uploader
     {
         $pic = $this->getPicture()->watermark($filePath, $savePath);
 
-        if ( $err = $pic->getError() ) {
+        if ($err = $pic->getError()) {
             $this->error = $err;
         } else {
             $this->result['waterImage'] = $pic->working['outFile'];
@@ -330,7 +330,7 @@ class Uploader
     {
         $pic = $this->getPicture()->thumb($filePath, $savePath);
 
-        if ( $err = $pic->getError() ) {
+        if ($err = $pic->getError()) {
             $this->error = $err;
         } else {
             $this->result['thumbImage'] = $pic->working['outFile'];
@@ -377,8 +377,8 @@ class Uploader
     private function _checkFile($file)
     {
         // check system error
-        if ( (int)$file['error'] !== 0 ) {
-            switch($file['error']){
+        if ((int)$file['error'] !== 0) {
+            switch ($file['error']) {
                 case UPLOAD_ERR_INI_SIZE:   # 1
                     $this->error = '超过php.ini 配置文件指定大小！';
                     break;
@@ -404,13 +404,13 @@ class Uploader
 
         $maxSize = $this->config['maxSize'] > 0 ? $this->config['maxSize'] : 0;
         $extList = $this->config['ext'];
-        $fileExt     = strtolower($file['ext']);
+        $fileExt = strtolower($file['ext']);
 
-        if ($extList && !in_array($fileExt, $extList) ){
+        if ($extList && !in_array($fileExt, $extList)) {
             $this->error = '不允许的上传文件类型！';
-        } elseif ( $maxSize && $file['size'] > $maxSize ){
+        } elseif ($maxSize && $file['size'] > $maxSize) {
             $this->error = '上传文件超出允许大小！';
-        } elseif ( !is_uploaded_file($file['tmp_name'])){
+        } elseif (!is_uploaded_file($file['tmp_name'])) {
             $this->error = '非法文件！';
         }
 

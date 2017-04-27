@@ -27,7 +27,7 @@ abstract class FileSystem
      */
     public static function isAbsPath($path)
     {
-        if ( !$path || !is_string($path)) {
+        if (!$path || !is_string($path)) {
             return false;
         }
 
@@ -50,12 +50,11 @@ abstract class FileSystem
     public static function isAbsolutePath($file)
     {
         return strspn($file, '/\\', 0, 1)
-        || (strlen($file) > 3 && ctype_alpha($file[0])
-            && substr($file, 1, 1) === ':'
-            && strspn($file, '/\\', 2, 1)
-        )
-        || null !== parse_url($file, PHP_URL_SCHEME)
-            ;
+            || (strlen($file) > 3 && ctype_alpha($file[0])
+                && substr($file, 1, 1) === ':'
+                && strspn($file, '/\\', 2, 1)
+            )
+            || null !== parse_url($file, PHP_URL_SCHEME);
     }
 
     /**
@@ -65,9 +64,9 @@ abstract class FileSystem
      */
     public static function pathFormat($dirName)
     {
-        $dirName = str_ireplace('\\','/', trim($dirName));
+        $dirName = str_ireplace('\\', '/', trim($dirName));
 
-        return substr($dirName,-1) === '/' ? $dirName: $dirName.'/';
+        return substr($dirName, -1) === '/' ? $dirName : $dirName . '/';
     }
 
     /**
@@ -78,10 +77,10 @@ abstract class FileSystem
      * @throws NotFoundException
      * @return array|string [type]        [description]
      */
-    public static function exists($files, $ext=null)
+    public static function exists($files, $ext = null)
     {
-        $ext    = $ext ? trim($ext,'. ') : null;
-        $files  = StrHelper::toArray($files);
+        $ext = $ext ? trim($ext, '. ') : null;
+        $files = StrHelper::toArray($files);
 
         foreach ($files as $file) {
             $file = trim($file);
@@ -91,8 +90,7 @@ abstract class FileSystem
             }
 
             // if ( $ext && strrchr($file,'.') != '.'.$ext ) {
-            if ( $ext && preg_match("/\.($ext)$/i",$file) )
-            {
+            if ($ext && preg_match("/\.($ext)$/i", $file)) {
                 throw new \InvalidArgumentException("{$file} 不是 {$ext} 文件！");
             }
         }
@@ -103,9 +101,9 @@ abstract class FileSystem
     /**
      * Renames a file or a directory.
      * @from Symfony-filesystem
-     * @param string $origin    The origin filename or directory
-     * @param string $target    The new filename or directory
-     * @param bool   $overwrite Whether to overwrite the target if it already exists
+     * @param string $origin The origin filename or directory
+     * @param string $target The new filename or directory
+     * @param bool $overwrite Whether to overwrite the target if it already exists
      * @throws IOException When target file or directory already exists
      * @throws IOException When origin cannot be renamed
      */
@@ -141,7 +139,7 @@ abstract class FileSystem
      * Creates a directory recursively.
      *
      * @param string|array|\Traversable $dirs The directory path
-     * @param int                       $mode The directory mode
+     * @param int $mode The directory mode
      *
      * @throws IOException On any directory creation failure
      */
@@ -169,10 +167,10 @@ abstract class FileSystem
     /**
      * Change mode for an array of files or directories.
      * @from Symfony-filesystem
-     * @param string|array|\Traversable $files     A filename, an array of files, or a \Traversable instance to change mode
-     * @param int                       $mode      The new mode (octal)
-     * @param int                       $umask     The mode mask (octal)
-     * @param bool                      $recursive Whether change the mod recursively or not
+     * @param string|array|\Traversable $files A filename, an array of files, or a \Traversable instance to change mode
+     * @param int $mode The new mode (octal)
+     * @param int $umask The mode mask (octal)
+     * @param bool $recursive Whether change the mod recursively or not
      *
      * @throws IOException When the change fail
      */
@@ -191,9 +189,9 @@ abstract class FileSystem
     /**
      * Change the owner of an array of files or directories.
      * @from Symfony-filesystem
-     * @param string|array|\Traversable $files     A filename, an array of files, or a \Traversable instance to change owner
-     * @param string                    $user      The new owner user name
-     * @param bool                      $recursive Whether change the owner recursively or not
+     * @param string|array|\Traversable $files A filename, an array of files, or a \Traversable instance to change owner
+     * @param string $user The new owner user name
+     * @param bool $recursive Whether change the owner recursively or not
      *
      * @throws IOException When the change fail
      */
@@ -229,7 +227,7 @@ abstract class FileSystem
         $dh = opendir($path);
         while (($file = readdir($dh)) !== false) {
             if ($file !== '.' && $file !== '..') {
-                $fullPath = $path.'/'.$file;
+                $fullPath = $path . '/' . $file;
                 if (is_link($fullPath)) {
                     return false;
                 } elseif (!is_dir($fullPath) && !@chmod($fullPath, $mode)) {
@@ -248,7 +246,7 @@ abstract class FileSystem
      *
      * @from web
      * @access public
-     * @param  string  $file_path   文件路径
+     * @param  string $file_path 文件路径
      * @return int  返回值的取值范围为{0 <= x <= 15}，每个值表示的含义可由四位二进制数组合推出。
      *                  返回值在二进制计数法中，四位由高到低分别代表
      *                  可执行rename()函数权限 |可对文件追加内容权限 |可写入文件权限|可读取文件权限。
@@ -321,7 +319,7 @@ abstract class FileSystem
 
                 @unlink($test_file);
 
-            /* 如果是文件 */
+                /* 如果是文件 */
             } elseif (is_file($file_path)) {
                 /* 以读方式打开 */
                 $fp = @fopen($file_path, 'rb');

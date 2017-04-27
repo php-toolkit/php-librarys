@@ -6,6 +6,7 @@
  * ContainerManager.php
  * Date : 2014-7-10
  */
+
 namespace inhere\library\di;
 
 /**
@@ -25,9 +26,9 @@ abstract class ContainerManager
      * @var array
      */
     static protected $containers = [
-        'di' =>    [
-            'base'      => null,// 'container name'=> a base Container instance
-            'children'  => []
+        'di' => [
+            'base' => null,// 'container name'=> a base Container instance
+            'children' => []
         ]
     ];
 
@@ -44,15 +45,15 @@ abstract class ContainerManager
      * 3. 在后面追加参数
      */
     const OVERLOAD_PARAM = 1;
-    const REPLACE_PARAM  = 2;
-    const APPEND_PARAM   = 3;
+    const REPLACE_PARAM = 2;
+    const APPEND_PARAM = 3;
 
-    static public function getContainer($name=null)
+    static public function getContainer($name = null)
     {
         return self::build($name);
     }
 
-    static public function make($name='', $profile='')
+    static public function make($name = '', $profile = '')
     {
         return self::build($name, $profile);
     }
@@ -62,7 +63,7 @@ abstract class ContainerManager
      * @param string $profile
      * @return Container
      */
-    static public function build($name='', $profile='')
+    static public function build($name = '', $profile = '')
     {
         $profile = $profile ?: static::$profile;
 
@@ -99,8 +100,8 @@ abstract class ContainerManager
 
         if (!isset(static::$containers[$profile])) {
             static::$containers[$profile] = array(
-                'root'      => null,
-                'children'  => []
+                'root' => null,
+                'children' => []
             );
         }
 
@@ -134,21 +135,21 @@ abstract class ContainerManager
         return;
     }
 
-    static public function exists($id, $name='')
+    static public function exists($id, $name = '')
     {
         $container = self::getContainer($name);
 
         return $container->exists($id);
     }
 
-    static public function set($id, $service, $name='')
+    static public function set($id, $service, $name = '')
     {
         $container = self::getContainer($name);
 
         return $container->set($id, $service);
     }
 
-    static public function share($id, $service, $name='')
+    static public function share($id, $service, $name = '')
     {
 
     }
@@ -161,11 +162,11 @@ abstract class ContainerManager
      * @param int $bindType
      * @return mixed
      */
-    static public function get($id, $name='', array $params=[], $bindType=self::OVERLOAD_PARAM)
+    static public function get($id, $name = '', array $params = [], $bindType = self::OVERLOAD_PARAM)
     {
         $container = self::getContainer($name);
 
-        return $container->get($id, (array) $params, $bindType);
+        return $container->get($id, (array)$params, $bindType);
     }
 
     /**
@@ -176,11 +177,11 @@ abstract class ContainerManager
      * @param int $bindType
      * @return mixed
      */
-    static public function getNew($id, $name='', array $params=[], $bindType=self::OVERLOAD_PARAM)
+    static public function getNew($id, $name = '', array $params = [], $bindType = self::OVERLOAD_PARAM)
     {
         $container = self::getContainer($name);
 
-        return $container->make($id, (array) $params, $bindType);
+        return $container->make($id, (array)$params, $bindType);
     }
 
     static public function getShared()

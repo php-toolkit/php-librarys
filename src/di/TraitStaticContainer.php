@@ -52,12 +52,12 @@ trait TraitStaticContainer
     public static function set($name, $service, $replace = false)
     {
         // have been used.
-        if ( isset(self::$instances[$name]) ) {
+        if (isset(self::$instances[$name])) {
             throw new \LogicException("The service [$name] have been instanced, don't allow override it.");
         }
 
         // setting
-        if ( !isset(self::$services[$name]) || $replace ) {
+        if (!isset(self::$services[$name]) || $replace) {
             self::$services[$name] = $service;
         }
 
@@ -73,14 +73,14 @@ trait TraitStaticContainer
      */
     public static function get($name, $call = true)
     {
-        if ( !isset(self::$services[$name]) ) {
+        if (!isset(self::$services[$name])) {
             throw new \RuntimeException("The service [$name] don't register.");
         }
 
         $service = self::$services[$name];
 
-        if ( is_object($service) && $service instanceof \Closure && $call) {
-            if ( !isset(self::$instances[$name]) ) {
+        if (is_object($service) && $service instanceof \Closure && $call) {
+            if (!isset(self::$instances[$name])) {
                 self::$instances[$name] = $service();
             }
 
@@ -96,7 +96,7 @@ trait TraitStaticContainer
      */
     public static function raw($name)
     {
-        if ( !isset(self::$services[$name]) ) {
+        if (!isset(self::$services[$name])) {
             throw new \RuntimeException("The service [$name] don't register.");
         }
 
@@ -111,13 +111,13 @@ trait TraitStaticContainer
      */
     public static function factory($name)
     {
-        if ( !isset(self::$services[$name]) ) {
+        if (!isset(self::$services[$name])) {
             throw new \RuntimeException("The service [$name] don't register.");
         }
 
         $service = self::$services[$name];
 
-        if ( is_object($service) && $service instanceof \Closure ) {
+        if (is_object($service) && $service instanceof \Closure) {
             return $service();
         }
 

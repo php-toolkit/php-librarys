@@ -38,19 +38,19 @@ class ZipCompressor extends AbstractCompressor
      */
     public function encode($sourcePath, $archiveFile, $override = true)
     {
-        if( !class_exists('ZipArchive') ){
+        if (!class_exists('ZipArchive')) {
             throw new NotFoundException('The method is require class ZipArchive (by zip extension)');
         }
 
         // 是一些指定文件
-        if ( is_array($sourcePath) ) {
+        if (is_array($sourcePath)) {
             $files = new \ArrayObject();
         } else {
             $files = $this->finder->findAll(true, $sourcePath)->getFiles();
         }
 
         // no file
-        if( !$files->count() ){
+        if (!$files->count()) {
             return false;
         }
 
@@ -61,20 +61,20 @@ class ZipCompressor extends AbstractCompressor
         try {
             $za = $this->getDriver();
 
-            if( true !== $za->open($archiveFile, $override ? ZipArchive::OVERWRITE : ZipArchive::CREATE)) {
+            if (true !== $za->open($archiveFile, $override ? ZipArchive::OVERWRITE : ZipArchive::CREATE)) {
                 return false;
             }
 
-            $za->setArchiveComment('compressed at '.date('Y-m-d H:i:s'));
+            $za->setArchiveComment('compressed at ' . date('Y-m-d H:i:s'));
 
-            foreach($files as $file){
+            foreach ($files as $file) {
                 $file = FileSystem::isAbsPath($file) ? $file : $this->sourcePath . '/' . $file;
                 $za->addFile($file);
 //            $za->addFile($this->sourcePath . $path, $path);
             }
 
             return $za->close();
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             throw new FileSystemException(
                 "Compress directory [$sourcePath] to archive file [$archiveFile] failure!! MSG:" . $e->getMessage()
             );
@@ -94,7 +94,7 @@ class ZipCompressor extends AbstractCompressor
         $res = $za->open($archiveFile);
 
         if ($res !== true) {
-            throw new FileSystemException('Open the zip file ['.$archiveFile.'] failure!!');
+            throw new FileSystemException('Open the zip file [' . $archiveFile . '] failure!!');
         }
 
         $za->extractTo($extractTo ?: dirname($archiveFile));
@@ -104,7 +104,7 @@ class ZipCompressor extends AbstractCompressor
 
     public function getDriver()
     {
-        if ( !$this->driver || !($this->driver instanceof ZipArchive) ) {
+        if (!$this->driver || !($this->driver instanceof ZipArchive)) {
             $this->driver = new ZipArchive();
         }
 

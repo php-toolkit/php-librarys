@@ -28,7 +28,7 @@ class AssetPublisher extends StdBase
      * asset source base path
      * @var string
      */
-    protected $sourcePath  = '';
+    protected $sourcePath = '';
 
     /**
      * asset publish base path
@@ -91,8 +91,8 @@ class AssetPublisher extends StdBase
             'include' => [
                 'file' => ['README.md'],
                 'ext' => [
-                    'js','css',
-                    'ttf','svg', 'eot', 'woff', 'woff2',
+                    'js', 'css',
+                    'ttf', 'svg', 'eot', 'woff', 'woff2',
                     'png', 'jpg', 'jpeg', 'gif', 'ico',
                 ],
                 'dir' => [], // ['dist'],
@@ -103,9 +103,9 @@ class AssetPublisher extends StdBase
              * @var array
              */
             'exclude' => [
-                'file' => [ '.gitignore', 'LICENSE', 'LICENSE.txt' ],
-                'ext' => [ 'swp', 'json'],
-                'dir' => ['.git' , 'src'],
+                'file' => ['.gitignore', 'LICENSE', 'LICENSE.txt'],
+                'ext' => ['swp', 'json'],
+                'dir' => ['.git', 'src'],
             ]
         ];
     }
@@ -123,7 +123,7 @@ class AssetPublisher extends StdBase
         }
 
         if (is_array($from)) {
-            array_walk($from,function($f,$t) {
+            array_walk($from, function ($f, $t) {
                 $this->add($f, $t);
             });
 
@@ -132,10 +132,10 @@ class AssetPublisher extends StdBase
 
         $to = !$to ? $from : $to;
         $fullPath = Directory::isAbsPath($from) || file_exists($from) ?
-                    $from :
-                    $this->sourcePath . '/' . trim($from, '/\\ ');
+            $from :
+            $this->sourcePath . '/' . trim($from, '/\\ ');
 
-        if ( is_file($fullPath) ) {
+        if (is_file($fullPath)) {
             $this->publishAssets['files'][$fullPath] = $to;
         } elseif (is_dir($fullPath)) {
             $this->publishAssets['dirs'][$fullPath] = $to;
@@ -164,7 +164,7 @@ class AssetPublisher extends StdBase
         }
 
         // no define asset to publish, will publish source-path to publish-path
-        if ( !$this->hasAssetToPublish() ) {
+        if (!$this->hasAssetToPublish()) {
             $this->publishDir($this->sourcePath, $this->publishPath, $override);
         }
 
@@ -183,8 +183,8 @@ class AssetPublisher extends StdBase
         //$targetFile = $to . '/' . basename($from);
 
         if (!file_exists($targetFile) || $override) {
-            if ( !Directory::create(dirname($targetFile), 0775) ) {
-                throw new FileSystemException('Create dir path [' . dirname($targetFile). '] failure.');
+            if (!Directory::create(dirname($targetFile), 0775)) {
+                throw new FileSystemException('Create dir path [' . dirname($targetFile) . '] failure.');
             }
 
             File::copy($from, $targetFile);
@@ -202,12 +202,12 @@ class AssetPublisher extends StdBase
      */
     public function publishDir($fromDir, $toDir, $override = false)
     {
-        $files = $this->finder->findAll(1,$fromDir)->getFiles();
+        $files = $this->finder->findAll(1, $fromDir)->getFiles();
         $toDir = Directory::isAbsPath($toDir) ? $toDir : $this->publishPath . '/' . $toDir;
 
         // publish files ...
         foreach ($files as $file) {
-            $this->publishFile($fromDir . '/' . $file, $toDir . '/'. $file, $override);
+            $this->publishFile($fromDir . '/' . $file, $toDir . '/' . $file, $override);
         }
     }
 
@@ -275,7 +275,7 @@ class AssetPublisher extends StdBase
      */
     public function setPublishPath($publishPath)
     {
-        if ( $publishPath ) {
+        if ($publishPath) {
             $this->publishPath = $publishPath;
         }
     }

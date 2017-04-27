@@ -28,11 +28,11 @@ class File extends FileSystem
      * @param bool $clearExt 是否去掉文件名中的后缀，仅保留名字
      * @return string
      */
-    public static function getName($file, $clearExt=false)
+    public static function getName($file, $clearExt = false)
     {
-        $filename = basename( trim($file) );
+        $filename = basename(trim($file));
 
-        return $clearExt ? strstr($filename,'.', true) : $filename;
+        return $clearExt ? strstr($filename, '.', true) : $filename;
     }
 
     /**
@@ -41,11 +41,11 @@ class File extends FileSystem
      * @param bool $clearPoint
      * @return string
      */
-    public static function getSuffix($filename, $clearPoint=false)
+    public static function getSuffix($filename, $clearPoint = false)
     {
-        $suffix = strrchr($filename,'.');
+        $suffix = strrchr($filename, '.');
 
-        return (bool)$clearPoint ? trim($suffix,'.') : $suffix;
+        return (bool)$clearPoint ? trim($suffix, '.') : $suffix;
     }
 
     /**
@@ -54,24 +54,24 @@ class File extends FileSystem
      * @param bool $clearPoint
      * @return string
      */
-    public static function getExtension($path, $clearPoint=false)
+    public static function getExtension($path, $clearPoint = false)
     {
-        $ext = pathinfo($path,PATHINFO_EXTENSION);
+        $ext = pathinfo($path, PATHINFO_EXTENSION);
 
         return $clearPoint ? $ext : '.' . $ext;
     }
 
-    public static function getInfo($filename, $check=true)
+    public static function getInfo($filename, $check = true)
     {
         $check && self::exists($filename);
 
         return [
-            'name'            => basename($filename), //文件名
-            'type'            => filetype($filename), //类型
-            'size'            => ( filesize($filename)/1000 ).' Kb', //大小
-            'is_write'        => is_writable($filename) ? 'true' : 'false', //可写
-            'is_read'         => is_readable($filename) ? 'true' : 'false',//可读
-            'update_time'     => filectime($filename), //修改时间
+            'name' => basename($filename), //文件名
+            'type' => filetype($filename), //类型
+            'size' => (filesize($filename) / 1000) . ' Kb', //大小
+            'is_write' => is_writable($filename) ? 'true' : 'false', //可写
+            'is_read' => is_readable($filename) ? 'true' : 'false',//可读
+            'update_time' => filectime($filename), //修改时间
             'last_visit_time' => fileatime($filename), //文件的上次访问时间
         ];
     }
@@ -82,7 +82,7 @@ class File extends FileSystem
      */
     public static function getStat($filename)
     {
-         return stat($filename);
+        return stat($filename);
     }
 
     /**
@@ -91,9 +91,9 @@ class File extends FileSystem
      * @param  string $filename [description], LOCK_EX
      * @return bool
      */
-    public static function save($filename, $data )
+    public static function save($filename, $data)
     {
-        return file_put_contents($filename, $data)!==false;
+        return file_put_contents($filename, $data) !== false;
     }
 
     /**
@@ -117,7 +117,7 @@ class File extends FileSystem
     public static function openHandler($path)
     {
         if (($handler = @fopen($path, 'wb')) === false) {
-            throw new IOException('The file "'.$path.'" could not be opened for writing. Check if PHP has enough permissions.');
+            throw new IOException('The file "' . $path . '" could not be opened for writing. Check if PHP has enough permissions.');
         }
 
         return $handler;
@@ -134,7 +134,7 @@ class File extends FileSystem
     public static function writeToFile($handler, $content, $path = '')
     {
         if (($result = @fwrite($handler, $content)) === false || ($result < strlen($content))) {
-            throw new IOException('The file "'.$path.'" could not be written to. Check your disk space and file permissions.');
+            throw new IOException('The file "' . $path . '" could not be written to. Check your disk space and file permissions.');
         }
     }
 
@@ -142,28 +142,28 @@ class File extends FileSystem
      * ********************** 创建多级目录和多个文件 **********************
      * 结合上两个函数
      * @param $fileData - 数组：要创建的多个文件名组成,含文件的完整路径
-     * @param $append   - 是否以追加的方式写入数据 默认false
-     * @param $mode=0777 - 权限，默认0775
+     * @param $append - 是否以追加的方式写入数据 默认false
+     * @param $mode =0777 - 权限，默认0775
      *  eg: $fileData = array(
      *      'file_name'   => 'content',
      *      'case.html'   => 'content' ,
      *  );
      **/
-    public static function createAndWrite(array $fileData = [],$append=false,$mode=0664)
+    public static function createAndWrite(array $fileData = [], $append = false, $mode = 0664)
     {
-        foreach($fileData as $file=>$content) {
+        foreach ($fileData as $file => $content) {
             //检查目录是否存在，不存在就先创建（多级）目录
-            Directory::create(dirname($file),$mode);
+            Directory::create(dirname($file), $mode);
 
             //$fileName = basename($file); //文件名
 
             //检查文件是否存在
-            if ( !is_file($file) ) {
-                file_put_contents($file,$content,LOCK_EX);
-                @chmod($file,$mode);
+            if (!is_file($file)) {
+                file_put_contents($file, $content, LOCK_EX);
+                @chmod($file, $mode);
             } elseif ($append) {
-                file_put_contents($file,$content,FILE_APPEND | LOCK_EX);
-                @chmod($file,$mode);
+                file_put_contents($file, $content, FILE_APPEND | LOCK_EX);
+                @chmod($file, $mode);
             }
         }
     }
@@ -184,7 +184,7 @@ class File extends FileSystem
         }
 
         if (in_array(ini_get('allow_url_fopen'), ['On', 'on', '1'], true) || !preg_match('/^https?:\/\//', $file)) {
-            if ( !file_exists($file) ) {
+            if (!file_exists($file)) {
                 throw new FileNotFoundException("File [{$file}] don't exists!");
             }
 
@@ -234,7 +234,7 @@ class File extends FileSystem
     {
         Directory::mkdir(dirname($target));
 
-        if ( static::copy($file, $target) ) {
+        if (static::copy($file, $target)) {
             unlink($file);
         }
     }
@@ -276,9 +276,9 @@ class File extends FileSystem
         if (is_array($inFile)) {
             foreach ($inFile as $value) {
                 if (is_file($value)) {
-                    $data .= trim( file_get_contents($value) );
+                    $data .= trim(file_get_contents($value));
                 } else {
-                    throw new FileNotFoundException('文件'.$value.'不存在！！');
+                    throw new FileNotFoundException('文件' . $value . '不存在！！');
                 }
             }
         }
@@ -290,12 +290,12 @@ class File extends FileSystem
         }*/
 
         $preg_arr = array(
-                '/\/\*.*?\*\/\s*/is'        // 去掉所有多行注释/* .... */
-                ,'/\/\/.*?[\r\n]/is'        // 去掉所有单行注释//....
-                ,'/(?!\w)\s*?(?!\w)/is'     // 去掉空白行
-                );
+            '/\/\*.*?\*\/\s*/is'        // 去掉所有多行注释/* .... */
+        , '/\/\/.*?[\r\n]/is'        // 去掉所有单行注释//....
+        , '/(?!\w)\s*?(?!\w)/is'     // 去掉空白行
+        );
 
-        $data     = preg_replace($preg_arr,'',$data);
+        $data = preg_replace($preg_arr, '', $data);
 //        $outFile  = $outDir . Data::getRandStr(8) . '.' . $fileType;
 
         $fileData = array(
@@ -314,35 +314,33 @@ class File extends FileSystem
      * @param  boolean $deleteSpace [description]
      * @return void [type]               [description]
      */
-    public static function margePhp($fileArr,$outFile,$deleteSpace=true)
+    public static function margePhp($fileArr, $outFile, $deleteSpace = true)
     {
         $savePath = dirname($outFile);
 
-        if ( !is_dir($savePath) ) {
+        if (!is_dir($savePath)) {
             Directory::create($savePath);
         }
 
-        if ( !is_array($fileArr) ) {
-            $fileArr =array($fileArr);
+        if (!is_array($fileArr)) {
+            $fileArr = array($fileArr);
         }
 
         $data = '';
 
-        foreach( $fileArr as $v )
-        {
+        foreach ($fileArr as $v) {
             #删除注释、空白
-            if ( $deleteSpace )
-            {
+            if ($deleteSpace) {
                 $data .= StrHelper::deleteStripSpace($v);
             }#不删除注释、空白
             else {
                 $o_data = file_get_contents($v);
-                $o_data = substr($o_data,0,5) === '<?php' ? substr($o_data,5) : $o_data ;
-                $data  .= substr($o_data,-2) === '?>' ? substr($o_data,0,-2) : $o_data ;
+                $o_data = substr($o_data, 0, 5) === '<?php' ? substr($o_data, 5) : $o_data;
+                $data .= substr($o_data, -2) === '?>' ? substr($o_data, 0, -2) : $o_data;
             }
         }
 
-        $data = '<?php ' .$data. '?>';
+        $data = '<?php ' . $data . '?>';
         file_put_contents($outFile, $data);
     }
 }

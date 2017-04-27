@@ -62,7 +62,7 @@ abstract class AbstractCompressor extends StdBase
      * @param bool $override
      * @return bool
      */
-    abstract public function encode( $sourcePath, $archiveFile, $override = true);
+    abstract public function encode($sourcePath, $archiveFile, $override = true);
 
     /**
      * @param string $archiveFile

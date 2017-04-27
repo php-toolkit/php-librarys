@@ -11,6 +11,7 @@
  * $down = new Download();
  *
  */
+
 namespace inhere\library\files;
 
 /**
@@ -177,14 +178,14 @@ class Download
      * @param string $downName
      * @return static
      */
-    public static function make($filePath='',$downName='')
+    public static function make($filePath = '', $downName = '')
     {
-        return new static($filePath,$downName);
+        return new static($filePath, $downName);
     }
 
-    public function __construct($filePath='',$downName='')
+    public function __construct($filePath = '', $downName = '')
     {
-        if ( $filePath ) {
+        if ($filePath) {
             $this->start($filePath, $downName);
         }
     }
@@ -194,7 +195,7 @@ class Download
      * @param string $downName
      * @return bool
      */
-    public function start($filePath, $downName='')
+    public function start($filePath, $downName = '')
     {
         if (!$filePath && !$this->filePath) {
             $this->errInfo = $this->_lang['err'] . ':' . $this->_lang['args_empty'];
@@ -223,7 +224,7 @@ class Download
         说明: 判定某个文件是否为图片的有效手段, 常用在文件上传验证
         */
         $imgInfo = @getimagesize($filePath);
-        if ($imgInfo[2] && $imgInfo['bits'])  {
+        if ($imgInfo[2] && $imgInfo['bits']) {
             $fileType = $imgInfo['mime'];       // 支持不标准扩展名
             $isImage = true;
         }
@@ -249,13 +250,13 @@ class Download
             /*
             HTTP头信息: 缓存文件过期时间(格林威治标准时)
             */
-            header('Expires: ' . gmdate('D, d M Y H:i:s', time()+31536000) . ' GMT');
+            header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 31536000) . ' GMT');
             /*
             HTTP头信息: 文件在服务期端最后被修改的时间
             Cache-control,Expires,Last-Modified 都是控制浏览器缓存的头信息
             在一些访问量巨大的门户, 合理的设置缓存能够避免过多的服务器请求, 一定程度下缓解服务器的压力
             */
-            header('Last-Modified: ' . gmdate('D, d M Y H:i:s' , filemtime($filePath) . ' GMT'));
+            header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($filePath) . ' GMT'));
             /*
             HTTP头信息: 文档的编码(Encode)方法, 因为附件请求的文件多样化, 改变编码方式有可能损坏文件, 故为none
             */

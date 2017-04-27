@@ -1,12 +1,12 @@
 <?php
 
-namespace inhere\library\io;
+namespace inhere\library\http;
 
 /**
- * Class Input
- * @package inhere\library\io
+ * Class SimpleRequest
+ * @package inhere\library\http
  */
-class Input
+class SimpleRequest
 {
     protected $parsedBody = false;
 

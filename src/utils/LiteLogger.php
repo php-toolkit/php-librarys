@@ -13,21 +13,21 @@ use inhere\library\helpers\PhpHelper;
 
 /**
  * simple file logger handler
- * Class SFLogger
+ * Class LiteLogger
  * @package inhere\library\utils
  * ```
  * $config = [...];
- * $logger = SFLogger::make($config);
+ * $logger = LiteLogger::make($config);
  * $logger->info(...);
  * $logger->debug(...);
  *
  * ......
  *
- * // Notice: must call SFLogger::flushAll() on application run end.
- * SFLogger::flushAll();
+ * // Notice: must call LiteLogger::flushAll() on application run end.
+ * LiteLogger::flushAll();
  * ```
  */
-class SFLogger
+class LiteLogger
 {
     /**
      * logger instance list
@@ -214,7 +214,7 @@ class SFLogger
      * fast get logger instance
      * @param string $name
      * @param array $args
-     * @return SFLogger
+     * @return LiteLogger
      */
     public static function __callStatic(string $name, array $args)
     {

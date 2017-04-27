@@ -6,13 +6,13 @@
  * Time: 16:40
  */
 
-namespace inhere\library\utils;
+namespace inhere\library\http;
 
 use inhere\library\helpers\UrlHelper;
 
 /**
  * Class Curl
- * @package inhere\library\utils
+ * @package inhere\library\http
  *
  * ```
  * $curl = Curl::make('http://my-site.com');
@@ -56,7 +56,7 @@ class Curl implements CurlInterface
         'logFile' => '',
 
         // set a base uri
-        'baseUri' => '',
+        'baseUrl' => '',
 
         // retry times, when an error occurred.
         'retry' => 0,
@@ -168,7 +168,7 @@ class Curl implements CurlInterface
         }
 
         if (is_string($config)) {
-            $this->_config['baseUri'] = trim($config);
+            $this->_config['baseUrl'] = trim($config);
         } elseif (is_array($config)) {
             $this->setConfig($config);
         }
@@ -371,7 +371,7 @@ class Curl implements CurlInterface
         }
 
         // set request url
-        $url = $this->_config['baseUri'] . $url;
+        $url = $this->_config['baseUrl'] . $url;
         curl_setopt($ch, CURLOPT_URL, UrlHelper::encode2($url));
 
         $response = '';
@@ -965,12 +965,12 @@ class Curl implements CurlInterface
     }
 
     /**
-     * @param string $baseUri
+     * @param string $baseUrl
      * @return $this
      */
-    public function setBashUrl($baseUri)
+    public function setBashUrl($baseUrl)
     {
-        $this->_config['baseUri'] = trim($baseUri);
+        $this->_config['baseUrl'] = trim($baseUrl);
 
         return $this;
     }

@@ -6,11 +6,11 @@
  * Time: 13:14
  */
 
-namespace inhere\library\utils;
+namespace inhere\library\http;
 
 /**
  * Class CurlInterface
- * @package inhere\library\utils
+ * @package inhere\library\http
  */
 interface CurlInterface
 {

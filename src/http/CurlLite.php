@@ -6,13 +6,13 @@
  * Time: 18:44
  */
 
-namespace inhere\library\utils;
+namespace inhere\library\http;
 
 /**
- * Class SimpleCurl
- * @package inhere\library\utils
+ * Class CurlLite - a lite curl tool
+ * @package inhere\library\http
  */
-class SimpleCurl
+class CurlLite
 {
     /**
      * @var array

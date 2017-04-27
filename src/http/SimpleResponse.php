@@ -1,14 +1,14 @@
 <?php
 
-namespace inhere\library\io;
+namespace inhere\library\http;
 
 use inhere\library\helpers\ObjectHelper;
 
 /**
- * Class Output
- * @package inhere\library\io
+ * Class SimpleResponse
+ * @package inhere\library\http
  */
-class Output
+class SimpleResponse
 {
     const DEFAULT_CHARSET = 'UTF-8';
 

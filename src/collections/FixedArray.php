@@ -176,7 +176,7 @@ class FixedArray implements \ArrayAccess, \IteratorAggregate
         // change size.
         $this->values->setSize($index + 1);
 
-        $this->values[] = $value;
+        $this->values[$index] = $value;
         $this->keys[$offset] = $index;
     }
 

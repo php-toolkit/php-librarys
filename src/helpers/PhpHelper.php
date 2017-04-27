@@ -2,6 +2,7 @@
 /**
  *
  */
+
 namespace inhere\library\helpers;
 
 use inhere\exceptions\ExtensionMissException;
@@ -22,7 +23,7 @@ class PhpHelper
     {
         $result = extension_loaded($name);
 
-        if ( !$result && $throwException) {
+        if (!$result && $throwException) {
             throw new ExtensionMissException("Extension [$name] is not loaded.");
         }
 
@@ -179,13 +180,13 @@ class PhpHelper
     {
         return in_array(
             PHP_SAPI, [
-                'apache',
-                'cgi',
-                'fast-cgi',
-                'cgi-fcgi',
-                'fpm-fcgi',
-                'srv',
-                'cli-server'
+            'apache',
+            'cgi',
+            'fast-cgi',
+            'cgi-fcgi',
+            'fpm-fcgi',
+            'srv',
+            'cli-server'
         ], true
         );
     }
@@ -256,8 +257,7 @@ class PhpHelper
     //检查 Apache mod_rewrite 是否开启
     public static function checkApacheRewriteMode()
     {
-        if ( function_exists('apache_get_modules') )
-        {
+        if (function_exists('apache_get_modules')) {
             return in_array('mod_rewrite', apache_get_modules(), true);
         }
         // de(\apache_get_version() ,\apache_get_modules());
@@ -283,29 +283,29 @@ class PhpHelper
         //system
         if (function_exists('system')) {
             ob_start();
-            system($command , $return_var);
+            system($command, $return_var);
             $output = ob_get_contents();
             ob_end_clean();
 
-        // passthru
+            // passthru
         } elseif (function_exists('passthru')) {
             ob_start();
-            passthru($command , $return_var);
+            passthru($command, $return_var);
             $output = ob_get_contents();
             ob_end_clean();
-        //exec
+            //exec
         } else if (function_exists('exec')) {
-            exec($command , $output , $return_var);
-            $output = implode("\n" , $output);
+            exec($command, $output, $return_var);
+            $output = implode("\n", $output);
 
-        //shell_exec
+            //shell_exec
         } else if (function_exists('shell_exec')) {
-            $output = shell_exec($command) ;
+            $output = shell_exec($command);
         } else {
             $output = 'Command execution not possible on this system';
             $return_var = 0;
         }
 
-        return array('output' => $output , 'status' => $return_var);
+        return array('output' => $output, 'status' => $return_var);
     }
 }

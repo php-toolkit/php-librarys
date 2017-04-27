@@ -41,34 +41,34 @@ class Request extends \Slim\Http\Request
      */
     protected $filterList = [
         // return raw
-        'raw'     => '',
+        'raw' => '',
 
         // (int)$var
-        'int'     => 'int',
+        'int' => 'int',
         // (float)$var or floatval($var)
-        'float'   => 'float',
+        'float' => 'float',
         // (bool)$var
-        'bool'    => 'bool',
+        'bool' => 'bool',
         // (bool)$var
         'boolean' => 'bool',
         // (string)$var
-        'string'  => 'string',
+        'string' => 'string',
 
         // trim($var)
-        'trimmed'  => StrainerList::class . '::trim',
+        'trimmed' => StrainerList::class . '::trim',
 
         // safe data
-        'safe'  => 'htmlspecialchars',
+        'safe' => 'htmlspecialchars',
 
         // abs((int)$var)
-        'number'  => StrainerList::class . '::abs',
+        'number' => StrainerList::class . '::abs',
         // will use filter_var($var ,FILTER_SANITIZE_EMAIL)
-        'email'   => StrainerList::class . '::email',
+        'email' => StrainerList::class . '::email',
         // will use filter_var($var ,FILTER_SANITIZE_URL)
-        'url'     => StrainerList::class . '::url',
+        'url' => StrainerList::class . '::url',
 
         // will use filter_var($var ,FILTER_SANITIZE_ENCODED, $settings);
-        'encoded'     => StrainerList::class . '::encoded',
+        'encoded' => StrainerList::class . '::encoded',
     ];
 
     /**
@@ -120,12 +120,12 @@ class Request extends \Slim\Http\Request
      * ]
      * @return array
      */
-    public function getMulti(array $needKeys=[])
+    public function getMulti(array $needKeys = [])
     {
         $needed = [];
 
         foreach ($needKeys as $key => $value) {
-            if ( is_int($key) ) {
+            if (is_int($key)) {
                 $needed[$value] = $this->getParam($value);
             } else {
                 $needed[$key] = $this->filtering($key, $value);
@@ -203,16 +203,16 @@ class Request extends \Slim\Http\Request
      */
     public function filtering($value, $filter)
     {
-        if ( $filter === static::FILTER_RAW) {
+        if ($filter === static::FILTER_RAW) {
             return $value;
         }
 
         // is a custom filter
-        if ( !is_string($filter) || !isset($this->filterList[$filter]) ) {
+        if (!is_string($filter) || !isset($this->filterList[$filter])) {
             $result = $value;
 
             // is custom callable filter
-            if ( is_callable($filter) ) {
+            if (is_callable($filter)) {
                 $result = call_user_func($filter, $value);
             }
 
@@ -222,10 +222,10 @@ class Request extends \Slim\Http\Request
         // is a defined filter
         $filter = $this->filterList[$filter];
 
-        if ( !in_array($filter, DataType::types(), true) ) {
+        if (!in_array($filter, DataType::types(), true)) {
             $result = call_user_func($filter, $value);
         } else {
-            switch ( lcfirst(trim($filter)) ) {
+            switch (lcfirst(trim($filter))) {
                 case DataType::T_BOOL :
                 case DataType::T_BOOLEAN :
                     $result = (bool)$value;

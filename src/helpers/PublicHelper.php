@@ -3,6 +3,7 @@
  *
  * PublicHelper.php
  */
+
 namespace inhere\library\helpers;
 
 /**
@@ -16,9 +17,9 @@ class PublicHelper
      * @param bool $float
      * @return mixed
      */
-    static public function requestTime($float=true)
+    static public function requestTime($float = true)
     {
-        if ( (bool) $float ) {
+        if ((bool)$float) {
             return $_SERVER['REQUEST_TIME_FLOAT'];
         }
 
@@ -40,7 +41,7 @@ class PublicHelper
 
     static public function fileSuffix()
     {
-        return ['js','json','css','php','yaml','inc'];
+        return ['js', 'json', 'css', 'php', 'yaml', 'inc'];
     }
 
     /**
@@ -48,9 +49,9 @@ class PublicHelper
      * @param string $class
      * @return null|string
      */
-    static public function getClassname( $class )
+    static public function getClassname($class)
     {
-        return self::parseFullClassname( $class, true);
+        return self::parseFullClassname($class, true);
     }
 
     /**
@@ -58,9 +59,9 @@ class PublicHelper
      * @param $class
      * @return null|string
      */
-    static public function getNamespace( $class )
+    static public function getNamespace($class)
     {
-        return self::parseFullClassname( $class, false);
+        return self::parseFullClassname($class, false);
     }
 
     /**
@@ -69,16 +70,16 @@ class PublicHelper
      * @param  boolean $onlyName true:namespace false:classname
      * @return null|string
      */
-    static private function parseFullClassname( $class, $onlyName = false)
+    static private function parseFullClassname($class, $onlyName = false)
     {
         if (is_object($class)) {
             $classname = get_class($class);
-        } else if ( $class && is_string($class) ) {
-            $classname = rtrim($class,'\\ ');
+        } else if ($class && is_string($class)) {
+            $classname = rtrim($class, '\\ ');
         } else {
             return null;
         }
 
-        return !$onlyName ? trim(dirname($classname),'.'): basename($classname);
+        return !$onlyName ? trim(dirname($classname), '.') : basename($classname);
     }
 }

@@ -24,9 +24,9 @@ class ProcessHelper
     {
         // 显示运行时间
         $return['time'] = number_format(microtime(true) - $startTime, 4) . 's';
-        $startMem =  (int)array_sum(explode(' ',$startMem));
-        $endMem   =  array_sum(explode(' ',memory_get_usage()));
-        $return['memory'] = number_format(($endMem - $startMem)/1024) . 'kb';
+        $startMem = (int)array_sum(explode(' ', $startMem));
+        $endMem = array_sum(explode(' ', memory_get_usage()));
+        $return['memory'] = number_format(($endMem - $startMem) / 1024) . 'kb';
 
         return $return;
     }
@@ -108,7 +108,7 @@ class ProcessHelper
             $gid = $userInfo['gid'];
         }
 
-        if ( !posix_initgroups($userInfo['name'], $gid) ) {
+        if (!posix_initgroups($userInfo['name'], $gid)) {
             return "Warning: The user [{$user}] is not in the user group ID [GID:{$gid}].";
         }
 

@@ -56,7 +56,7 @@ class Element extends StdBase
      * tag content
      * @var string
      */
-    protected $content=null;
+    protected $content = null;
 
     /**
      * current tag's parent element
@@ -78,17 +78,17 @@ class Element extends StdBase
      */
     protected $defaultAddRule = 'after';
 
-    const BEFORE_TEXT    = 'before';
-    const AFTER_TEXT     = 'after';
-    const REPLACE_TEXT   = 'replace';
+    const BEFORE_TEXT = 'before';
+    const AFTER_TEXT = 'after';
+    const REPLACE_TEXT = 'replace';
 
-    public function __construct($name=null, $content=null, array $attrs=[])
+    public function __construct($name = null, $content = null, array $attrs = [])
     {
-        $this->name    = $name;
+        $this->name = $name;
         $this->content = $content;
-        $this->attrs   = $attrs;
+        $this->attrs = $attrs;
 
-        $this->childs   = new \SplObjectStorage();
+        $this->childs = new \SplObjectStorage();
     }
 
 ///////////////////////////////////////// generate element /////////////////////////////////////////
@@ -98,21 +98,21 @@ class Element extends StdBase
      */
     public function getString()
     {
-        if ( !$name = strtolower(trim($this->name)) ) {
+        if (!$name = strtolower(trim($this->name))) {
             throw new InvalidConfigException('请设置标签元素的名称！');
         }
 
         $attrString = $this->getAttrs(true);
-        $content    = $this->_handleChildAndContent();
+        $content = $this->_handleChildAndContent();
 
-        $eleString  = sprintf("\n<{$name}%s>%s", $attrString,$content);
-        $eleString  .= $this->isAloneTag($name) ? "\n": "</{$name}>\n";
+        $eleString = sprintf("\n<{$name}%s>%s", $attrString, $content);
+        $eleString .= $this->isAloneTag($name) ? "\n" : "</{$name}>\n";
 
         // has parent
         if ($parent = $this->parent) {
 
-            if ( $this->isAloneTag($parent->name) ) {
-                throw new InvalidConfigException('不能设置单标签元素 '.$parent->name.'为父元素！');
+            if ($this->isAloneTag($parent->name)) {
+                throw new InvalidConfigException('不能设置单标签元素 ' . $parent->name . '为父元素！');
             }
 
             $parent->setContent($eleString);
@@ -133,35 +133,35 @@ class Element extends StdBase
      */
     protected function _handleChildAndContent()
     {
-        if ( !($childs = $this->childs) ) {
+        if (!($childs = $this->childs)) {
             return $this->content;
         }
 
         $content = $this->content;
 
         // 替换 直接占有 内容的位置
-        if ( isset($childs[self::REPLACE_TEXT]) ) {
+        if (isset($childs[self::REPLACE_TEXT])) {
             $string = '';
             foreach ($childs[self::REPLACE_TEXT] as $child) {
-                $string .= rtrim( (string)$child );
+                $string .= rtrim((string)$child);
             }
 
             $content = $string . "\n";
         }
 
-        if ( isset($childs[self::BEFORE_TEXT]) ) {
+        if (isset($childs[self::BEFORE_TEXT])) {
             $string = '';
             foreach ($childs[self::BEFORE_TEXT] as $child) {
-                $string .= rtrim( (string)$child );
+                $string .= rtrim((string)$child);
             }
 
             $content = $string . $content;
         }
 
-        if ( isset($childs[self::AFTER_TEXT]) ) {
+        if (isset($childs[self::AFTER_TEXT])) {
             $string = '';
             foreach ($childs[self::AFTER_TEXT] as $child) {
-                $string .= rtrim( (string)$child );
+                $string .= rtrim((string)$child);
             }
 
             $content .= $string . "\n";
@@ -188,7 +188,7 @@ class Element extends StdBase
      * @param array $attrs
      * @return Element
      */
-    public function setParent($name=null, $content=null, array $attrs=[])
+    public function setParent($name = null, $content = null, array $attrs = [])
     {
         if ($name instanceof self) {
             $parent = $name;
@@ -221,7 +221,7 @@ class Element extends StdBase
      * @param string $rule
      * @return Element
      */
-    public function addChild($name=null, $content=null, array $attrs=[], $rule = self::AFTER_TEXT)
+    public function addChild($name = null, $content = null, array $attrs = [], $rule = self::AFTER_TEXT)
     {
         if ($name instanceof self) {
             $child = $name;
@@ -273,7 +273,7 @@ class Element extends StdBase
      */
     public function setDefaultAddRule($value)
     {
-        if ( $this->isValidRule($value) ) {
+        if ($this->isValidRule($value)) {
             $this->defaultAddRule = $value;
         }
 
@@ -347,12 +347,12 @@ class Element extends StdBase
      * @param string $position
      * @return $this
      */
-    public function addContent($value, $position='after')
+    public function addContent($value, $position = 'after')
     {
         if ($position == 'after') {
             $this->content .= $value;
         } else {
-            $this->content = $value.$this->content;
+            $this->content = $value . $this->content;
         }
 
         return $this;
@@ -363,8 +363,8 @@ class Element extends StdBase
      */
     public function getContent()
     {
-        if ( $content = $this->getAttr('content') ?: $this->getAttr('text') ) {
-            unset($this->attrs['content'],$this->attrs['text']);
+        if ($content = $this->getAttr('content') ?: $this->getAttr('text')) {
+            unset($this->attrs['content'], $this->attrs['text']);
 
             $this->content = $content;
         }
@@ -389,10 +389,10 @@ class Element extends StdBase
      * @param bool $toString
      * @return array|string
      */
-    public function getAttrs($toString=false)
+    public function getAttrs($toString = false)
     {
-        if ( $content = $this->getAttr('content') ?: $this->getAttr('text') ) {
-            unset($this->attrs['content'],$this->attrs['text']);
+        if ($content = $this->getAttr('content') ?: $this->getAttr('text')) {
+            unset($this->attrs['content'], $this->attrs['text']);
 
             $this->content = $content;
         }
@@ -439,7 +439,7 @@ class Element extends StdBase
      */
     public function getAttr($name)
     {
-        $name  = trim($name);
+        $name = trim($name);
 
         return isset($this->attrs[$name]) ? $this->attrs[$name] : null;
     }
@@ -464,10 +464,10 @@ class Element extends StdBase
      */
     public function addAttr($name, $value)
     {
-        $name  = trim($name);
+        $name = trim($name);
         $value = trim($value);
 
-        if ( $value && !$this->existsAttr($name)) {
+        if ($value && !$this->existsAttr($name)) {
             $this->attrs[$name] = $value;
         }
 
@@ -483,12 +483,12 @@ class Element extends StdBase
      * @param string $separator 追加的值与原有的值之间的分隔符 e.g. 两个class之间的空格
      * @return $this
      */
-    public function appendAttr($name, $value, $separator='')
+    public function appendAttr($name, $value, $separator = '')
     {
         if ($this->existsAttr($name)) {
 
             if ($name == 'class') {
-                $separator=' ';
+                $separator = ' ';
             }
 
             $this->attrs[$name] .= $separator . trim($value);
@@ -504,16 +504,16 @@ class Element extends StdBase
      * @param $value
      * @return Element
      */
-    public function setClass( $value )
+    public function setClass($value)
     {
-        return $this->setAttr('class', $value );
+        return $this->setAttr('class', $value);
     }
 
     /**
      * @param $value
      * @return Element
      */
-    public function addClass( $value )
+    public function addClass($value)
     {
         return $this->appendAttr('class', $value, ' ');
     }
@@ -523,10 +523,10 @@ class Element extends StdBase
      * @param null $value
      * @return Element
      */
-    public function addStyle( $name, $value=null )
+    public function addStyle($name, $value = null)
     {
         if ($value) {
-            $value = $name.':'.$value;
+            $value = $name . ':' . $value;
         }
 
         return $this->appendAttr('style', $value);
@@ -556,35 +556,34 @@ class Element extends StdBase
      * @param  array $attrs [需要合并的属性]
      * @return string
      */
-    public function attrMerge($old, $new, array $attrs=[])
+    public function attrMerge($old, $new, array $attrs = [])
     {
-        if ( !$old && !$new ) {
+        if (!$old && !$new) {
             return [];
         } else if (!$new) {
             return $old;
         }
 
-        $default = ['class','style'];
+        $default = ['class', 'style'];
 
         if ($attrs) {
-            array_map(function($value) use(&$default) {
-                if ( !in_array($value, $default) ) {
-                   $default[] = $value;
+            array_map(function ($value) use (&$default) {
+                if (!in_array($value, $default)) {
+                    $default[] = $value;
                 }
             }, $attrs);
         }
 
-        $attrs  = $default;
+        $attrs = $default;
         $merges = [];
 
         // 交集, 都含有的属性
-        $intersectAttrs  = array_keys(array_intersect_key($old,$new));
+        $intersectAttrs = array_keys(array_intersect_key($old, $new));
 
         foreach ($attrs as $attr) {
 
-            if ( in_array($attr, $intersectAttrs) )
-            {
-                $merges[$attr] = $old[$attr].' '.$new[$attr];
+            if (in_array($attr, $intersectAttrs)) {
+                $merges[$attr] = $old[$attr] . ' ' . $new[$attr];
             }
         }
 

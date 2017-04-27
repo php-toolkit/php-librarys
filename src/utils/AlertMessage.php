@@ -77,14 +77,14 @@ class AlertMessage extends FixedData
         return $this;
     }
 
-    public function all($toArray=true)
+    public function all($toArray = true)
     {
         // add a new alert message
         return [
-            'type'      => $this->type ?: 'info', // info success primary warning danger
-            'title'     => $this->title ?:'Info!',
-            'msg'       => $this->msg,
-            'closeBtn'  => (bool)$this->closeBtn
+            'type' => $this->type ?: 'info', // info success primary warning danger
+            'title' => $this->title ?: 'Info!',
+            'msg' => $this->msg,
+            'closeBtn' => (bool)$this->closeBtn
         ];
     }
 

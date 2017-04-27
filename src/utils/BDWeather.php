@@ -27,7 +27,7 @@ class BDWeather
      */
     public static function cityList($apikey, $cityName)
     {
-        $url = self::WEATHER_API. '/citylist';
+        $url = self::WEATHER_API . '/citylist';
 
         return self::send($url, ['cityname' => $cityName], ["apikey: $apikey"]);
     }
@@ -40,7 +40,7 @@ class BDWeather
      */
     public static function byCityPinyin($cityPinyin, $apikey)
     {
-        $url = self::WEATHER_API. '/weather';
+        $url = self::WEATHER_API . '/weather';
 
         return self::send($url, ['citypinyin' => $cityPinyin], ["apikey: $apikey"]);
     }
@@ -53,7 +53,7 @@ class BDWeather
      */
     public static function byCityName($cityName, $apikey)
     {
-        $url = self::WEATHER_API. '/cityname';
+        $url = self::WEATHER_API . '/cityname';
 
         return self::send($url, ['cityname' => $cityName], ["apikey: $apikey"]);
     }
@@ -68,11 +68,11 @@ class BDWeather
      */
     public static function recentWeathers($cityName, $cityCode, $apikey)
     {
-        $url = self::WEATHER_API. '/recentweathers';
+        $url = self::WEATHER_API . '/recentweathers';
 
         return self::send($url, [
-            'cityname'  => $cityName,
-            'cityid'    => $cityCode,
+            'cityname' => $cityName,
+            'cityid' => $cityCode,
         ], ["apikey: $apikey"]);
     }
 
@@ -97,7 +97,7 @@ class BDWeather
      */
     public static function cityInfo($cityName, $apikey)
     {
-        $url = self::WEATHER_API. '/cityinfo';
+        $url = self::WEATHER_API . '/cityinfo';
 
         return self::send($url, ['cityname' => $cityName], ["apikey: $apikey"]);
     }
@@ -109,7 +109,7 @@ class BDWeather
      */
     public static function aqiCityList($apikey)
     {
-        $url = self::AQI_API. '/citylist';
+        $url = self::AQI_API . '/citylist';
 
         return self::send($url, [], ["apikey: $apikey"]);
     }
@@ -122,14 +122,14 @@ class BDWeather
      */
     public static function aqi($cityName, $apikey)
     {
-        $url = self::AQI_API. '/aqi';
+        $url = self::AQI_API . '/aqi';
 
         return self::send($url, ['city' => $cityName], ["apikey: $apikey"]);
     }
 
     protected static function send($url, array $params = [], array $headers = [])
     {
-        $res = CurlHelper::get($url, $params , $headers);
+        $res = CurlHelper::get($url, $params, $headers);
 
         return json_decode($res, true);
     }

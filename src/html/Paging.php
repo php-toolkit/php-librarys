@@ -18,6 +18,7 @@
  *
  *
  */
+
 namespace inhere\library\html;
 
 /**
@@ -30,24 +31,24 @@ class Paging extends PagingBase
      * @var array
      */
     public $elements = [
-        'box'               => [
-            'tag'             => 'ul', //'div>ul',
-            'class'           => '',
+        'box' => [
+            'tag' => 'ul', //'div>ul',
+            'class' => '',
         ],
-        'list'              => [
-            'tag'             => 'li',
-            'currentClass'    => 'active',
+        'list' => [
+            'tag' => 'li',
+            'currentClass' => 'active',
         ],
-        'link'              => [
-            'tag'             => 'a',
+        'link' => [
+            'tag' => 'a',
             // 'currentClass'    => 'active',
         ],
     ];
 
 
     /*********************************************************************************
-    * build html tag string
-    *********************************************************************************/
+     * build html tag string
+     *********************************************************************************/
 
     /**
      * 得到回到第一页字符串
@@ -56,7 +57,7 @@ class Paging extends PagingBase
     public function firstPage()
     {
         // return '<a href="'.$this->getUrl().'" class="number" title="1">'.$this->text['first'].'</a>';
-        $first = Html::a($this->text['first'],$this->getUrl(1));
+        $first = Html::a($this->text['first'], $this->getUrl(1));
 
         $this->html['first'] = $this->hasListElement($first);
 
@@ -72,7 +73,7 @@ class Paging extends PagingBase
         $page = (int)$this->getOption('page', 1);
 
         if ($page > 1) {
-            $prev = Html::a($this->text['prev'],$this->getUrl($this->prevPage));
+            $prev = Html::a($this->text['prev'], $this->getUrl($this->prevPage));
 
             $prev = $this->hasListElement($prev);
         }
@@ -91,13 +92,13 @@ class Paging extends PagingBase
         $prevAcrossPages = $this->options['page'] - $this->options['btnNum'];
 
         if ($prevAcrossPages > 0) {
-            $text  = sprintf($this->text['prevs'], $this->options['btnNum']);
+            $text = sprintf($this->text['prevs'], $this->options['btnNum']);
             // return '<a href="'.$this->getUrl($prevAcrossPages).'" class="number" title="'.$text.'">'.$text.'</a>';
-            $prevs = Html::a($text,$this->getUrl($prevAcrossPages),['title'=>$text]);
+            $prevs = Html::a($text, $this->getUrl($prevAcrossPages), ['title' => $text]);
             $prevs = $this->hasListElement($prevs);
         }
 
-        $this->html['prevs'] = isset($prevs) ? $prevs: '';
+        $this->html['prevs'] = isset($prevs) ? $prevs : '';
 
         return $this;
     }
@@ -108,18 +109,18 @@ class Paging extends PagingBase
      */
     public function numberPageBtn()
     {
-        $numBtnPage='';
+        $numBtnPage = '';
         $page = (int)$this->getOption('page', 1);
 
-        for($i=$this->firstNumBtn; $i<=$this->lastNumBtn;$i++) {
+        for ($i = $this->firstNumBtn; $i <= $this->lastNumBtn; $i++) {
             if ($i === $page) {
                 //给当前页按钮设置额外样式
                 // $numBtnPage .='<a href="'.$this->getUrl($i).'" class="number current" title="'.$i.'">'.$i.'</a>';
-                $a = Html::a($i,'',['title'=>$i]);
-                $numBtnPage .= $this->hasListElement($a,['class'=>$this->elements['list']['currentClass']]);
+                $a = Html::a($i, '', ['title' => $i]);
+                $numBtnPage .= $this->hasListElement($a, ['class' => $this->elements['list']['currentClass']]);
             } else {
                 // $numBtnPage .='<a href="'.$this->getUrl($i).'" class="number" title="'.$i.'">'.$i.'</a>';
-                $a = Html::a($i,$this->getUrl($i),['title'=>$i]);
+                $a = Html::a($i, $this->getUrl($i), ['title' => $i]);
                 $numBtnPage .= $this->hasListElement($a);
             }
         }
@@ -138,8 +139,8 @@ class Paging extends PagingBase
         $nextAcrossPages = $this->options['page'] + $this->options['btnNum'];
 
         if ($nextAcrossPages < $this->pageTotal) {
-            $text  = sprintf($this->text['nexts'],$this->options['btnNum']);
-            $nexts = Html::a($text,$this->getUrl($nextAcrossPages),['title'=>$text]);
+            $text = sprintf($this->text['nexts'], $this->options['btnNum']);
+            $nexts = Html::a($text, $this->getUrl($nextAcrossPages), ['title' => $text]);
             $nexts = $this->hasListElement($nexts);
         }
 
@@ -170,7 +171,7 @@ class Paging extends PagingBase
      */
     public function lastPage()
     {
-        $last = Html::a($this->text['last'],$this->getUrl($this->pageTotal),['title'=>$this->text['last']]);
+        $last = Html::a($this->text['last'], $this->getUrl($this->pageTotal), ['title' => $this->text['last']]);
 
         $this->html['last'] = $this->hasListElement($last);
 
@@ -187,7 +188,7 @@ class Paging extends PagingBase
      */
     public function totalStr()
     {
-        $this->html['total'] = sprintf( $this->text['totalStr'], $this->options['total'] );
+        $this->html['total'] = sprintf($this->text['totalStr'], $this->options['total']);
 
         return $this;
     }
@@ -202,15 +203,15 @@ class Paging extends PagingBase
             return '';
         }
 
-        $jumpPage = ' <input type="button" class="button jump-page-btn" value="'.$this->text['jumpTo'].'"
+        $jumpPage = ' <input type="button" class="button jump-page-btn" value="' . $this->text['jumpTo'] . '"
             onclick="javascript:var jumpPN = document.getElementById(\'jumpPageNum\');
-            if (jumpPN.value<='.$this->pageTotal.'){
-                    location.href=\''.$this->getUrl().'\'+jumpPN.value;
+            if (jumpPN.value<=' . $this->pageTotal . '){
+                    location.href=\'' . $this->getUrl() . '\'+jumpPN.value;
                 }">';
         $jumpPage .= ' <input type="text" class="page-num-input" id="jumpPageNum"
-            style="width: 35px;" value="'.$this->options['page'].'" onkeydown = "javascript:
-                if (event.keyCode==13 && this.value<='.$this->pageTotal.'){
-                    location.href=\''.$this->getUrl().'\'+this.value;
+            style="width: 35px;" value="' . $this->options['page'] . '" onkeydown = "javascript:
+                if (event.keyCode==13 && this.value<=' . $this->pageTotal . '){
+                    location.href=\'' . $this->getUrl() . '\'+this.value;
                 }"> ';
 
         $this->html['jump'] = $jumpPage;
@@ -230,12 +231,12 @@ class Paging extends PagingBase
 
         $page = (int)$this->getOption('page', 1);
         $select = ' <select class="page-num-input" style="max-height: 400px"
-        onchange="javascript:location.href=\''.$this->getUrl().'\'+this.value;">';
+        onchange="javascript:location.href=\'' . $this->getUrl() . '\'+this.value;">';
 
-        for($i=1;$i<=$this->pageTotal;$i++) {
-            $select .=($page==$i)?
-                '<option value="'.$i.'" selected="selected"">'.$i.'</option>' :
-                '<option value="'.$i.'" >'.$i.'</option>';
+        for ($i = 1; $i <= $this->pageTotal; $i++) {
+            $select .= ($page == $i) ?
+                '<option value="' . $i . '" selected="selected"">' . $i . '</option>' :
+                '<option value="' . $i . '" >' . $i . '</option>';
         }
 
         $select .= '</select> ';
@@ -248,9 +249,9 @@ class Paging extends PagingBase
 ////////////////////////////////////////// get paging string ///////////////////////////////////////
 
     //得到组装后的分页字符串
-    public function useStyle($type='full')
+    public function useStyle($type = 'full')
     {
-        switch(trim($type)) {
+        switch (trim($type)) {
             case 'mini'://最简单
                 $this->prevPage()->nextPage();
                 break;
@@ -259,20 +260,20 @@ class Paging extends PagingBase
                 break;
             case 'normal'://常用
                 $this->prevAcrossPages()->prevPage()
-                     ->numberPageBtn()->nextPage()->nextAcrossPages()->totalStr();
+                    ->numberPageBtn()->nextPage()->nextAcrossPages()->totalStr();
                 break;
             case 'normal_select'://常用+select
                 $this->prevAcrossPages()->prevPage()->numberPageBtn()->nextPage()
-                     ->nextAcrossPages()->selectPage()->totalStr();
+                    ->nextAcrossPages()->selectPage()->totalStr();
                 break;
             case 'normal_jump'://常用+input jump
                 $this->prevAcrossPages()->prevPage()->numberPageBtn()->nextPage()
-                     ->nextAcrossPages()->jumpPage()->totalStr();
+                    ->nextAcrossPages()->jumpPage()->totalStr();
                 break;
             default://完整的组装
                 $this->firstPage()->prevAcrossPages()->prevPage()
-                     ->numberPageBtn()->nextPage()->nextAcrossPages()
-                     ->lastPage()->totalStr()->selectPage()->jumpPage();
+                    ->numberPageBtn()->nextPage()->nextAcrossPages()
+                    ->lastPage()->totalStr()->selectPage()->jumpPage();
                 break;
         }
 
@@ -281,12 +282,12 @@ class Paging extends PagingBase
     }
 
     // 添加 a 的外部元素 li
-    private function hasListElement($ele,$attrs=[])
+    private function hasListElement($ele, $attrs = [])
     {
-        if ($this->elements['list']['tag'] !='') {
+        if ($this->elements['list']['tag'] != '') {
             $listEle = $this->elements['list']['tag'];
 
-            return Html::tag($listEle,$ele,$attrs);
+            return Html::tag($listEle, $ele, $attrs);
         }
 
         return $ele;
@@ -300,9 +301,9 @@ class Paging extends PagingBase
         $string = parent::toString();
 
         if ($this->elements['box']['tag']) {
-            $box      = $this->elements['box'];
-            $string  = Html::tag($box['tag'], $string, [
-                'class'=>isset($box['class']) ? $box['class'] : ''
+            $box = $this->elements['box'];
+            $string = Html::tag($box['tag'], $string, [
+                'class' => isset($box['class']) ? $box['class'] : ''
             ]);
         }
 

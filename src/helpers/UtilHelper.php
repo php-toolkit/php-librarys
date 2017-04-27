@@ -1,8 +1,8 @@
 <?php
 
 /**
-*
-*/
+ *
+ */
 abstract class UtilHelper
 {
 
@@ -16,14 +16,14 @@ abstract class UtilHelper
      */
     static public function gitCheck()
     {
-        if ( PHP_SAPI === 'cli' ) {
+        if (PHP_SAPI === 'cli') {
             $_GET = getopt('d::', ['dir::']);
         }
 
         // 获取要查看的目录，没有则检测当前目录
-        $dir = $_GET['d'] ?? ( $_GET['dir'] ?? __DIR__);
+        $dir = $_GET['d'] ?? ($_GET['dir'] ?? __DIR__);
 
-        if ( !is_dir($dir) ) {
+        if (!is_dir($dir)) {
             trigger_error($dir);
         }
 
@@ -31,11 +31,11 @@ abstract class UtilHelper
         system("cd $dir && git branch -v");
         $c = ob_get_clean();
 
-        $result = preg_match('#\* (?<brName>[\S]+)(?:\s+)(?<logNum>[0-9a-z]{7})(?<ciText>.*)#i',$c, $data);
+        $result = preg_match('#\* (?<brName>[\S]+)(?:\s+)(?<logNum>[0-9a-z]{7})(?<ciText>.*)#i', $c, $data);
         $data['projectName'] = basename($dir);
 
         // var_dump($c,$result, $data);
-        return ( $result === 1 ) ? $data : null;
+        return ($result === 1) ? $data : null;
     }
 
     /**
@@ -54,7 +54,7 @@ abstract class UtilHelper
 
         $data = json_encode($object);
 
-        echo '<script type="text/javascript">console.' . $type . '('. $data . ');</script>';
+        echo '<script type="text/javascript">console.' . $type . '(' . $data . ');</script>';
     }
 
 }

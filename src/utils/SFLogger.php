@@ -113,7 +113,7 @@ class SFLogger
      *  注意：如果启用了按级别分割文件，次阀值检查可能会出现错误。
      * @var int
      */
-    protected $logThreshold  = 1000;
+    protected $logThreshold = 1000;
 
     /**
      * 格式
@@ -128,14 +128,14 @@ class SFLogger
 
     const EXCEPTION = 'exception';
     const EMERGENCY = 'emergency';
-    const ALERT     = 'alert';
-    const CRITICAL  = 'critical';
-    const ERROR     = 'error';
-    const WARNING   = 'warning';
-    const NOTICE    = 'notice';
-    const INFO      = 'info';
-    const DEBUG     = 'debug';
-    const TRACE     = 'trace';
+    const ALERT = 'alert';
+    const CRITICAL = 'critical';
+    const ERROR = 'error';
+    const WARNING = 'warning';
+    const NOTICE = 'notice';
+    const INFO = 'info';
+    const DEBUG = 'debug';
+    const TRACE = 'trace';
 
     /**
      * create new instance or get exists instance
@@ -148,13 +148,13 @@ class SFLogger
             throw new \InvalidArgumentException('Log config is must be an array and not allow empty.');
         }
 
-        if ( !isset($config['name']) ) {
+        if (!isset($config['name'])) {
             $config['name'] = 'default';
         }
 
         $name = $config['name'];
 
-        if ( !isset(self::$loggers[$name]) ) {
+        if (!isset(self::$loggers[$name])) {
             self::$loggers[$name] = new static($config);
         }
 
@@ -195,7 +195,7 @@ class SFLogger
 
     /**
      * del logger
-     * @param  string       $name
+     * @param  string $name
      * @param  bool|boolean $flush
      * @return bool
      */
@@ -241,12 +241,12 @@ class SFLogger
     private function __construct(array $config = [])
     {
         $this->name = $config['name'];
-        $canSetting = ['logConsole','logThreshold','debug','channel','basePath','subFolder','format','splitFile', 'levels'];
+        $canSetting = ['logConsole', 'logThreshold', 'debug', 'channel', 'basePath', 'subFolder', 'format', 'splitFile', 'levels'];
 
         foreach ($canSetting as $name) {
-            if ( isset($config[$name]) ) {
+            if (isset($config[$name])) {
                 $setter = 'set' . ucfirst($name);
-                if ( method_exists($this, $setter) ) {
+                if (method_exists($this, $setter)) {
                     $this->$setter($config[$name]);
                 } else {
                     $this->$name = $config[$name];
@@ -277,6 +277,7 @@ class SFLogger
     {
         $this->exception($e, $context, $logRequest);
     }
+
     public function exception(\Exception $e, array $context = [], $logRequest = true)
     {
         $message = $e->getMessage() . PHP_EOL;
@@ -308,19 +309,19 @@ class SFLogger
      */
     public function trace($message = '', array $context = [])
     {
-        if ( !$this->debug ) {
+        if (!$this->debug) {
             return false;
         }
 
         $msg = '';
 
-        if ( $message ) {
+        if ($message) {
             $msg = "\n  MSG: $message.";
         }
 
         $file = $method = $line = 'Unknown';
 
-        if ( $data = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,3) ) {
+        if ($data = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)) {
             if (isset($data[0]['file'])) {
                 $file = $data[0]['file'];
             }
@@ -331,7 +332,7 @@ class SFLogger
 
             if (isset($data[1])) {
                 $t = $data[1];
-                $method = self::arrayRemove($t, 'class', 'CLASS') . '::' .  self::arrayRemove($t, 'function', 'METHOD');
+                $method = self::arrayRemove($t, 'class', 'CLASS') . '::' . self::arrayRemove($t, 'function', 'METHOD');
             }
         }
 
@@ -371,7 +372,7 @@ class SFLogger
     public function log($level, $message, array $context = [])
     {
         // 不在记录的级别内
-        if ( $this->levels && !in_array($level, $this->levels, true)) {
+        if ($this->levels && !in_array($level, $this->levels, true)) {
             return null;
         }
 
@@ -383,7 +384,7 @@ class SFLogger
             fwrite(STDOUT, $string . PHP_EOL);
         }
 
-        if ( $this->splitFile ) {
+        if ($this->splitFile) {
             $this->_records[$level][] = $string;
         } else {
             $this->_records[] = $string;
@@ -445,10 +446,10 @@ class SFLogger
      */
     protected function dataFormatter($level, $message, array $context)
     {
-        $format = $this->format ? : self::SIMPLE_FORMAT;
+        $format = $this->format ?: self::SIMPLE_FORMAT;
         $record = [
             '{datetime}' => date('Y-m-d H:i:s'),
-            '{message}'  => $message,
+            '{message}' => $message,
             '{level_name}' => strtoupper($level),
         ];
 
@@ -467,15 +468,15 @@ class SFLogger
     protected function write($str)
     {
         $file = $this->getLogPath() . $this->getFilename();
-        $dir  = dirname($file);
+        $dir = dirname($file);
 
-        if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir) ) {
+        if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
             throw new FileSystemException("Create directory failed. $dir");
         }
 
         // check file size
-        if ( is_file($file) && filesize($file) > $this->maxSize*1000*1000 ) {
-            rename($file, substr($file, 0, -3) . time(). '.log');
+        if (is_file($file) && filesize($file) > $this->maxSize * 1000 * 1000) {
+            rename($file, substr($file, 0, -3) . time() . '.log');
         }
 
         // return error_log($str, 3, $file);
@@ -515,7 +516,7 @@ class SFLogger
             throw new \InvalidArgumentException('The property basePath is required.');
         }
 
-        return $this->basePath . '/' . ( $this->subFolder ? $this->subFolder . '/' : '' );
+        return $this->basePath . '/' . ($this->subFolder ? $this->subFolder . '/' : '');
     }
 
     /**
@@ -536,11 +537,11 @@ class SFLogger
      */
     public function getFilename()
     {
-        if ( $handler = $this->filenameHandler ) {
+        if ($handler = $this->filenameHandler) {
             return $handler($this);
         }
 
-        return ( $this->splitFile ? $this->levelName : $this->name ) . '.' . date('Y-m-d') . '.log';
+        return ($this->splitFile ? $this->levelName : $this->name) . '.' . date('Y-m-d') . '.log';
     }
 
     /**

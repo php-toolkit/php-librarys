@@ -17,17 +17,17 @@ namespace inhere\library\html;
  */
 class Html
 {
-	// Independent tag
+    // Independent tag
     public static $aloneTags = [
-        'area','br','base','col','frame','hr','img','input','link','mate' ,'param'
+        'area', 'br', 'base', 'col', 'frame', 'hr', 'img', 'input', 'link', 'mate', 'param'
     ];
 
     // need close tags
     public static $closeTags = [
-        'html', 'head', 'body', 'a' , 'div', 'p', 'ul', 'li', 'ol', 'dl', 'table', 'tr', 'th', 'td'
+        'html', 'head', 'body', 'a', 'div', 'p', 'ul', 'li', 'ol', 'dl', 'table', 'tr', 'th', 'td'
     ];
 
-    public static $tagAttrs = [ 'id', 'class', 'style', 'type', 'href', 'src' ];
+    public static $tagAttrs = ['id', 'class', 'style', 'type', 'href', 'src'];
 
     /**
      * @param $name
@@ -37,14 +37,15 @@ class Html
     {
         return in_array(trim($name), static::$aloneTags);
     }
+
     /**
      * link tag
      * @param array $attrs
      * @return string
      */
-    public static function link(array $attrs=[])
+    public static function link(array $attrs = [])
     {
-        return static::tag('link',null,$attrs);
+        return static::tag('link', null, $attrs);
     }
 
     /**
@@ -53,16 +54,16 @@ class Html
      * @param array $attrs
      * @return string
      */
-    public static function css($href,  array $attrs=[])
+    public static function css($href, array $attrs = [])
     {
         $attrs = array_merge([
             'type' => "text/css",
-            'rel'  => 'stylesheet',
+            'rel' => 'stylesheet',
             'href' => $href,
         ],
-            $attrs );
+            $attrs);
 
-        return static::tag('link',null,$attrs);
+        return static::tag('link', null, $attrs);
     }
 
     /**
@@ -71,13 +72,14 @@ class Html
      * @param array $attrs
      * @return string
      */
-    public static function style($content,  array $attrs=[])
+    public static function style($content, array $attrs = [])
     {
-        $attrs = array_merge( ['type' =>"text/css"], $attrs );
+        $attrs = array_merge(['type' => "text/css"], $attrs);
 
-        return static::tag('style', PHP_EOL . trim($content) . PHP_EOL,$attrs);
+        return static::tag('style', PHP_EOL . trim($content) . PHP_EOL, $attrs);
     }
-    public static function cssCode($content,  array $attrs=[])
+
+    public static function cssCode($content, array $attrs = [])
     {
         return static::style($content, $attrs);
     }
@@ -88,16 +90,16 @@ class Html
      * @param array $attrs
      * @return string
      */
-    public static function script($src, array $attrs=[])
+    public static function script($src, array $attrs = [])
     {
         $attrs = array_merge(
             [
                 'type' => 'text/javascript',
                 'src' => $src
             ],
-            $attrs );
+            $attrs);
 
-        return static::tag('script',null,$attrs);
+        return static::tag('script', null, $attrs);
     }
 
     /**
@@ -106,13 +108,14 @@ class Html
      * @param array $attrs
      * @return string
      */
-    public static function scriptCode($content=null, array $attrs=[])
+    public static function scriptCode($content = null, array $attrs = [])
     {
-        $attrs = array_merge( array('type' => 'text/javascript'), $attrs );
+        $attrs = array_merge(array('type' => 'text/javascript'), $attrs);
 
-        return static::tag('script',  PHP_EOL . trim($content) . PHP_EOL,$attrs);
+        return static::tag('script', PHP_EOL . trim($content) . PHP_EOL, $attrs);
     }
-    public static function jsCode($content=null, array $attrs=[])
+
+    public static function jsCode($content = null, array $attrs = [])
     {
         return static::scriptCode($content, $attrs);
     }
@@ -131,14 +134,14 @@ EOF;
      * @param array $attrs
      * @return string
      */
-    public static function a($content, $url, array $attrs=[])
+    public static function a($content, $url, array $attrs = [])
     {
-        $url   = $url ? : 'javascript:void(0);';
+        $url = $url ?: 'javascript:void(0);';
 
         return static::tag('a', $content, array_merge([
             'href' => $url,
-            'title'=> $content,
-        ], $attrs) );
+            'title' => $content,
+        ], $attrs));
     }
 
     /**
@@ -147,11 +150,11 @@ EOF;
      * @return string
      * @internal param string $alt
      */
-    public static function img($src, array $attrs=[])
+    public static function img($src, array $attrs = [])
     {
-        $newAttrs = array_merge(['src'=>$src], $attrs);
+        $newAttrs = array_merge(['src' => $src], $attrs);
 
-        return static::tag('img',null,$newAttrs);
+        return static::tag('img', null, $newAttrs);
     }
 
     /**
@@ -160,23 +163,23 @@ EOF;
      * @return string
      * @internal param string $type
      */
-    public static function button($content,  array $attrs=[])
+    public static function button($content, array $attrs = [])
     {
-        $attrs = array_merge(['type'=>'button'], $attrs);
+        $attrs = array_merge(['type' => 'button'], $attrs);
 
-        $button = static::tag('button',$content, $attrs);
+        $button = static::tag('button', $content, $attrs);
 
         return $button;
     }
 
 //////////////////////////////////////// form tag ////////////////////////////////////////
 
-    public static function startForm($action='', $method = 'post', array $attrs=[])
+    public static function startForm($action = '', $method = 'post', array $attrs = [])
     {
-        $attrs = array_merge( [
-                'action' => $action,
-                'method' => $method,
-            ], $attrs );
+        $attrs = array_merge([
+            'action' => $action,
+            'method' => $method,
+        ], $attrs);
 
         return static::startTag('form', $attrs);
     }
@@ -193,11 +196,11 @@ EOF;
      * @return string
      * @internal param string $content
      */
-    public static function input($type='text', array $attrs=[])
+    public static function input($type = 'text', array $attrs = [])
     {
-        $attrs = array_merge(['type'=>$type], $attrs);
+        $attrs = array_merge(['type' => $type], $attrs);
 
-        $input = static::tag('input',null, $attrs);
+        $input = static::tag('input', null, $attrs);
 
         return $input;
     }
@@ -208,7 +211,7 @@ EOF;
      * @return string
      * @internal param string $content
      */
-    public static function textarea($content, array $attrs=[])
+    public static function textarea($content, array $attrs = [])
     {
         return static::tag('textarea', $content, $attrs);
     }
@@ -222,17 +225,17 @@ EOF;
      * @param array $attrs
      * @return string
      */
-    public static function tag($name, $content='', array $attrs=[])
+    public static function tag($name, $content = '', array $attrs = [])
     {
-        if ( !$name = strtolower(trim($name)) ) {
+        if (!$name = strtolower(trim($name))) {
             return '';
         }
 
-        if ( isset($attrs['content']) ) {
+        if (isset($attrs['content'])) {
             $content = $attrs['content'];
             unset($attrs['content']);
 
-        } elseif ( isset($attrs['text']) ) {
+        } elseif (isset($attrs['text'])) {
             $content = $attrs['text'];
 
             unset($attrs['text']);
@@ -250,7 +253,7 @@ EOF;
      * @param array $attrs
      * @return string
      */
-    public static function startTag($name, array $attrs=[])
+    public static function startTag($name, array $attrs = [])
     {
         return sprintf("\n<%s %s>", strtolower(trim($name)), static::_buildAttr($attrs));
     }
@@ -266,12 +269,12 @@ EOF;
 
     /**
      * 结束标签
-     * @param  string$name
+     * @param  string $name
      * @return string
      */
     public static function endTag($name)
     {
-        return '</'.strtolower(trim($name)).">\n";
+        return '</' . strtolower(trim($name)) . ">\n";
     }
 
     /**
@@ -280,9 +283,9 @@ EOF;
      * @param string $value
      * @return string
      */
-    protected static function _buildAttr($attr, $value='')
+    protected static function _buildAttr($attr, $value = '')
     {
-        if ( is_string($attr) ) {
+        if (is_string($attr)) {
 
             if (is_bool($value)) {
                 $value = $value ? 'true' : 'false';
@@ -295,7 +298,7 @@ EOF;
             $attrs = [];
 
             foreach ($attr as $name => $val) {
-                $attrs[] = static::_buildAttr($name,$val);
+                $attrs[] = static::_buildAttr($name, $val);
             }
 
             return implode(' ', $attrs);

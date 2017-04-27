@@ -31,7 +31,7 @@ class UrlHelper
     {
         $rule = '/^(http|https|ftp):\/\/([A-Z0-9][A-Z0-9_-]*(?:\.[A-Z0-9][A-Z0-9_-]*)+):?(\d+)?\/?/i';
 
-        return preg_match($rule,$str)===1;
+        return preg_match($rule, $str) === 1;
     }
 
     /**
@@ -42,25 +42,25 @@ class UrlHelper
     {
         $url = trim($url);
 
-        if ( function_exists('curl_init') ) {
+        if (function_exists('curl_init')) {
             // use curl
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_NOBODY, true);
-            curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, 5);//设置超时
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);//设置超时
             curl_setopt($ch, CURLOPT_TIMEOUT, 5);
 
-            if ( false !== curl_exec($ch) ){
+            if (false !== curl_exec($ch)) {
                 $statusCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
                 return $statusCode === 200;
             }
-        } elseif ( function_exists('get_headers') ) {
+        } elseif (function_exists('get_headers')) {
             $headers = get_headers($url, 1);
 
             return strpos($headers[0], 200) > 0;
         } else {
             $opts = [
-                'http'=> ['timeout' => 5,]
+                'http' => ['timeout' => 5,]
             ];
             $context = stream_context_create($opts);
             $resource = @file_get_contents($url, false, $context);
@@ -72,26 +72,26 @@ class UrlHelper
     }
 
     // Build arrays of values we need to decode before parsing
-    protected static  $entities       = array(
+    protected static $entities = array(
         '%21', '%2A', '%27', '%28', '%29', '%3B', '%3A', '%40', '%26',
         '%3D', '%24', '%2C', '%2F', '%3F', '%23', '%5B', '%5D'
     );
 
-    protected static $replacements   = array(
-        '!'  , '*'  , "'"  ,  '(' ,  ')' ,  ';' ,  ':' ,  '@' ,  '&' ,
-        '='  , '$'  , ','  ,  '/' ,  '?' ,  '#' ,  '[' ,  ']'
+    protected static $replacements = array(
+        '!', '*', "'", '(', ')', ';', ':', '@', '&',
+        '=', '$', ',', '/', '?', '#', '[', ']'
     );
 
     public static function parseUrl($url)
     {
-        $result         = [];
+        $result = [];
 
         // Create encoded URL with special URL characters decoded so it can be parsed
         // All other characters will be encoded
-        $encodedURL     = str_replace(self::$entities, self::$replacements, urlencode($url));
+        $encodedURL = str_replace(self::$entities, self::$replacements, urlencode($url));
 
         // Parse the encoded URL
-        $encodedParts   = parse_url($encodedURL);
+        $encodedParts = parse_url($encodedURL);
 
         // Now, decode each value of the resulting array
         if ($encodedParts) {
@@ -115,16 +115,16 @@ class UrlHelper
      */
     public static function encode($url)
     {
-        $url        = trim($url);
+        $url = trim($url);
 
-        if (empty($url) || !is_string($url) ) {
+        if (empty($url) || !is_string($url)) {
             return $url;
         }
 
         // 若已被编码的url，将被解码，再继续重新编码
-        $url       = urldecode($url);
+        $url = urldecode($url);
         $encodeUrl = urlencode($url);
-        $encodeUrl = str_replace( self::$entities, self::$replacements, $encodeUrl);
+        $encodeUrl = str_replace(self::$entities, self::$replacements, $encodeUrl);
 
         return $encodeUrl;
     }
@@ -141,19 +141,19 @@ class UrlHelper
      */
     public static function encode2($url)
     {
-        $url         = trim($url);
+        $url = trim($url);
 
-        if (!$url || !is_string($url) ) {
+        if (!$url || !is_string($url)) {
             return $url;
         }
 
         // 若已被编码的url，将被解码，再继续重新编码
-        $url         = urldecode($url);
-        $encodeUrl   = rawurlencode(mb_convert_encoding($url, 'utf-8'));
+        $url = urldecode($url);
+        $encodeUrl = rawurlencode(mb_convert_encoding($url, 'utf-8'));
 
         // $url  = rawurlencode($url);
 
-        $encodeUrl = str_replace( self::$entities, self::$replacements, $encodeUrl);
+        $encodeUrl = str_replace(self::$entities, self::$replacements, $encodeUrl);
 
         return $encodeUrl;
     }

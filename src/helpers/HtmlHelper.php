@@ -21,7 +21,7 @@ class HtmlHelper
      * @return string the encoded data
      * @see http://www.php.net/manual/en/function.htmlspecialchars.php
      */
-    public static function encode($text, $charset= 'utf-8')
+    public static function encode($text, $charset = 'utf-8')
     {
         return htmlspecialchars($text, ENT_QUOTES, $charset);
     }
@@ -34,7 +34,7 @@ class HtmlHelper
      */
     public static function decode($text)
     {
-        return htmlspecialchars_decode($text,ENT_QUOTES);
+        return htmlspecialchars_decode($text, ENT_QUOTES);
     }
 
     /**
@@ -44,17 +44,17 @@ class HtmlHelper
      * @return array the encoded data
      * @see http://www.php.net/manual/en/function.htmlspecialchars.php
      */
-    public static function encodeArray($data, $charset= 'utf-8')
+    public static function encodeArray($data, $charset = 'utf-8')
     {
         $d = [];
 
-        foreach($data as $key=>$value) {
+        foreach ($data as $key => $value) {
             if (is_string($key)) {
-                $key = htmlspecialchars($key,ENT_QUOTES,$charset);
+                $key = htmlspecialchars($key, ENT_QUOTES, $charset);
             }
 
             if (is_string($value)) {
-                $value = htmlspecialchars($value,ENT_QUOTES,$charset);
+                $value = htmlspecialchars($value, ENT_QUOTES, $charset);
             } elseif (is_array($value)) {
                 $value = static::encodeArray($value);
             }
@@ -68,7 +68,7 @@ class HtmlHelper
     /**
      * Strip img-tags from string
      *
-     * @param   string  $string  Sting to be cleaned.
+     * @param   string $string Sting to be cleaned.
      *
      * @return  string  Cleaned string
      */
@@ -80,7 +80,7 @@ class HtmlHelper
     /**
      * Strip iframe-tags from string
      *
-     * @param   string  $string  Sting to be cleaned.
+     * @param   string $string Sting to be cleaned.
      *
      * @return  string  Cleaned string
      */
@@ -118,18 +118,18 @@ class HtmlHelper
      * @param bool|true $onlySrc
      * @return array
      */
-    public function fetchImgSrc($html, $onlySrc=true)
+    public function fetchImgSrc($html, $onlySrc = true)
     {
         // $preg = '/<img.*?src=[\"|\']?(.*?)[\"|\']?\s.*>/i';
         $preg = '/<img.+src=\"(:?.+.+\.(?:jpg|gif|bmp|bnp|png)\"?).+>/i';
 
         preg_match_all($preg, trim($html), $imgArr);
 
-        if ( !$imgArr ) {
+        if (!$imgArr) {
             return [];
         }
 
-        if ( $onlySrc ) {
+        if ($onlySrc) {
             return array_key_exists(1, $imgArr) ? $imgArr[1] : [];
         }
 

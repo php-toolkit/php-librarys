@@ -26,7 +26,7 @@ class BDApi
      */
     public static function ipInfo($ip, $apikey)
     {
-        $url = self::OPEN_API. '/iplookupservice/iplookup';
+        $url = self::OPEN_API . '/iplookupservice/iplookup';
 
         return self::send($url, ['ip' => $ip], ["apikey: $apikey"]);
     }
@@ -50,7 +50,7 @@ class BDApi
      */
     public static function mobilePhoneInfo($mobilephone, $apikey)
     {
-        $url = self::OPEN_API. '/mobilephoneservice/mobilephone';
+        $url = self::OPEN_API . '/mobilephoneservice/mobilephone';
 
         return self::send($url, ['tel' => $mobilephone], ["apikey: $apikey"]);
     }
@@ -77,7 +77,7 @@ class BDApi
      */
     public static function mobileNumberInfo($mobilenumber, $apikey)
     {
-        $url = self::OPEN_API. '/mobilenumber/mobilenumber';
+        $url = self::OPEN_API . '/mobilenumber/mobilenumber';
 
         return self::send($url, ['tel' => $mobilenumber], ["apikey: $apikey"]);
     }
@@ -95,7 +95,7 @@ class BDApi
      */
     public static function lotteryList($lotteryType, $apikey)
     {
-        $url = self::OPEN_API. '/lottery/lotterylist';
+        $url = self::OPEN_API . '/lottery/lotterylist';
 
         return self::send($url, ['lotterytype' => $lotteryType], ["apikey: $apikey"]);
     }
@@ -110,17 +110,17 @@ class BDApi
      */
     public static function lotteryQuery($lotteryCode, $apikey, $recordcnt = 2)
     {
-        $url = self::OPEN_API. 'lottery/lotteryquery';
+        $url = self::OPEN_API . 'lottery/lotteryquery';
 
         return self::send($url, [
             'lotterycode' => $lotteryCode,
-            'recordcnt'   => $recordcnt,
+            'recordcnt' => $recordcnt,
         ], ["apikey: $apikey"]);
     }
 
     protected static function send($url, array $params = [], array $headers = [])
     {
-        $res = CurlHelper::get($url, $params , $headers);
+        $res = CurlHelper::get($url, $params, $headers);
 
         return json_decode($res, true);
     }

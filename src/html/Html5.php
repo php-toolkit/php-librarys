@@ -20,11 +20,11 @@ class Html5 extends Html
      * @param array $attrs
      * @return string
      */
-    public static function style($content,  array $attrs=[])
+    public static function style($content, array $attrs = [])
     {
         // $attrs = array_merge( ['type' =>"text/css"], $attrs );
 
-        return static::tag('style', PHP_EOL . trim($content) . PHP_EOL,$attrs);
+        return static::tag('style', PHP_EOL . trim($content) . PHP_EOL, $attrs);
     }
 
     /**
@@ -32,13 +32,13 @@ class Html5 extends Html
      * @param array $attrs
      * @return string
      */
-    public static function css($href,  array $attrs=[])
+    public static function css($href, array $attrs = [])
     {
         $attrs = array_merge([
             'href' => $href,
-        ], $attrs );
+        ], $attrs);
 
-        return static::tag('link',null,$attrs);
+        return static::tag('link', null, $attrs);
     }
 
     /**
@@ -47,9 +47,9 @@ class Html5 extends Html
      * @param array $attrs
      * @return string
      */
-    public static function scriptCode($content=null, array $attrs=[])
+    public static function scriptCode($content = null, array $attrs = [])
     {
-        return static::tag('script',  PHP_EOL . trim($content) . PHP_EOL,$attrs);
+        return static::tag('script', PHP_EOL . trim($content) . PHP_EOL, $attrs);
     }
 
     /**
@@ -58,12 +58,12 @@ class Html5 extends Html
      * @param array $attrs
      * @return string
      */
-    public static function script($src, array $attrs=[])
+    public static function script($src, array $attrs = [])
     {
         $attrs = array_merge([
-                'src' => $src
-            ], $attrs );
+            'src' => $src
+        ], $attrs);
 
-        return static::tag('script',null,$attrs);
+        return static::tag('script', null, $attrs);
     }
 }

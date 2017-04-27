@@ -17,7 +17,7 @@ class FormatHelper
 {
     /**
      * Replaces &amp; with & for XHTML compliance
-     * @param   string  $text  Text to process
+     * @param   string $text Text to process
      * @return  string  Processed string.
      */
     static public function ampReplace($text)
@@ -35,7 +35,7 @@ class FormatHelper
     /**
      * Cleans text of all formatting and scripting code
      *
-     * @param   string  &$text  Text to clean
+     * @param   string &$text Text to clean
      *
      * @return  string  Cleaned text.
      */
@@ -67,7 +67,7 @@ class FormatHelper
             return '0';
         }
 
-        $base     = log($size) / log(1024);
+        $base = log($size) / log(1024);
         $suffixes = array('b', 'k', 'M', 'G', 'T');
         $floorBase = floor($base);
 
@@ -111,7 +111,7 @@ class FormatHelper
         }
 
         $value_length = strlen($value);
-        $qty = (int)substr($value, 0, $value_length - 1 );
+        $qty = (int)substr($value, 0, $value_length - 1);
         $unit = StringHelper::strtolower(substr($value, $value_length - 1));
         switch ($unit) {
             case 'k':

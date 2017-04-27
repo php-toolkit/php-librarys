@@ -26,15 +26,22 @@ interface CurlInterface
 
     // ssl auth type
     const SSL_TYPE_CERT = 'cert';
-    const SSL_TYPE_KEY  = 'key';
+    const SSL_TYPE_KEY = 'key';
 
     public function get($url, $params = [], array $headers = [], array $options = []);
+
     public function post($url, $data = [], array $headers = [], array $options = []);
+
     public function put($url, $data = [], array $headers = [], array $options = []);
+
     public function patch($url, $data = [], array $headers = [], array $options = []);
+
     public function delete($url, $data = [], array $headers = [], array $options = []);
+
     public function options($url, $data = [], array $headers = [], array $options = []);
+
     public function head($url, $params = [], array $headers = [], array $options = []);
+
     public function trace($url, $params = [], array $headers = [], array $options = []);
 
     /**
@@ -68,6 +75,7 @@ interface CurlInterface
      * @return $this
      */
     public function setHeaders(array $headers, $override = false);
+
     public function getHeaders($onlyValues = false);
 
     /**
@@ -76,6 +84,7 @@ interface CurlInterface
      * @return $this
      */
     public function setOptions(array $options);
+
     public function getOptions();
 
     /**

@@ -6,6 +6,7 @@
  * Time: 10:35
  * Uesd: 主要功能是 hi
  */
+
 namespace inhere\library\helpers;
 
 /**
@@ -40,7 +41,7 @@ class ObjectHelper
         } elseif (is_object($data)) {
             $data = get_object_vars($data);
         } else {
-            $data = (array) $data;
+            $data = (array)$data;
         }
 
         if ($recursive) {
@@ -55,7 +56,7 @@ class ObjectHelper
     }
 
     //定义一个用来序列化对象的函数
-    public static function encode( $obj )
+    public static function encode($obj)
     {
         return base64_encode(gzcompress(serialize($obj)));
     }

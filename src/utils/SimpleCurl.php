@@ -103,7 +103,7 @@ class SimpleCurl
 
     /**
      * make Multi
-     * @param  array  $data
+     * @param  array $data
      * @return self
      */
     public function makeMulti(array $data)
@@ -123,7 +123,7 @@ class SimpleCurl
 
     public function exec($mh = null)
     {
-        if (!$mh = $mh ?:$this->mh) {
+        if (!$mh = $mh ?: $this->mh) {
             return false;
         }
 
@@ -162,7 +162,7 @@ class SimpleCurl
         $baseUrl = $this->getBaseUrl();
 
         // is a url part.
-        if (0 !== strpos($url, 'http:') && 0 !== strpos($url, 'https:') && 0 !== strpos($url, '//') ) {
+        if (0 !== strpos($url, 'http:') && 0 !== strpos($url, 'https:') && 0 !== strpos($url, '//')) {
             $url = $baseUrl . $url;
         }
 

@@ -40,7 +40,7 @@ class CurlHelper
     public static function fetchImg($imgUrl, $savePath, $rename = '')
     {
         // e.g. http://static.oschina.net/uploads/user/277/554046_50.jpg?t=34512323
-        if ( strpos($imgUrl, '?')) {
+        if (strpos($imgUrl, '?')) {
             [$real,] = explode('?', $imgUrl, 2);
         } else {
             $real = $imgUrl;
@@ -49,17 +49,17 @@ class CurlHelper
         $last = trim(strrchr($real, '/'), '/');
 
         // special url e.g http://img.blog.csdn.net/20150929103749499
-        if ( false === strpos($last, '.')) {
+        if (false === strpos($last, '.')) {
             $suffix = '.jpg';
-            $name   = $rename ? : $last;
+            $name = $rename ?: $last;
         } else {
             $suffix = File::getSuffix($real) ?: '.jpg';
-            $name   = $rename ? : File::getName($real, 1);
+            $name = $rename ?: File::getName($real, 1);
         }
 
-        $imgFile = $savePath . '/' . $name .$suffix;
+        $imgFile = $savePath . '/' . $name . $suffix;
 
-        if ( file_exists($imgFile) ) {
+        if (file_exists($imgFile)) {
             return $imgFile;
         }
         $ch = curl_init();
@@ -108,9 +108,9 @@ class CurlHelper
     /**
      * send POST request
      *
-     * @param string        $url     submit url
-     * @param array|string  $data    post data. array: form data, string: json data
-     * @param array         $headers HEADER info
+     * @param string $url submit url
+     * @param array|string $data post data. array: form data, string: json data
+     * @param array $headers HEADER info
      * @return string
      */
     public static function post($url, array $data = [], array $headers = [])
@@ -141,7 +141,7 @@ class CurlHelper
     {
         $ret = '';
         while ($retries--) {
-            if ( ($ret = curl_exec($ch)) === false) {
+            if (($ret = curl_exec($ch)) === false) {
                 $curlErrNo = curl_errno($ch);
 
                 if (false === in_array($curlErrNo, self::$canRetryErrorCodes, true) || !$retries) {

@@ -16,13 +16,13 @@ namespace inhere\library\helpers;
 abstract class DataHelper
 {
     /**
-    * Get a value from $_POST / $_GET
-    * if unavailable, take a default value
-    *
-    * @param string $key Value key
-    * @param mixed $default_value (optional)
-    * @return mixed Value
-    */
+     * Get a value from $_POST / $_GET
+     * if unavailable, take a default value
+     *
+     * @param string $key Value key
+     * @param mixed $default_value (optional)
+     * @return mixed Value
+     */
     public static function getValue($key, $default_value = false)
     {
         if (!$key || !is_string($key)) {
@@ -145,7 +145,7 @@ abstract class DataHelper
             return trim($data);
         }
 
-        array_walk_recursive($data, function( &$value) {
+        array_walk_recursive($data, function (&$value) {
             $value = trim($value);
         });
 
@@ -164,15 +164,15 @@ abstract class DataHelper
      *    ]
      * @return array
      */
-    public static function buildQueryParams($data, $separator='/')
+    public static function buildQueryParams($data, $separator = '/')
     {
-        $arrData = is_string($data) ? explode( $separator , $data) : $data;
-        $arrData = array_values(array_filter( $arrData ));
-        $newArr  = [];
-        $count   = count($arrData); #统计
+        $arrData = is_string($data) ? explode($separator, $data) : $data;
+        $arrData = array_values(array_filter($arrData));
+        $newArr = [];
+        $count = count($arrData); #统计
 
         // $arrData 中的 奇数位--变为键，偶数位---变为前一个奇数 键的值 array('前一个奇数'=>'偶数位')
-        for( $i=0; $i<$count; $i+=2 ) {
+        for ($i = 0; $i < $count; $i += 2) {
             $newArr[$arrData[$i]] = $arrData[$i + 1] ?? '';
         }
 
@@ -186,18 +186,18 @@ abstract class DataHelper
      * 由于 strip_tags() 无法实际验证 HTML，不完整或者破损标签将导致更多的数据被删除。
      * $allow_tags 允许的标记,多个以空格隔开
      **/
-    public static function stripTags ( $data , $allow_tags=null )
+    public static function stripTags($data, $allow_tags = null)
     {
-        if ( is_array ( $data ) ){
+        if (is_array($data)) {
 
-            foreach($data as $k => $v){
-                $data[$k] = self::stripTags( $v , $allow_tags );
+            foreach ($data as $k => $v) {
+                $data[$k] = self::stripTags($v, $allow_tags);
             }
 
-            return $data ;
+            return $data;
         }
-        if ( is_string ( $data ) || is_numeric($data)){
-            return strip_tags ( $data , $allow_tags );
+        if (is_string($data) || is_numeric($data)) {
+            return strip_tags($data, $allow_tags);
         }
 
         return false;
@@ -212,24 +212,24 @@ abstract class DataHelper
      * htmlspecialchars() <--> htmlspecialchars_decode() — 将特殊的 HTML 实体转换回普通字符
      * ENT_COMPAT ENT_QUOTES ENT_NOQUOTES ENT_HTML401 ENT_XML1 ENT_XHTML ENT_HTML5
      * */
-    public static function htmlEscape($data, $type = 0 ,$encoding = 'UTF-8'  )
+    public static function htmlEscape($data, $type = 0, $encoding = 'UTF-8')
     {
-        if ( is_array($data) ){
+        if (is_array($data)) {
 
-            foreach($data as $k=>$v){
-                $data[$k] = self::htmlEscape($data, $type ,$encoding );
+            foreach ($data as $k => $v) {
+                $data[$k] = self::htmlEscape($data, $type, $encoding);
             }
 
         } else {
 
-            if ( !$type ){//默认使用  htmlspecialchars()
-                $data = htmlspecialchars($data,ENT_QUOTES,$encoding);
+            if (!$type) {//默认使用  htmlspecialchars()
+                $data = htmlspecialchars($data, ENT_QUOTES, $encoding);
             } else {
-                $data = htmlentities($data,ENT_QUOTES, $encoding);
+                $data = htmlentities($data, ENT_QUOTES, $encoding);
             }
 
             //如‘&#x5FD7;’这样的16进制的html字符，为了防止这样的字符被错误转译，使用正则进行匹配，把这样的字符又转换回来。
-            if ( strpos($data, '&#') ) {
+            if (strpos($data, '&#')) {
                 $data = preg_replace('/&((#(\d{3,5}|x[a-fA-F0-9]{4}));)/',
                     '&\\1', $data);
             }
@@ -237,17 +237,18 @@ abstract class DataHelper
 
         return $data;
     }
-     //去掉html转义
-    public static function htmlUnescap($data, $type =0 ,$encoding = 'UTF-8' )
-    {
-        if ( is_array($data) ){
 
-            foreach($data as $k=>$v){
-                $data[$k] = self::htmlUnescap($data, $type ,$encoding );
+    //去掉html转义
+    public static function htmlUnescap($data, $type = 0, $encoding = 'UTF-8')
+    {
+        if (is_array($data)) {
+
+            foreach ($data as $k => $v) {
+                $data[$k] = self::htmlUnescap($data, $type, $encoding);
             }
 
         } else {
-            if ( !$type ){//默认使用  htmlspecialchars_decode()
+            if (!$type) {//默认使用  htmlspecialchars_decode()
                 $data = htmlspecialchars_decode($data, ENT_QUOTES);
             } else {
                 $data = html_entity_decode($data, ENT_QUOTES, $encoding);
@@ -267,11 +268,11 @@ abstract class DataHelper
      * @param int $level 增强
      * @return array|string
      */
-    public static function slashes($data , $escape=1, $level=0 )
+    public static function slashes($data, $escape = 1, $level = 0)
     {
-        if (is_array($data)){
+        if (is_array($data)) {
             foreach ((array)$data as $key => $value) {
-                $data[$key] = self::slashes($value ,$escape,$level);
+                $data[$key] = self::slashes($value, $escape, $level);
             }
 
             return $data;
@@ -279,7 +280,7 @@ abstract class DataHelper
 
         $data = trim($data);
 
-        if (!$escape){
+        if (!$escape) {
             return stripslashes($data);
         }
 
@@ -287,7 +288,7 @@ abstract class DataHelper
 
         if ($level) {
             // 两个str_replace替换转义目的是防止黑客转换SQL编码进行攻击。
-            $data = str_replace(['_', '%'],["\_","\%"],$data);    // 转义掉_ %
+            $data = str_replace(['_', '%'], ["\_", "\%"], $data);    // 转义掉_ %
         }
 
         return $data;
@@ -297,7 +298,7 @@ abstract class DataHelper
     {
         return strtr($str, array(
             "\0" => '',
-            "'"  => '&#39;',
+            "'" => '&#39;',
             '"' => '&#34;',
             "\\" => '&#92;',
             // more secure
@@ -313,22 +314,22 @@ abstract class DataHelper
      * @param $out_charset
      * @return array|string
      */
-    public static function changeEncode($data ,$in_charset='GBK' , $out_charset='UTF-8' )
+    public static function changeEncode($data, $in_charset = 'GBK', $out_charset = 'UTF-8')
     {
-        if ( is_array($data) ){
+        if (is_array($data)) {
 
             foreach ($data as $key => $value) {
-                $data[$key] = self::changeEncode($value,$in_charset,$out_charset);
+                $data[$key] = self::changeEncode($value, $in_charset, $out_charset);
             }
 
             return $data;
         }
 
         if (function_exists('mb_convert_encoding')) {
-            return mb_convert_encoding($data,$out_charset,$in_charset);
+            return mb_convert_encoding($data, $out_charset, $in_charset);
         }
 
-        return iconv ( $in_charset , $out_charset. '/' . '/IGNORE', $data );
+        return iconv($in_charset, $out_charset . '/' . '/IGNORE', $data);
     }
 
 }

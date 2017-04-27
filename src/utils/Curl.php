@@ -34,14 +34,14 @@ class Curl implements CurlInterface
 {
     private static $supportedMethods = [
         // method => allow post data
-        'GET'     => false,
-        'POST'    => true,
-        'PUT'     => true,
-        'PATCH'   => true,
-        'DELETE'  => false,
-        'HEAD'    => false,
+        'GET' => false,
+        'POST' => true,
+        'PUT' => true,
+        'PATCH' => true,
+        'DELETE' => false,
+        'HEAD' => false,
         'OPTIONS' => false,
-        'TRACE'   => false,
+        'TRACE' => false,
     ];
 
     /**
@@ -50,7 +50,7 @@ class Curl implements CurlInterface
      */
     private $_config = [
         // open debug mode
-        'debug'   => false,
+        'debug' => false,
 
         // if 'debug = true ', is valid. will output log to the file. if is empty, output to STDERR.
         'logFile' => '',
@@ -59,7 +59,7 @@ class Curl implements CurlInterface
         'baseUri' => '',
 
         // retry times, when an error occurred.
-        'retry'   => 0,
+        'retry' => 0,
     ];
 
     /**
@@ -75,16 +75,16 @@ class Curl implements CurlInterface
 
         // true curl_exec() 会将头文件的信息作为数据流输出到响应的最前面，此时可用 [[self::parseResponse()]] 解析。
         // false curl_exec() 返回的响应就只有body
-        CURLOPT_HEADER         => true,
+        CURLOPT_HEADER => true,
 
         // enable debug
-        CURLOPT_VERBOSE        => false,
+        CURLOPT_VERBOSE => false,
 
         // auto add REFERER
-        CURLOPT_AUTOREFERER    => true,
+        CURLOPT_AUTOREFERER => true,
 
         CURLOPT_CONNECTTIMEOUT => 30,
-        CURLOPT_TIMEOUT        => 30,
+        CURLOPT_TIMEOUT => 30,
 
         CURLOPT_SSL_VERIFYPEER => false,
         // isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
@@ -142,9 +142,9 @@ class Curl implements CurlInterface
     private $_responseMeta = [
         // http status code
         'status' => 200,
-        'errno'  => 0,
-        'error'  => '',
-        'info'   => '',
+        'errno' => 0,
+        'error' => '',
+        'info' => '',
     ];
 
     /**
@@ -246,9 +246,9 @@ class Curl implements CurlInterface
 
     /**
      * File upload
-     * @param string $url       The target url
-     * @param string $field     The post field name
-     * @param string $filePath  The file path
+     * @param string $url The target url
+     * @param string $field The post field name
+     * @param string $filePath The file path
      * @param string $mimeType The post file mime type
      * param string $postFilename The post file name
      * @return mixed
@@ -261,16 +261,16 @@ class Curl implements CurlInterface
         }
 
         // create file
-        if ( function_exists('curl_file_create') ) {
+        if (function_exists('curl_file_create')) {
             $file = curl_file_create($filePath, $mimeType); // , $postFilename
         } else {
             $this->setOption(CURLOPT_SAFE_UPLOAD, true);
             $file = "@{$filePath};type={$mimeType}"; // ;filename={$postFilename}
         }
 
-        $headers = [ 'Content-Type' => 'multipart/form-data' ];
+        $headers = ['Content-Type' => 'multipart/form-data'];
 
-        return $this->post($url, [ $field => $file], $headers);
+        return $this->post($url, [$field => $file], $headers);
     }
 
     /**
@@ -282,7 +282,7 @@ class Curl implements CurlInterface
      */
     public function download($url, $saveTo)
     {
-        if ( ($fp = fopen($saveTo, 'wb')) === false) {
+        if (($fp = fopen($saveTo, 'wb')) === false) {
             throw new \RuntimeException('Failed to save the content', __LINE__);
         }
 
@@ -305,7 +305,7 @@ class Curl implements CurlInterface
     public function downImage($imgUrl, $saveTo, $rename = '')
     {
         // e.g. http://static.oschina.net/uploads/user/277/554046_50.jpg?t=34512323
-        if ( strpos($imgUrl, '?')) {
+        if (strpos($imgUrl, '?')) {
             [$real,] = explode('?', $imgUrl, 2);
         } else {
             $real = $imgUrl;
@@ -314,18 +314,18 @@ class Curl implements CurlInterface
         $last = trim(strrchr($real, '/'), '/');
 
         // special url e.g http://img.blog.csdn.net/20150929103749499
-        if ( false === strpos($last, '.')) {
+        if (false === strpos($last, '.')) {
             $suffix = '.jpg';
-            $name   = $rename ? : $last;
+            $name = $rename ?: $last;
         } else {
-            $info = pathinfo($real,PATHINFO_EXTENSION | PATHINFO_FILENAME);
-            $suffix = $info['extension']  ?: '.jpg';
-            $name   = $rename ? : $info['filename'];
+            $info = pathinfo($real, PATHINFO_EXTENSION | PATHINFO_FILENAME);
+            $suffix = $info['extension'] ?: '.jpg';
+            $name = $rename ?: $info['filename'];
         }
 
-        $imgFile = $saveTo . '/' . $name .$suffix;
+        $imgFile = $saveTo . '/' . $name . $suffix;
 
-        if ( file_exists($imgFile) ) {
+        if (file_exists($imgFile)) {
             return $imgFile;
         }
 
@@ -347,7 +347,7 @@ class Curl implements CurlInterface
     {
         $type = strtoupper($type);
 
-        if ( !isset(self::$supportedMethods[$type]) ) {
+        if (!isset(self::$supportedMethods[$type])) {
             throw new \InvalidArgumentException("The method type [$type] is not supported!");
         }
 
@@ -363,7 +363,7 @@ class Curl implements CurlInterface
         if ($data) {
 
             // allow post data
-            if ( self::$supportedMethods[$type] ) {
+            if (self::$supportedMethods[$type]) {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
             } else {
                 $url .= (strpos($url, '?') ? '&' : '?') . http_build_query($data);
@@ -379,7 +379,7 @@ class Curl implements CurlInterface
 
         // execute
         while ($retries--) {
-            if ( false === ($response = curl_exec($ch)) ) {
+            if (false === ($response = curl_exec($ch))) {
                 $curlErrNo = curl_errno($ch);
 
                 if (false === in_array($curlErrNo, self::$canRetryErrorCodes, true) || !$retries) {
@@ -404,7 +404,7 @@ class Curl implements CurlInterface
         // get http status code
         $this->_responseMeta['status'] = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        if( $this->isDebug() ) {
+        if ($this->isDebug()) {
             $this->_responseMeta['info'] = curl_getinfo($ch);
         }
 
@@ -422,11 +422,11 @@ class Curl implements CurlInterface
         $this->resetResponse();
 
         // open debug
-        if ( $this->isDebug() ) {
+        if ($this->isDebug()) {
             $this->_options[CURLOPT_VERBOSE] = true;
 
             // redirect exec log to logFile.
-            if ( $logFile = $this->_config['logFile'] ) {
+            if ($logFile = $this->_config['logFile']) {
                 $this->_options[CURLOPT_STDERR] = $logFile;
             }
         }
@@ -438,12 +438,12 @@ class Curl implements CurlInterface
         $this->setHeaders($headers);
 
         // append http headers to options
-        if ( $this->_headers ) {
+        if ($this->_headers) {
             $this->_options[CURLOPT_HTTPHEADER] = $this->getHeaders(true);
         }
 
         // append http cookies to options
-        if ( $this->_cookies ) {
+        if ($this->_cookies) {
             $this->_options[CURLOPT_COOKIE] = http_build_query($this->_cookies, '', '; ');
         }
     }
@@ -451,12 +451,12 @@ class Curl implements CurlInterface
     protected function parseResponse()
     {
         // have been parsed || no response data
-        if ( $this->_responseParsed || !($response = $this->_response) ) {
+        if ($this->_responseParsed || !($response = $this->_response)) {
             return false;
         }
 
         // if no return headers data
-        if ( false === $this->getOption(CURLOPT_HEADER, false) ) {
+        if (false === $this->getOption(CURLOPT_HEADER, false)) {
             $this->_responseBody = $response;
             $this->_responseParsed = true;
 
@@ -473,7 +473,7 @@ class Curl implements CurlInterface
 
         # Include all received headers in the $headers_string
         while (count($matches[0])) {
-            $headers_string = array_pop($matches[0]).$headers_string;
+            $headers_string = array_pop($matches[0]) . $headers_string;
         }
 
         # Remove all headers from the response body
@@ -535,6 +535,7 @@ class Curl implements CurlInterface
     {
         return $this->getResponseMeta($key);
     }
+
     public function getResponseMeta($key = null)
     {
         if ($key) {
@@ -551,6 +552,7 @@ class Curl implements CurlInterface
     {
         return $this->getResponseBody();
     }
+
     public function getResponseBody()
     {
         $this->parseResponse();
@@ -563,13 +565,13 @@ class Curl implements CurlInterface
      */
     public function getArrayData()
     {
-        if ( !$this->getResponseBody() ) {
+        if (!$this->getResponseBody()) {
             return false;
         }
 
         $data = json_decode($this->_responseBody, true);
 
-        if ( json_last_error() > 0 ) {
+        if (json_last_error() > 0) {
             return false;
         }
 
@@ -675,9 +677,9 @@ class Curl implements CurlInterface
         $this->_responseMeta = [
             // http status code
             'status' => 200,
-            'errno'  => 0,
-            'error'  => '',
-            'info'   => '',
+            'errno' => 0,
+            'error' => '',
+            'info' => '',
         ];
 
         return $this;
@@ -691,6 +693,7 @@ class Curl implements CurlInterface
     {
         return $this->resetAll();
     }
+
     public function resetAll()
     {
         $this->_headers = $this->_options = $this->_cookies = [];
@@ -738,6 +741,7 @@ class Curl implements CurlInterface
     {
         return $this->byAjax();
     }
+
     public function byAjax()
     {
         $this->setHeader('X-Requested-With', 'XMLHttpRequest');
@@ -849,16 +853,16 @@ class Curl implements CurlInterface
      */
     public function setSSLAuth($pwd, $file, $authType = self::SSL_TYPE_CERT)
     {
-        if ( $authType !== self::SSL_TYPE_CERT && $authType !== self::SSL_TYPE_KEY ) {
+        if ($authType !== self::SSL_TYPE_CERT && $authType !== self::SSL_TYPE_KEY) {
             throw new \InvalidArgumentException('The SSL auth type only allow: cert|key');
         }
 
-        if ( !file_exists($file) ) {
+        if (!file_exists($file)) {
             $name = $authType === self::SSL_TYPE_CERT ? 'certificate' : 'private key';
             throw new \InvalidArgumentException("The SSL $name file not found: {$file}");
         }
 
-        if ( $authType === self::SSL_TYPE_CERT ) {
+        if ($authType === self::SSL_TYPE_CERT) {
             $this->_options[CURLOPT_SSLCERTPASSWD] = $pwd;
             $this->_options[CURLOPT_SSLCERT] = $file;
         } else {
@@ -913,7 +917,7 @@ class Curl implements CurlInterface
      */
     public function getConfig($name = null, $default = null)
     {
-        if ( $name === null ) {
+        if ($name === null) {
             return $this->_config;
         }
 

@@ -13,15 +13,44 @@ namespace inhere\library\gearman;
  */
 class JobServer
 {
-    protected $channel = 'queue';
+
+    /**
+     * @event PushEvent
+     */
+    const EVENT_BEFORE_PUSH = 'beforePush';
+
+    /**
+     * @event PushEvent
+     */
+    const EVENT_AFTER_PUSH = 'afterPush';
+
+    /**
+     * @event JobEvent
+     */
+    const EVENT_BEFORE_WORK = 'beforeWork';
+
+    /**
+     * @event JobEvent
+     */
+    const EVENT_AFTER_WORK = 'afterWork';
+
+    /**
+     * @event ErrorEvent
+     */
+    const EVENT_AFTER_ERROR = 'afterError';
 
     public $host = '127.0.0.1';
 
     public $port = '4730';
 
-    public function __construct($channel = 'queue')
+    protected $config = [
+    ];
+
+    protected $channel = 'queue';
+
+    public function __construct(array $config = [])
     {
-        $this->channel = $channel;
+        $this->config = $config;
     }
 
     /**
@@ -45,10 +74,10 @@ class JobServer
 
     public function handleJob($payload)
     {
-        $job = $this->serializer->unserialize($payload);
+        $job = unserialize($payload);
 
-        if (!($job instanceof Job)) {
-            throw new \InvalidArgumentException('Message must be ' . Job::class . ' object.');
+        if (!($job instanceof JobInterface)) {
+            throw new \InvalidArgumentException('Message must be ' . JobInterface::class . ' object.');
         }
 
         $error = null;

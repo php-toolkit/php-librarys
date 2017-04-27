@@ -38,7 +38,7 @@ trait TraitGetterSetterAccess
     {
         $getter = 'get' . ucfirst($name);
 
-        if ( method_exists($this, $getter) ) {
+        if (method_exists($this, $getter)) {
             return $this->$getter();
         }
 
@@ -54,7 +54,7 @@ trait TraitGetterSetterAccess
     {
         $setter = 'set' . ucfirst($name);
 
-        if ( method_exists($this, $setter) ) {
+        if (method_exists($this, $setter)) {
             $this->$setter($name, $value);
         }
 

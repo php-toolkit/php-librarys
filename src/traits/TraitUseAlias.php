@@ -28,14 +28,14 @@ trait TraitUseAlias
      * @throws \RuntimeException
      * @return mixed
      */
-    public function alias($alias, $value='')
+    public function alias($alias, $value = '')
     {
         // set
         if ($alias && $value) {
             $this->aliasAndValueCheck($alias, $value);
             $this->aliases[$alias] = trim($value);
 
-        // get
+            // get
         } else {
             return $this->resolveAlias($alias);
         }
@@ -47,7 +47,7 @@ trait TraitUseAlias
     {
         $this->aliasAndValueCheck($alias, $value);
 
-        if ( !isset($this->aliases[$alias]) ) {
+        if (!isset($this->aliases[$alias])) {
             $this->aliases[$alias] = trim($value);
         }
 
@@ -61,7 +61,7 @@ trait TraitUseAlias
      *                      若要用于判断， 可传入 0 '' false
      * @return mixed
      */
-    public function resolveAlias($alias, $default=null)
+    public function resolveAlias($alias, $default = null)
     {
         $default === null && $default = $alias;
 
@@ -74,7 +74,7 @@ trait TraitUseAlias
      */
     protected function aliasAndValueCheck(& $alias, & $value)
     {
-        if ( !$value || !is_string($value) ) {
+        if (!$value || !is_string($value)) {
             throw new \InvalidArgumentException(sprintf(
                 'The 2th parameter must be of type string is not empty, %s given',
                 gettype($value)
@@ -83,8 +83,8 @@ trait TraitUseAlias
 
         $alias = trim($alias);
 
-        if ( in_array($alias, $this->lockedAliases, true)) {
-            throw new \RuntimeException(sprintf('别名：%s , 已被锁定。请设置其他名称。',$alias));
+        if (in_array($alias, $this->lockedAliases, true)) {
+            throw new \RuntimeException(sprintf('别名：%s , 已被锁定。请设置其他名称。', $alias));
         }
     }
 
@@ -138,8 +138,7 @@ trait TraitUseAlias
      */
     public function lockAlias($alias)
     {
-        if ( $alias && !isset($this->lockedAliases[$alias]) )
-        {
+        if ($alias && !isset($this->lockedAliases[$alias])) {
             $this->lockedAliases[] = $alias;
         }
     }

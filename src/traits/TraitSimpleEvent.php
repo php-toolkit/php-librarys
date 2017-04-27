@@ -43,7 +43,7 @@ trait TraitSimpleEvent
      */
     public function on($event, callable $handler, $once = false)
     {
-        if ( $this->isSupportedEvent($event) ) {
+        if ($this->isSupportedEvent($event)) {
             $this->eventHandlers[$event][] = $handler;
             $this->events[$event] = (bool)$once;
         }
@@ -67,20 +67,20 @@ trait TraitSimpleEvent
      */
     public function fire($event, array $args = [])
     {
-        if ( !isset($this->events[$event]) ) {
+        if (!isset($this->events[$event])) {
             return false;
         }
 
         // call event handlers of the event.
         foreach ((array)$this->eventHandlers[$event] as $cb) {
             // return FALSE to stop go on handle.
-            if ( false === call_user_func_array($cb, $args) ) {
+            if (false === call_user_func_array($cb, $args)) {
                 break;
             }
         }
 
         // is a once event, remove it
-        if ( $this->events[$event] ) {
+        if ($this->events[$event]) {
             return $this->removeEvent($event);
         }
 
@@ -96,9 +96,10 @@ trait TraitSimpleEvent
     {
         return $this->removeEvent($event);
     }
+
     public function removeEvent($event)
     {
-        if ( $this->hasEvent($event) ) {
+        if ($this->hasEvent($event)) {
             unset($this->events[$event], $this->eventHandlers[$event]);
 
             return true;
@@ -122,7 +123,7 @@ trait TraitSimpleEvent
      */
     public function isOnce($event)
     {
-        if ( $this->hasEvent($event) ) {
+        if ($this->hasEvent($event)) {
             return $this->events[$event];
         }
 
@@ -136,11 +137,11 @@ trait TraitSimpleEvent
      */
     public function isSupportedEvent($event)
     {
-        if ( !$event || !preg_match('/[a-zA-z][\w-]+/', $event) ) {
+        if (!$event || !preg_match('/[a-zA-z][\w-]+/', $event)) {
             return false;
         }
 
-        if ( $ets = $this->supportedEvents ) {
+        if ($ets = $this->supportedEvents) {
             return in_array($event, $ets, true);
         }
 

@@ -26,20 +26,20 @@ trait TraitSimpleAlias
      * @param string|null $value
      * @return bool|string
      */
-    public static function alias($path, $value=null)
+    public static function alias($path, $value = null)
     {
         // get path by alias
-        if ( is_string($path) && !$value ) {
+        if (is_string($path) && !$value) {
             // don't use alias
-            if ( $path[0] !== '@' ) {
+            if ($path[0] !== '@') {
                 return $path;
             }
-            
+
             $sep = '/';
-            $path = str_replace(['/','\\'], $sep , $path);
+            $path = str_replace(['/', '\\'], $sep, $path);
 
             // only a alias. e.g. @project
-            if ( !strpos($path, $sep) ) {
+            if (!strpos($path, $sep)) {
                 return isset(self::$aliases[$path]) ? self::$aliases[$path] : $path;
             }
 
@@ -47,22 +47,22 @@ trait TraitSimpleAlias
             $realPath = $path;
             list($alias, $other) = explode($sep, $path, 2);
 
-            if ( isset(self::$aliases[$alias]) ) {
+            if (isset(self::$aliases[$alias])) {
                 $realPath = self::$aliases[$alias] . $sep . $other;
             }
 
             return $realPath;
         }
 
-        if ( $path && $value && is_string($path) && is_string($value) ) {
+        if ($path && $value && is_string($path) && is_string($value)) {
             $path = [$path => $value];
         }
 
         // custom set path's alias. e.g: Slim::alias([ 'alias' => 'path' ]);
-        if ( is_array($path) ) {
+        if (is_array($path)) {
             foreach ($path as $alias => $realPath) {
                 // 1th char must is '@'
-                if ( $alias[0] !== '@' ) {
+                if ($alias[0] !== '@') {
                     continue;
                 }
 

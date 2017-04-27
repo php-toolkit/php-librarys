@@ -23,7 +23,7 @@ trait TraitArrayAccess
 {
     /**
      * Checks whether an offset exists in the iterator.
-     * @param   mixed  $offset  The array offset.
+     * @param   mixed $offset The array offset.
      * @return  boolean  True if the offset exists, false otherwise.
      */
     public function offsetExists($offset)
@@ -33,7 +33,7 @@ trait TraitArrayAccess
 
     /**
      * Gets an offset in the iterator.
-     * @param   mixed  $offset  The array offset.
+     * @param   mixed $offset The array offset.
      * @return  mixed  The array value if it exists, null otherwise.
      */
     public function offsetGet($offset)
@@ -43,8 +43,8 @@ trait TraitArrayAccess
 
     /**
      * Sets an offset in the iterator.
-     * @param   mixed  $offset  The array offset.
-     * @param   mixed  $value   The array value.
+     * @param   mixed $offset The array offset.
+     * @param   mixed $value The array value.
      * @return  void
      */
     public function offsetSet($offset, $value)
@@ -54,7 +54,7 @@ trait TraitArrayAccess
 
     /**
      * Unset an offset in the iterator.
-     * @param   mixed  $offset  The array offset.
+     * @param   mixed $offset The array offset.
      * @return  void
      */
     public function offsetUnset($offset)

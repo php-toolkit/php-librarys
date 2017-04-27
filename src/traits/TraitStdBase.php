@@ -33,9 +33,9 @@ trait TraitStdBase
      * @param null|string $fullName
      * @return string
      */
-    final public static function spaceName($fullName=null)
+    final public static function spaceName($fullName = null)
     {
-        $fullName = $fullName ? : self::fullName();
+        $fullName = $fullName ?: self::fullName();
         $fullName = str_replace('\\', '/', $fullName);
 
         return strpos($fullName, '/') ? dirname($fullName) : null;
@@ -46,12 +46,12 @@ trait TraitStdBase
      * @param null|string $fullName
      * @return string
      */
-    final public static function className($fullName=null)
+    final public static function className($fullName = null)
     {
-        $fullName = $fullName ? : self::fullName();
+        $fullName = $fullName ?: self::fullName();
         $fullName = str_replace('\\', '/', $fullName);
 
-        return basename( $fullName );
+        return basename($fullName);
     }
 
     /**
@@ -60,13 +60,13 @@ trait TraitStdBase
      * @param $value
      * @throws SetPropertyException
      */
-    public function __set($name,$value)
+    public function __set($name, $value)
     {
-        $method = 'set' . ucfirst( $name );
+        $method = 'set' . ucfirst($name);
 
-        if ( method_exists($this, $method) ) {
+        if (method_exists($this, $method)) {
             $this->$method($value);
-        } elseif ( method_exists($this, 'get' . ucfirst( $name )) ) {
+        } elseif (method_exists($this, 'get' . ucfirst($name))) {
             throw new SetPropertyException('Setting a Read-only property! ' . get_class($this) . "::{$name}");
         } else {
             throw new SetPropertyException('Setting a Unknown property! ' . get_class($this) . "::{$name}");
@@ -81,17 +81,17 @@ trait TraitStdBase
      */
     public function __get($name)
     {
-        $method = 'get' . ucfirst( $name );
+        $method = 'get' . ucfirst($name);
 
         if (method_exists($this, $method)) {
             return $this->$method();
         }
 
-        if (method_exists($this, 'set' . ucfirst( $name ))) {
-            throw new GetPropertyException('Getting a Write-only property! ' .get_class($this)."::{$name}");
+        if (method_exists($this, 'set' . ucfirst($name))) {
+            throw new GetPropertyException('Getting a Write-only property! ' . get_class($this) . "::{$name}");
         }
 
-        throw new GetPropertyException('Getting a Unknown property! ' .get_class($this)."::{$name}");
+        throw new GetPropertyException('Getting a Unknown property! ' . get_class($this) . "::{$name}");
     }
 
     /**
@@ -100,7 +100,7 @@ trait TraitStdBase
      */
     public function __isset($name)
     {
-        $getter = 'get' . ucfirst( $name );
+        $getter = 'get' . ucfirst($name);
 
         if (method_exists($this, $getter)) {
             return $this->$getter() !== null;
@@ -115,7 +115,7 @@ trait TraitStdBase
      */
     public function __unset($name)
     {
-        $setter = 'set' . ucfirst( $name );
+        $setter = 'set' . ucfirst($name);
 
         if (method_exists($this, $setter)) {
             $this->$setter(null);
@@ -137,7 +137,7 @@ trait TraitStdBase
         //     return call_user_func_array( array($this, $method), (array) $args);
         // }
 
-        throw new UnknownCalledException('Called a Unknown method! ' . get_class($this)."->{$method}()");
+        throw new UnknownCalledException('Called a Unknown method! ' . get_class($this) . "->{$method}()");
     }
 
     /**
@@ -148,9 +148,9 @@ trait TraitStdBase
      */
     static public function __callStatic($method, $args)
     {
-        if (method_exists( get_called_class() , $method) ) {
+        if (method_exists(get_called_class(), $method)) {
 
-            return call_user_func_array( array( get_called_class() , $method), (array) $args);
+            return call_user_func_array(array(get_called_class(), $method), (array)$args);
         }
 
         throw new UnknownCalledException('Called a Unknown static method! [ ' . get_called_class() . "::{$method}()]");

@@ -60,7 +60,7 @@ trait TraitUseOption
             $value = $this->options[$name];
 
             // use strict, check value is empty ?
-            if ( true === $strict || (false !== $strict && $this->isStrict()) ) {
+            if (true === $strict || (false !== $strict && $this->isStrict())) {
                 $value = $value ?: $default;
             }
 
@@ -77,8 +77,8 @@ trait TraitUseOption
 
     /**
      * Method to set property options
-     * @param   string  $name
-     * @param   mixed   $value
+     * @param   string $name
+     * @param   mixed $value
      * @return  static  Return self to support chaining.
      */
     public function setOption($name, $value)

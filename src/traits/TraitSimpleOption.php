@@ -55,8 +55,8 @@ trait TraitSimpleOption
 
     /**
      * Method to set property options
-     * @param   string  $name
-     * @param   mixed   $value
+     * @param   string $name
+     * @param   mixed $value
      * @return  static  Return self to support chaining.
      */
     public function setOption($name, $value)

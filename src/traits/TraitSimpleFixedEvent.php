@@ -52,7 +52,7 @@ trait TraitSimpleFixedEvent
      */
     public function getCallback($event)
     {
-        if ( false === ($key = array_search($event, $this->getSupportedEvents(), true)) ) {
+        if (false === ($key = array_search($event, $this->getSupportedEvents(), true))) {
             return null;
         }
 
@@ -69,25 +69,25 @@ trait TraitSimpleFixedEvent
 
     /**
      * register a event callback
-     * @param string    $event    event name
-     * @param callable  $cb       event callback
-     * @param bool      $replace  replace exists's event cb
+     * @param string $event event name
+     * @param callable $cb event callback
+     * @param bool $replace replace exists's event cb
      * @return $this
      */
     public function on(string $event, callable $cb, bool $replace = false)
     {
-        if ( false === ($key = array_search($event, $this->getSupportedEvents(), true)) ) {
+        if (false === ($key = array_search($event, $this->getSupportedEvents(), true))) {
             $sup = implode(',', $this->getSupportedEvents());
 
             throw new \InvalidArgumentException("The want registered event [$event] is not supported. Supported: $sup");
         }
 
         // init property
-        if ( $this->callbacks === null ) {
-            $this->callbacks = new \SplFixedArray( count($this->getSupportedEvents()) );
+        if ($this->callbacks === null) {
+            $this->callbacks = new \SplFixedArray(count($this->getSupportedEvents()));
         }
 
-        if ( !$replace && isset($this->callbacks[$key]) ) {
+        if (!$replace && isset($this->callbacks[$key])) {
             throw new \InvalidArgumentException("The want registered event [$event] have been registered! don't allow replace.");
         }
 
@@ -103,11 +103,11 @@ trait TraitSimpleFixedEvent
      */
     public function off($event)
     {
-        if ( false === ($key = array_search($event, $this->getSupportedEvents(), true)) ) {
+        if (false === ($key = array_search($event, $this->getSupportedEvents(), true))) {
             return false;
         }
 
-        if ( !isset($this->callbacks[$key]) || !($cb = $this->callbacks[$key]) ) {
+        if (!isset($this->callbacks[$key]) || !($cb = $this->callbacks[$key])) {
             return true;
         }
 
@@ -123,11 +123,11 @@ trait TraitSimpleFixedEvent
      */
     protected function trigger(string $event, array $args = [])
     {
-        if ( false === ($key = array_search($event, $this->getSupportedEvents(), true)) ) {
+        if (false === ($key = array_search($event, $this->getSupportedEvents(), true))) {
             throw new \InvalidArgumentException("Trigger a not exists's event: $event.");
         }
 
-        if ( !isset($this->callbacks[$key]) || !($cb = $this->callbacks[$key]) ) {
+        if (!isset($this->callbacks[$key]) || !($cb = $this->callbacks[$key])) {
             return null;
         }
 

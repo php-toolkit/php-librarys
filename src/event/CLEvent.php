@@ -2,25 +2,22 @@
 /**
  * Created by PhpStorm.
  * User: inhere
- * Date: 2017-03-27
- * Time: 16:17
+ * Date: 2017-04-27
+ * Time: 9:30
  */
 
 namespace inhere\library\event;
 
 /**
- * Class TraitSimpleStaticEvent
+ * Class CLEvent
+ *  the Class Level Event
+ *
+ * @reference yii2 Event
+ *
  * @package inhere\library\event
  */
-trait TraitSimpleStaticEvent
+class CLEvent
 {
-    /**
-     * set the supported events, if you need.
-     *  if it is empty, will allow register any event.
-     * @var array
-     */
-    protected static $supportedEvents = [];
-
     /**
      * registered Events
      * @var array
@@ -31,36 +28,18 @@ trait TraitSimpleStaticEvent
     private static $events = [];
 
     /**
-     * events and handlers
-     * @var array
-     * [
-     *  'event' => callable, // event handler
-     * ]
-     */
-    private static $eventHandlers = [];
-
-    /**
      * register a event handler
+     * @param string|object $class
      * @param $event
      * @param callable $handler
-     * @param bool $once
      */
-    public static function on($event, callable $handler, $once = false)
+    public static function on($class, $event, callable $handler)
     {
-        if (self::isSupportedEvent($event)) {
-            self::$eventHandlers[$event][] = $handler;
-            self::$events[$event] = (bool)$once;
-        }
-    }
+        $class = ltrim($class, '\\');
 
-    /**
-     * register a once event handler
-     * @param $event
-     * @param callable $handler
-     */
-    public static function once($event, callable $handler)
-    {
-        self::on($event, $handler, true);
+        if (self::isSupportedEvent($event)) {
+            self::$events[$event][$class] = $handler;
+        }
     }
 
     /**

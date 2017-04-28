@@ -7,6 +7,7 @@
  */
 
 namespace inhere\library\gearman;
+use inhere\exceptions\UnknownMethodException;
 
 /**
  * Class JobClient
@@ -22,8 +23,14 @@ class JobClient
     /**
      * @var bool
      */
-    public $activity = true;
+    public $enable = true;
 
+    /**
+     * allow 'json','php'
+     * @var string
+     */
+    public $serialize = 'json';
+    
     /**
      * @var array|string
      * [
@@ -43,7 +50,7 @@ class JobClient
      */
     public function init()
     {
-        if (!$this->activity) {
+        if (!$this->enable) {
             return false;
         }
 
@@ -55,7 +62,7 @@ class JobClient
             $client->addServer();
         }
 
-        $this->activity = true;
+        $this->enable = true;
         $this->client = $client;
 
         return true;
@@ -70,8 +77,14 @@ class JobClient
      */
     public function doJob($funcName, $workload, $unique = null, $clientMethod = 'doBackground')
     {
-        if (!$this->activity) {
+        if (!$this->enable) {
             return null;
+        }
+
+        if ($this->serialize === 'json') {
+            $workload = json_encode($workload);
+        } elseif ($this->serialize === 'php') {
+            $workload = serialize($workload);
         }
 
         $jobHandle = $this->client->$clientMethod($funcName, $workload, $unique);
@@ -116,10 +129,11 @@ class JobClient
      * @param string $name
      * @param array $params
      * @return mixed
+     * @throws UnknownMethodException
      */
     public function __call($name, $params)
     {
-        if (!$this->activity) {
+        if (!$this->enable) {
             return null;
         }
 
@@ -136,6 +150,6 @@ class JobClient
             return call_user_func_array([$this->client, $name], $params);
         }
 
-        return parent::__call($name, $params);
+        throw new UnknownMethodException('Calling unknown method: ' . get_class($this) . "::$name()");
     }
 }

@@ -242,6 +242,38 @@ abstract class FileSystem
     }
 
     /**
+     * @param string $dir
+     * @return string
+     */
+    public static function availableSpace($dir = '.')
+    {
+        $base = 1024;
+        $bytes = disk_free_space($dir);
+        $suffix = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        $class = min((int)log($bytes , $base) , count($suffix) - 1);
+
+        //echo $bytes . '<br />';
+
+        return sprintf('%1.2f' , $bytes / pow($base,$class)) . ' ' . $suffix[$class];
+    }
+
+    /**
+     * @param string $dir
+     * @return string
+     */
+    public static function totalSpace($dir = '.')
+    {
+        $base = 1024;
+        $bytes = disk_total_space($dir);
+        $suffix = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        $class = min((int)log($bytes , $base) , count($suffix) - 1);
+
+        //echo $bytes . '<br />';
+
+        return sprintf('%1.2f' , $bytes / pow($base,$class)) . ' ' . $suffix[$class];
+    }
+
+    /**
      * 文件或目录权限检查函数
      *
      * @from web

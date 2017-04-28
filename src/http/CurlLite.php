@@ -15,14 +15,33 @@ namespace inhere\library\http;
 class CurlLite
 {
     /**
+     * Can to retry
+     * @var array
+     */
+    private static $canRetryErrorCodes = [
+        CURLE_COULDNT_RESOLVE_HOST,
+        CURLE_COULDNT_CONNECT,
+        CURLE_HTTP_NOT_FOUND,
+        CURLE_READ_ERROR,
+        CURLE_OPERATION_TIMEOUTED,
+        CURLE_HTTP_POST_ERROR,
+        CURLE_SSL_CONNECT_ERROR,
+    ];
+
+    /**
      * @var array
      */
     private $config = [
         'base_url' => '',
         'timeout' => 3,
+        'retry' => 3,
 
         'proxy_host' => '',
         'proxy_port' => '',
+
+        'headers' => [
+            // 'host' => 'xx.com'
+        ],
     ];
 
     /**
@@ -32,7 +51,7 @@ class CurlLite
 
     /**
      * @param array $config
-     * @return SimpleCurl
+     * @return self
      */
     public static function make(array $config = [])
     {
@@ -52,48 +71,41 @@ class CurlLite
      * GET
      * @param $url
      * @param array $data
+     * @param array $headers
      * @return array|mixed
      */
-    public function get($url, array $data = [])
+    public function get($url, array $data = [], array $headers = [])
     {
         if ($param = http_build_query($data)) {
             $url .= (strpos($url, '?') ? '?' : '&') . $param;
         }
 
-        $ch = $this->createCH($url);
+        $ch = $this->createCH($url, $headers);
 
-        if (false === ($data = curl_exec($ch))) {
-            $this->error = curl_errno($ch) . ': ' . curl_error($ch);
-        }
-
-        curl_close($ch);
-
-        return $data;
+        return $this->execute($ch, (int)$this->config['retry']);
     }
 
     /**
      * POST
      * @param string $url 地址
      * @param array $data 数据
+     * @param array $headers
      * @return mixed
      */
-    public function post($url, array $data = [])
+    public function post($url, array $data = [], array $headers = [])
     {
-        $ch = $this->createCH($url);
+        $ch = $this->createCH($url, $headers);
 
         // post提交方式
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 
-        if (false === ($data = curl_exec($ch))) {
-            $this->error = curl_errno($ch) . ': ' . curl_error($ch);
-        }
-
-        curl_close($ch);
-
-        return $data;
+        return $this->execute($ch, (int)$this->config['retry']);
     }
 
+    /**
+     * @var array
+     */
     private $chMap = [];
 
     /**
@@ -147,16 +159,18 @@ class CurlLite
         foreach ($this->chMap as $key => $ch) {
             curl_multi_remove_handle($mh, $ch);
         }
+
         curl_multi_close($mh);
 
         return true;
     }
 
     /**
-     * @param $url
+     * @param string $url
+     * @param array $headers
      * @return resource
      */
-    protected function createCH($url)
+    protected function createCH($url, array $headers = [])
     {
         $url = trim($url);
         $baseUrl = $this->getBaseUrl();
@@ -170,7 +184,19 @@ class CurlLite
 
         curl_setopt($ch, CURLOPT_URL, $url);
 
-        //设置超时
+        // headers
+        if ($a = array_merge($this->config['headers'], $headers)) {
+            $headers = [];
+
+            foreach ($a as $name => $value) {
+                $name = ucwords($name);
+                $headers[$name] = $value;
+            }
+
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        }
+
+        // 设置超时
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->config['timeout']);
 
         // 如果有配置代理这里就设置代理
@@ -189,6 +215,45 @@ class CurlLite
         curl_setopt($ch, CURLOPT_HEADER, false);
 
         return $ch;
+    }
+    /**
+     * Executes a CURL request with optional retries and exception on failure
+     *
+     * @param  resource $ch curl handle
+     * @param  int $retries 重试
+     * @param bool $closeAfterDone
+     * @return string
+     */
+    public function execute($ch, $retries = 3, $closeAfterDone = true)
+    {
+        $ret = '';
+
+        while ($retries--) {
+            if (($ret = curl_exec($ch)) === false) {
+                $curlErrNo = curl_errno($ch);
+
+                if (false === in_array($curlErrNo, self::$canRetryErrorCodes, true) || !$retries) {
+                    $curlError = curl_error($ch);
+
+                    if ($closeAfterDone) {
+                        curl_close($ch);
+                    }
+
+                    $this->error = sprintf('Curl error (code %s): %s', $curlErrNo, $curlError);
+                    // throw new \RuntimeException(sprintf('Curl error (code %s): %s', $curlErrNo, $curlError));
+                }
+
+                continue;
+            }
+
+            if ($closeAfterDone) {
+                curl_close($ch);
+            }
+
+            break;
+        }
+
+        return $ret;
     }
 
     /**

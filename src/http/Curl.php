@@ -565,11 +565,37 @@ class Curl implements CurlInterface
      */
     public function getArrayData()
     {
+        return $this->getJsonArray();
+    }
+
+    /**
+     * @return bool|array
+     */
+    public function getJsonArray()
+    {
         if (!$this->getResponseBody()) {
             return false;
         }
 
         $data = json_decode($this->_responseBody, true);
+
+        if (json_last_error() > 0) {
+            return false;
+        }
+
+        return $data;
+    }
+
+    /**
+     * @return bool|\stdClass
+     */
+    public function getJsonObject()
+    {
+        if (!$this->getResponseBody()) {
+            return false;
+        }
+
+        $data = json_decode($this->_responseBody);
 
         if (json_last_error() > 0) {
             return false;
@@ -633,7 +659,7 @@ class Curl implements CurlInterface
     }
 
 ///////////////////////////////////////////////////////////////////////
-//   reset data
+//   reset data/unset attribute
 ///////////////////////////////////////////////////////////////////////
 
     /**
@@ -781,7 +807,7 @@ class Curl implements CurlInterface
     public function setHeader($name, $value, $override = false)
     {
         if ($override || !isset($this->_headers[$name])) {
-            $this->_headers[$name] = "$name: $value";
+            $this->_headers[$name] = ucwords($name) . ": $value";
         }
 
         return $this;
@@ -803,11 +829,11 @@ class Curl implements CurlInterface
     }
 
 ///////////////////////////////////////////////////////////////////////
-//   request options
+//  request options
 ///////////////////////////////////////////////////////////////////////
 
     /**
-     * @param $userAgent
+     * @param string $userAgent
      * @return $this
      */
     public function setUserAgent($userAgent)
@@ -818,12 +844,25 @@ class Curl implements CurlInterface
     }
 
     /**
-     * @param $referrer
+     * @param string $referrer
      * @return $this
      */
     public function setReferrer($referrer)
     {
         $this->_options[CURLOPT_REFERER] = $referrer;
+
+        return $this;
+    }
+
+    /**
+     * @param string $host
+     * @param string $port
+     * @return $this
+     */
+    public function setProxy($host, $port)
+    {
+        $this->_options[CURLOPT_PROXY] = $host;
+        $this->_options[CURLOPT_PROXYPORT] = $port;
 
         return $this;
     }

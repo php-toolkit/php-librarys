@@ -45,41 +45,41 @@ class PublicHelper
     }
 
     /**
-     * get classname by full classname
+     * get className by full className
      * @param string $class
      * @return null|string
      */
-    static public function getClassname($class)
+    static public function getClassName($class)
     {
-        return self::parseFullClassname($class, true);
+        return self::parseFullClassName($class, true);
     }
 
     /**
-     * get classname by full classname
+     * get className by full className
      * @param $class
      * @return null|string
      */
     static public function getNamespace($class)
     {
-        return self::parseFullClassname($class, false);
+        return self::parseFullClassName($class, false);
     }
 
     /**
-     * _parseFullClassname 解析类名
+     * _parseFull ClassName 解析类名
      * @param  mixed $class 类 或 类的实例
-     * @param  boolean $onlyName true:namespace false:classname
+     * @param  boolean $onlyName true:namespace false:className
      * @return null|string
      */
-    static private function parseFullClassname($class, $onlyName = false)
+    static private function parseFullClassName($class, $onlyName = false)
     {
         if (is_object($class)) {
-            $classname = get_class($class);
+            $className = get_class($class);
         } else if ($class && is_string($class)) {
-            $classname = rtrim($class, '\\ ');
+            $className = rtrim($class, '\\ ');
         } else {
             return null;
         }
 
-        return !$onlyName ? trim(dirname($classname), '.') : basename($classname);
+        return !$onlyName ? trim(dirname($className), '.') : basename($className);
     }
 }

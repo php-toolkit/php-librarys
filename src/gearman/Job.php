@@ -12,10 +12,27 @@ namespace inhere\library\gearman;
  * Class Job
  * @package inhere\library\gearman
  */
-class Job implements JobInterface
+abstract class Job implements JobInterface
 {
-    public function run()
-    {
+    /**
+     * @var mixed
+     */
+    protected $context;
 
+    /**
+     * do the job
+     * @param string $workload
+     * @param WorkerManager $manger
+     * @param \GearmanJob $job
+     * @return mixed
+     */
+    abstract public function run($workload, WorkerManager $manger, \GearmanJob $job);
+
+    /**
+     * @param mixed $context
+     */
+    public function setContext($context)
+    {
+        $this->context = $context;
     }
 }

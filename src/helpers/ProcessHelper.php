@@ -65,7 +65,7 @@ class ProcessHelper
      * @param int $sigNo
      * @return string
      */
-    public static function killProcessByName($name, $sigNo = 9)
+    public static function killByName($name, $sigNo = 9)
     {
         $cmd = 'ps -eaf |grep "' . $name . '" | grep -v "grep"| awk "{print $2}"|xargs kill -' . $sigNo;
         return exec($cmd);

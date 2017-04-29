@@ -29,11 +29,63 @@ use inhere\library\helpers\PhpHelper;
  */
 class LiteLogger
 {
+    // * Log runtime info
+    const TRACE = 50;
+
+    // Detailed debug information
+    const DEBUG = 100;
+
+    // Interesting events
+    const INFO = 200;
+
+    // Uncommon events
+    const NOTICE = 250;
+
+    // Exceptional occurrences that are not errors
+    const WARNING = 300;
+
+    // Runtime errors
+    const ERROR = 400;
+
+    // * Runtime exceptions
+    const EXCEPTION = 450;
+
+    // Critical conditions
+    const CRITICAL = 500;
+
+    // Action must be taken immediately
+    const ALERT = 550;
+
+    // Urgent alert.
+    const EMERGENCY = 600;
+
+    /**
+     * Logging levels from syslog protocol defined in RFC 5424
+     * @var array $levels Logging levels
+     */
+    protected static $levelMap = array(
+        self::TRACE     => 'TRACE',
+        self::DEBUG     => 'DEBUG',
+        self::INFO      => 'INFO',
+        self::NOTICE    => 'NOTICE',
+        self::WARNING   => 'WARNING',
+        self::ERROR     => 'ERROR',
+        self::EXCEPTION => 'EXCEPTION',
+        self::CRITICAL  => 'CRITICAL',
+        self::ALERT     => 'ALERT',
+        self::EMERGENCY => 'EMERGENCY',
+    );
+
     /**
      * logger instance list
      * @var static[]
      */
     private static $loggers = [];
+
+    /**
+     * @var bool
+     */
+    private static $shutdownRegistered = false;
 
     /**
      * log text records list
@@ -42,16 +94,21 @@ class LiteLogger
     private $_records = [];
 
     /**
-     * 日志实例名称
+     * 日志实例名称 channel name
      * @var string
      */
-    public $name = 'default';
+    public $name;
 
     /**
-     * file content max size. (M)
-     * @var int
+     * @var string
      */
-    protected $maxSize = 4;
+    public $logFile = 'default.log';
+
+    /**
+     * allow multi line for a record
+     * @var bool
+     */
+    public $allowMultiLine = true;
 
     /**
      * 存放日志的基础路径
@@ -78,22 +135,37 @@ class LiteLogger
     protected $levels = [];
 
     /**
-     * channel name
-     * @var string
+     * log Level
+     * @var int
      */
-    protected $channel = 'WEB';
+    protected $logLevel = 0;
 
     /**
-     * level name
-     * @var string
-     */
-    protected $levelName = 'info';
-
-    /**
-     * split file by level name
+     * split file
      * @var bool
      */
-    protected $splitFile = false;
+    public $splitFile = false;
+
+    /**
+     * @var bool
+     */
+    public $splitByCopy = true;
+
+    /**
+     * @var string 'level' 'day' 'hour', if is empty, not split
+     */
+    public $splitType = 'day';
+
+    /**
+     * file content max size. (M)
+     * @var int
+     */
+    public $maxSize = 4;
+
+    /**
+     * @var integer Number of log files used for rotation. Defaults to 5.
+     */
+    public $maxFiles = 5;
 
     /**
      * log print to console (when on the CLI is valid.)
@@ -108,7 +180,7 @@ class LiteLogger
 
     /**
      * 日志写入阀值
-     *  即是除了手动调用 self::flushAll() 之外，当 self::$_records 存储到了阀值时，就会自动写入一次
+     *  即是除了手动调用 self::flushAll() 或者 flush() 之外，当 self::$_records 存储到了阀值时，就会自动写入一次
      *  设为 0 则是每次记录都立即写入文件
      *  注意：如果启用了按级别分割文件，次阀值检查可能会出现错误。
      * @var int
@@ -119,43 +191,49 @@ class LiteLogger
      * 格式
      * @var string
      */
-    public $format = '[{datetime}] [{level_name}] {message} {context}';
+    public $format = "[%datetime%] [%channel%.%level_name%] %message% %context%\n";
 
     /**
      * default format
      */
-    const SIMPLE_FORMAT = "[{datetime}] [{channel}.{level_name}] {message} {context} {extra}\n";
+    const SIMPLE_FORMAT = "[%datetime%] [%channel%.%level_name%] {message} {context} {extra}\n";
 
-    const EXCEPTION = 'exception';
-    const EMERGENCY = 'emergency';
-    const ALERT = 'alert';
-    const CRITICAL = 'critical';
-    const ERROR = 'error';
-    const WARNING = 'warning';
-    const NOTICE = 'notice';
-    const INFO = 'info';
-    const DEBUG = 'debug';
-    const TRACE = 'trace';
+//////////////////////////////////////////////////////////////////////
+/// loggers manager
+//////////////////////////////////////////////////////////////////////
 
     /**
      * create new instance or get exists instance
      * @param string|array $config
+     * @param string $name
      * @return static
      */
-    public static function make($config)
+    public static function make(array $config = [], $name = '')
     {
-        if (!$config || !is_array($config)) {
-            throw new \InvalidArgumentException('Log config is must be an array and not allow empty.');
+        if (!is_array($config)) {
+            throw new \InvalidArgumentException('Logger config is must be an array and not allow empty.');
         }
 
-        if (!isset($config['name'])) {
-            $config['name'] = 'default';
-        }
+        $name = $name ? : (isset($config['name']) ? $config['name'] : '');
 
-        $name = $config['name'];
+        if (!$name) {
+            throw new \InvalidArgumentException('Logger name is required.');
+        }
 
         if (!isset(self::$loggers[$name])) {
-            self::$loggers[$name] = new static($config);
+            self::$loggers[$name] = new static($config, $name);
+        }
+
+        // register shutdown function
+        if (self::$shutdownRegistered) {
+            register_shutdown_function(function () {
+                // make regular flush before other shutdown functions, which allows session data collection and so on
+                self::flushAll();
+
+                // make sure log entries written by shutdown functions are also flushed
+                // ensure "flush()" is called last when there are multiple shutdown functions
+                register_shutdown_function([self::class, 'flushAll'], true);
+            });
         }
 
         return self::$loggers[$name];
@@ -174,7 +252,7 @@ class LiteLogger
      * exists logger instance
      * @return bool
      */
-    public static function existLogger()
+    public static function count()
     {
         return count(self::$loggers) > 0;
     }
@@ -194,6 +272,14 @@ class LiteLogger
     }
 
     /**
+     * @return array
+     */
+    public static function getLoggerNames()
+    {
+        return array_keys(self::$loggers);
+    }
+
+    /**
      * del logger
      * @param  string $name
      * @param  bool|boolean $flush
@@ -204,7 +290,7 @@ class LiteLogger
         if (isset(self::$loggers[$name])) {
             $logger = self::$loggers[$name];
 
-            return $flush ? $logger->save() : true;
+            return $flush ? $logger->flush() : true;
         }
 
         return false;
@@ -229,23 +315,37 @@ class LiteLogger
     public static function flushAll()
     {
         foreach (self::$loggers as $logger) {
-            $logger->save();
+            $logger->flush();
         }
     }
 
-    /**
-     * create new instance
-     * @param array $config
-     * @throws \InvalidArgumentException
-     */
-    private function __construct(array $config = [])
-    {
-        $this->name = $config['name'];
-        $canSetting = ['logConsole', 'logThreshold', 'debug', 'channel', 'basePath', 'subFolder', 'format', 'splitFile', 'levels'];
+//////////////////////////////////////////////////////////////////////
+/// logic methods
+//////////////////////////////////////////////////////////////////////
 
-        foreach ($canSetting as $name) {
+    /**
+     * create new logger instance
+     * @param array     $config
+     * @param null|string $name
+     */
+    public function __construct(array $config = [], $name = null)
+    {
+        if (!$name) {
+            throw new \InvalidArgumentException('Logger name is required.');
+        }
+
+        $this->name = $name;
+
+        // attributes
+        $attributes = [
+            'logConsole', 'logThreshold', 'debug', 'logFile', 'basePath', 'subFolder',
+            'format', 'splitFile', 'splitByCopy', 'logLevel', 'levels'
+        ];
+
+        foreach ($attributes as $name) {
             if (isset($config[$name])) {
                 $setter = 'set' . ucfirst($name);
+
                 if (method_exists($this, $setter)) {
                     $this->$setter($config[$name]);
                 } else {
@@ -253,18 +353,45 @@ class LiteLogger
                 }
             }
         }
+
+        $this->init();
     }
 
-    public function error($message, array $context = array())
+    protected function init()
+    {
+        if ($this->maxFiles < 1) {
+            $this->maxFiles = 1;
+        }
+
+        if ($this->maxSize < 1) {
+            $this->maxSize = 1;
+        }
+    }
+
+    /**
+     * destruct
+     */
+    public function __destruct()
+    {
+        self::flushAll();
+    }
+
+    public function emerg($message, array $context = [])
+    {
+        $this->log(self::EMERGENCY, $message, $context);
+        // $this->flush();
+    }
+
+    public function error($message, array $context = [])
     {
         $this->log(self::ERROR, $message, $context);
-        $this->save();
+        // $this->flush();
     }
 
-    public function alert($message, array $context = array())
+    public function alert($message, array $context = [])
     {
         $this->log(self::ALERT, $message, $context);
-        $this->save();
+        // $this->flush();
     }
 
     /**
@@ -277,7 +404,6 @@ class LiteLogger
     {
         $this->exception($e, $context, $logRequest);
     }
-
     public function exception(\Exception $e, array $context = [], $logRequest = true)
     {
         $message = $e->getMessage() . PHP_EOL;
@@ -293,13 +419,12 @@ class LiteLogger
                 'METHOD' => $this->getServer('request_method'),
                 'URI' => $this->getServer('request_uri'),
                 'DATA' => $_REQUEST,
-                'REFERER' => $this->getServer('HTTP_REFERER'),
+                'REFERRER' => $this->getServer('HTTP_REFERER'),
             ];
         }
 
-        $this->format .= PHP_EOL;
         $this->log('exception', $message, $context);
-        $this->save();
+        $this->flush();
     }
 
     /**
@@ -342,41 +467,44 @@ class LiteLogger
         return true;
     }
 
-    public function warning($message, array $context = array())
+    public function warning($message, array $context = [])
     {
         $this->log(self::WARNING, $message, $context);
     }
 
-    public function notice($message, array $context = array())
+    public function notice($message, array $context = [])
     {
         $this->log(self::NOTICE, $message, $context);
     }
 
-    public function info($message, array $context = array())
+    public function info($message, array $context = [])
     {
         $this->log(self::INFO, $message, $context);
     }
 
-    public function debug($message, array $context = array())
+    public function debug($message, array $context = [])
     {
         $this->log(self::DEBUG, $message, $context);
     }
 
     /**
      * record log info to file
-     * @param mixed $level
+     * @param int $level
      * @param string $message
      * @param array $context
+     * @param array $extra
      * @return null|void
      */
-    public function log($level, $message, array $context = [])
+    public function log($level, $message, array $context = [], array $extra = [])
     {
+        $levelName = is_int($level) ? self::getLevelName($level) : $level;
+
         // 不在记录的级别内
-        if ($this->levels && !in_array($level, $this->levels, true)) {
+        if ($this->levels && !in_array($levelName, $this->levels, true)) {
             return null;
         }
 
-        $string = $this->dataFormatter($level, $message, $context);
+        $string = $this->dataFormatter($level, $message, $context, $extra);
 
         // serve is running in php build in server env.
         if ($this->logConsole && (PhpHelper::isBuiltInServer() || PhpHelper::isCli())) {
@@ -384,46 +512,39 @@ class LiteLogger
             fwrite(STDOUT, $string . PHP_EOL);
         }
 
-        if ($this->splitFile) {
-            $this->_records[$level][] = $string;
-        } else {
-            $this->_records[] = $string;
-        }
+        $this->_records[] = [$level, $string];
 
         // 检查阀值
-        if (count($this->_records) >= $this->logThreshold) {
-            $this->save();
+        if ($this->logThreshold > 0 && count($this->_records) >= $this->logThreshold) {
+            $this->flush();
         }
 
         return null;
     }
 
     /**
+     * flush data to file.
      * @return bool
      */
     public function save()
+    {
+        return $this->flush();
+    }
+    public function flush()
     {
         if (!$this->_records) {
             return true;
         }
 
-        $written = false;
         $str = '';
+        $written = false;
 
-        foreach ($this->_records as $key => $record) {
-            $this->levelName = $key;
-
-            if ($this->splitFile) {
-                $str = '';
-
-                foreach ($record as $text) {
-                    $str .= $text . "\n";
-                }
-
-                $this->write($str);
+        foreach ($this->_records as $record) {
+            if ($this->splitType === 'level') {
+                $this->write(implode(PHP_EOL, $record) . PHP_EOL, self::getLevelName($record['level']));
                 $written = true;
             } else {
-                $str .= $record . "\n";
+                $str .= $record . PHP_EOL;
             }
         }
 
@@ -439,35 +560,50 @@ class LiteLogger
     }
 
     /**
-     * @param $level
+     * @param int $level
      * @param $message
      * @param array $context
+     * @param array $extra
      * @return string
      */
-    protected function dataFormatter($level, $message, array $context)
+    protected function dataFormatter($level, $message, array $context = [], array $extra = [])
     {
-        $format = $this->format ?: self::SIMPLE_FORMAT;
+        $output = $this->format ?: self::SIMPLE_FORMAT;
         $record = [
-            '{datetime}' => date('Y-m-d H:i:s'),
-            '{message}' => $message,
-            '{level_name}' => strtoupper($level),
+            'datetime' => date('Y-m-d H:i:s'),
+            'message'  => $message,
+            'level'     => $level,
+            'level_name' => self::getLevelName($level),
         ];
 
-        $record['{channel}'] = strtoupper(self::arrayRemove($context, 'channel', $this->channel));
-        $record['{context}'] = $context ? json_encode($context) : '';
+        $record['channel'] = strtoupper(self::arrayRemove($context, 'channel', $this->name));
+        $record['context'] = $context ? json_encode($context) : '';
+        $record['extra']   = $extra ? json_encode($extra) : '';
 
-        return strtr($format, $record);
+        foreach ($record as $var => $val) {
+            if (false !== strpos($output, '%'.$var.'%')) {
+                $output = str_replace('%'.$var.'%', $this->stringify($val), $output);
+            }
+        }
+
+        // remove leftover %extra.xxx% and %context.xxx% if any
+        if (false !== strpos($output, '%')) {
+            $output = preg_replace('/%(?:extra|context)\..+?%/', '', $output);
+        }
+
+        return $output;
     }
 
     /**
      * write log info to file
      * @param string $str
+     * @param string $levelName
      * @return bool
      * @throws FileSystemException
      */
-    protected function write($str)
+    protected function write($str, $levelName = '')
     {
-        $file = $this->getLogPath() . $this->getFilename();
+        $file = $this->getLogPath() . $this->getFilename($levelName);
         $dir = dirname($file);
 
         if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
@@ -506,6 +642,24 @@ class LiteLogger
     }
 
     /**
+     * Gets all supported logging levels.
+     * @return array Assoc array with human-readable level names => level codes.
+     */
+    public static function getLevels()
+    {
+        return array_flip(static::$levelMap);
+    }
+
+    /**
+     * @param $level
+     * @return mixed|string
+     */
+    public static function getLevelName($level)
+    {
+        return isset(static::$levelMap[$level]) ? static::$levelMap[$level] : 'UNKNOWN';
+    }
+
+    /**
      * get log path
      * @return string
      * @throws \InvalidArgumentException
@@ -533,15 +687,22 @@ class LiteLogger
 
     /**
      * 得到日志文件名
+     * @param string $levelName
      * @return string
      */
-    public function getFilename()
+    public function getFilename($levelName)
     {
         if ($handler = $this->filenameHandler) {
-            return $handler($this);
+            return $handler($this, $levelName);
         }
 
-        return ($this->splitFile ? $this->levelName : $this->name) . '.' . date('Y-m-d') . '.log';
+        if ($this->splitType === 'level') {
+            return $this->name . '-' . $levelName . '.log';
+        } elseif ($this->splitType === 'hour') {
+            return $this->name . '-' . date('Y-m-d.H') . '.log';
+        }
+
+        return $this->name . '-' . date('Y-m-d') . '.log';
     }
 
     /**
@@ -577,43 +738,80 @@ class LiteLogger
     }
 
     /**
-     * @param $message
-     * @param array $context
-     * @return string
+     * @param $value
+     * @return mixed
      */
-    protected function interpolate($message, array $context = [])
+    public function stringify($value)
     {
-        // build a replacement array with braces around the context keys
-        $replace = [];
+        return $this->replaceNewlines($this->convertToString($value));
+    }
 
-        foreach ($context as $key => $val) {
-            $replace['{' . $key . '}'] = $val;
+    /**
+     * @param $data
+     * @return mixed|string
+     */
+    protected function convertToString($data)
+    {
+        if (null === $data || is_bool($data)) {
+            return var_export($data, true);
         }
 
-        // interpolate replacement values into the message and return
-        return strtr($message, $replace);
+        if (is_scalar($data)) {
+            return (string) $data;
+        }
+
+        if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+            return json_encode($data);
+        }
+
+        return str_replace('\\/', '/', @json_encode($data));
     }
 
     /**
-     * @param string $name
-     * @return static
+     * @param $str
+     * @return mixed
      */
-    public function getLogger($name = 'default')
+    protected function replaceNewlines($str)
     {
-        return self::make($name);
+        if ($this->allowMultiLine) {
+            if (0 === strpos($str, '{')) {// json ?
+                return str_replace(array('\r', '\n'), array("\r", "\n"), $str);
+            }
+
+            return $str;
+        }
+
+        return str_replace(array("\r\n", "\r", "\n"), ' ', $str);
     }
 
     /**
-     * @return array
+     * Rotates log files.
      */
-    public function getLoggerNames()
+    protected function splitFiles()
     {
-        return array_keys(self::$loggers);
-    }
+        $file = $this->logFile;
 
-    public static function sendLog()
-    {
-        // Yii::$app->gearman->doBackground();
+        for ($i = $this->maxFiles; $i >= 0; --$i) {
+            // $i == 0 is the original log file
+            $rotateFile = $file . ($i === 0 ? '' : '.' . $i);
+
+            if (is_file($rotateFile)) {
+                // suppress errors because it's possible multiple processes enter into this section
+                if ($i === $this->maxFiles) {
+                    @unlink($rotateFile);
+                } else {
+                    if ($this->splitByCopy) {
+                        @copy($rotateFile, $file . '.' . ($i + 1));
+                        if ($fp = @fopen($rotateFile, 'a')) {
+                            @ftruncate($fp, 0);
+                            @fclose($fp);
+                        }
+                    } else {
+                        @rename($rotateFile, $file . '.' . ($i + 1));
+                    }
+                }
+            }
+        }
     }
 }
 

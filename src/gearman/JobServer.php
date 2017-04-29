@@ -13,7 +13,6 @@ namespace inhere\library\gearman;
  */
 class JobServer
 {
-
     /**
      * @event PushEvent
      */

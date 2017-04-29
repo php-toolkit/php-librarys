@@ -267,6 +267,31 @@ class PhpHelper
     }
 
     /**
+     * Converts an exception into a simple string.
+     * @param \Exception $exp the exception being converted
+     * @param bool $getTrace
+     * @return string the string representation of the exception.
+     */
+    public static function convertExceptionToString($exp, $getTrace = false)
+    {
+        if ($exp instanceof \Exception && !$getTrace) {
+            $message = "Error: {$exp->getMessage()}";
+        } else {
+            if ($exp instanceof \ErrorException) {
+                $message = 'Error';
+            } else {
+                $message = 'Exception';
+            }
+
+            $message .= " '" . get_class($exp) . "' with message '{$exp->getMessage()}' \n\nin "
+                . $exp->getFile() . ':' . $exp->getLine() . "\n\n"
+                . "Stack trace:\n" . $exp->getTraceAsString();
+        }
+
+        return $message;
+    }
+
+    /**
      * Method to execute a command in the terminal
      * Uses :
      * 1. system

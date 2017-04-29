@@ -9,53 +9,58 @@
 namespace inhere\library\event;
 
 /**
- * Class CLEvent
+ * Class ClassEvent
  *  the Class Level Event
  *
  * @reference yii2 Event
  *
  * @package inhere\library\event
  */
-class CLEvent
+class ObjectEvent
 {
     /**
      * registered Events
      * @var array
      * [
-     *  'event' => bool, // is once event
+     *  'event' => [ handler, data],
      * ]
      */
-    private static $events = [];
+    private $_events = [];
+
+    /**
+     * @var array
+     */
+    protected static $supportedEvents = [];
 
     /**
      * register a event handler
      * @param string|object $class
-     * @param $event
+     * @param $name
      * @param callable $handler
      */
-    public static function on($class, $event, callable $handler)
+    public function on($class, $name, callable $handler)
     {
         $class = ltrim($class, '\\');
 
-        if (self::isSupportedEvent($event)) {
-            self::$events[$event][$class] = $handler;
+        if (self::isSupportedEvent($name)) {
+            $this->_events[$name][$class] = $handler;
         }
     }
 
     /**
      * trigger event
-     * @param $event
+     * @param $name
      * @param array $args
      * @return bool
      */
-    public static function fire($event, array $args = [])
+    public function fire($name, array $args = [])
     {
-        if (!isset(self::$events[$event])) {
+        if (!isset($this->_events[$name])) {
             return false;
         }
 
         // call event handlers of the event.
-        foreach ((array)self::$eventHandlers[$event] as $cb) {
+        foreach ((array)$this->_events[$name] as $cb) {
             // return FALSE to stop go on handle.
             if (false === call_user_func_array($cb, $args)) {
                 break;
@@ -63,8 +68,8 @@ class CLEvent
         }
 
         // is a once event, remove it
-        if (self::$events[$event]) {
-            return self::removeEvent($event);
+        if ($this->_events[$name]) {
+            return $this->removeEvent($name);
         }
 
         return true;
@@ -72,18 +77,18 @@ class CLEvent
 
     /**
      * remove event and it's handlers
-     * @param $event
+     * @param $name
      * @return bool
      */
-    public static function off($event)
+    public function off($name)
     {
-        return self::removeEvent($event);
+        return $this->removeEvent($name);
     }
 
-    public static function removeEvent($event)
+    public function removeEvent($name)
     {
-        if (self::hasEvent($event)) {
-            unset(self::$events[$event], self::$eventHandlers[$event]);
+        if ($this->hasEvent($name)) {
+            unset($this->_events[$name]);
 
             return true;
         }
@@ -92,40 +97,27 @@ class CLEvent
     }
 
     /**
-     * @param $event
+     * @param $name
      * @return bool
      */
-    public static function hasEvent($event)
+    public function hasEvent($name)
     {
-        return isset(self::$events[$event]);
-    }
-
-    /**
-     * @param $event
-     * @return bool
-     */
-    public static function isOnce($event)
-    {
-        if (self::hasEvent($event)) {
-            return self::$events[$event];
-        }
-
-        return false;
+        return isset($this->_events[$name]);
     }
 
     /**
      * check $name is a supported event name
-     * @param $event
+     * @param $name
      * @return bool
      */
-    public static function isSupportedEvent($event)
+    public function isSupportedEvent($name)
     {
-        if (!$event || !preg_match('/[a-zA-z][\w-]+/', $event)) {
+        if (!$name || !preg_match('/[a-zA-z][\w-]+/', $name)) {
             return false;
         }
 
         if ($ets = self::$supportedEvents) {
-            return in_array($event, $ets, true);
+            return in_array($name, $ets, true);
         }
 
         return true;
@@ -150,16 +142,16 @@ class CLEvent
     /**
      * @return array
      */
-    public static function getEvents()
+    public function getEvents()
     {
-        return self::$events;
+        return $this->_events;
     }
 
     /**
      * @return int
      */
-    public static function countEvents()
+    public function countEvents()
     {
-        return count(self::$events);
+        return count($this->_events);
     }
 }

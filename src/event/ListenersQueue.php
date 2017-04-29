@@ -148,7 +148,6 @@ class ListenersQueue implements \IteratorAggregate, \Countable
         return $this->store->contains($listener);
     }
 
-
     /**
      * Get the inner queue with its cursor on top of the heap.
      * @return  \SplPriorityQueue  The inner queue.

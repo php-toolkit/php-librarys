@@ -14,5 +14,12 @@ namespace inhere\library\gearman;
  */
 interface JobInterface
 {
-    public function run();
+    /**
+     * do the job
+     * @param string $workload
+     * @param WorkerManager $manger
+     * @param \GearmanJob $job
+     * @return mixed
+     */
+    public function run($workload, WorkerManager $manger, \GearmanJob $job);
 }

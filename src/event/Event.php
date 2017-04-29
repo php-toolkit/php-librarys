@@ -169,14 +169,6 @@ class Event extends StdBase implements InterfaceEvent, \ArrayAccess, \Serializab
     }
 
     /**
-     * @return bool
-     */
-    public function getStopped()
-    {
-        return (bool) $this->stopped;
-    }
-
-    /**
      * @param $value
      */
     public function setStopped($value)
@@ -259,6 +251,9 @@ class Event extends StdBase implements InterfaceEvent, \ArrayAccess, \Serializab
         return count($this->arguments);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function __get($name)
     {
         if ( isset($this->arguments[$name]) ) {
@@ -268,6 +263,9 @@ class Event extends StdBase implements InterfaceEvent, \ArrayAccess, \Serializab
         return parent::__get($name);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function __set($name, $value)
     {
         if ( isset($this->arguments[$name]) ) {

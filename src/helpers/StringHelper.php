@@ -521,5 +521,16 @@ abstract class StringHelper
         return self::strtolower(trim(preg_replace('/([A-Z][a-z])/', $sep . '$1', $string), $sep));
     }
 
+    /**
+     * @param int $length
+     * @return bool|string
+     */
+    public static function genUID($length = 7)
+    {
+        if (!is_int($length) || $length > 32 || $length < 1) {
+            $length = 7;
+        }
 
+        return substr(hash('md5', uniqid('', true)), 0, $length);
+    }
 }

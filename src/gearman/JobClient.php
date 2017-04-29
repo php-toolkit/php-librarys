@@ -8,14 +8,20 @@
 
 namespace inhere\library\gearman;
 use inhere\exceptions\UnknownMethodException;
+use inhere\library\helpers\ObjectHelper;
 
 /**
  * Class JobClient
  * @package inhere\library\gearman
  *
+ * @method string doHigh($function_name, $workload, $unique = null)
+ * @method string doNormal($function_name, $workload, $unique = null)
+ * @method string doLow($function_name, $workload, $unique = null)
+ *
  * @method string doHighBackground($function_name, $workload, $unique = null)
  * @method string doBackground($function_name, $workload, $unique = null)
  * @method string doLowBackground($function_name, $workload, $unique = null)
+ *
  * @method array jobStatus($job_handle)
  */
 class JobClient
@@ -26,11 +32,16 @@ class JobClient
     public $enable = true;
 
     /**
+     * @var \GearmanClient
+     */
+    private $client;
+
+    /**
      * allow 'json','php'
      * @var string
      */
     public $serialize = 'json';
-    
+
     /**
      * @var array|string
      * [
@@ -41,9 +52,29 @@ class JobClient
     public $servers = [];
 
     /**
-     * @var \GearmanClient
+     * @var array
      */
-    private $client;
+    private static $jobMethods = [
+        'doHigh', 'doNormal', 'doLow',
+    ];
+
+    /**
+     * @var array
+     */
+    private static $backMethods = [
+        'doBackground', 'doHighBackground', 'doLowBackground',
+    ];
+
+    /**
+     * JobClient constructor.
+     * @param array $config
+     */
+    public function __construct(array $config = [])
+    {
+        ObjectHelper::loadAttrs($this, $config);
+
+        $this->init();
+    }
 
     /**
      * init
@@ -73,24 +104,31 @@ class JobClient
      * @param string $workload
      * @param null $unique
      * @param string $clientMethod
-     * @return bool
+     * @return mixed
      */
-    public function doJob($funcName, $workload, $unique = null, $clientMethod = 'doBackground')
+    public function addJob($funcName, $workload, $unique = null, $clientMethod = 'doBackground')
     {
         if (!$this->enable) {
             return null;
         }
 
-        if ($this->serialize === 'json') {
-            $workload = json_encode($workload);
-        } elseif ($this->serialize === 'php') {
-            $workload = serialize($workload);
+        if (is_array($workload) || is_object($workload)) {
+            if ($this->serialize === 'json') {
+                $workload = json_encode($workload);
+            } else { //  $this->serialize === 'php'
+                $workload = serialize($workload);
+            }
         }
 
-        $jobHandle = $this->client->$clientMethod($funcName, $workload, $unique);
-        $stat = $this->client->jobStatus($jobHandle);
+        $ret = $this->client->$clientMethod($funcName, $workload, $unique);
 
-        return !$stat[0];
+        if (in_array($clientMethod, self::$jobMethods, true)) {
+            return $ret;
+        }
+
+        $stat = $this->client->jobStatus($ret);
+
+        return !$stat[0];// bool
     }
 
     /**
@@ -137,8 +175,8 @@ class JobClient
             return null;
         }
 
-        if (in_array($name, ['doBackground', 'doHighBackground', 'doLowBackground'])) {
-            return $this->doJob(
+        if (in_array($name, self::$jobMethods + self::$backMethods, true)) {
+            return $this->addJob(
                 $params[0],
                 isset($params[1]) ? $params[1] : '',
                 isset($params[2]) ? $params[2] : null,

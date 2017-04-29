@@ -17,6 +17,20 @@ use inhere\library\exceptions\NotFoundException;
 class JsonHelper
 {
     /**
+     * encode data to json
+     * @param $data
+     * @return string
+     */
+    public static function encode($data)
+    {
+        if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+            return json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        }
+
+        return json_encode($data);
+    }
+
+    /**
      * @param $file
      * @param bool|true $toArray
      * @return mixed|null|string

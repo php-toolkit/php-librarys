@@ -178,8 +178,7 @@ class PhpHelper
      */
     public static function isWeb()
     {
-        return in_array(
-            PHP_SAPI, [
+        return in_array(PHP_SAPI, [
             'apache',
             'cgi',
             'fast-cgi',
@@ -187,8 +186,7 @@ class PhpHelper
             'fpm-fcgi',
             'srv',
             'cli-server'
-        ], true
-        );
+        ], true );
     }
 
     /**
@@ -246,35 +244,15 @@ class PhpHelper
     }
 
     /**
-     * supportMcrypt
-     * @return  boolean
-     */
-    public static function hasMcrypt()
-    {
-        return extension_loaded('mcrypt');
-    }
-
-    //检查 Apache mod_rewrite 是否开启
-    public static function checkApacheRewriteMode()
-    {
-        if (function_exists('apache_get_modules')) {
-            return in_array('mod_rewrite', apache_get_modules(), true);
-        }
-        // de(\apache_get_version() ,\apache_get_modules());
-
-        return true;
-        // return false;
-    }
-
-    /**
      * Converts an exception into a simple string.
-     * @param \Exception $exp the exception being converted
+     * @param \Exception|\Throwable $exp the exception being converted
+     * @param string $br
      * @param bool $getTrace
      * @return string the string representation of the exception.
      */
-    public static function convertExceptionToString($exp, $getTrace = false)
+    public static function convertExceptionToString($exp, $br = "\n", $getTrace = false)
     {
-        if ($exp instanceof \Exception && !$getTrace) {
+        if (!$getTrace) {
             $message = "Error: {$exp->getMessage()}";
         } else {
             if ($exp instanceof \ErrorException) {
@@ -286,51 +264,25 @@ class PhpHelper
             $message .= " '" . get_class($exp) . "' with message '{$exp->getMessage()}' \n\nin "
                 . $exp->getFile() . ':' . $exp->getLine() . "\n\n"
                 . "Stack trace:\n" . $exp->getTraceAsString();
+
+            if ($br !== "\n") {
+                $message = str_replace("\n", $br, $message);
+            }
         }
 
         return $message;
     }
 
     /**
-     * Method to execute a command in the terminal
-     * Uses :
-     * 1. system
-     * 2. passthru
-     * 3. exec
-     * 4. shell_exec
-     * @param $command
-     * @return array
+     * dump vars
+     * @param array ...$args
+     * @return string
      */
-    public static function terminal($command)
+    public static function dumpVar(...$args)
     {
-        $return_var = 1;
+        ob_start();
+        var_dump(...$args);
 
-        //system
-        if (function_exists('system')) {
-            ob_start();
-            system($command, $return_var);
-            $output = ob_get_contents();
-            ob_end_clean();
-
-            // passthru
-        } elseif (function_exists('passthru')) {
-            ob_start();
-            passthru($command, $return_var);
-            $output = ob_get_contents();
-            ob_end_clean();
-            //exec
-        } else if (function_exists('exec')) {
-            exec($command, $output, $return_var);
-            $output = implode("\n", $output);
-
-            //shell_exec
-        } else if (function_exists('shell_exec')) {
-            $output = shell_exec($command);
-        } else {
-            $output = 'Command execution not possible on this system';
-            $return_var = 0;
-        }
-
-        return array('output' => $output, 'status' => $return_var);
+        return ob_get_clean();
     }
 }

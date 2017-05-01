@@ -50,9 +50,70 @@ class ProcessHelper
         return 0;
     }
 
-    public function getMasterPID()
+    /**
+     * @return int
+     */
+    public static function getMasterPID()
     {
         return posix_getpid();
+    }
+
+    /**
+     * @param $pid
+     * @return bool
+     */
+    public static function isRunning($pid)
+    {
+        return ($pid > 0) && @posix_kill($pid, 0);
+    }
+
+    /**
+     * kill process by PID
+     * @param int $pid
+     * @param int $signal
+     * @param int $timeout
+     * @return bool
+     */
+    public static function kill($pid, $signal = SIGTERM, $timeout = 3)
+    {
+        if ($pid <= 0) {
+            return false;
+        }
+
+        // do kill
+        if ($ret = posix_kill($pid, $signal)) {
+            return true;
+        }
+
+        // don't want retry
+        if ($timeout <= 0) {
+            return $ret;
+        }
+
+        // failed, try again ...
+
+        $timeout = $timeout > 0 && $timeout < 10 ? $timeout : 3;
+        $startTime = time();
+
+        // retry stop if not stopped.
+        while (true) {
+            // success
+            if (!$isRunning = @posix_kill($pid, 0)) {
+                break;
+            }
+
+            // have been timeout
+            if ((time() - $startTime) >= $timeout) {
+                return false;
+            }
+
+            // try again kill
+            $ret = posix_kill($pid, $signal);
+
+            usleep(10000);
+        }
+
+        return $ret;
     }
 
 //////////////////////////////////////////////////////////////////////

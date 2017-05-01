@@ -8,6 +8,8 @@
 
 use \inhere\library\gearman\WorkerManager;
 
+require dirname(__DIR__) . '/../../../../autoload.php';
+
 $config = [
     'log_level' => WorkerManager::LOG_DEBUG,
 ];

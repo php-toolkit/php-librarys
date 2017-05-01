@@ -143,7 +143,7 @@ class WorkerManager extends ManagerAbstracter
     protected function showHelp($msg = '')
     {
         $version = self::VERSION;
-        $script = $this->getScriptName();
+        $script = $this->getScript();
 
         if ($msg) {
             echo "ERROR:\n  " . wordwrap($msg, 72, "\n  ") . "\n\n";
@@ -174,7 +174,7 @@ OPTIONS:
   
   -v LEVEL       Increase verbosity level by one. eg: -v vv
   
-  -h             Shows this help
+  -h,--help      Shows this help
   -V             Display the version of the manager
   -Z             Parse the command line and config file then dump it to the screen and exit.\n
 EOF;
@@ -187,7 +187,7 @@ EOF;
     protected function parseCliOption()
     {
         $map = [
-            'a' => 'auto_reload', // auto load modify files
+            // 'a' => 'auto_reload', // auto load modify files
             'c' => 'conf_file',   // config file
             's' => 'servers', // server address
 
@@ -205,22 +205,22 @@ EOF;
         ];
 
         // 'c:d:' ... ...
-        $shortOpts = implode(':', array_keys($map));
+        $shortOpts = implode(':', array_keys($map)) . ':';
         $opts = getopt(
             // short opts
             $shortOpts . // server address
             'v::' . // verbosity level
-            'hVZ', // h: show help V: version Z: dump config to screen
+            'ahVZ', // a: auto load modify files h: show help V: version Z: dump config to screen
 
             // long opts
             [
                 'help',          // No value
-                'worker-num:',   // Required value
-                'max-lifetime:', // Required value
-                'max-run-job:',
+                // 'worker-num:',   // Required value
+                // 'max-lifetime:', // Required value
+                // 'max-run-job:',
             ]
         );
-
+var_dump($opts, $shortOpts);
         // show help
         if (isset($opts['h']) || isset($opts['help'])) {
             $this->showHelp();
@@ -244,29 +244,8 @@ EOF;
         $this->verbose = (int)$this->config['log_level'];
         $this->pidFile = trim($this->config['pid_file']);
 
-        // If we want to daemonize, fork here and exit
-        if ($this->config['d']) {
-            $this->runAsDaemon();
-        }
-
-        if ($this->pidFile) {
-            $fp = @fopen($this->pidFile, 'w');
-
-            if ($fp) {
-                fwrite($fp, $this->pid);
-                fclose($fp);
-            } else {
-                $this->showHelp("Unable to write PID to the file {$this->pidFile}");
-            }
-        }
-
-        if (!empty($this->config['log_file'])) {
-            if ($this->config['log_file'] === 'syslog') {
-                $this->log_syslog = true;
-            } else {
-                $this->log_file = $this->config['log_file'];
-                $this->openLogFile();
-            }
+        if (isset($opts['a'])) {
+            $this->config['auto_reload'] = $opts['a'];
         }
 
         if (isset($opts['v'])) {
@@ -292,55 +271,9 @@ EOF;
             $this->config['log_level'] = $this->verbose;
         }
 
-        if ($this->user) {
-            $user = posix_getpwnam($this->user);
-            if (!$user || !isset($user['uid'])) {
-                $this->showHelp("User ({$this->user}) not found.");
-            }
-
-            /**
-             * Ensure new uid can read/write pid and log files
-             */
-            if (!empty($this->pid_file)) {
-                if (!chown($this->pid_file, $user['uid'])) {
-                    $this->log("Unable to chown PID file to {$this->user}", self::LOG_PROC_INFO);
-                }
-            }
-
-            if (!empty($this->log_file_handle)) {
-                if (!chown($this->log_file, $user['uid'])) {
-                    $this->log("Unable to chown log file to {$this->user}", self::LOG_PROC_INFO);
-                }
-            }
-
-            posix_setuid($user['uid']);
-            if (posix_geteuid() != $user['uid']) {
-                $this->showHelp("Unable to change user to {$this->user} (UID: {$user['uid']}).");
-            }
-            $this->log("User set to {$this->user}", self::LOG_PROC_INFO);
-        }
-
-        if (!empty($this->config['auto_reload'])) {
-            $this->check_code = true;
-        }
-
-        if (!empty($this->config['handler_dir'])) {
-            $this->handler_dir = $this->config['handler_dir'];
-        } else {
-            $this->handler_dir = "./workers";
-        }
-
-        if (isset($this->config['max_lifetime']) && (int)$this->config['max_lifetime'] > 0) {
-            $this->maxLifetime = (int)$this->config['max_lifetime'];
-        }
-
-        if (isset($this->config['worker_restart_splay']) && (int)$this->config['worker_restart_splay'] > 0) {
-            $this->worker_restart_splay = (int)$this->config['worker_restart_splay'];
-        }
-
-        if (isset($this->config['count']) && (int)$this->config['count'] > 0) {
-            $this->do_all_count = (int)$this->config['count'];
-        }
+//        if ((int)$this->config['restart_splay'] > 0) {
+//            $this->worker_restart_splay = (int)$this->config['restart_splay'];
+//        }
 
         // parseConfig
         $this->parseConfig();
@@ -354,11 +287,20 @@ EOF;
 
     protected function parseConfig()
     {
-        $this->config['work_num'] = (int)$this->config['work_num'];
+        $this->config['worker_num'] = (int)$this->config['worker_num'];
+        $this->config['max_lifetime'] = (int)$this->config['max_lifetime'];
 
-        if ($this->config['work_num'] <= 0) {
-            $this->config['work_num'] = 1;
+        if ($this->config['worker_num'] <= 0) {
+            $this->config['worker_num'] = 1;
         }
+
+        if ($this->config['max_lifetime'] <= 100) {
+            $this->config['max_lifetime'] = 600;
+        }
+
+        $this->doAllWorkers = $this->config['worker_num'];
+        $this->maxLifetime = $this->config['max_lifetime'];
+
     }
 
     protected function loadConfigFile($file)

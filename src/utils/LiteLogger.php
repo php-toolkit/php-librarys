@@ -64,16 +64,16 @@ class LiteLogger
      * @var array $levels Logging levels
      */
     protected static $levelMap = array(
-        self::TRACE     => 'TRACE',
-        self::DEBUG     => 'DEBUG',
-        self::INFO      => 'INFO',
-        self::NOTICE    => 'NOTICE',
-        self::WARNING   => 'WARNING',
-        self::ERROR     => 'ERROR',
-        self::EXCEPTION => 'EXCEPTION',
-        self::CRITICAL  => 'CRITICAL',
-        self::ALERT     => 'ALERT',
-        self::EMERGENCY => 'EMERGENCY',
+        self::TRACE     => 'trace',
+        self::DEBUG     => 'debug',
+        self::INFO      => 'info',
+        self::NOTICE    => 'notice',
+        self::WARNING   => 'warning',
+        self::ERROR     => 'error',
+        self::EXCEPTION => 'exception',
+        self::CRITICAL  => 'critical',
+        self::ALERT     => 'alert',
+        self::EMERGENCY => 'emergency',
     );
 
     /**
@@ -141,18 +141,12 @@ class LiteLogger
     protected $logLevel = 0;
 
     /**
-     * split file
-     * @var bool
-     */
-    public $splitFile = false;
-
-    /**
      * @var bool
      */
     public $splitByCopy = true;
 
     /**
-     * @var string 'level' 'day' 'hour', if is empty, not split
+     * @var string 'day' 'hour', if is empty, not split
      */
     public $splitType = 'day';
 
@@ -163,20 +157,15 @@ class LiteLogger
     public $maxSize = 4;
 
     /**
-     * @var integer Number of log files used for rotation. Defaults to 5.
+     * @var integer Number of log files used for rotation. Defaults to 20.
      */
-    public $maxFiles = 5;
+    public $maxFiles = 20;
 
     /**
      * log print to console (when on the CLI is valid.)
      * @var bool
      */
-    protected $logConsole = true;
-
-    /**
-     * @var bool
-     */
-    protected $debug = false;
+    public $logConsole = false;
 
     /**
      * 日志写入阀值
@@ -185,18 +174,18 @@ class LiteLogger
      *  注意：如果启用了按级别分割文件，次阀值检查可能会出现错误。
      * @var int
      */
-    protected $logThreshold = 1000;
+    public $logThreshold = 1000;
 
     /**
      * 格式
      * @var string
      */
-    public $format = "[%datetime%] [%channel%.%level_name%] %message% %context%\n";
+    public $format = "[%datetime%] [%level_name%] %message% %context%\n";
 
     /**
      * default format
      */
-    const SIMPLE_FORMAT = "[%datetime%] [%channel%.%level_name%] {message} {context} {extra}\n";
+    const DEFAULT_FORMAT = "[%datetime%] [%channel%.%level_name%] {message} {context} {extra}\n";
 
 //////////////////////////////////////////////////////////////////////
 /// loggers manager
@@ -319,6 +308,58 @@ class LiteLogger
         }
     }
 
+
+    /**
+     * Gets all supported logging levels.
+     * @return array Assoc array with human-readable level names => level codes.
+     */
+    public static function getLevelMap()
+    {
+        return static::$levelMap;
+    }
+
+    /**
+     * @param int $level
+     * @return mixed|string
+     */
+    public static function getLevelName($level)
+    {
+        if (is_string($level) && !is_numeric($level)) {
+            return $level;
+        }
+
+        return isset(self::$levelMap[$level]) ? self::$levelMap[$level] : 'unknown';
+    }
+
+    /**
+     * @param string $name
+     * @return mixed|string
+     */
+    public static function getLevelByName($name)
+    {
+        static $nameMap;
+
+        if (is_numeric($name)) {
+            return (int)$name;
+        }
+
+        if (!$nameMap) {
+            $nameMap = array_flip(self::$levelMap);
+        }
+
+        $name = strtolower($name);
+
+        return isset($nameMap[$name]) ? $nameMap[$name] : 0;
+    }
+
+    /**
+     * @return static[]
+     */
+    public static function getLoggers()
+    {
+        return self::$loggers;
+    }
+
 //////////////////////////////////////////////////////////////////////
 /// logic methods
 //////////////////////////////////////////////////////////////////////
@@ -339,7 +380,7 @@ class LiteLogger
         // attributes
         $attributes = [
             'logConsole', 'logThreshold', 'debug', 'logFile', 'basePath', 'subFolder',
-            'format', 'splitFile', 'splitByCopy', 'logLevel', 'levels'
+            'format', 'splitType', 'splitByCopy', 'logLevel', 'levels'
         ];
 
         foreach ($attributes as $name) {
@@ -360,11 +401,11 @@ class LiteLogger
     protected function init()
     {
         if ($this->maxFiles < 1) {
-            $this->maxFiles = 1;
+            $this->maxFiles = 10;
         }
 
         if ($this->maxSize < 1) {
-            $this->maxSize = 1;
+            $this->maxSize = 4;
         }
     }
 
@@ -407,20 +448,21 @@ class LiteLogger
     public function exception(\Exception $e, array $context = [], $logRequest = true)
     {
         $message = $e->getMessage() . PHP_EOL;
-        $message .= 'Called At ' . $e->getFile() . ', On Line: ' . $e->getLine() . PHP_EOL;
+        $message .= 'Called At ' . $e->getFile() . ', An Line: ' . $e->getLine() . PHP_EOL;
         $message .= 'Catch the exception by: ' . get_class($e);
         $message .= "\nCode Trace :\n" . $e->getTraceAsString();
 
         // If log the request info
         if ($logRequest) {
-            $message .= PHP_EOL;
-            $context['request'] = [
-                'HOST' => $this->getServer('HTTP_HOST'),
-                'METHOD' => $this->getServer('request_method'),
-                'URI' => $this->getServer('request_uri'),
-                'DATA' => $_REQUEST,
-                'REFERRER' => $this->getServer('HTTP_REFERER'),
-            ];
+            $message .= "\nRequest Info:\n  " . implode("\n  ", [
+                    'HOST ' . $this->getServer('HTTP_HOST'),
+                    'IP ' . $this->getServer('REMOTE_ADDR'),
+                    'METHOD ' . $this->getServer('REQUEST_METHOD'),
+                    'URI ' . $this->getServer('REQUEST_URI'),
+                    'REFERRER ' . $this->getServer('HTTP_REFERER'),
+                ]);
+
+            $context['request'] = $_REQUEST;
         }
 
         $this->log('exception', $message, $context);
@@ -434,19 +476,14 @@ class LiteLogger
      */
     public function trace($message = '', array $context = [])
     {
-        if (!$this->debug) {
-            return false;
-        }
-
-        $msg = '';
-
-        if ($message) {
-            $msg = "\n  MSG: $message.";
+        // 不在记录的级别内
+        if ($this->levels && !in_array(self::getLevelName(self::TRACE), $this->levels, true)) {
+            return null;
         }
 
         $file = $method = $line = 'Unknown';
 
-        if ($data = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)) {
+        if ($data = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10)) {
             if (isset($data[0]['file'])) {
                 $file = $data[0]['file'];
             }
@@ -461,8 +498,8 @@ class LiteLogger
             }
         }
 
-        $message = "\n  FUNC: $method\n  POS: $file Line [$line]. $msg\n  DATA:";
-        $this->log('trace', $message, $context);
+        $message .= "\n  Function: $method\n  Position $file, At Line $line\n  Trace:";
+        $this->log(self::TRACE, $message, $context);
 
         return true;
     }
@@ -497,22 +534,30 @@ class LiteLogger
      */
     public function log($level, $message, array $context = [], array $extra = [])
     {
-        $levelName = is_int($level) ? self::getLevelName($level) : $level;
+        $levelName = self::getLevelName($level);
 
         // 不在记录的级别内
-        if ($this->levels && !in_array($levelName, $this->levels, true)) {
+        if ($this->levels && !in_array(strtolower($levelName), $this->levels, true)) {
             return null;
         }
 
-        $string = $this->dataFormatter($level, $message, $context, $extra);
+        $record = array(
+            'message' => (string) $message,
+            'context' => $context,
+            'level' => $level,
+            'level_name' => $levelName,
+            'channel' => $this->name,
+            'datetime' => date('Y-m-d H:i:s'),
+            'extra' => $extra,
+        );
 
         // serve is running in php build in server env.
         if ($this->logConsole && (PhpHelper::isBuiltInServer() || PhpHelper::isCli())) {
             defined('STDOUT') or define('STDOUT', fopen('php://stdout', 'wb'));
-            fwrite(STDOUT, $string . PHP_EOL);
+            fwrite(STDOUT, "[{$record['datetime']}] [$levelName] $message" . PHP_EOL);
         }
 
-        $this->_records[] = [$level, $string];
+        $this->_records[] = $record;
 
         // 检查阀值
         if ($this->logThreshold > 0 && count($this->_records) >= $this->logThreshold) {
@@ -537,48 +582,28 @@ class LiteLogger
         }
 
         $str = '';
-        $written = false;
-
         foreach ($this->_records as $record) {
-            if ($this->splitType === 'level') {
-                $this->write(implode(PHP_EOL, $record) . PHP_EOL, self::getLevelName($record['level']));
-                $written = true;
-            } else {
-                $str .= $record . PHP_EOL;
-            }
+            $str .= $this->recordFormat($record);
         }
 
-        // no split File
-        if (!$written) {
-            $this->write($str);
-            unset($str);
-        }
-
+        $this->write($str);
         $this->_records = [];
+        unset($str);
 
         return true;
     }
 
     /**
-     * @param int $level
-     * @param $message
-     * @param array $context
-     * @param array $extra
+     * @param array $record
      * @return string
      */
-    protected function dataFormatter($level, $message, array $context = [], array $extra = [])
+    protected function recordFormat(array $record)
     {
-        $output = $this->format ?: self::SIMPLE_FORMAT;
-        $record = [
-            'datetime' => date('Y-m-d H:i:s'),
-            'message'  => $message,
-            'level'     => $level,
-            'level_name' => self::getLevelName($level),
-        ];
-
-        $record['channel'] = strtoupper(self::arrayRemove($context, 'channel', $this->name));
-        $record['context'] = $context ? json_encode($context) : '';
-        $record['extra']   = $extra ? json_encode($extra) : '';
+        $output = $this->format ?: self::DEFAULT_FORMAT;
+        $record['level_name'] = strtoupper($record['level_name']);
+        $record['channel'] = strtoupper($record['channel']);
+        $record['context'] = $record['context'] ? json_encode($record['context']) : '';
+        $record['extra']   = $record['extra'] ? json_encode($record['extra']) : '';
 
         foreach ($record as $var => $val) {
             if (false !== strpos($output, '%'.$var.'%')) {
@@ -597,13 +622,12 @@ class LiteLogger
     /**
      * write log info to file
      * @param string $str
-     * @param string $levelName
      * @return bool
      * @throws FileSystemException
      */
-    protected function write($str, $levelName = '')
+    protected function write($str)
     {
-        $file = $this->getLogPath() . $this->getFilename($levelName);
+        $file = $this->getLogPath() . $this->getFilename();
         $dir = dirname($file);
 
         if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
@@ -634,29 +658,35 @@ class LiteLogger
     }
 
     /**
-     * @param int $logThreshold
+     * @return \array[]
      */
-    public function setLogThreshold($logThreshold)
+    public function getRecords()
     {
-        $this->logThreshold = (int)$logThreshold;
+        return $this->_records;
     }
 
     /**
-     * Gets all supported logging levels.
-     * @return array Assoc array with human-readable level names => level codes.
+     * @return string
      */
-    public static function getLevels()
+    public function getName()
     {
-        return array_flip(static::$levelMap);
+        return $this->name;
     }
 
     /**
-     * @param $level
-     * @return mixed|string
+     * @return string
      */
-    public static function getLevelName($level)
+    public function getBasePath()
     {
-        return isset(static::$levelMap[$level]) ? static::$levelMap[$level] : 'UNKNOWN';
+        return $this->basePath;
+    }
+
+    /**
+     * @return array
+     */
+    public function getLevels()
+    {
+        return $this->levels;
     }
 
     /**
@@ -687,22 +717,19 @@ class LiteLogger
 
     /**
      * 得到日志文件名
-     * @param string $levelName
      * @return string
      */
-    public function getFilename($levelName)
+    public function getFilename()
     {
         if ($handler = $this->filenameHandler) {
-            return $handler($this, $levelName);
+            return $handler($this);
         }
 
-        if ($this->splitType === 'level') {
-            return $this->name . '-' . $levelName . '.log';
-        } elseif ($this->splitType === 'hour') {
-            return $this->name . '-' . date('Y-m-d.H') . '.log';
+        if ($this->splitType === 'hour') {
+            return $this->name . '.' . date('Ymd.H') . '.log';
         }
 
-        return $this->name . '-' . date('Y-m-d') . '.log';
+        return $this->name . '.' . date('Ymd') . '.log';
     }
 
     /**
@@ -732,8 +759,6 @@ class LiteLogger
      */
     public function getServer($name, $default = '')
     {
-        $name = strtoupper($name);
-
         return $_SERVER[$name] ?? $default;
     }
 
@@ -812,6 +837,44 @@ class LiteLogger
                 }
             }
         }
+    }
+
+    /**
+     * Rotates the files.
+     */
+    protected function rotateFiles()
+    {
+        // update filename
+        // $filename = $this->getFilename();
+        $path = $this->getLogPath();
+
+        // skip GC of old logs if files are unlimited
+        if (0 === $this->maxFiles) {
+            return;
+        }
+
+        $logFiles = glob($path . "{$this->name}*.log");
+        if ($this->maxFiles >= count($logFiles)) {
+            // no files to remove
+            return;
+        }
+
+        // Sorting the files by name to remove the older ones
+        usort($logFiles, function ($a, $b) {
+            return strcmp($b, $a);
+        });
+
+        foreach (array_slice($logFiles, $this->maxFiles) as $file) {
+            if (is_writable($file)) {
+                // suppress errors here as unlink() might fail if two processes
+                // are cleaning up/rotating at the same time
+                set_error_handler(function ($errno, $errstr, $errfile, $errline) {});
+                unlink($file);
+                restore_error_handler();
+            }
+        }
+
+        // $this->mustRotate = false;
     }
 }
 

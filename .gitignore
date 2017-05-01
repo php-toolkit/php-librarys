@@ -4,5 +4,7 @@
 !.gitkeep
 composer.lock
 *.swp
+*.log
+*.pid
 *.patch
 .DS_Store

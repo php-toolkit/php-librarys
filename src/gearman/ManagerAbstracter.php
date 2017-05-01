@@ -67,7 +67,12 @@ abstract class ManagerAbstracter
     /**
      * @var string
      */
-    protected $scriptName;
+    protected $script;
+
+    /**
+     * @var string
+     */
+    protected $command;
 
     /**
      * Verbosity level for the running script. Set via -v option
@@ -284,22 +289,19 @@ abstract class ManagerAbstracter
     {
         $this->pid = getmypid();
         $this->setConfig($config);
-        $this->bootstrap();
+        $this->init();
     }
 
     /**
      * bootstrap
      */
-    protected function bootstrap()
+    protected function init()
     {
         // checkEnvironment
         $this->checkEnvironment();
 
         // parseCliOption
         $this->handleCliCommand();
-
-        // parseCliOption
-        $this->parseCliOption();
 
         // $this->debug("Start gearman worker, connection to the gearman server {$host}:{$port}");
     }
@@ -310,6 +312,8 @@ abstract class ManagerAbstracter
     public function start()
     {
         $this->log("Started with pid {$this->pid}, Current script owner: " . get_current_user(), self::LOG_PROC_INFO);
+
+        $this->bootstrap();
 
         $this->startWorkers();
 
@@ -322,13 +326,21 @@ abstract class ManagerAbstracter
     {
         global $argv;
         $tmp = $argv;
-        $this->scriptName = array_shift($tmp);
+        $this->script = array_shift($tmp);
+
+        // collect command `start`
+        if (isset($tmp[0]) && $tmp[0]{0} !== '-' && (false === strpos($tmp[0], '='))) {
+            $this->command = trim($tmp[0]);
+        } else {
+            $this->command = 'start';
+        }
 
         unset($tmp);
 
-        $command = $this->getCommand(); // e.g 'start'
+        $command = $this->command;
 
-        $this->checkInputCommand($command);
+        // parseCliOption
+        $this->parseCliOption();
 
         $masterPid = $this->getPidFromFile($this->pidFile);
         $masterIsStarted = ($masterPid > 0) && @posix_kill($masterPid, 0);
@@ -338,18 +350,15 @@ abstract class ManagerAbstracter
 
             // check master process is running
             if ($masterIsStarted) {
-                $this->stdout("The worker manager have been started. (PID:{$masterPid})", true, -__LINE__);
+                $this->stdout("The worker manager has been running. (PID:{$masterPid})", true, -__LINE__);
             }
-
-            // run as daemon
-            $this->daemon = (bool)$this->cliIn->boolOpt('d', $this->config->get('swoole.daemonize'));
 
             return $this;
         }
 
         // check master process
         if (!$masterIsStarted) {
-            $this->cliOut->error("The swoole server({$this->name}) is not running.", true, -__LINE__);
+            $this->stdout('The worker manager is not running.', true, -__LINE__);
         }
 
         // switch command
@@ -362,17 +371,16 @@ abstract class ManagerAbstracter
                 break;
 
             case 'status':
-                $this->showRuntimeStatus();
+                // $this->showStatus();
+                $this->showHelp("The command [{$command}] is un-completed!");
                 break;
 
             default:
-                $this->stdout("The command [{$command}] is don't supported!");
-                $this->showHelpPanel();
+                $this->showHelp("The command [{$command}] is don't supported!");
                 break;
         }
 
         return $this;
-
     }
 
     /**
@@ -380,6 +388,55 @@ abstract class ManagerAbstracter
      * @return mixed
      */
     abstract protected function parseCliOption();
+
+    /**
+     * bootstrap start
+     */
+    protected function bootstrap()
+    {
+        if ($this->pidFile && !file_put_contents($this->pidFile, $this->pid)) {
+            $this->showHelp("Unable to write PID to the file {$this->pidFile}");
+        }
+
+        // If we want run as daemon, fork here and exit
+        if ($this->config['as_daemon']) {
+            $this->runAsDaemon();
+        }
+
+        if ($logFile = $this->config['log_file']) {
+            if ($logFile === 'syslog') {
+                $this->config['log_syslog'] = true;
+                $this->config['log_file'] = $logFile =  '';
+            } else {
+                $this->openLogFile();
+            }
+        }
+
+        if ($username = $this->config['user']) {
+            $user = posix_getpwnam($username);
+
+            if (!$user || !isset($user['uid'])) {
+                $this->showHelp("User ({$username}) not found.");
+            }
+
+            // Ensure new uid can read/write pid and log files
+            if ($this->pidFile && !chown($this->pidFile, $user['uid'])) {
+                $this->log("Unable to chown PID file to {$username}", self::LOG_ERROR);
+            }
+
+            if ($this->logFileHandle && !chown($logFile, $user['uid'])) {
+                $this->log("Unable to chown log file to {$username}", self::LOG_ERROR);
+            }
+
+            posix_setuid($user['uid']);
+
+            if (posix_geteuid() !== (int)$user['uid']) {
+                $this->showHelp("Unable to change user to {$username} (UID: {$user['uid']}).");
+            }
+
+            $this->log("User set to {$username}", self::LOG_PROC_INFO);
+        }
+    }
 
     /**
      * Bootstrap a set of workers and any vars that need to be set
@@ -545,7 +602,7 @@ abstract class ManagerAbstracter
                 break;
 
             default: // at parent
-                $this->log("Started child $pid (" . implode(',', $jobs) . ')', self::LOG_PROC_INFO);
+                $this->log("Started child (PID:$pid) (Jobs:" . implode(',', $jobs) . ')', self::LOG_PROC_INFO);
                 $this->children[$pid] = array(
                     'jobs'       => $jobs,
                     'start_time' => time(),
@@ -804,7 +861,7 @@ abstract class ManagerAbstracter
      * Handles signals
      * @param int $sigNo
      */
-    public function signal($sigNo)
+    public function signalHandler($sigNo)
     {
         static $termCount = 0;
 
@@ -886,9 +943,17 @@ abstract class ManagerAbstracter
     /**
      * @return string
      */
-    public function getScriptName()
+    public function getScript()
     {
-        return $this->scriptName;
+        return $this->script;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCommand()
+    {
+        return $this->command;
     }
 
     /**
@@ -1123,6 +1188,11 @@ abstract class ManagerAbstracter
 /// some help method
 //////////////////////////////////////////////////////////////////////
 
+    protected function showStatus()
+    {
+        // todo ...
+    }
+
     /**
      * Shows the scripts help info with optional error message
      * @param string $msg
@@ -1159,13 +1229,13 @@ abstract class ManagerAbstracter
 
         switch ($status) {
             case 'killed':
-                $message = "Child $pid has been running too long. Forcibly killing process. ($jobStr)";
+                $message = "Child (PID:$pid) has been running too long. Forcibly killing process. (Jobs:$jobStr)";
                 break;
             case 'exited':
-                $message = "Child $pid exited cleanly. ($jobStr)";
+                $message = "Child (PID:$pid) exited cleanly. (Jobs:$jobStr)";
                 break;
             default:
-                $message = "Child $pid died unexpectedly with exit code $status. ($jobStr)";
+                $message = "Child (PID:$pid) died unexpectedly with exit code $status. (Jobs:$jobStr)";
                 break;
         }
 

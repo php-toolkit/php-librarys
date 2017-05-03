@@ -294,7 +294,6 @@ class Curl implements CurlInterface
         return $this;
     }
 
-
     /**
      * Image file download and save
      * @param string $imgUrl image url e.g. http://static.oschina.net/uploads/user/277/554046_50.jpg
@@ -302,7 +301,7 @@ class Curl implements CurlInterface
      * @param string $rename 图片重命名(只写名称，不用后缀) 为空则使用原名称
      * @return string
      */
-    public function downImage($imgUrl, $saveTo, $rename = '')
+    public function downloadImage($imgUrl, $saveTo, $rename = '')
     {
         // e.g. http://static.oschina.net/uploads/user/277/554046_50.jpg?t=34512323
         if (strpos($imgUrl, '?')) {

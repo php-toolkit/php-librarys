@@ -226,24 +226,6 @@ class PhpHelper
     }
 
     /**
-     * supportPcntl
-     * @return  boolean
-     */
-    public static function hasPcntl()
-    {
-        return extension_loaded('PCNTL');
-    }
-
-    /**
-     * supportCurl
-     * @return  boolean
-     */
-    public static function hasCurl()
-    {
-        return function_exists('curl_init');
-    }
-
-    /**
      * Converts an exception into a simple string.
      * @param \Exception|\Throwable $exp the exception being converted
      * @param string $br
@@ -284,5 +266,23 @@ class PhpHelper
         var_dump(...$args);
 
         return ob_get_clean();
+    }
+
+    /**
+     * print vars
+     * @param array ...$args
+     * @return string
+     */
+    public static function printVar(...$args)
+    {
+        ob_start();
+
+        foreach ($args as $arg) {
+            print_r($arg);
+        }
+
+        $string = ob_get_clean();
+
+        return str_replace("=>\n ", "=>", $string);
     }
 }

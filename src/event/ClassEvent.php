@@ -55,7 +55,7 @@ class ClassEvent
         }
 
         // call event handlers of the event.
-        foreach ((array)self::$eventHandlers[$event] as $cb) {
+        foreach ((array)self::$events[$event] as $cb) {
             // return FALSE to stop go on handle.
             if (false === call_user_func_array($cb, $args)) {
                 break;
@@ -83,7 +83,7 @@ class ClassEvent
     public static function removeEvent($event)
     {
         if (self::hasEvent($event)) {
-            unset(self::$events[$event], self::$eventHandlers[$event]);
+            unset(self::$events[$event]);
 
             return true;
         }
@@ -124,27 +124,7 @@ class ClassEvent
             return false;
         }
 
-        if ($ets = self::$supportedEvents) {
-            return in_array($event, $ets, true);
-        }
-
         return true;
-    }
-
-    /**
-     * @return array
-     */
-    public static function getSupportEvents()
-    {
-        return self::$supportedEvents;
-    }
-
-    /**
-     * @param array $supportedEvents
-     */
-    public static function setSupportEvents(array $supportedEvents)
-    {
-        self::$supportedEvents = $supportedEvents;
     }
 
     /**

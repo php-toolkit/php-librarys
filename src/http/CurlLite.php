@@ -36,8 +36,10 @@ class CurlLite
         'timeout' => 3,
         'retry' => 3,
 
-        'proxy_host' => '',
-        'proxy_port' => '',
+        'proxy' => [
+            // 'host' => '',
+            // 'port' => '',
+        ],
 
         'headers' => [
             // 'host' => 'xx.com'
@@ -51,6 +53,11 @@ class CurlLite
      * @var string
      */
     private $error;
+
+    /**
+     * @var array
+     */
+    private $info = [];
 
     /**
      * @param array $config
@@ -74,14 +81,15 @@ class CurlLite
      * GET
      * @param $url
      * @param array $data
-     * @param array $headers
+     * @param array $options
      * @return array|mixed
      */
-    public function get($url, array $data = [], array $headers = [])
+    public function get($url, array $data = [], array $options = [])
     {
-        $url = $this->buildQuery($url, $data);
-        $url = $this->buildUrl($url);
-        $ch = $this->createCH($url, $headers, $this->config);
+        $url = $this->buildUrl($url, $data);
+
+        $options = $options ? array_merge($this->config, $options) : $this->config;
+        $ch = $this->createCH($url, $options);
 
         curl_setopt($ch, CURLOPT_HTTPGET, true);
 
@@ -92,13 +100,15 @@ class CurlLite
      * POST
      * @param string $url 地址
      * @param array $data 数据
-     * @param array $headers
+     * @param array $options
      * @return mixed
      */
-    public function post($url, array $data = [], array $headers = [])
+    public function post($url, array $data = [], array $options = [])
     {
+        $options = $options ? array_merge($this->config, $options) : $this->config;
+
         $url = $this->buildUrl($url);
-        $ch = $this->createCH($url, $headers, $this->config);
+        $ch = $this->createCH($url, $options);
 
         // post
         curl_setopt($ch, CURLOPT_POST, true);
@@ -111,13 +121,15 @@ class CurlLite
      * PUT
      * @param string $url 地址
      * @param array $data 数据
-     * @param array $headers
+     * @param array $options
      * @return mixed
      */
-    public function put($url, array $data = [], array $headers = [])
+    public function put($url, array $data = [], array $options = [])
     {
+        $options = $options ? array_merge($this->config, $options) : $this->config;
+
         $url = $this->buildUrl($url);
-        $ch = $this->createCH($url, $headers, $this->config);
+        $ch = $this->createCH($url, $options);
 
         // PUT
         curl_setopt($ch, CURLOPT_PUT, true);
@@ -130,13 +142,15 @@ class CurlLite
      * PATCH
      * @param string $url 地址
      * @param array $data 数据
-     * @param array $headers
+     * @param array $options
      * @return mixed
      */
-    public function patch($url, array $data = [], array $headers = [])
+    public function patch($url, array $data = [], array $options = [])
     {
+        $options = $options ? array_merge($this->config, $options) : $this->config;
+
         $url = $this->buildUrl($url);
-        $ch = $this->createCH($url, $headers, $this->config);
+        $ch = $this->createCH($url, $options);
 
         // PATCH
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
@@ -149,14 +163,15 @@ class CurlLite
      * DELETE
      * @param string $url 地址
      * @param array $data 数据
-     * @param array $headers
+     * @param array $options
      * @return mixed
      */
-    public function delete($url, array $data = [], array $headers = [])
+    public function delete($url, array $data = [], array $options = [])
     {
-        $url = $this->buildQuery($url, $data);
-        $url = $this->buildUrl($url);
-        $ch = $this->createCH($url, $headers, $this->config);
+        $options = $options ? array_merge($this->config, $options) : $this->config;
+
+        $url = $this->buildUrl($url, $data);
+        $ch = $this->createCH($url, $options);
 
         // DELETE
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
@@ -202,45 +217,41 @@ class CurlLite
             break;
         }
 
+        $this->info = curl_getinfo($ch);
+
         return $ret;
     }
 
     /**
      * @param string $url
-     * @param array $headers
      * @param array $opts
      * @return resource
      */
-    public function createCH($url, array $headers = [], array $opts = [])
+    public function createCH($url, array $opts = [])
     {
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_URL, $url);
 
         // headers
-        if ($a = array_merge($this->config['headers'], $headers)) {
+        if ($a = $opts['headers']) {
             $headers = [];
 
             foreach ($a as $name => $value) {
                 $name = ucwords($name);
-                $headers[$name] = $value;
+                $headers[] = "$name: $value";
             }
 
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        }
-
-        // set custom options
-        if (isset($opts['curlOptions']) && $cOpts = $opts['curlOptions']) {
-            curl_setopt_array($ch, $cOpts);
         }
 
         // 设置超时
         curl_setopt($ch, CURLOPT_TIMEOUT, $opts['timeout']);
 
         // 如果有配置代理这里就设置代理
-        if ($opts['proxy_host'] && $opts['proxy_port'] > 0) {
-            curl_setopt($ch, CURLOPT_PROXY, $opts['proxy_host']);
-            curl_setopt($ch, CURLOPT_PROXYPORT, $opts['proxy_port']);
+        if (isset($opts['proxy']) && $opts['proxy']) {
+            curl_setopt($ch, CURLOPT_PROXY, $opts['proxy']['host']);
+            curl_setopt($ch, CURLOPT_PROXYPORT, $opts['proxy']['port']);
         }
 
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -252,115 +263,12 @@ class CurlLite
         // 设置不返回header 返回的响应就只有body
         curl_setopt($ch, CURLOPT_HEADER, false);
 
+        // set custom options
+        if (isset($opts['curlOptions']) && $cOpts = $opts['curlOptions']) {
+            curl_setopt_array($ch, $cOpts);
+        }
+
         return $ch;
-    }
-
-    /**
-     * @var array
-     */
-    private $chMap = [];
-
-    /**
-     * @var resource
-     */
-    private $mh;
-
-    /**
-     * @var array
-     */
-    private $defaultOpts = [
-        'url' => '',
-        'type' => 'GET', // 'POST'
-        'timeout' => 3,
-        'headers' => [],
-        'data' => [],
-        'curlOptions' => [],
-    ];
-
-    /**
-     * make Multi
-     * @param  array $data
-     * @return self
-     */
-    public function createMultiCh(array $data)
-    {
-        $this->mh = curl_multi_init();
-
-        foreach ($data as $key => $opts) {
-            $opts = array_merge($this->defaultOpts, $opts);
-
-            switch ($opts['type']) {
-                case 'POST':
-                    $opts[CURLOPT_POST] = true;
-                    $opts[CURLOPT_POSTFIELDS] = $data;
-                    break;
-                case 'PUT':
-                    $opts[CURLOPT_PUT] = true;
-                    $opts[CURLOPT_POSTFIELDS] = $data;
-                    break;
-                case 'PATCH':
-                    $opts[CURLOPT_CUSTOMREQUEST] = 'PATCH';
-                    $opts[CURLOPT_POSTFIELDS] = $data;
-                    break;
-                case 'DELETE':
-                    $opts[CURLOPT_CUSTOMREQUEST] = 'DELETE';
-                    $opts['url'] = $this->buildQuery($opts['url'], $opts['data']);
-                    break;
-                case 'GET':
-                default:
-                    $opts[CURLOPT_HTTPGET] = true;
-                    $opts['url'] = $this->buildQuery($opts['url'], $opts['data']);
-                break;
-            }
-
-            $this->chMap[$key] = $this->createCH($opts['url'], $opts['headers'], $opts);
-
-            curl_multi_add_handle($this->mh, $this->chMap[$key]);
-        }
-
-        unset($data);
-
-        return $this;
-    }
-
-    /**
-     * execute multi request
-     * @param null|resource $mh
-     * @return bool|array
-     */
-    public function execute($mh = null)
-    {
-        if (!($mh = $mh ?: $this->mh)) {
-            return false;
-        }
-
-        $active = true;
-        $mrc = CURLM_OK;
-
-        while ($active && $mrc === CURLM_OK) {
-
-            // Solve CPU 100% usage
-            if (curl_multi_select($mh) === -1) {
-                usleep(100);
-            }
-
-            do {
-                $mrc = curl_multi_exec($mh, $active);
-                // curl_multi_select($mh); // Solve CPU 100% usage
-            } while ($mrc === CURLM_CALL_MULTI_PERFORM);
-        }
-
-        $responseMap = [];
-
-        // 关闭全部句柄
-        foreach ($this->chMap as $key => $ch) {
-            curl_multi_remove_handle($mh, $ch);
-            $responseMap[$key] = curl_multi_getcontent($ch);
-        }
-
-        curl_multi_close($mh);
-
-        return $responseMap;
     }
 
     /**
@@ -368,8 +276,7 @@ class CurlLite
      */
     public function __destruct()
     {
-        $this->mh = null;
-        $this->chMap = [];
+        $this->config = [];
     }
 
     /**
@@ -388,9 +295,10 @@ class CurlLite
 
     /**
      * @param $url
+     * @param array $data
      * @return string
      */
-    protected function buildUrl($url)
+    protected function buildUrl($url, array $data = [])
     {
         $url = trim($url);
         $baseUrl = $this->config['base_url'];
@@ -403,6 +311,10 @@ class CurlLite
         // check again
         if (!$this->isFullUrl($url)) {
             throw new \RuntimeException("The request url is not full, URL $url");
+        }
+
+        if ($data) {
+            return $this->buildQuery($url, $data);
         }
 
         return $url;
@@ -450,5 +362,13 @@ class CurlLite
     public function getError(): string
     {
         return $this->error;
+    }
+
+    /**
+     * @return array
+     */
+    public function getInfo(): array
+    {
+        return $this->info;
     }
 }

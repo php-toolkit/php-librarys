@@ -30,58 +30,18 @@ class CurlMulti extends CurlLite
     private $mh;
 
     /**
-     * @var array
-     */
-    private $defaultOpts = [
-        'url' => '',
-        'type' => 'GET', // 'POST'
-        'timeout' => 3,
-        'headers' => [],
-        'proxy' => [
-            // 'host' => '',
-            // 'port' => '',
-        ],
-        'data' => [],
-        'curlOptions' => [],
-    ];
-
-    /**
      * make Multi
      * @param  array $data
      * @return self
      */
-    public function createMulti(array $data)
+    public function create(array $data)
     {
         $this->mh = curl_multi_init();
 
         foreach ($data as $key => $opts) {
-            $opts = array_merge($this->defaultOpts, $opts);
+            $opts = array_merge($this->defaultOptions, $opts);
 
-            switch ($opts['type']) {
-                case 'POST':
-                    $opts[CURLOPT_POST] = true;
-                    $opts[CURLOPT_POSTFIELDS] = $data;
-                    break;
-                case 'PUT':
-                    $opts[CURLOPT_PUT] = true;
-                    $opts[CURLOPT_POSTFIELDS] = $data;
-                    break;
-                case 'PATCH':
-                    $opts[CURLOPT_CUSTOMREQUEST] = 'PATCH';
-                    $opts[CURLOPT_POSTFIELDS] = $data;
-                    break;
-                case 'DELETE':
-                    $opts[CURLOPT_CUSTOMREQUEST] = 'DELETE';
-                    $opts['url'] = $this->buildQuery($opts['url'], $opts['data']);
-                    break;
-                case 'GET':
-                default:
-                    $opts[CURLOPT_HTTPGET] = true;
-                    $opts['url'] = $this->buildQuery($opts['url'], $opts['data']);
-                    break;
-            }
-
-            $this->chMap[$key] = $this->createCH($opts['url'], $opts);
+            $this->chMap[$key] = $this->createResource($opts['url'], [], [], $opts);
 
             curl_multi_add_handle($this->mh, $this->chMap[$key]);
         }

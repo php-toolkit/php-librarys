@@ -350,13 +350,10 @@ class Curl implements CurlInterface
             throw new \InvalidArgumentException("The method type [$type] is not supported!");
         }
 
-        $this->prepareRequest($headers, $options);
-
         // init curl
         $ch = curl_init();
 
-        // set options
-        curl_setopt_array($ch, $options);
+        $this->prepareRequest($ch, $headers, $options);
 
         // add send data
         if ($data) {
@@ -416,7 +413,7 @@ class Curl implements CurlInterface
 //   helper method
 ///////////////////////////////////////////////////////////////////////
 
-    protected function prepareRequest(array $headers = [], array $options = [])
+    protected function prepareRequest($ch, array $headers = [], array $options = [])
     {
         $this->resetResponse();
 
@@ -430,6 +427,10 @@ class Curl implements CurlInterface
             }
         }
 
+        // set options, can not use `array_merge()`, $options key is int.
+        curl_setopt_array($ch, self::$defaultOptions);
+        curl_setopt_array($ch, $this->_options);
+
         // merge default options
         $this->_options = array_merge(self::$defaultOptions, $this->_options, $options);
 
@@ -438,13 +439,15 @@ class Curl implements CurlInterface
 
         // append http headers to options
         if ($this->_headers) {
-            $this->_options[CURLOPT_HTTPHEADER] = $this->getHeaders(true);
+            $options[CURLOPT_HTTPHEADER] = $this->getHeaders(true);
         }
 
         // append http cookies to options
         if ($this->_cookies) {
-            $this->_options[CURLOPT_COOKIE] = http_build_query($this->_cookies, '', '; ');
+            $options[CURLOPT_COOKIE] = http_build_query($this->_cookies, '', '; ');
         }
+
+        curl_setopt_array($ch, $options);
     }
 
     protected function parseResponse()

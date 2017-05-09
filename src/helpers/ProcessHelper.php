@@ -68,13 +68,13 @@ class ProcessHelper
     }
 
     /**
-     * kill process by PID
+     * send signal to the process
      * @param int $pid
      * @param int $signal
      * @param int $timeout
      * @return bool
      */
-    public static function kill($pid, $signal = SIGTERM, $timeout = 3)
+    public function sendSignal($pid, $signal, $timeout = 3)
     {
         if ($pid <= 0) {
             return false;
@@ -114,6 +114,19 @@ class ProcessHelper
         }
 
         return $ret;
+    }
+
+    /**
+     * kill process by PID
+     * @param int $pid
+     * @param int $signal
+     * @param int $timeout
+     * @return bool
+     */
+    public static function kill($pid, $signal = SIGTERM, $timeout = 3)
+    {
+
+        return self::sendSignal($pid, $signal, $timeout);
     }
 
 //////////////////////////////////////////////////////////////////////

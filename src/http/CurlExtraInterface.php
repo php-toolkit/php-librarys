@@ -9,10 +9,10 @@
 namespace inhere\library\http;
 
 /**
- * Class CurlInterface
+ * Class CurlExtraInterface
  * @package inhere\library\http
  */
-interface CurlInterface
+interface CurlExtraInterface
 {
     // request method list
     const GET = 'GET';
@@ -28,32 +28,16 @@ interface CurlInterface
     const SSL_TYPE_CERT = 'cert';
     const SSL_TYPE_KEY = 'key';
 
-    public function get($url, $params = [], array $headers = [], array $options = []);
-
-    public function post($url, $data = [], array $headers = [], array $options = []);
-
-    public function put($url, $data = [], array $headers = [], array $options = []);
-
-    public function patch($url, $data = [], array $headers = [], array $options = []);
-
-    public function delete($url, $data = [], array $headers = [], array $options = []);
-
-    public function options($url, $data = [], array $headers = [], array $options = []);
-
-    public function head($url, $params = [], array $headers = [], array $options = []);
-
-    public function trace($url, $params = [], array $headers = [], array $options = []);
-
     /**
      * Send request
      * @param $url
      * @param array $data
-     * @param string $type
+     * @param string $method
      * @param array $headers
      * @param array $options
      * @return self
      */
-    public function request($url, $data = [], $type = self::GET, array $headers = [], array $options = []);
+    public function request($url, $data = null, $method = self::GET, array $headers = [], array $options = []);
 
     public function reset();
 

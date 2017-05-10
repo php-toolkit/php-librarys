@@ -12,7 +12,7 @@ namespace inhere\library\http;
  * Class CurlLite - a lite curl tool
  * @package inhere\library\http
  */
-class CurlLite
+class CurlLite implements CurlLiteInterface
 {
     /**
      * Can to retry
@@ -26,6 +26,21 @@ class CurlLite
         CURLE_OPERATION_TIMEOUTED,
         CURLE_HTTP_POST_ERROR,
         CURLE_SSL_CONNECT_ERROR,
+    ];
+
+    /**
+     * @var array
+     */
+    protected static $supportedMethods = [
+        // method => allow post data
+        'GET' => false,
+        'POST' => true,
+        'PUT' => true,
+        'PATCH' => true,
+        'DELETE' => false,
+        'HEAD' => false,
+        'OPTIONS' => false,
+        'TRACE' => false,
     ];
 
     /**
@@ -48,7 +63,7 @@ class CurlLite
      * @var array
      */
     protected $defaultOptions = [
-        'url' => '',
+        'uri' => '',
         'method' => 'GET', // 'POST'
         'retry' => 3,
         'timeout' => 10,
@@ -76,75 +91,88 @@ class CurlLite
     /**
      * SimpleCurl constructor.
      * @param array $options
+     * @throws \ErrorException
      */
     public function __construct(array $options = [])
     {
+        if (!extension_loaded('curl')) {
+            throw new \ErrorException('The cURL extensions is not loaded, make sure you have installed the cURL extension: https://php.net/manual/curl.setup.php');
+        }
+
         if (isset($options['baseUrl'])) {
             $this->setBaseUrl($options['baseUrl']);
             unset($options['baseUrl']);
         }
 
-        $this->defaultOptions = array_merge($this->defaultOptions, $options);
+        $this->defaultOptions = self::mergeOptions($this->defaultOptions, $options);
     }
 
+///////////////////////////////////////////////////////////////////////
+// main
+///////////////////////////////////////////////////////////////////////
+
     /**
-     * GET
-     * @param $url
-     * @param mixed $data
-     * @param array $options
-     * @return array|mixed
+     * {@inheritDoc}
      */
     public function get($url, $data = null, array $headers = [], array $options = [])
     {
-        return $this->request($url, $data, 'GET', $headers, $options);
+        return $this->request($url, $data, self::GET, $headers, $options);
     }
 
     /**
-     * POST
-     * @param string $url 地址
-     * @param mixed $data 数据
-     * @param array $options
-     * @return mixed
+     * {@inheritDoc}
      */
     public function post($url, $data = null, array $headers = [], array $options = [])
     {
-        return $this->request($url, $data, 'POST', $headers, $options);
+        return $this->request($url, $data, self::POST, $headers, $options);
     }
 
     /**
-     * PUT
-     * @param string $url 地址
-     * @param mixed $data 数据
-     * @param array $options
-     * @return mixed
+     * {@inheritDoc}
      */
     public function put($url, $data = null, array $headers = [], array $options = [])
     {
-        return $this->request($url, $data, 'PUT', $headers, $options);
+        return $this->request($url, $data, self::PUT, $headers, $options);
     }
 
     /**
-     * PATCH
-     * @param string $url 地址
-     * @param mixed $data 数据
-     * @param array $options
-     * @return mixed
+     * {@inheritDoc}
      */
     public function patch($url, $data = null, array $headers = [], array $options = [])
     {
-        return $this->request($url, $data, 'PATCH', $headers,  $options);
+        return $this->request($url, $data, self::PATCH, $headers,  $options);
     }
 
     /**
-     * DELETE
-     * @param string $url 地址
-     * @param mixed $data 数据
-     * @param array $options
-     * @return mixed
+     * {@inheritDoc}
      */
     public function delete($url, $data = null, array $headers = [], array $options = [])
     {
-        return $this->request($url, $data, 'DELETE', $headers, $options);
+        return $this->request($url, $data, self::DELETE, $headers, $options);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function options($url, $data = null, array $headers = [], array $options = [])
+    {
+        return $this->request($url, $data, self::OPTIONS, $headers, $options);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function head($url, $params = [], array $headers = [], array $options = [])
+    {
+        return $this->request($url, $params, self::HEAD, $headers, $options);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function trace($url, $params = [], array $headers = [], array $options = [])
+    {
+        return $this->request($url, $params, self::TRACE, $headers, $options);
     }
 
     /**
@@ -152,12 +180,14 @@ class CurlLite
      *
      * @param string $url url path
      * @param mixed $data send data
+     * @param string $method
+     * @param array $headers
      * @param array $options
      * @return string
      */
     public function request($url, $data = null, $method = 'GET', array $headers = [], array $options = [])
     {
-        $options = array_merge($this->options, $options);
+        $options = self::mergeOptions($this->defaultOptions, $options);
 
         if ($method) {
             $options['method'] = $method;
@@ -192,6 +222,8 @@ class CurlLite
 
     /**
      * @param string $url
+     * @param null $data
+     * @param array $headers
      * @param array $opts
      * @return resource
      */
@@ -270,7 +302,7 @@ class CurlLite
 
         // add custom options
         if ($opts['curlOptions']) {
-            curl_setopt_array($opts['curlOptions']);
+            curl_setopt_array($ch, $opts['curlOptions']);
         }
 
         return $ch;
@@ -281,7 +313,7 @@ class CurlLite
      */
     public function __destruct()
     {
-        $this->options = [];
+        $this->info = [];
     }
 
     /**
@@ -306,7 +338,7 @@ class CurlLite
     protected function buildUrl($url, $data = null)
     {
         $url = trim($url);
-        $baseUrl = $this->options['base_url'];
+        $baseUrl = $this->defaultOptions['base_url'];
 
         // is a url part.
         if (!$this->isFullUrl($url)) {
@@ -334,6 +366,11 @@ class CurlLite
         return 0 === strpos($url, 'http:') || 0 === strpos($url, 'https:') || 0 === strpos($url, '//');
     }
 
+    /**
+     * @param $a
+     * @param $b
+     * @return mixed
+     */
     public static function mergeOptions($a, $b)
     {
         if (!$a) {

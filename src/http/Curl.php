@@ -15,7 +15,9 @@ use inhere\library\helpers\UrlHelper;
  * @package inhere\library\http
  *
  * ```
- * $curl = Curl::make('http://my-site.com');
+ * $curl = Curl::make([
+ *   'baseUrl' =>  'http://my-site.com'
+ * ]);
  * $curl->get('/users/1');
  *
  * $headers = $curl->getResponseHeaders();
@@ -30,20 +32,8 @@ use inhere\library\helpers\UrlHelper;
  *
  * ```
  */
-class Curl implements CurlInterface
+class Curl extends CurlLite implements CurlExtraInterface
 {
-    private static $supportedMethods = [
-        // method => allow post data
-        'GET' => false,
-        'POST' => true,
-        'PUT' => true,
-        'PATCH' => true,
-        'DELETE' => false,
-        'HEAD' => false,
-        'OPTIONS' => false,
-        'TRACE' => false,
-    ];
-
     /**
      * config for self
      * @var array
@@ -66,7 +56,7 @@ class Curl implements CurlInterface
      * The default curl options
      * @var array
      */
-    private static $defaultOptions = [
+    protected $defaultOptions = [
         // TRUE 将 curl_exec() 获取的信息以字符串返回，而不是直接输出
         CURLOPT_RETURNTRANSFER => true,
 
@@ -147,32 +137,6 @@ class Curl implements CurlInterface
         'info' => '',
     ];
 
-    /**
-     * @param array|string|null $config
-     * @return Curl
-     */
-    public static function make($config = null)
-    {
-        return new self($config);
-    }
-
-    /**
-     * Curl constructor.
-     * @param array|string|null $config
-     * @throws \ErrorException
-     */
-    public function __construct($config = null)
-    {
-        if (!extension_loaded('curl')) {
-            throw new \ErrorException('The cURL extensions is not loaded, make sure you have installed the cURL extension: https://php.net/manual/curl.setup.php');
-        }
-
-        if (is_string($config)) {
-            $this->_config['baseUrl'] = trim($config);
-        } elseif (is_array($config)) {
-            $this->setConfig($config);
-        }
-    }
 
     /**
      * @param $method
@@ -185,64 +149,8 @@ class Curl implements CurlInterface
     }
 
 ///////////////////////////////////////////////////////////////////////
-//   main
+// extra
 ///////////////////////////////////////////////////////////////////////
-
-    public function get($url, $params = [], array $headers = [], array $options = [])
-    {
-        $options[CURLOPT_HTTPGET] = true;
-
-        return $this->request($url, $params, self::GET, $headers, $options);
-    }
-
-    public function post($url, $data = [], array $headers = [], array $options = [])
-    {
-        // will auto setting: 'Content-Type' => 'application/x-www-form-urlencoded'
-        $options[CURLOPT_POST] = true;
-
-        return $this->request($url, $data, self::POST, $headers, $options);
-    }
-
-    public function put($url, $data = [], array $headers = [], array $options = [])
-    {
-        $options[CURLOPT_PUT] = true;
-
-        return $this->request($url, $data, self::PUT, $headers, $options);
-    }
-
-    public function patch($url, $data = [], array $headers = [], array $options = [])
-    {
-        $options[CURLOPT_CUSTOMREQUEST] = self::PATCH;
-
-        return $this->request($url, $data, self::PATCH, $headers, $options);
-    }
-
-    public function delete($url, $data = [], array $headers = [], array $options = [])
-    {
-        $options[CURLOPT_CUSTOMREQUEST] = self::DELETE;
-
-        return $this->request($url, $data, self::DELETE, $headers, $options);
-    }
-
-    public function options($url, $data = [], array $headers = [], array $options = [])
-    {
-        return $this->request($url, $data, self::OPTIONS, $headers, $options);
-    }
-
-    public function head($url, $params = [], array $headers = [], array $options = [])
-    {
-        $options[CURLOPT_NOBODY] = true;
-        $options[CURLOPT_CUSTOMREQUEST] = self::HEAD;
-
-        return $this->request($url, $params, self::HEAD, $headers, $options);
-    }
-
-    public function trace($url, $params = [], array $headers = [], array $options = [])
-    {
-        $options[CURLOPT_CUSTOMREQUEST] = self::TRACE;
-
-        return $this->request($url, $params, self::TRACE, $headers, $options);
-    }
 
     /**
      * File upload
@@ -342,12 +250,12 @@ class Curl implements CurlInterface
      * Send request
      * @inheritdoc
      */
-    public function request($url, $data = [], $type = self::GET, array $headers = [], array $options = [])
+    public function request($url, $data = null, $method = self::GET, array $headers = [], array $options = [])
     {
-        $type = strtoupper($type);
+        $method = strtoupper($method);
 
-        if (!isset(self::$supportedMethods[$type])) {
-            throw new \InvalidArgumentException("The method type [$type] is not supported!");
+        if (!isset(self::$supportedMethods[$method])) {
+            throw new \InvalidArgumentException("The method type [$method] is not supported!");
         }
 
         // init curl
@@ -357,9 +265,8 @@ class Curl implements CurlInterface
 
         // add send data
         if ($data) {
-
             // allow post data
-            if (self::$supportedMethods[$type]) {
+            if (self::$supportedMethods[$method]) {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
             } else {
                 $url .= (strpos($url, '?') ? '&' : '?') . http_build_query($data);
@@ -428,11 +335,10 @@ class Curl implements CurlInterface
         }
 
         // set options, can not use `array_merge()`, $options key is int.
-        curl_setopt_array($ch, self::$defaultOptions);
-        curl_setopt_array($ch, $this->_options);
 
         // merge default options
-        $this->_options = array_merge(self::$defaultOptions, $this->_options, $options);
+        $this->_options = self::mergeOptions($this->defaultOptions, $this->_options);
+        $this->_options = self::mergeOptions($this->_options, $options);
 
         // set headers
         $this->setHeaders($headers);
@@ -447,7 +353,7 @@ class Curl implements CurlInterface
             $options[CURLOPT_COOKIE] = http_build_query($this->_cookies, '', '; ');
         }
 
-        curl_setopt_array($ch, $options);
+        curl_setopt_array($ch, $this->_options);
     }
 
     protected function parseResponse()
@@ -507,14 +413,6 @@ class Curl implements CurlInterface
     public static function getSupportedMethods()
     {
         return self::$supportedMethods;
-    }
-
-    /**
-     * @return array
-     */
-    public static function getDefaultOptions()
-    {
-        return self::$defaultOptions;
     }
 
 ///////////////////////////////////////////////////////////////////////

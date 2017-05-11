@@ -76,10 +76,12 @@ class Telnet
 
         $this->setConfig($config);
 
-        $this->connect();
+        $this->init();
+
+        $this->connect($this->host, $this->port);
     }
 
-    protected function connect()
+    protected function init()
     {
         $driver = $this->config['driver'];
 
@@ -93,8 +95,31 @@ class Telnet
         }
 
         $this->driver = $driver;
-        $host = $this->host;
-        $port = $this->port;
+    }
+
+    /**
+     * @param string $host
+     * @param string $port
+     */
+    protected function connect($host, $port)
+    {
+        try {
+            $this->doConnect($host, $port, $this->driver);
+        } catch (\Exception $e) {
+            throw new \RuntimeException(
+                "Use {$this->driver} connect to the server {$host}:{$port} failed, ERROR({$e->getCode()}): {$e->getMessage()}",
+                -500
+            );
+        }
+    }
+
+    /**
+     * @param string $host
+     * @param string $port
+     * @param string $driver
+     */
+    protected function doConnect($host, $port, $driver)
+    {
         $errNo = $errStr = null;
 
         switch ($driver) {
@@ -147,6 +172,70 @@ class Telnet
     }
 
     /**
+     * watch a command
+     * @param  string  $command
+     * @param  integer $interval (ms)
+     */
+    public function watch($command, $interval = 500)
+    {
+        $count = 0;
+        $activeTime = time();
+        $maxTime = (int)$this->config['max_wait_time'];
+        $intervalUs = $interval * 1000;
+
+        echo "watch command: $command, refresh interval: {$interval}ms\n";
+
+        while (true) {
+            $count++;
+            $result = $this->command($command);
+
+            if (0 === strpos($result, 'ERR ')) {
+                echo "$result\n";
+                echo "error command: $command.\n";
+                break;
+            }
+
+            // clear screen before output
+            echo "\033[2JThe {$count} times watch {$command} result(refresh interval: {$interval}ms):\n{$result}\n";
+
+            if (time() - $activeTime >= $maxTime) {
+                echo "wait timeout, auto quit.\n";
+                break;
+            }
+
+            $activeTime = time();
+            usleep($intervalUs);
+        }
+
+        echo "Quit\n";
+    }
+
+    /**
+     * into interactive environment
+     */
+    public function interactive()
+    {
+        echo "welcome! please input command('quit' or 'exit' to Quit).\n ";
+
+        while (true) {
+            echo "> ";
+            if ($cmd = trim(fgets(\STDIN))) {
+                // echo "input command: $cmd\n";
+                if ($cmd === 'quit' || $cmd === 'exit') {
+                    echo "Quit. Bye\n";
+                    break;
+                }
+
+                echo $this->command($cmd) . PHP_EOL;
+            }
+
+            usleep(50000);
+        }
+
+        $this->close();
+    }
+
+    /**
      * send command
      * @param  string $command
      * @param bool $readResult
@@ -162,40 +251,6 @@ class Telnet
         }
 
         return $len;
-    }
-
-    /**
-     * into interactive environment
-     */
-    public function interactive()
-    {
-        $activeTime = time();
-        $maxTime = $this->config['max_wait_time'];
-
-        echo "welcome! please input command.\n ";
-
-        while (true) {
-            echo "> ";
-            if ($cmd = trim(fgets(\STDIN))) {
-                // echo "input command: $cmd\n";
-                if ($cmd === 'quit' || $cmd === 'exit') {
-                    echo "Quit. Bye\n";
-                    break;
-                }
-
-                echo $this->command($cmd) . PHP_EOL;
-            }
-
-            if (time() - $activeTime >= $maxTime) {
-                echo "connection timeout.\n";
-                break;
-            }
-
-            $activeTime = time();
-            usleep(50000);
-        }
-
-        $this->close();
     }
 
     /**

@@ -59,8 +59,8 @@ class Telnet
         // 10s
         'timeout' => 10,
 
-        // max wait time 180s, when into the interactive environment
-        'max_wait_time' => 180,
+        // max watch time 300s, when use watch()
+        'max_watch_time' => 300,
     ];
 
     /**
@@ -180,7 +180,7 @@ class Telnet
     {
         $count = 0;
         $activeTime = time();
-        $maxTime = (int)$this->config['max_wait_time'];
+        $maxTime = (int)$this->config['max_watch_time'];
         $intervalUs = $interval * 1000;
 
         echo "watch command: $command, refresh interval: {$interval}ms\n";
@@ -191,19 +191,18 @@ class Telnet
 
             if (0 === strpos($result, 'ERR ')) {
                 echo "$result\n";
-                echo "error command: $command.\n";
+                echo "error command: $command. ";
                 break;
             }
 
             // clear screen before output
             echo "\033[2JThe {$count} times watch {$command} result(refresh interval: {$interval}ms):\n{$result}\n";
 
-            if (time() - $activeTime >= $maxTime) {
-                echo "wait timeout, auto quit.\n";
+            if ($maxTime > 0 && time() - $activeTime >= $maxTime) {
+                echo "watch time end. ";
                 break;
             }
 
-            $activeTime = time();
             usleep($intervalUs);
         }
 

@@ -70,17 +70,16 @@ class CliHelper
     /**
      * @param $text
      * @param string|int|array $style
-     * @param bool $return
      * @return string
      */
-    public static function renderColor($text, $style = self::NORMAL, $return = true)
+    public static function renderColor($text, $style = self::NORMAL)
     {
         if (!self::isSupportColor()) {
             return $text;
         }
 
         if(is_string($style)) {
-            $out = $style;
+            $out = isset(self::$styles[$style]) ? self::$styles[$style] : '0';
         } elseif (is_int($style)) {
             $out = $style;
 
@@ -92,15 +91,7 @@ class CliHelper
         }
 
 //        $result = chr(27). "$out{$text}" . chr(27) . chr(27) . "[0m". chr(27);
-        $result = "\033[{$out}m{$text}\033[0m";
-
-        if($return ){
-            return $result;
-        }
-
-        echo $result;
-
-        return true;
+        return "\033[{$out}m{$text}\033[0m";
     }
 
     /**

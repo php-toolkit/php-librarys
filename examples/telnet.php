@@ -15,7 +15,7 @@ $opts = getopt('h', ['help']);
 
 if (isset($opts['h']) || isset($opts['help'])) {
     $script = array_shift($argv);
-    $script = Helper::addColor($script, Helper::$styles['light_green']);
+    $script = Helper::color($script, Helper::$styles['light_green']);
     $help = <<<EOF
 Start a telnet client.
 
@@ -32,9 +32,9 @@ EOF;
 $host = isset($argv[1]) ? $argv[1] : '127.0.0.1';
 $port = isset($argv[2]) ? $argv[2] : 80;
 
-printf("Connect to the gearman server {$host}:{$port}");
+printf("Connect to the server {$host}:{$port}");
 
-$tt = new \inhere\gearman\tools\Telnet($host, $port);
+$tt = new \inhere\library\network\Telnet($host, $port);
 
 // var_dump($tt);die;
 

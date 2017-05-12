@@ -278,29 +278,24 @@ class Curl extends CurlLite implements CurlExtraInterface
         curl_setopt($ch, CURLOPT_URL, UrlHelper::encode2($url));
 
         $response = '';
-        $retries = $this->_config['retry'] + 1;
+        $retries = (int)$this->_config['retry'];
 
         // execute
-        while ($retries--) {
+        while ($retries >= 0) {
             if (false === ($response = curl_exec($ch))) {
                 $curlErrNo = curl_errno($ch);
 
                 if (false === in_array($curlErrNo, self::$canRetryErrorCodes, true) || !$retries) {
                     $curlError = curl_error($ch);
 
-                    // close
-                    curl_close($ch);
-
                     // throw new \RuntimeException(sprintf('Curl error (code %s): %s', $curlErrNo, $curlError));
                     $this->_responseMeta['errno'] = $curlErrNo;
                     $this->_responseMeta['error'] = $curlError;
                 }
 
+                $retries--;
                 continue;
             }
-
-            // close
-            curl_close($ch);
             break;
         }
 
@@ -312,6 +307,9 @@ class Curl extends CurlLite implements CurlExtraInterface
         }
 
         $this->_response = $response;
+
+        // close
+        curl_close($ch);
 
         return $this;
     }
@@ -771,10 +769,10 @@ class Curl extends CurlLite implements CurlExtraInterface
      * Use http auth
      * @param string $user
      * @param string $pwd
-     * @param int $authType
+     * @param int $authType CURLAUTH_BASIC CURLAUTH_DIGEST
      * @return $this
      */
-    public function setUserAuth($user, $pwd, $authType = CURLAUTH_BASIC)
+    public function setUserAuth($user, $pwd = '', $authType = CURLAUTH_BASIC)
     {
         $this->_options[CURLOPT_HTTPAUTH] = $authType;
         $this->_options[CURLOPT_USERPWD] = "$user:$pwd";

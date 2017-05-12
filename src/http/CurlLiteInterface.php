@@ -23,10 +23,7 @@ interface CurlLiteInterface
     const HEAD = 'HEAD';
     const OPTIONS = 'OPTIONS';
     const TRACE = 'TRACE';
-
-    // ssl auth type
-    const SSL_TYPE_CERT = 'cert';
-    const SSL_TYPE_KEY = 'key';
+    const SEARCH = 'SEARCH';
 
     /**
      * GET

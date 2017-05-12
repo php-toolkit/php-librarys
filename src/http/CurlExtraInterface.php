@@ -14,16 +14,6 @@ namespace inhere\library\http;
  */
 interface CurlExtraInterface
 {
-    // request method list
-    const GET = 'GET';
-    const POST = 'POST';
-    const PUT = 'PUT';
-    const PATCH = 'PATCH';
-    const DELETE = 'DELETE';
-    const HEAD = 'HEAD';
-    const OPTIONS = 'OPTIONS';
-    const TRACE = 'TRACE';
-
     // ssl auth type
     const SSL_TYPE_CERT = 'cert';
     const SSL_TYPE_KEY = 'key';

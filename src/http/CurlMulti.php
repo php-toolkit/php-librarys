@@ -52,6 +52,22 @@ class CurlMulti extends CurlLite
     }
 
     /**
+     * @param $url
+     * @param null $data
+     * @param array $headers
+     * @param array $options
+     * @return $this
+     */
+    public function append($url, $data = null, array $headers = [], array $options = [])
+    {
+        $this->chMap[] = $ch = $this->createResource($url, $data, $headers, $options);
+
+        curl_multi_add_handle($this->mh, $ch);
+
+        return $this;
+    }
+
+    /**
      * execute multi request
      * @param null|resource $mh
      * @return bool|array
@@ -99,13 +115,77 @@ class CurlMulti extends CurlLite
     }
 
     /**
-     * __destruct
+     * @return bool
      */
-    public function __destruct()
+    public function isOk()
     {
-        parent::__destruct();
+        return !$this->errors;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFail()
+    {
+        return !!$this->errors;
+    }
+
+    /**
+     * reset
+     */
+    public function reset()
+    {
+        parent::reset();
 
         $this->mh = null;
-        $this->chMap = [];
+        $this->chMap = $this->errors = [];
+    }
+
+    /**
+     * @return array
+     */
+    public function getErrors(): array
+    {
+        return $this->errors;
+    }
+
+    /**
+     * @param array $errors
+     */
+    public function setErrors(array $errors)
+    {
+        $this->errors = $errors;
+    }
+
+    /**
+     * @return array
+     */
+    public function getChMap(): array
+    {
+        return $this->chMap;
+    }
+
+    /**
+     * @param array $chMap
+     */
+    public function setChMap(array $chMap)
+    {
+        $this->chMap = $chMap;
+    }
+
+    /**
+     * @return resource
+     */
+    public function getMh(): resource
+    {
+        return $this->mh;
+    }
+
+    /**
+     * @param resource $mh
+     */
+    public function setMh(resource $mh)
+    {
+        $this->mh = $mh;
     }
 }

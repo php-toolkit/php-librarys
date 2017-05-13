@@ -115,4 +115,14 @@ interface CurlLiteInterface
      * @return self
      */
     public function request($url, $data = null, $method = self::GET, array $headers = [], array $options = []);
+
+    /**
+     * @return bool
+     */
+    public function isOk();
+
+    /**
+     * @return bool
+     */
+    public function isFail();
 }

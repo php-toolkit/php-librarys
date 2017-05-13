@@ -13,27 +13,27 @@ namespace inhere\library\traits;
 use inhere\library\helpers\ArrayHelper;
 
 /**
- * Class TraitSimpleOption
+ * Class TraitSimpleConfig
  * @package inhere\library\traits
  *
- * @property array $options 必须在使用的类定义此属性, 在 Trait 中已定义的属性，在使用 Trait 的类中不能再次定义
+ * @property array $config 必须在使用的类定义此属性, 在 Trait 中已定义的属性，在使用 Trait 的类中不能再次定义
  */
-trait TraitSimpleOption
+trait TraitSimpleConfig
 {
     /**
      * 在 Trait 中已定义的属性，在使用 Trait 的类中不能再次定义
      * 而已定义的方法 可以被覆盖，但无法直接使用 已定义的方法体 e.g. parent::set(...)
      * 只能完全重写。但可以用继承 使用了 Trait 的父级来解决,具体请看 \inhere\library\dataStorage\example 的 例子
      */
-    //protected $options;
+    //protected $config = [];
 
     /**
      * @param $name
      * @return bool
      */
-    public function hasOption($name)
+    public function hasConfig($name)
     {
-        return array_key_exists($name, $this->options);
+        return array_key_exists($name, $this->config);
     }
 
     /**
@@ -42,9 +42,9 @@ trait TraitSimpleOption
      * @param   mixed $default
      * @return  mixed
      */
-    public function getOption(string $name, $default = null)
+    public function getValue(string $name, $default = null)
     {
-        $value = array_key_exists($name, $this->options) ? $this->options[$name] : $default;
+        $value = array_key_exists($name, $this->config) ? $this->config[$name] : $default;
 
         if ($value && is_callable($value) && ($value instanceof \Closure)) {
             $value = $value();
@@ -54,14 +54,14 @@ trait TraitSimpleOption
     }
 
     /**
-     * Method to set property options
+     * Method to set property config
      * @param   string $name
      * @param   mixed $value
      * @return  static  Return self to support chaining.
      */
-    public function setOption($name, $value)
+    public function setValue($name, $value)
     {
-        $this->options[$name] = $value;
+        $this->config[$name] = $value;
 
         return $this;
     }
@@ -71,14 +71,14 @@ trait TraitSimpleOption
      * @param $name
      * @return mixed|null
      */
-    public function delOption($name)
+    public function delValue($name)
     {
         $value = null;
 
-        if ($this->hasOption($name)) {
-            $value = $this->getOption($name);
+        if ($this->hasConfig($name)) {
+            $value = $this->getValue($name);
 
-            unset($this->options[$name]);
+            unset($this->config[$name]);
         }
 
         return $value;
@@ -88,20 +88,20 @@ trait TraitSimpleOption
      * Method to get property Options
      * @return  array
      */
-    public function getOptions()
+    public function getConfig()
     {
-        return $this->options;
+        return $this->config;
     }
 
     /**
-     * Method to set property options
-     * @param  array $options
+     * Method to set property config
+     * @param  array $config
      * @param  bool $merge
      * @return static Return self to support chaining.
      */
-    public function setOptions(array $options, $merge = true)
+    public function setConfig(array $config, $merge = true)
     {
-        $this->options = $merge ? ArrayHelper::merge($this->options, $options) : $options;
+        $this->config = $merge ? ArrayHelper::merge($this->config, $config) : $config;
 
         return $this;
     }

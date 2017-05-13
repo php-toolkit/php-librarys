@@ -183,13 +183,13 @@ class Telnet
         $maxTime = (int)$this->config['max_watch_time'];
         $intervalUs = $interval * 1000;
 
-        echo "watch command: $command, refresh interval: {$interval}ms\n";
+        //echo "watch command: $command, refresh interval: {$interval}ms\n";
 
         while (true) {
             $count++;
             $result = $this->command($command);
 
-            if (0 === strpos($result, 'ERR ')) {
+            if (0 === strpos($result, 'ERR')) {
                 echo "$result\n";
                 echo "error command: $command. ";
                 break;

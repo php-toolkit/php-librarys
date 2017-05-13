@@ -47,7 +47,7 @@ class CurlLite implements CurlLiteInterface
      * base Url
      * @var string
      */
-    private $baseUrl = '';
+    protected $baseUrl = '';
 
     /**
      * @var string
@@ -196,18 +196,21 @@ class CurlLite implements CurlLiteInterface
         $ch = $this->createResource($url, $data, $headers, $options);
 
         $ret = '';
-        $retries = isset($options['retry']) ? (int)$options['retry'] : 3;
+        $retries = (int)$options['retry'];
+        $retries = $retries > 30 || $retries < 0 ? 3 : $retries;
 
-        while ($retries--) {
+        while ($retries >= 0) {
             if (($ret = curl_exec($ch)) === false) {
                 $curlErrNo = curl_errno($ch);
 
-                if (false === in_array($curlErrNo, self::$canRetryErrorCodes, true) || !$retries) {
+                if (false === in_array($curlErrNo, self::$canRetryErrorCodes, true)) {
                     $curlError = curl_error($ch);
 
                     $this->error = sprintf('Curl error (code %s): %s', $curlErrNo, $curlError);
                     // throw new \RuntimeException(sprintf('Curl error (code %s): %s', $curlErrNo, $curlError));
                 }
+
+                $retries--;
                 continue;
             }
 
@@ -309,11 +312,36 @@ class CurlLite implements CurlLiteInterface
     }
 
     /**
+     * @return bool
+     */
+    public function isOk()
+    {
+        return !$this->error;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFail()
+    {
+        return !!$this->error;
+    }
+
+    /**
+     * reset
+     */
+    public function reset()
+    {
+        $this->error = null;
+        $this->info = [];
+    }
+
+    /**
      * __destruct
      */
     public function __destruct()
     {
-        $this->info = [];
+        $this->reset();
     }
 
     /**
@@ -338,11 +366,10 @@ class CurlLite implements CurlLiteInterface
     protected function buildUrl($url, $data = null)
     {
         $url = trim($url);
-        $baseUrl = $this->defaultOptions['base_url'];
 
         // is a url part.
-        if (!$this->isFullUrl($url)) {
-            $url = $baseUrl . $url;
+        if ($this->baseUrl && !$this->isFullUrl($url)) {
+            $url = $this->baseUrl . $url;
         }
 
         // check again

@@ -15,47 +15,68 @@ namespace inhere\library\helpers;
 class ProcessHelper
 {
     /**
-     * 获取资源消耗
-     * @param int $startTime
-     * @param int $startMem
-     * @return array
+     * Daemon, detach and run in the background
+     * @param \Closure|null $beforeQuit
      */
-    public static function runtime($startTime, $startMem)
+    public static function runAsDaemon(\Closure $beforeQuit = null)
     {
-        // 显示运行时间
-        $return['time'] = number_format(microtime(true) - $startTime, 4) . 's';
-        $startMem = (int)array_sum(explode(' ', $startMem));
-        $endMem = array_sum(explode(' ', memory_get_usage()));
-        $return['memory'] = number_format(($endMem - $startMem) / 1024) . 'kb';
+        // umask(0);
 
-        return $return;
+        // fork new process
+        $pid = pcntl_fork();
+
+        switch ($pid) {
+            case 0: // at new process
+                // $pid = getmypid(); // can also use: posix_getpid()
+
+                if(posix_setsid() < 0) {
+                    throw new \RuntimeException('posix_setsid() execute failed! exiting');
+                }
+
+//                chdir('/');
+//                umask(0);
+
+                break;
+
+            case -1: // fork failed.
+                throw new \RuntimeException('Fork new process is failed! exiting');
+                break;
+
+            default: // at parent
+                if ($beforeQuit) {
+                    $beforeQuit($pid);
+                }
+
+                exit;
+        }
     }
 
     /**
-     * get Pid By PidFile
-     * @param string $pidFile
-     * @return int
+     * fork multi process
+     * @param $number
+     * @return array|int
      */
-    public static function getPidByPidFile($pidFile)
+    public static function spawn($number)
     {
-        if ($pidFile && file_exists($pidFile)) {
-            $pid = (int)file_get_contents($pidFile);
-            if (posix_getpgid($pid)) {
-                return $pid;
-            }
+        $num = (int)$number >= 0 ? (int)$number : 0;
 
-            unlink($pidFile);
+        if ($num <= 0) {
+            return posix_getpid();
         }
 
-        return 0;
-    }
+        $pidAry = array();
 
-    /**
-     * @return int
-     */
-    public static function getMasterPID()
-    {
-        return posix_getpid();
+        for ($i = 0; $i < $num; $i++) {
+            $pid = pcntl_fork();
+
+            if ($pid > 0) {// at parent, get forked child PID
+                $pidAry[] = $pid;
+            } else {
+                break;
+            }
+        }
+
+        return $pidAry;
     }
 
     /**
@@ -74,13 +95,13 @@ class ProcessHelper
      * @param int $timeout
      * @return bool
      */
-    public function sendSignal($pid, $signal, $timeout = 3)
+    public static function sendSignal($pid, $signal, $timeout = 3)
     {
         if ($pid <= 0) {
             return false;
         }
 
-        // do kill
+        // do send
         if ($ret = posix_kill($pid, $signal)) {
             return true;
         }
@@ -117,7 +138,7 @@ class ProcessHelper
     }
 
     /**
-     * kill process by PID
+     * send kill signal to the process
      * @param int $pid
      * @param int $signal
      * @param int $timeout
@@ -125,13 +146,51 @@ class ProcessHelper
      */
     public static function kill($pid, $signal = SIGTERM, $timeout = 3)
     {
-
         return self::sendSignal($pid, $signal, $timeout);
     }
 
-//////////////////////////////////////////////////////////////////////
-/// some help method(from workman)
-//////////////////////////////////////////////////////////////////////
+    /**
+     * Do shutdown process and wait it exit.
+     * @param  int $pid Master Pid
+     * @param int $signal
+     * @param string $name
+     * @param int $waitTime
+     * @return bool
+     */
+    public static function killAndWait($pid, $signal = SIGTERM, $name = 'process', $waitTime = 30)
+    {
+        CliHelper::stdout("Stop the $name(PID:$pid)");
+
+        // do stop
+        if (!self::kill($signal, SIGTERM)) {
+            CliHelper::stderr("Send stop signal to the $name(PID:$pid) failed!");
+
+            return false;
+        }
+
+        $startTime = time();
+        CliHelper::stdout('Stopping .', false);
+
+        // wait exit
+        while (true) {
+            if (!self::isRunning($pid)) {
+                break;
+            }
+
+            if (time() - $startTime > $waitTime) {
+                CliHelper::stderr("Stop the $name(PID:$pid) failed(timeout)!");
+                break;
+            }
+
+            CliHelper::stdout('.', false);
+            sleep(1);
+        }
+
+        // stop success
+        CliHelper::stdout(sprintf("\n%s\n"), CliHelper::color('The process stopped', CliHelper::FG_GREEN));
+
+        return true;
+    }
 
     /**
      * 杀死所有进程
@@ -145,55 +204,26 @@ class ProcessHelper
         return exec($cmd);
     }
 
-    /**
-     * Get unix user of current process.
-     *
-     * @return string
-     */
-    public static function getCurrentUser()
-    {
-        $userInfo = posix_getpwuid(posix_getuid());
+//////////////////////////////////////////////////////////////////////
+/// some help method
+//////////////////////////////////////////////////////////////////////
 
-        return $userInfo['name'];
+    /**
+     * @return int
+     */
+    public static function getMasterPID()
+    {
+        return posix_getpid();
     }
 
     /**
-     * Set unix user and group for current process.
-     * @param $user
-     * @param string $group
-     * @return string|true
+     * Get unix user of current process.
+     *
+     * @return array
      */
-    public static function setUserAndGroup($user, $group = '')
+    public static function getCurrentUser()
     {
-        // Get uid.
-        if (!$userInfo = posix_getpwnam($user)) {
-            return "Warning: User {$user} not exists";
-        }
-
-        $uid = $userInfo['uid'];
-
-        // Get gid.
-        if ($group) {
-            if (!$groupInfo = posix_getgrnam($group)) {
-                return "Warning: Group {$group} not exists";
-            }
-            $gid = $groupInfo['gid'];
-        } else {
-            $gid = $userInfo['gid'];
-        }
-
-        if (!posix_initgroups($userInfo['name'], $gid)) {
-            return "Warning: The user [{$user}] is not in the user group ID [GID:{$gid}].";
-        }
-
-        // Set uid and gid.
-        // if ($uid != posix_getuid() || $gid != posix_getgid()) {
-        if (!posix_setgid($gid) || !posix_setuid($uid)) {
-            return 'Warning: change gid or uid fail.';
-        }
-
-        // }
-        return true;
+        return posix_getpwuid(posix_getuid());
     }
 
     /**
@@ -207,14 +237,92 @@ class ProcessHelper
             return false;
         }
 
-        // >=php 5.5
         if (function_exists('cli_set_process_title')) {
             cli_set_process_title($title);
-            // Need process title when php<=5.5
-        } else {
-            swoole_set_process_name($title);
         }
 
         return true;
     }
+
+    /**
+     * Set unix user and group for current process script.
+     * @param string $user
+     * @param string $group
+     */
+    public static function changeScriptOwner($user, $group = '')
+    {
+        $uInfo = posix_getpwnam($user);
+
+        if (!$uInfo || !isset($uInfo['uid'])) {
+            throw new \RuntimeException("User ({$user}) not found.");
+        }
+
+        $uid = (int)$uInfo['uid'];
+
+        // Get gid.
+        if ($group) {
+            if (!$gInfo = posix_getgrnam($group)) {
+                throw new \RuntimeException("Group {$group} not exists", -300);
+            }
+
+            $gid = (int)$gInfo['gid'];
+        } else {
+            $gid = (int)$uInfo['gid'];
+        }
+
+        if (!posix_initgroups($uInfo['name'], $gid)) {
+            throw new \RuntimeException("The user [{$user}] is not in the user group ID [GID:{$gid}]", -300);
+        }
+
+        posix_setgid($gid);
+
+        if (posix_geteuid() !== $gid) {
+            throw new \RuntimeException("Unable to change group to {$user} (UID: {$gid}).", -300);
+        }
+
+        posix_setuid($uid);
+
+        if (posix_geteuid() !== $uid) {
+            throw new \RuntimeException("Unable to change user to {$user} (UID: {$uid}).", -300);
+        }
+    }
+
+    /**
+     * 获取资源消耗
+     * @param int $startTime
+     * @param int $startMem
+     * @return array
+     */
+    public static function runtime($startTime, $startMem)
+    {
+        // 显示运行时间
+        $return['time'] = number_format(microtime(true) - $startTime, 4) . 's';
+        $startMem = (int)array_sum(explode(' ', $startMem));
+        $endMem = array_sum(explode(' ', memory_get_usage()));
+        $return['memory'] = number_format(($endMem - $startMem) / 1024) . 'kb';
+
+        return $return;
+    }
+
+    /**
+     * get Pid By PidFile
+     * @param string $pidFile
+     * @return int
+     */
+    public static function getPidByPidFile($pidFile)
+    {
+        if ($pidFile && file_exists($pidFile)) {
+            $pid = (int)file_get_contents($pidFile);
+
+            // check
+            if (posix_getpgid($pid)) {
+                return $pid;
+            }
+
+            unlink($pidFile);
+        }
+
+        return 0;
+    }
+
 }

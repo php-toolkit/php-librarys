@@ -45,9 +45,6 @@ class Curl extends CurlLite implements CurlExtraInterface
         // if 'debug = true ', is valid. will output log to the file. if is empty, output to STDERR.
         'logFile' => '',
 
-        // set a base uri
-        'baseUrl' => '',
-
         // retry times, when an error occurred.
         'retry' => 0,
     ];
@@ -274,7 +271,7 @@ class Curl extends CurlLite implements CurlExtraInterface
         }
 
         // set request url
-        $url = $this->_config['baseUrl'] . $url;
+        $url = $this->buildUrl($url);
         curl_setopt($ch, CURLOPT_URL, UrlHelper::encode2($url));
 
         $response = '';
@@ -285,7 +282,7 @@ class Curl extends CurlLite implements CurlExtraInterface
             if (false === ($response = curl_exec($ch))) {
                 $curlErrNo = curl_errno($ch);
 
-                if (false === in_array($curlErrNo, self::$canRetryErrorCodes, true) || !$retries) {
+                if (false === in_array($curlErrNo, self::$canRetryErrorCodes, true)) {
                     $curlError = curl_error($ch);
 
                     // throw new \RuntimeException(sprintf('Curl error (code %s): %s', $curlErrNo, $curlError));
@@ -416,6 +413,22 @@ class Curl extends CurlLite implements CurlExtraInterface
 ///////////////////////////////////////////////////////////////////////
 //   response data
 ///////////////////////////////////////////////////////////////////////
+
+    /**
+     * @return bool
+     */
+    public function isOk()
+    {
+        return !$this->_responseMeta['error'];
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFail()
+    {
+        return !!$this->_responseMeta['error'];
+    }
 
     /**
      * @return string
@@ -656,7 +669,7 @@ class Curl extends CurlLite implements CurlExtraInterface
 
     public function byJson()
     {
-        $this->setHeader('Content-Type', 'application/json');
+        $this->setHeader('Content-Type', 'application/json; charset=utf-8');
 
         return $this;
     }
@@ -897,17 +910,6 @@ class Curl extends CurlLite implements CurlExtraInterface
     public function setRetry($retry)
     {
         $this->_config['retry'] = (int)$retry;
-
-        return $this;
-    }
-
-    /**
-     * @param string $baseUrl
-     * @return $this
-     */
-    public function setBashUrl($baseUrl)
-    {
-        $this->_config['baseUrl'] = trim($baseUrl);
 
         return $this;
     }

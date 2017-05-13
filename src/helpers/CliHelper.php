@@ -72,7 +72,7 @@ class CliHelper
      * @param string|int|array $style
      * @return string
      */
-    public static function renderColor($text, $style = self::NORMAL)
+    public static function color($text, $style = self::NORMAL)
     {
         if (!self::isSupportColor()) {
             return $text;
@@ -179,6 +179,39 @@ class CliHelper
         }
 
         return $result;
+    }
+
+
+    /**
+     * Logs data to stdout
+     * @param string $logString
+     * @param bool $nl
+     * @param bool|int $quit
+     */
+    public static function stdout($logString, $nl = true, $quit = false)
+    {
+        fwrite(\STDOUT, $logString . ($nl ? PHP_EOL : ''));
+
+        if (($isTrue = true === $quit) || is_int($quit)) {
+            $code = $isTrue ? 0 : $quit;
+            exit($code);
+        }
+    }
+
+    /**
+     * Logs data to stderr
+     * @param string $text
+     * @param bool $nl
+     * @param bool|int $quit
+     */
+    public static function stderr($text, $nl = true, $quit = -200)
+    {
+        fwrite(\STDERR, self::color('[ERROR] ', 'red') . $text . ($nl ? PHP_EOL : ''));
+
+        if (($isTrue = true === $quit) || is_int($quit)) {
+            $code = $isTrue ? 0 : $quit;
+            exit($code);
+        }
     }
 
     /**

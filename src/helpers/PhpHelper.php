@@ -273,7 +273,7 @@ class PhpHelper
      * @param array ...$args
      * @return string
      */
-    public static function printVar(...$args)
+    public static function printR(...$args)
     {
         ob_start();
 
@@ -283,6 +283,6 @@ class PhpHelper
 
         $string = ob_get_clean();
 
-        return str_replace("=>\n ", "=>", $string);
+        return preg_replace("/Array\n\s+\(/", 'Array (', $string);
     }
 }

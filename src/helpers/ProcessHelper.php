@@ -168,6 +168,13 @@ class ProcessHelper
             return false;
         }
 
+        // not wait, only send signal
+        if ($waitTime <= 0) {
+            CliHelper::stdout("The $name process stopped");
+
+            return true;
+        }
+
         $startTime = time();
         CliHelper::stdout('Stopping .', false);
 
@@ -187,7 +194,7 @@ class ProcessHelper
         }
 
         // stop success
-        CliHelper::stdout(sprintf("\n%s\n"), CliHelper::color('The process stopped', CliHelper::FG_GREEN));
+        CliHelper::stdout(sprintf("\n%s\n"), CliHelper::color("The $name process stopped", CliHelper::FG_GREEN));
 
         return true;
     }

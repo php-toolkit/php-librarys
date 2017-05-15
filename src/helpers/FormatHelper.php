@@ -16,45 +16,6 @@ namespace inhere\library\helpers;
 class FormatHelper
 {
     /**
-     * Replaces &amp; with & for XHTML compliance
-     * @param   string $text Text to process
-     * @return  string  Processed string.
-     */
-    static public function ampReplace($text)
-    {
-        $text = str_replace('&&', '*--*', $text);
-        $text = str_replace('&#', '*-*', $text);
-        $text = str_replace('&amp;', '&', $text);
-        $text = str_replace('*-*', '&#', $text);
-        $text = str_replace('*--*', '&&', $text);
-        $text = preg_replace('/|&(?![\w]+;)|/', '&amp;', $text);
-
-        return $text;
-    }
-
-    /**
-     * Cleans text of all formatting and scripting code
-     *
-     * @param   string &$text Text to clean
-     *
-     * @return  string  Cleaned text.
-     */
-    static public function cleanText(&$text)
-    {
-        $text = preg_replace('/<script[^>]*>.*?</script>/si', '', $text);
-        $text = preg_replace('/<a\s+.*?href="([^"]+)"[^>]*>([^<]+)<\/a>/is', '\2 (\1)', $text);
-        $text = preg_replace('/<!--.+?-->/', '', $text);
-        $text = preg_replace('/{.+?}/', '', $text);
-        $text = preg_replace('/&nbsp;/', ' ', $text);
-        $text = preg_replace('/&amp;/', ' ', $text);
-        $text = preg_replace('/&quot;/', ' ', $text);
-        $text = strip_tags($text);
-        $text = htmlspecialchars($text, ENT_COMPAT, 'UTF-8');
-
-        return $text;
-    }
-
-    /**
      * Format a number into a human readable format
      * e.g. 24962496 => 23.81M
      * @param     $size
@@ -72,6 +33,64 @@ class FormatHelper
         $floorBase = floor($base);
 
         return round(1024 ** ($base - $floorBase), $precision) . $suffixes[(int)$floorBase];
+    }
+
+    /**
+     * formatTime
+     * @param  int $secs
+     * @return string
+     */
+    public static function formatTime($secs)
+    {
+        static $timeFormats = [
+            [0, '< 1 sec'],
+            [1, '1 sec'],
+            [2, 'secs', 1],
+            [60, '1 min'],
+            [120, 'mins', 60],
+            [3600, '1 hr'],
+            [7200, 'hrs', 3600],
+            [86400, '1 day'],
+            [172800, 'days', 86400],
+        ];
+
+        foreach ($timeFormats as $index => $format) {
+            if ($secs >= $format[0]) {
+                if ((isset($timeFormats[$index + 1]) && $secs < $timeFormats[$index + 1][0])
+                    || $index == count($timeFormats) - 1
+                ) {
+                    if (2 == count($format)) {
+                        return $format[1];
+                    }
+
+                    return floor($secs / $format[2]).' '.$format[1];
+                }
+            }
+        }
+    }
+
+    /**
+     * @param $memory
+     * @return string
+     * ```
+     * Helper::formatMemory(memory_get_usage(true));
+     * ```
+     */
+    public static function formatMemory($memory)
+    {
+        if ($memory >= 1024 * 1024 * 1024) {
+            return sprintf('%.1f GiB', $memory / 1024 / 1024 / 1024);
+        }
+
+        if ($memory >= 1024 * 1024) {
+            return sprintf('%.1f MiB', $memory / 1024 / 1024);
+        }
+
+        if ($memory >= 1024) {
+            return sprintf('%d KiB', $memory / 1024);
+        }
+
+        return sprintf('%d B', $memory);
     }
 
     /**
@@ -127,4 +146,44 @@ class FormatHelper
 
         return $qty;
     }
+
+    /**
+     * Replaces &amp; with & for XHTML compliance
+     * @param   string $text Text to process
+     * @return  string  Processed string.
+     */
+    public static function ampReplace($text)
+    {
+        $text = str_replace('&&', '*--*', $text);
+        $text = str_replace('&#', '*-*', $text);
+        $text = str_replace('&amp;', '&', $text);
+        $text = str_replace('*-*', '&#', $text);
+        $text = str_replace('*--*', '&&', $text);
+        $text = preg_replace('/|&(?![\w]+;)|/', '&amp;', $text);
+
+        return $text;
+    }
+
+    /**
+     * Cleans text of all formatting and scripting code
+     *
+     * @param   string &$text Text to clean
+     *
+     * @return  string  Cleaned text.
+     */
+    public static function cleanText(&$text)
+    {
+        $text = preg_replace('/<script[^>]*>.*?</script>/si', '', $text);
+        $text = preg_replace('/<a\s+.*?href="([^"]+)"[^>]*>([^<]+)<\/a>/is', '\2 (\1)', $text);
+        $text = preg_replace('/<!--.+?-->/', '', $text);
+        $text = preg_replace('/{.+?}/', '', $text);
+        $text = preg_replace('/&nbsp;/', ' ', $text);
+        $text = preg_replace('/&amp;/', ' ', $text);
+        $text = preg_replace('/&quot;/', ' ', $text);
+        $text = strip_tags($text);
+        $text = htmlspecialchars($text, ENT_COMPAT, 'UTF-8');
+
+        return $text;
+    }
+
 }// end class FormatHelper

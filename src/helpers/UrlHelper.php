@@ -38,6 +38,30 @@ class UrlHelper
      * @param $url
      * @return bool
      */
+    public static function isFullUrl($url)
+    {
+        return 0 === strpos($url, 'http:') || 0 === strpos($url, 'https:') || 0 === strpos($url, '//');
+    }
+
+    /**
+     * @param string $url
+     * @param mixed $data
+     * @return string
+     */
+    public static function build($url, $data = null)
+    {
+        if ($data && ($param = http_build_query($data))) {
+            $url .= (strpos($url, '?') ? '&' : '?') . $param;
+        }
+
+        return $url;
+    }
+
+
+    /**
+     * @param $url
+     * @return bool
+     */
     public static function canAccessed($url)
     {
         $url = trim($url);

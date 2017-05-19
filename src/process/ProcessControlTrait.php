@@ -38,8 +38,6 @@ trait ProcessControlTrait
     public function runAsDaemon()
     {
         if (!$this->supportPC) {
-            $this->log("Want to run process as daemon, require 'pcntl','posix' extension!", self::LOG_DEBUG);
-        } else {
             ProcessHelper::runAsDaemon();
 
             // set pid
@@ -58,7 +56,7 @@ trait ProcessControlTrait
 
         if ($isMaster) {
             // $signals = ['SIGTERM' => 'close worker', ];
-            $this->log('Registering signal handlers for master(parent) process', self::LOG_DEBUG);
+//            $this->log('Registering signal handlers for master(parent) process', self::LOG_DEBUG);
 
             pcntl_signal(SIGTERM, [$this, 'signalHandler'], false);
             pcntl_signal(SIGINT, [$this, 'signalHandler'], false);
@@ -70,11 +68,9 @@ trait ProcessControlTrait
             pcntl_signal(SIGCHLD, [$this, 'signalHandler'], false);
 
         } else {
-            $this->log("Registering signal handlers for current worker process", self::LOG_DEBUG);
+//            $this->log("Registering signal handlers for current worker process", self::LOG_DEBUG);
 
-            if (!pcntl_signal(SIGTERM, [$this, 'signalHandler'], false)) {
-                $this->quit(-170);
-            }
+            pcntl_signal(SIGTERM, [$this, 'signalHandler'], false);
         }
 
         return $this;

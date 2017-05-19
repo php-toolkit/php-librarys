@@ -538,6 +538,14 @@ class Curl extends CurlLite implements CurlExtraInterface
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function getHttpCode()
+    {
+        return $this->_responseMeta['status'];
+    }
+
+    /**
      * Was an 'info' header returned.
      */
     public function isInfo()

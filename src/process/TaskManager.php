@@ -2,15 +2,19 @@
 
 namespace inhere\library\process;
 
+use inhere\library\traits\TraitSimpleConfig;
+
 /**
- *
+ * Class TaskManager
+ * @package inhere\library\process
  */
 class TaskManager
 {
+    use TraitSimpleConfig;
     use ProcessControlTrait;
 
     /**
-     * @var resource
+     * @var MsgQueue
      */
     protected $queue;
 
@@ -53,6 +57,9 @@ class TaskManager
      */
     protected $workers = [];
 
+    /**
+     * @var array
+     */
     protected $config = [
         'daemon' => false,
         'server' => '0.0.0.0:9999',
@@ -64,11 +71,18 @@ class TaskManager
         ],
     ];
 
-    public function __construct($argument)
+    /**
+     * TaskManager constructor.
+     * @param array $config
+     */
+    public function __construct(array $config = [])
     {
-        # code...
+        $this->setConfig($config);
     }
 
+    /**
+     * run
+     */
     public function run()
     {
         if ($this->config['daemon']) {
@@ -89,6 +103,10 @@ class TaskManager
         exit("manager exited.\n");
     }
 
+    /**
+     * @param int $workerNum
+     * @return array
+     */
     public function startWorkers($workerNum)
     {
         $workers = [];
@@ -99,7 +117,7 @@ class TaskManager
             // 主进程
             if ($pid > 0) {
                 $workers[$pid] = [
-                    'id' => $id,
+                    'id' => $i,
                     'start_time' => time(),
                 ];
                 echo "create worker $i.pid = $pid\n";
@@ -116,6 +134,9 @@ class TaskManager
         return $workers;
     }
 
+    /**
+     * @param int $id
+     */
     public function runWorker($id)
     {
         $this->isMaster = false;
@@ -127,13 +148,16 @@ class TaskManager
             if($pkt = $this->queue->pop()) {
                 echo "[Worker $id] ". $pkt;
             } else {
-                echo "ERROR: queue errno={$this->queue->getErrCode()}\n";
+                echo "ERROR: queue errNo={$this->queue->getErrCode()}\n";
             }
 
             usleep(50000);
         }
     }
 
+    /**
+     * @param $data
+     */
     public function handleTask($data)
     {
         if ($cb = $this->taskHandler) {
@@ -141,6 +165,9 @@ class TaskManager
         }
     }
 
+    /**
+     * startMaster
+     */
     public function startMaster()
     {
         $bind = "udp://{$this->config['server']}";
@@ -149,7 +176,7 @@ class TaskManager
         $socket = stream_socket_server($bind, $errNo, $errStr, STREAM_SERVER_BIND);
 
         if (!$socket) {
-            die("$errstr ($errno)");
+            die("$errStr ($errNo)");
         }
 
         stream_set_blocking($socket, 1);
@@ -175,6 +202,9 @@ class TaskManager
         }
     }
 
+    /**
+     * @param callable $cb
+     */
     public function setTaskHandler(callable $cb)
     {
         $this->taskHandler = $cb;

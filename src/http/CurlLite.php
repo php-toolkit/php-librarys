@@ -8,6 +8,8 @@
 
 namespace inhere\library\http;
 
+use inhere\library\helpers\UrlHelper;
+
 /**
  * Class CurlLite - a lite curl tool
  * @package inhere\library\http
@@ -48,6 +50,11 @@ class CurlLite implements CurlLiteInterface
      * @var string
      */
     protected $baseUrl = '';
+
+    /**
+     * @var int
+     */
+    private $errNo;
 
     /**
      * @var string
@@ -206,8 +213,8 @@ class CurlLite implements CurlLiteInterface
                 if (false === in_array($curlErrNo, self::$canRetryErrorCodes, true)) {
                     $curlError = curl_error($ch);
 
-                    $this->error = sprintf('Curl error (code %s): %s', $curlErrNo, $curlError);
-                    // throw new \RuntimeException(sprintf('Curl error (code %s): %s', $curlErrNo, $curlError));
+                    $this->errNo = $curlErrNo;
+                    $this->error = sprintf('Curl error (code %s): %s', $this->errNo, $curlError);
                 }
 
                 $retries--;
@@ -217,8 +224,8 @@ class CurlLite implements CurlLiteInterface
             break;
         }
 
-        curl_close($ch);
         $this->info = curl_getinfo($ch);
+        curl_close($ch);
 
         return $ret;
     }
@@ -237,6 +244,7 @@ class CurlLite implements CurlLiteInterface
         $curlOptions = [
             // 设置超时
             CURLOPT_TIMEOUT => (int)$opts['timeout'],
+            CURLOPT_CONNECTTIMEOUT => (int)$opts['timeout'],
 
             // disable 'https' verify
             CURLOPT_SSL_VERIFYPEER => false,
@@ -244,6 +252,10 @@ class CurlLite implements CurlLiteInterface
 
             // 要求返回结果而不是输出到屏幕上
             CURLOPT_RETURNTRANSFER => true,
+
+            // 允许重定向
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 5,
 
             // 设置不返回header 返回的响应就只有body
             CURLOPT_HEADER => false,
@@ -290,8 +302,17 @@ class CurlLite implements CurlLiteInterface
                 $formatted[] = "$name: $value";
             }
 
+            $formatted[] = 'Expect: '; // 首次速度非常慢 解决
+            $formatted[] = 'Accept-Encoding: gzip, deflate'; // gzip
+
             $curlOptions[CURLOPT_HTTPHEADER]  = $formatted;
         }
+
+        // gzip
+        $curlOptions[CURLOPT_ENCODING] = '';
+
+        // 首次速度非常慢 解决
+        $curlOptions[CURLOPT_IPRESOLVE] = CURL_IPRESOLVE_V4;
 
         foreach ($curlOptions as $option => $value) {
             curl_setopt($ch, $option, $value);
@@ -328,6 +349,30 @@ class CurlLite implements CurlLiteInterface
     }
 
     /**
+     * @return int
+     */
+    public function getHttpCode()
+    {
+        return isset($this->info['http_code']) ? $this->info['http_code'] : 200;
+    }
+
+    /**
+     * @return int
+     */
+    public function getConnectTime()
+    {
+        return isset($this->info['connect_time']) ? $this->info['connect_time'] : 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotalTime()
+    {
+        return isset($this->info['total_time']) ? $this->info['total_time'] : 0;
+    }
+
+    /**
      * reset
      */
     public function reset()
@@ -342,20 +387,6 @@ class CurlLite implements CurlLiteInterface
     public function __destruct()
     {
         $this->reset();
-    }
-
-    /**
-     * @param string $url
-     * @param mixed $data
-     * @return string
-     */
-    protected function buildQuery($url, mixed $data)
-    {
-        if ($param = http_build_query($data)) {
-            $url .= (strpos($url, '?') ? '&' : '?') . $param;
-        }
-
-        return $url;
     }
 
     /**
@@ -378,7 +409,7 @@ class CurlLite implements CurlLiteInterface
         }
 
         if ($data) {
-            return $this->buildQuery($url, $data);
+            return UrlHelper::build($url, $data);
         }
 
         return $url;
@@ -440,6 +471,14 @@ class CurlLite implements CurlLiteInterface
     public function getDefaultOptions(): array
     {
         return $this->defaultOptions;
+    }
+
+    /**
+     * @return int
+     */
+    public function getErrNo(): int
+    {
+        return $this->errNo;
     }
 
     /**

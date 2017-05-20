@@ -17,17 +17,17 @@ class ProcessHelper
     /**
      * Daemon, detach and run in the background
      * @param \Closure|null $beforeQuit
+     * @return int Return new process PID
      */
     public static function runAsDaemon(\Closure $beforeQuit = null)
     {
         // umask(0);
-
         // fork new process
         $pid = pcntl_fork();
 
         switch ($pid) {
             case 0: // at new process
-                // $pid = getmypid(); // can also use: posix_getpid()
+                $pid = getmypid(); // can also use: posix_getpid()
 
                 if(posix_setsid() < 0) {
                     throw new \RuntimeException('posix_setsid() execute failed! exiting');
@@ -35,7 +35,6 @@ class ProcessHelper
 
 //                chdir('/');
 //                umask(0);
-
                 break;
 
             case -1: // fork failed.
@@ -49,44 +48,105 @@ class ProcessHelper
 
                 exit;
         }
+
+        return $pid;
     }
 
     /**
-     * fork multi process
-     * @param $number
+     * fork multi child processes.
+     * @param int $number
+     * @param callable|null $childHandler
      * @return array|int
      */
-    public static function spawn($number)
+    public static function forkProcesses($number, callable $childHandler = null)
     {
-        $num = (int)$number >= 0 ? (int)$number : 0;
+        $num = (int)$number > 0 ? (int)$number : 0;
 
         if ($num <= 0) {
-            return posix_getpid();
+            return false;
         }
 
-        $pidAry = array();
+        $pidAry = [];
 
-        for ($i = 0; $i < $num; $i++) {
-            $pid = pcntl_fork();
-
-            if ($pid > 0) {// at parent, get forked child PID
-                $pidAry[] = $pid;
-            } else {
-                break;
-            }
+        for ($id = 0; $id < $num; $id++) {
+            $child = self::forkProcess($id, $childHandler);
+            $pidAry[$child['pid']] = $child;
         }
 
         return $pidAry;
     }
 
     /**
-     * @param $pid
+     * fork a child process.
+     * @param int $id
+     * @param callable|null $childHandler
+     * @param bool $first
+     * @return array
+     */
+    public static function forkProcess($id, callable $childHandler = null, $first = true)
+    {
+        $info = [];
+        $pid = pcntl_fork();
+
+        if ($pid > 0) {// at parent, get forked child info
+            $info = [
+                'id'  => $id,
+                'pid' => $pid,
+                'startTime' => time(),
+            ];
+        } elseif ($pid == 0) { // at child
+            $pid = getmypid();
+            $exitCode = $childHandler ? call_user_func($childHandler, $id, $pid) : 0;
+
+            CliHelper::stdout(sprintf('Child #%d(PID:%d) exited.', $id, $pid), true, (int)$exitCode);
+        } else {
+            CliHelper::stderr("Fork child process failed! exiting.\n");
+        }
+
+        return $info;
+    }
+
+    /**
+     * Stops all running children
+     * @param array $children
+     * [
+     *  'pid' => [
+     *      'id' => worker id
+     *  ],
+     *  ... ...
+     * ]
+     * @param int $signal
      * @return bool
      */
-    public static function isRunning($pid)
+    public static function stopChildren(array $children, $signal = SIGTERM)
     {
-        return ($pid > 0) && @posix_kill($pid, 0);
+        if (!$children) {
+            return false;
+        }
+
+        $signals = [
+            SIGINT => 'SIGINT(Ctrl+C)',
+            SIGTERM => 'SIGTERM',
+            SIGKILL => 'SIGKILL',
+        ];
+
+        CliHelper::stdout("Stopping workers({$signals[$signal]}) ...");
+
+        foreach ($children as $pid => $child) {
+            CliHelper::stdout(sprintf(
+                "Stopping worker %s(PID:%d)", isset($child['id']) ? "#{$child['id']} " : '', $pid
+            ));
+
+            // send exit signal.
+            self::sendSignal($pid, $signal);
+        }
+
+        return true;
     }
+
+//////////////////////////////////////////////////////////////////////
+/// basic signal method
+//////////////////////////////////////////////////////////////////////
 
     /**
      * send signal to the process
@@ -130,7 +190,6 @@ class ProcessHelper
 
             // try again kill
             $ret = posix_kill($pid, $signal);
-
             usleep(10000);
         }
 
@@ -211,16 +270,35 @@ class ProcessHelper
         return exec($cmd);
     }
 
+    /**
+     * @param $pid
+     * @return bool
+     */
+    public static function isRunning($pid)
+    {
+        return ($pid > 0) && @posix_kill($pid, 0);
+    }
+
+    /**
+     * exit
+     * @param int $code
+     */
+    public static function quit($code = 0)
+    {
+        exit((int)$code);
+    }
+
 //////////////////////////////////////////////////////////////////////
 /// some help method
 //////////////////////////////////////////////////////////////////////
 
     /**
+     * get current process id
      * @return int
      */
-    public static function getMasterPID()
+    public static function getPid()
     {
-        return posix_getpid();
+        return posix_getpid();// or use getmypid()
     }
 
     /**

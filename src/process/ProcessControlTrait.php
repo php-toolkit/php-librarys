@@ -28,6 +28,26 @@ trait ProcessControlTrait
      */
     protected $pid = 0;
 
+    /**
+     * @var string
+     */
+    protected $pidFile;
+
+    /**
+     * @var bool
+     */
+    protected $stopWork = false;
+
+    /**
+     * The statistics info for server/worker
+     * @var array
+     */
+    protected $stat = [
+        'start_time' => 0,
+        'stop_time'  => 0,
+        'start_times' => 0,
+    ];
+
     /////////////////////////////////////////////////////////////////////////////////////////
     /// process method
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -38,10 +58,7 @@ trait ProcessControlTrait
     public function runAsDaemon()
     {
         if (!$this->supportPC) {
-            ProcessHelper::runAsDaemon();
-
-            // set pid
-            $this->pid = getmypid(); // can also use: posix_getpid()
+            $this->pid = ProcessHelper::runAsDaemon();
         }
     }
 
@@ -124,6 +141,19 @@ trait ProcessControlTrait
 
     /**
      * @param int $pid
+     * @return bool
+     */
+    protected function isRunning(int $pid)
+    {
+        if ($this->supportPC) {
+            return ProcessHelper::isRunning($pid);
+        }
+
+        return false;
+    }
+
+    /**
+     * @param int $pid
      * @param int $signal
      */
     protected function sendSignal(int $pid, int $signal)
@@ -155,11 +185,60 @@ trait ProcessControlTrait
     }
 
     /**
+     * @return int
+     */
+    public function getPid(): int
+    {
+        return $this->pid;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPidFile(): string
+    {
+        return $this->pidFile;
+    }
+
+    /**
      * @return string
      */
     public function getPidRole()
     {
         return $this->isMaster ? 'Master' : 'Worker';
+    }
+
+    /**
+     * savePidFile
+     */
+    protected function savePidFile()
+    {
+        if ($this->pidFile && !file_put_contents($this->pidFile, $this->pid)) {
+            $this->stderr("Unable to write PID to the file {$this->pidFile}");
+        }
+    }
+
+    /**
+     * delete pidFile
+     */
+    protected function delPidFile()
+    {
+        if ($this->pidFile && file_exists($this->pidFile) && !unlink($this->pidFile)) {
+            $this->stderr("Could not delete PID file: {$this->pidFile}", true, false);
+        }
+    }
+
+    /**
+     * @param string $pidFile
+     * @return int
+     */
+    protected function getPidFromFile($pidFile)
+    {
+        if ($pidFile && file_exists($pidFile)) {
+            return (int)trim(file_get_contents($pidFile));
+        }
+
+        return 0;
     }
 
     /**
@@ -176,8 +255,26 @@ trait ProcessControlTrait
             $e1t = $e1 ? 'yes' : 'no';
             $e2t = $e2 ? 'yes' : 'no';
 
-            // $this->stdout("Is not support multi process of the current system. the posix($e1t),pcntl($e2t) extensions is required.\n");
+            $this->stdout("Is not support multi process of the current system. the posix($e1t),pcntl($e2t) extensions is required.\n");
         }
+    }
+
+    /**
+     * exit
+     * @param int $code
+     */
+    protected function quit($code = 0)
+    {
+        exit((int)$code);
+    }
+
+    /**
+     * stopWork
+     */
+    protected function stopWork()
+    {
+        $this->stopWork = true;
+        $this->stat['stop_time'] = time();
     }
 
     /**

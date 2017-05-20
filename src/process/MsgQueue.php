@@ -7,57 +7,80 @@
 namespace inhere\library\process;
 
 /**
- * 是对Linux Sysv系统消息队列的封装，单台服务器推荐使用
+ * Class MsgQueue
+ * @package inhere\library\process
  */
 class MsgQueue
 {
-    protected $msgId;
+    /**
+     * @var int
+     */
+    private $msgId;
 
-    protected $msgType = 1;
+    /**
+     * @var int
+     */
+    private $msgType = 1;
 
     /**
      * @var resource
      */
     private $queue;
 
+    /**
+     * @var int
+     */
     private $errCode = 0;
 
+    /**
+     * @var array
+     */
     private $config = [
         'msgId' => null,
-        'msgType' => null,
+        'msgType' => 1,
         'blocking' => 1,
         'serialize' => false,
         'bufferSize' => 8192, // 65525
     ];
 
+    /**
+     * MsgQueue constructor.
+     * @param array $config
+     */
     public function __construct(array $config = [])
     {
         if (!function_exists('msg_receive')) {
-            throw new \RuntimeException("Is not support msg queue of the current system.", -500);
+            throw new \RuntimeException('Is not support msg queue of the current system(must enable sysvmsg for php).', -500);
         }
 
         $this->config = array_merge($this->config, $config);
+        $this->msgId = !empty($config['msgId']) ? (int)$config['msgId'] : ftok(__FILE__, 0);
+        $this->msgType = (int)$this->config['msgType'];
 
-        if (!empty($config['msgId'])) {
-            $this->msgId = $config['msgId'];
-        } else {
-            $this->msgId = ftok(__FILE__, 0);
-        }
-
-        if (isset($config['msgType'])) {
-            $this->msgType = (int)$config['msgType'];
-        }
-
+        // create queue
         $this->queue = msg_get_queue($this->msgId);
     }
 
+    /**
+     * Setting the queue option
+     * @param array $options
+     */
+    public function setOptions(array $options = [])
+    {
+        msg_set_queue($this->queue, $options);
+    }
+
+    /**
+     * pop data
+     * @return mixed Return False is failed.
+     */
     public function pop()
     {
         // bool msg_receive(
         //      resource $queue, int $desiredmsgtype, int &$msgtype, int $maxsize,
         //      mixed &$message [, bool $unserialize = true [, int $flags = 0 [, int &$errorcode ]]]
         //  )
-        $ret = msg_receive(
+        $success = msg_receive(
             $this->queue,
             0,
             $this->msgType,
@@ -68,13 +91,14 @@ class MsgQueue
             $this->errCode
         );
 
-        if ($ret) {
-            return $data;
-        }
-
-        return false;
+        return $success ? $data : false;
     }
 
+    /**
+     * push data
+     * @param mixed $data
+     * @return bool
+     */
     public function push($data)
     {
         // bool msg_send(
@@ -91,21 +115,51 @@ class MsgQueue
         );
     }
 
-    public function getStat()
+    /**
+     * close
+     */
+    public function close()
     {
-        return msg_stat_queue($this->msgId);
+        if ($this->queue) {
+            msg_remove_queue($this->queue);
+        }
     }
 
+    /**
+     * __destruct
+     */
+    public function __destruct()
+    {
+        $this->close();
+    }
+
+    /**
+     * @return array
+     */
+    public function getStat()
+    {
+        return msg_stat_queue($this->queue);
+    }
+
+    /**
+     * @return array
+     */
     public function getConfig()
     {
         return $this->config;
     }
 
+    /**
+     * @return int
+     */
     public function getMsgId()
     {
         return $this->msgId;
     }
 
+    /**
+     * @return int
+     */
     public function getErrCode()
     {
         return $this->errCode;

@@ -6,13 +6,13 @@
  * Time: 13:26
  */
 
-namespace inhere\library\process;
+namespace inhere\library\task\server;
 
 use inhere\library\helpers\CliHelper;
 
 /**
  * Class OptionAndConfigTrait
- * @package inhere\library\process
+ * @package inhere\library\task\server
  */
 trait OptionAndConfigTrait
 {
@@ -32,18 +32,18 @@ trait OptionAndConfigTrait
     private $command;
 
     /**
+     * @var array
+     */
+    private $cliOpts = [];
+
+    /**
      * handle CLI command and load options
      */
     protected function parseCommandAndConfig()
     {
-        $result = CliHelper::parseOpts([
-            'd', 'daemon', 'w', 'watch', 'h', 'help', 'V', 'version', 'no-test', 'watch-status'
-        ]);
-        $this->fullScript = implode(' ', $GLOBALS['argv']);
-        $this->script = strpos($result[0], '.php') ? "php {$result[0]}" : $result[0];
-        $this->command = $command = isset($result[1]) ? $result[1] : 'start';
-        unset($result[0], $result[1]);
+        $this->parseCliOptions();
 
+        $command = $this->command;
         $supported = ['start', 'stop', 'restart', 'reload', 'status'];
 
         if (!in_array($command, $supported, true)) {
@@ -51,7 +51,7 @@ trait OptionAndConfigTrait
         }
 
         // load CLI Options
-        $this->loadCliOptions($result);
+        $this->loadCliOptions($this->cliOpts);
 
         // init Config And Properties
         $this->initConfigAndProperties($this->config);
@@ -61,6 +61,23 @@ trait OptionAndConfigTrait
             $val = isset($result['D']) ? $result['D'] : (isset($result['dump']) ? $result['dump'] : '');
             $this->dumpInfo($val === 'all');
         }
+    }
+
+    /**
+     * parseCliOptions
+     */
+    protected function parseCliOptions()
+    {
+        $result = CliHelper::parseOpts([
+            'd', 'daemon', 'w', 'watch', 'h', 'help', 'V', 'version', 'no-test', 'watch-status'
+        ]);
+        $this->fullScript = implode(' ', $GLOBALS['argv']);
+        $this->script = strpos($result[0], '.php') ? "php {$result[0]}" : $result[0];
+        $this->command = $command = isset($result[1]) ? $result[1] : 'start';
+
+        unset($result[0], $result[1]);
+
+        $this->cliOpts = $result;
     }
 
     /**

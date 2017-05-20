@@ -1,23 +1,28 @@
 <?php
 
-namespace inhere\library\process;
+namespace inhere\library\task\worker;
 
 use inhere\library\helpers\CliHelper;
 use inhere\library\helpers\PhpHelper;
+use inhere\library\queue\MsgQueue;
+use inhere\library\queue\QueueInterface;
+use inhere\library\task\ProcessControlTrait;
+use inhere\library\task\ProcessLogInterface;
+use inhere\library\task\ProcessLogTrait;
 use inhere\library\traits\TraitSimpleConfig;
 
 /**
- * Class TaskManager
- * @package inhere\library\process
+ * Class Manager - task workers manager
+ * @package inhere\library\task\worker
  */
-class TaskManager implements ProcessLogInterface
+class Manager implements ProcessLogInterface
 {
     use TraitSimpleConfig;
     use OptionAndConfigTrait;
     use ProcessControlTrait;
     use ProcessLogTrait;
     use ProcessManageTrait;
-    
+
     const VERSION = '0.1.0';
 
     /**
@@ -53,7 +58,7 @@ class TaskManager implements ProcessLogInterface
     protected $name;
 
     /**
-     * @var MsgQueue
+     * @var QueueInterface
      */
     protected $queue;
 
@@ -69,7 +74,10 @@ class TaskManager implements ProcessLogInterface
     protected $config = [
         'daemon' => false,
         'name' => '',
+
         'server' => '0.0.0.0:9999',
+        'serverType' => 'udp',
+
         'workerNum' => 2,
         'bufferSize' => 8192,
 
@@ -91,6 +99,7 @@ class TaskManager implements ProcessLogInterface
     ];
 
     protected $workerNum = 2;
+
     protected $maxLifetime = 3600;
 
     /**
@@ -126,22 +135,17 @@ class TaskManager implements ProcessLogInterface
 
         $this->isMaster = true;
         $this->stopWork = false;
-        $this->stat['start_time'] = time();
-        $this->setProcessTitle(sprintf("php-gwm: master process%s (%s)", $this->getShowName(), getcwd() . '/' . $this->fullScript));
+        $this->stat['startTime'] = time();
+        $this->setProcessTitle(sprintf("php-twm: master process%s (%s)", $this->getShowName(), getcwd() . '/' . $this->fullScript));
 
-        if ($this->config['daemon']) {
-            $this->runAsDaemon();
-        }
+        $this->prepare();
 
-        $this->queue = new MsgQueue($this->config['queue']);
-
-        $this->stdout("Create queue msgId = {$this->queue->getMsgId()}");
 
         $this->beforeStart();
 
-        $this->startManager();
+        $this->workers = $this->startWorkers($this->config['workerNum']);
 
-        $this->runTaskServer();
+        $this->startManager();
 
         $this->afterRun();
     }
@@ -163,6 +167,10 @@ class TaskManager implements ProcessLogInterface
             $this->stdout('Run the worker manager in the background');
             $this->runAsDaemon();
         }
+
+        $this->stdout("Create queue msgId = {$this->queue->getMsgId()}");
+
+        $this->queue = new MsgQueue($this->config['queue']);
 
         // save Pid File
         $this->savePidFile();
@@ -311,6 +319,91 @@ EOF;
         $this->quit();
     }
 
+    public function installSignals($isMaster = true)
+    {
+        // ignore
+        pcntl_signal(SIGPIPE, SIG_IGN, false);
+
+        if ($isMaster) {
+            $this->log('Registering signal handlers for master(parent) process', self::LOG_DEBUG);
+
+            pcntl_signal(SIGTERM, [$this, 'signalHandler'], false);
+            pcntl_signal(SIGINT, [$this, 'signalHandler'], false);
+            pcntl_signal(SIGUSR1, [$this, 'signalHandler'], false);
+            pcntl_signal(SIGUSR2, [$this, 'signalHandler'], false);
+
+            pcntl_signal(SIGHUP, [$this, 'signalHandler'], false);
+
+            pcntl_signal(SIGCHLD, [$this, 'signalHandler'], false);
+
+        } else {
+            $this->log("Registering signal handlers for current worker process", self::LOG_DEBUG);
+
+            pcntl_signal(SIGTERM, [$this, 'signalHandler'], false);
+        }
+    }
+
+    /**
+     * Handles signals
+     * @param int $sigNo
+     */
+    public function signalHandler($sigNo)
+    {
+        if ($this->isMaster) {
+            static $stopCount = 0;
+
+            switch ($sigNo) {
+                case SIGINT: // Ctrl + C
+                case SIGTERM:
+                    $sigText = $sigNo === SIGINT ? 'SIGINT' : 'SIGTERM';
+                    $this->log("Shutting down(signal:$sigText)...", self::LOG_PROC_INFO);
+                    $this->stopWork();
+                    $stopCount++;
+
+                    if ($stopCount < 5) {
+                        $this->stopWorkers();
+                    } else {
+                        $this->log('Stop workers failed by(signal:SIGTERM), force kill workers by(signal:SIGKILL)', self::LOG_PROC_INFO);
+                        $this->stopWorkers(SIGKILL);
+                    }
+                    break;
+                case SIGHUP:
+                    $this->log('Restarting workers(signal:SIGHUP)', self::LOG_PROC_INFO);
+                    $this->openLogFile();
+                    $this->stopWorkers();
+                    break;
+                case SIGUSR1: // reload workers and reload handlers
+//                    $this->log('Reloading workers and handlers(signal:SIGUSR1)', self::LOG_PROC_INFO);
+//                    $this->stopWork();
+//                    $this->start();
+                    break;
+                case SIGUSR2:
+                    break;
+                default:
+                    // handle all other signals
+            }
+
+        } else {
+            $this->stopWork();
+            $this->log("Received 'stopWork' signal(signal:SIGTERM), will be exiting.", self::LOG_PROC_INFO);
+        }
+    }
+
+    /**
+     * @return QueueInterface
+     */
+    public function getQueue(): QueueInterface
+    {
+        return $this->queue;
+    }
+
+    /**
+     * @param QueueInterface $queue
+     */
+    public function setQueue(QueueInterface $queue)
+    {
+        $this->queue = $queue;
+    }
 
     /**
      * @param callable $cb

@@ -6,13 +6,16 @@
  * Time: 10:10
  */
 
-namespace inhere\library\process;
+namespace inhere\library\task\worker;
 
 use inhere\library\helpers\ProcessHelper;
+use inhere\library\queue\QueueInterface;
 
 /**
  * Class ProcessManageTrait
- * @package inhere\library\process
+ * @package inhere\library\task\worker
+ *
+ * @property QueueInterface $queue
  */
 trait ProcessManageTrait
 {
@@ -27,12 +30,6 @@ trait ProcessManageTrait
      * @var int
      */
     protected $masterPid = 0;
-
-    /**
-     * The PID of the manager process
-     * @var int
-     */
-    protected $managerPid = 0;
 
     /**
      * @var bool
@@ -67,69 +64,21 @@ trait ProcessManageTrait
      */
     protected $workers = [];
 
-    /**
-     * 建立一个UDP服务器接收请求
-     * runTaskServer
-     * @return int
-     */
-    public function runTaskServer()
-    {
-        $bind = "udp://{$this->config['server']}";
-        $socket = stream_socket_server($bind, $errNo, $errStr, STREAM_SERVER_BIND);
-
-        if (!$socket) {
-            $this->log("$errStr ($errNo)", self::LOG_ERROR);
-            $this->stopWork();
-            return -50;
-        }
-
-        stream_set_blocking($socket, 1);
-
-        $this->log("start server by stream_socket_server(), bind=$bind");
-
-        while (!$this->stopWork) {
-            $this->dispatchSignals();
-
-            $peer = '';
-            $pkt = stream_socket_recvfrom($socket, $this->config['bufferSize'], 0, $peer);
-
-            if ($pkt == false) {
-                $this->log("udp error", self::LOG_ERROR);
-            }
-
-            // 如果队列满了，这里会阻塞
-            $ret = $this->queue->push($pkt) ? "OK\n" : "ER\n";
-
-            stream_socket_sendto($socket, $ret, 0, $peer);
-            usleep(50000);
-        }
-
-        return 0;
-    }
+    ////////////////////////////////////////////////////////////////
+    /// workers manager
+    ////////////////////////////////////////////////////////////////
 
     /**
      * startMaster
      */
     protected function startManager()
     {
-        $info = ProcessHelper::forkProcess(0, function ($id, $pid) {
-            $this->setProcessTitle(sprintf("php-gwm: manager process%s", $this->getShowName()));
-            $this->isManager = true;
-            $this->isMaster = $this->isWorker = false;
-            $this->masterPid = $this->pid;
-            $this->pid = $pid;
+        $this->log('Now, Begin monitor runtime status for all workers', self::LOG_DEBUG);
 
-            $this->installSignals(false);
+        $this->runWorkersMonitor();
 
-            $this->workers = $this->startWorkers($this->config['workerNum']);
-
-            $this->runWorkersMonitor();
-
-            $this->log('All workers stopped', self::LOG_PROC_INFO);
-            $this->quit();
-        });
-
-        $this->managerPid = $info['pid'];
+        $this->log('All workers stopped', self::LOG_PROC_INFO);
+        $this->quit();
     }
 
     /**
@@ -137,8 +86,6 @@ trait ProcessManageTrait
      */
     protected function runWorkersMonitor()
     {
-        $this->log('Now, Begin monitor runtime status for all workers', self::LOG_DEBUG);
-
         // Main processing loop for the parent process
         while (!$this->stopWork || count($this->workers)) {
             $this->dispatchSignals();
@@ -223,10 +170,10 @@ trait ProcessManageTrait
         $this->isMaster = $this->isManager = false;
 
         $this->id = $id;
-        $this->managerPid = $this->pid;
+        $this->masterPid = $this->pid;
         $this->pid = getmypid();
 
-        $eCode = $this->handleTasks();
+        $eCode = $this->handleTasks($this->queue);
 
         $this->log("Worker #$id exited(Exit-Code:$eCode)", self::LOG_PROC_INFO);
         $this->quit($eCode);
@@ -234,20 +181,21 @@ trait ProcessManageTrait
 
     /**
      * run Worker
+     * @param MsgQueue $queue
      * @return int
      */
-    protected function handleTasks()
+    protected function handleTasks(MsgQueue $queue)
     {
         $eCode = 0;
 
         while (!$this->stopWork) {
             $this->dispatchSignals();
 
-            if($data = $this->queue->pop()) {
+            if($data = $queue->pop()) {
                 $this->log("workerId=$this->id data=$data", self::LOG_WORKER_INFO);
                 $this->handleTask($data);
             } else {
-                $this->log("queue errNo={$this->queue->getErrCode()}", self::LOG_ERROR);
+                $this->log("queue errNo={$queue->getErrCode()}", self::LOG_ERROR);
             }
 
             usleep(50000);

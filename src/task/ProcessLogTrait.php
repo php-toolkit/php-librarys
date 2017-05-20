@@ -6,13 +6,13 @@
  * Time: 17:03
  */
 
-namespace inhere\library\process;
+namespace inhere\library\task;
 
 use inhere\library\helpers\CliHelper;
 
 /**
  * Trait ProcessLogTrait
- * @package inhere\webSocket\traits
+ * @package inhere\webSocket\task
  */
 trait ProcessLogTrait
 {

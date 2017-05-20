@@ -1,17 +1,21 @@
 <?php
 /**
- * @author Tianfeng.Han
  * @from https://github.com/matyhtf/framework/blob/master/libs/Swoole/Queue/MsgQ.php
  */
 
-namespace inhere\library\process;
+namespace inhere\library\queue;
 
 /**
  * Class MsgQueue
- * @package inhere\library\process
+ * @package inhere\library\queue
  */
-class MsgQueue
+class MsgQueue implements QueueInterface
 {
+    /**
+     * @var int[]
+     */
+//    private static $msgIds = [];
+
     /**
      * @var int
      */
@@ -37,6 +41,7 @@ class MsgQueue
      */
     private $config = [
         'msgId' => null,
+        'uniKey' => 0,
         'msgType' => 1,
         'blocking' => 1,
         'serialize' => false,
@@ -54,8 +59,12 @@ class MsgQueue
         }
 
         $this->config = array_merge($this->config, $config);
-        $this->msgId = !empty($config['msgId']) ? (int)$config['msgId'] : ftok(__FILE__, 0);
+        $this->msgId = !empty($config['msgId']) ? (int)$config['msgId'] : ftok(__FILE__, $this->config['uniKey']);
         $this->msgType = (int)$this->config['msgType'];
+
+//        if (isset(self::$msgIds[$this->msgId])) {
+//
+//        }
 
         // create queue
         $this->queue = msg_get_queue($this->msgId);
@@ -113,6 +122,27 @@ class MsgQueue
             $this->config['blocking'],
             $this->errCode
         );
+    }
+
+    /**
+     * @return array
+     */
+    public static function allQueues()
+    {
+        $aQueues = [];
+
+        exec('ipcs -q | grep "^[0-9]" | cut -d " " -f 1', $aQueues);
+
+        return $aQueues;
+    }
+
+    /**
+     * @param $msgId
+     * @return bool
+     */
+    public function exist($msgId)
+    {
+        return msg_queue_exists($msgId);
     }
 
     /**

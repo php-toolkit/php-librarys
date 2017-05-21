@@ -5,19 +5,17 @@ namespace inhere\library\task\worker;
 use inhere\library\helpers\CliHelper;
 use inhere\library\helpers\PhpHelper;
 use inhere\library\queue\MsgQueue;
-use inhere\library\queue\QueueInterface;
+use inhere\library\task\Base;
 use inhere\library\task\ProcessControlTrait;
 use inhere\library\task\ProcessLogInterface;
 use inhere\library\task\ProcessLogTrait;
-use inhere\library\traits\TraitSimpleConfig;
 
 /**
  * Class Manager - task workers manager
  * @package inhere\library\task\worker
  */
-class Manager implements ProcessLogInterface
+class Manager extends Base implements ProcessLogInterface
 {
-    use TraitSimpleConfig;
     use OptionAndConfigTrait;
     use ProcessControlTrait;
     use ProcessLogTrait;
@@ -51,16 +49,6 @@ class Manager implements ProcessLogInterface
     const CODE_CONNECT_ERROR = 170;
     const CODE_NO_HANDLERS = 171;
     const CODE_UNKNOWN_ERROR = 180;
-
-    /**
-     * @var string
-     */
-    protected $name;
-
-    /**
-     * @var QueueInterface
-     */
-    protected $queue;
 
     /**
      * taskHandler
@@ -390,22 +378,6 @@ EOF;
     }
 
     /**
-     * @return QueueInterface
-     */
-    public function getQueue(): QueueInterface
-    {
-        return $this->queue;
-    }
-
-    /**
-     * @param QueueInterface $queue
-     */
-    public function setQueue(QueueInterface $queue)
-    {
-        $this->queue = $queue;
-    }
-
-    /**
      * @param callable $cb
      */
     public function setTaskHandler(callable $cb)
@@ -413,29 +385,5 @@ EOF;
         $this->taskHandler = $cb;
     }
 
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    /**
-     * @return string
-     */
-    public function getShowName()
-    {
-        return $this->name ? "({$this->name})" : '';
-    }
-
-
-    /**
-     * @return bool
-     */
-    public function isDaemon()
-    {
-        return $this->config['daemon'];
-    }
 
 }

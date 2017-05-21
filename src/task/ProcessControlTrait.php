@@ -8,7 +8,7 @@
 
 namespace inhere\library\task;
 
-use inhere\library\helpers\ProcessHelper;
+use inhere\library\process\ProcessUtil;
 
 /**
  * Class ProcessControlTrait
@@ -58,7 +58,7 @@ trait ProcessControlTrait
     public function runAsDaemon()
     {
         if (!$this->supportPC) {
-            $this->pid = ProcessHelper::runAsDaemon();
+            $this->pid = ProcessUtil::runAsDaemon();
         }
     }
 
@@ -69,7 +69,7 @@ trait ProcessControlTrait
     protected function isRunning(int $pid)
     {
         if ($this->supportPC) {
-            return ProcessHelper::isRunning($pid);
+            return ProcessUtil::isRunning($pid);
         }
 
         return false;
@@ -82,7 +82,7 @@ trait ProcessControlTrait
     protected function sendSignal(int $pid, int $signal)
     {
         if ($this->supportPC) {
-            ProcessHelper::sendSignal($pid, $signal);
+            ProcessUtil::sendSignal($pid, $signal);
         }
     }
 
@@ -103,7 +103,7 @@ trait ProcessControlTrait
     protected function setProcessTitle(string $title)
     {
         if ($this->supportPC) {
-            ProcessHelper::setProcessTitle($title);
+            ProcessUtil::setTitle($title);
         }
     }
 

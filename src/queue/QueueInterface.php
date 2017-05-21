@@ -28,4 +28,6 @@ interface QueueInterface
     public function pop();
 
     public function getMsgId();
+
+    public function getErrCode();
 }

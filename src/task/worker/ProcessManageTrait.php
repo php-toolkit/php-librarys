@@ -8,7 +8,8 @@
 
 namespace inhere\library\task\worker;
 
-use inhere\library\helpers\ProcessHelper;
+use inhere\library\helpers\CliHelper;
+use inhere\library\process\ProcessUtil;
 use inhere\library\queue\QueueInterface;
 
 /**
@@ -141,7 +142,7 @@ trait ProcessManageTrait
      */
     protected function startWorkers($workerNum)
     {
-        return ProcessHelper::forkProcesses($workerNum, function ($id, $pid) {
+        return ProcessUtil::forks($workerNum, function ($id, $pid) {
             $this->runWorker($id, $pid);
         });
     }
@@ -154,9 +155,9 @@ trait ProcessManageTrait
      */
     protected function startWorker($tasks, $id, $first = true)
     {
-        return ProcessHelper::forkProcess($id, function ($id, $pid) {
+        return ProcessUtil::fork($id, function ($id, $pid) use($first) {
             $this->runWorker($id, $pid);
-        }, $first);
+        });
     }
 
     /**
@@ -181,10 +182,10 @@ trait ProcessManageTrait
 
     /**
      * run Worker
-     * @param MsgQueue $queue
+     * @param QueueInterface $queue
      * @return int
      */
-    protected function handleTasks(MsgQueue $queue)
+    protected function handleTasks(QueueInterface $queue)
     {
         $eCode = 0;
 
@@ -211,7 +212,12 @@ trait ProcessManageTrait
      */
     protected function stopMaster($pid, $quit = true)
     {
-        ProcessHelper::killAndWait($pid, SIGTERM, 'manager');
+        $this->stdout("Stop the manager(PID:$pid)");
+
+        ProcessUtil::killAndWait($pid, SIGTERM, 'manager');
+
+        // stop success
+        $this->stdout(sprintf("\n%s\n"), CliHelper::color("The manager process stopped", CliHelper::FG_GREEN));
 
         if ($quit) {
             $this->quit();
@@ -248,22 +254,14 @@ trait ProcessManageTrait
             return false;
         }
 
-        $signals = [
-            SIGINT => 'SIGINT(Ctrl+C)',
-            SIGTERM => 'SIGTERM',
-            SIGKILL => 'SIGKILL',
-        ];
-
-        $this->log("Stopping workers({$signals[$signal]}) ...", self::LOG_PROC_INFO);
-
-        foreach ($this->workers as $pid => $worker) {
-            $this->log("Stopping worker #{$worker['id']}(PID:$pid)", self::LOG_PROC_INFO);
-
-            // send exit signal.
-            $this->sendSignal($pid, $signal);
-        }
-
-        return true;
+        return ProcessUtil::stopChildren($this->workers, $signal, [
+            'beforeStops' => function ($sigText) {
+                $this->log("Stopping workers({$sigText}) ...", self::LOG_PROC_INFO);
+            },
+            'beforeStop' => function ($pid, $info) {
+                $this->log("Stopping worker #{$info['id']}(PID:$pid)", self::LOG_PROC_INFO);
+            },
+        ]);
     }
 
     /**

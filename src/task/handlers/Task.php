@@ -1,11 +1,12 @@
 <?php
 
-namespace inhere\library\process;
+namespace inhere\library\task\handlers;
 
 /**
- *
+ * Class Task
+ * @package inhere\library\task\handlers
  */
-class Task
+abstract class Task
 {
     public $id;
 

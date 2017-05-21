@@ -10,6 +10,7 @@ namespace inhere\library\task\server;
 
 use inhere\library\queue\MsgQueue;
 use inhere\library\queue\QueueInterface;
+use inhere\library\task\Base;
 use inhere\library\task\ProcessLogInterface;
 use inhere\library\task\ProcessLogTrait;
 use inhere\library\task\ProcessControlTrait;
@@ -20,23 +21,11 @@ use inhere\library\traits\TraitSimpleConfig;
  *
  * @package inhere\library\task\server
  */
-class Server implements ProcessLogInterface
+class Server extends Base implements ProcessLogInterface
 {
     use OptionAndConfigTrait;
     use ProcessLogTrait;
     use ProcessControlTrait;
-    use TraitSimpleConfig;
-
-
-    /**
-     * @var string
-     */
-    protected $name;
-
-    /**
-     * @var QueueInterface
-     */
-    protected $queue;
 
     /**
      * @var array
@@ -238,43 +227,4 @@ class Server implements ProcessLogInterface
         }
     }
 
-    /**
-     * @return QueueInterface
-     */
-    public function getQueue(): QueueInterface
-    {
-        return $this->queue;
-    }
-
-    /**
-     * @param QueueInterface $queue
-     */
-    public function setQueue(QueueInterface $queue)
-    {
-        $this->queue = $queue;
-    }
-
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    /**
-     * @return string
-     */
-    public function getShowName()
-    {
-        return $this->name ? "({$this->name})" : '';
-    }
-
-    /**
-     * @return bool
-     */
-    public function isDaemon()
-    {
-        return $this->config['daemon'];
-    }
 }

@@ -37,7 +37,7 @@ class DbQueue extends BaseQueue
      * @param mixed $data
      * @return bool
      */
-    public function push($data)
+    public function push($data, $priority = self::PRIORITY_NORM)
     {
         // TODO: Implement push() method.
     }

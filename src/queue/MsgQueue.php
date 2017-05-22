@@ -17,9 +17,9 @@ class MsgQueue extends BaseQueue
     private $msgType = 1;
 
     /**
-     * @var resource
+     * @var array
      */
-    private $queue;
+    private $queues = [];
 
     /**
      * @var array
@@ -46,20 +46,38 @@ class MsgQueue extends BaseQueue
         }
 
         $this->config = array_merge($this->config, $config);
+        
         $this->id = !empty($config['id']) ? (int)$config['id'] : ftok(__FILE__, $this->config['uniKey']);
         $this->msgType = (int)$this->config['msgType'];
 
-        // create queue
-        $this->queue = msg_get_queue($this->id);
+        // create queues
+        foreach ($this->getIntChannels() as $id) {
+            $this->queues[] = msg_get_queue($id);
+        }
     }
 
     /**
-     * Setting the queue option
-     * @param array $options
+     * {@inheritdoc}
      */
-    public function setOptions(array $options = [])
+    public function push($data, $priority = self::PRIORITY_NORM)
     {
-        msg_set_queue($this->queue, $options);
+        // 如果队列满了，这里会阻塞
+        // bool msg_send(
+        //      resource $queue, int $msgtype, mixed $message [, bool $serialize = true [, bool $blocking = true [, int &$errorcode ]]]
+        // )
+
+        if (isset($this->queues[$priority])) {
+            return msg_send(
+                $this->queues[$priority],
+                $this->msgType,
+                $data,
+                $this->config['serialize'],
+                $this->config['blocking'],
+                $this->errCode
+            );
+        }
+
+        return false;
     }
 
     /**
@@ -72,39 +90,27 @@ class MsgQueue extends BaseQueue
         //      resource $queue, int $desiredmsgtype, int &$msgtype, int $maxsize,
         //      mixed &$message [, bool $unserialize = true [, int $flags = 0 [, int &$errorcode ]]]
         //  )
-        $success = msg_receive(
-            $this->queue,
-            0,
-            $this->msgType,
-            $this->config['bufferSize'],
-            $data,
-            $this->config['serialize'],
-            0,
-            $this->errCode
-        );
 
-        return $success ? $data : false;
-    }
+        $data = null;
 
-    /**
-     * push data
-     * @param mixed $data
-     * @return bool
-     */
-    public function push($data)
-    {
-        // bool msg_send(
-        //      resource $queue, int $msgtype, mixed $message [, bool $serialize = true [, bool $blocking = true [, int &$errorcode ]]]
-        // )
-        // 如果队列满了，这里会阻塞
-        return msg_send(
-            $this->queue,
-            $this->msgType,
-            $data,
-            $this->config['serialize'],
-            $this->config['blocking'],
-            $this->errCode
-        );
+        foreach ($this->queues as $queue) {
+            $success = msg_receive(
+                $queue,
+                0,
+                $this->msgType,
+                $this->config['bufferSize'],
+                $data,
+                $this->config['serialize'],
+                0,
+                $this->errCode
+            );
+
+            if ($success) {
+                break;
+            }
+        }
+
+        return $data;
     }
 
     /**
@@ -120,7 +126,17 @@ class MsgQueue extends BaseQueue
     }
 
     /**
-     * @param $id
+     * Setting the queue option
+     * @param array $options
+     * @param int $queue
+     */
+    public function setOptions(array $options = [], $queue = self::PRIORITY_NORM)
+    {
+        msg_set_queue($this->queues[$queue], $options);
+    }
+    
+    /**
+     * @param int $id
      * @return bool
      */
     public function exist($id)
@@ -133,8 +149,10 @@ class MsgQueue extends BaseQueue
      */
     public function close()
     {
-        if ($this->queue) {
-            msg_remove_queue($this->queue);
+        foreach ($this->queues as $queue) {
+            if ($queue) {
+                msg_remove_queue($queue);
+            }
         }
     }
 
@@ -147,11 +165,12 @@ class MsgQueue extends BaseQueue
     }
 
     /**
+     * @param int $queue
      * @return array
      */
-    public function getStat()
+    public function getStat($queue = self::PRIORITY_NORM)
     {
-        return msg_stat_queue($this->queue);
+        return msg_stat_queue($this->queues[$queue]);
     }
 
     /**

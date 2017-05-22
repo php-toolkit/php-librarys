@@ -14,12 +14,20 @@ namespace inhere\library\queue;
  */
 interface QueueInterface
 {
+    const PRIORITY_HIGH = 0;
+    const PRIORITY_NORM = 1;
+    const PRIORITY_LOW = 2;
+
+    const PRIORITY_LOW_SUFFIX = '_low';
+    const PRIORITY_HIGH_SUFFIX = '_high';
+
     /**
      * push data
      * @param mixed $data
+     * @param int $priority
      * @return bool
      */
-    public function push($data);
+    public function push($data, $priority = self::PRIORITY_NORM);
 
     /**
      * pop data

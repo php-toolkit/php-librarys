@@ -22,7 +22,7 @@ class PhpQueue extends BaseQueue
     /**
      * {@inheritDoc}
      */
-    public function push($data)
+    public function push($data, $priority = self::PRIORITY_NORM)
     {
         $this->queue->push($data);
 

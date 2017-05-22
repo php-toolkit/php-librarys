@@ -16,7 +16,7 @@ abstract class BaseQueue implements QueueInterface
 {
     /**
      * The queue id(name)
-     * @var string
+     * @var string|int
      */
     protected $id;
 
@@ -29,6 +29,48 @@ abstract class BaseQueue implements QueueInterface
      * @var string
      */
     protected $errMsg;
+
+    /**
+     * @var array
+     */
+    private static $channels = [];
+
+    /**
+     * @var array
+     */
+    private static $intChannels = [];
+
+    /**
+     * @return array
+     */
+    public function getChannels()
+    {
+        if (!self::$channels) {
+            self::$channels = [
+                'high' => $this->id . self::PRIORITY_HIGH_SUFFIX,
+                'norm' => $this->id,
+                'low' => $this->id . self::PRIORITY_LOW_SUFFIX,
+            ];
+        }
+
+        return self::$channels;
+    }
+
+    /**
+     * @return array
+     */
+    public function getIntChannels()
+    {
+        if (!self::$intChannels) {
+                self::$intChannels = [
+                'high' => $this->id . self::PRIORITY_HIGH,
+                'norm' => $this->id,
+                'low' => $this->id . self::PRIORITY_LOW,
+            ];
+        }
+
+        return self::$intChannels;
+    }
 
     /**
      * @return int

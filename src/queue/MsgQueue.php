@@ -9,18 +9,8 @@ namespace inhere\library\queue;
  * Class MsgQueue
  * @package inhere\library\queue
  */
-class MsgQueue implements QueueInterface
+class MsgQueue extends BaseQueue
 {
-    /**
-     * @var int[]
-     */
-//    private static $msgIds = [];
-
-    /**
-     * @var int
-     */
-    private $msgId;
-
     /**
      * @var int
      */
@@ -32,18 +22,12 @@ class MsgQueue implements QueueInterface
     private $queue;
 
     /**
-     * @var int
-     */
-    private $errCode = 0;
-
-    /**
      * @var array
      */
     private $config = [
-        'msgId' => null,
-        'uniKey' => 0,
+        'uniKey' => 0, // int|string
         'msgType' => 1,
-        'blocking' => 1,
+        'blocking' => 1, // 0|1
         'serialize' => false,
         'bufferSize' => 8192, // 65525
     ];
@@ -55,19 +39,18 @@ class MsgQueue implements QueueInterface
     public function __construct(array $config = [])
     {
         if (!function_exists('msg_receive')) {
-            throw new \RuntimeException('Is not support msg queue of the current system(must enable sysvmsg for php).', -500);
+            throw new \RuntimeException(
+                'Is not support msg queue of the current system(must enable sysvmsg for php).',
+                -500
+            );
         }
 
         $this->config = array_merge($this->config, $config);
-        $this->msgId = !empty($config['msgId']) ? (int)$config['msgId'] : ftok(__FILE__, $this->config['uniKey']);
+        $this->id = !empty($config['id']) ? (int)$config['id'] : ftok(__FILE__, $this->config['uniKey']);
         $this->msgType = (int)$this->config['msgType'];
 
-//        if (isset(self::$msgIds[$this->msgId])) {
-//
-//        }
-
         // create queue
-        $this->queue = msg_get_queue($this->msgId);
+        $this->queue = msg_get_queue($this->id);
     }
 
     /**
@@ -137,12 +120,12 @@ class MsgQueue implements QueueInterface
     }
 
     /**
-     * @param $msgId
+     * @param $id
      * @return bool
      */
-    public function exist($msgId)
+    public function exist($id)
     {
-        return msg_queue_exists($msgId);
+        return msg_queue_exists($id);
     }
 
     /**
@@ -177,21 +160,5 @@ class MsgQueue implements QueueInterface
     public function getConfig()
     {
         return $this->config;
-    }
-
-    /**
-     * @return int
-     */
-    public function getMsgId()
-    {
-        return $this->msgId;
-    }
-
-    /**
-     * @return int
-     */
-    public function getErrCode()
-    {
-        return $this->errCode;
     }
 }

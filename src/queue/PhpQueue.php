@@ -12,7 +12,7 @@ namespace inhere\library\queue;
  * Class PhpQueue
  * @package inhere\library\queue
  */
-class PhpQueue implements QueueInterface
+class PhpQueue extends BaseQueue
 {
     /**
      * @var \SplQueue
@@ -35,10 +35,5 @@ class PhpQueue implements QueueInterface
     public function pop()
     {
         return $this->queue->pop();
-    }
-
-    public function getMsgId()
-    {
-        // TODO: Implement getMsgId() method.
     }
 }

@@ -294,7 +294,15 @@ class ProcessLogger implements ProcessLogInterface
     }
 
     /**
-     * getLogFile
+     * @return array
+     */
+    public static function getLevels()
+    {
+        return self::$levels;
+    }
+
+    /**
+     * getFile
      * @return string
      */
     public function getFile()

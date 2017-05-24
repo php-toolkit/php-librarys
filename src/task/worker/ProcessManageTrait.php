@@ -40,11 +40,6 @@ trait ProcessManageTrait
     /**
      * @var bool
      */
-    protected $isManager = false;
-
-    /**
-     * @var bool
-     */
     protected $isWorker = false;
 
     /**
@@ -168,7 +163,7 @@ trait ProcessManageTrait
     protected function runWorker($id, $pid)
     {
         $this->isWorker = true;
-        $this->isMaster = $this->isManager = false;
+        $this->isMaster = false;
 
         $this->id = $id;
         $this->masterPid = $this->pid;

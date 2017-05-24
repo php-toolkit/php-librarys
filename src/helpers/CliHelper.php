@@ -151,21 +151,26 @@ class CliHelper
      *
      * @link http://php.net/manual/zh/function.getopt.php#83414
      * @param array $noValues List of parameters without values
+     * @param bool $mergeOpts
      * @return array
      */
-    public static function parseOpts($noValues = [])
+    public static function parseOptArg($noValues = [], $mergeOpts = false)
     {
-        $result = [];
+        $args = $sOpts = $lOpts = [];
         $params = $GLOBALS['argv'];
         reset($params);
+        $fullScript = implode(' ', $params);
+        $script = array_shift($params);
 
         while (list(, $p) = each($params)) {
             if ($p{0} === '-') {
+                $isLong = false;
                 $pName = substr($p, 1);
                 $value = true;
 
                 if ($pName{0} === '-') {
                     // long-opt (--<param>)
+                    $isLong = true;
                     $pName = substr($pName, 1);
 
                     if (strpos($p, '=') !== false) {
@@ -181,16 +186,25 @@ class CliHelper
                     list(, $value) = each($params);
                 }
 
-                $result[$pName] = $value;
+                if ($isLong) {
+                    $lOpts[$pName] = $value;
+                } else {
+                    $sOpts[$pName] = $value;
+                }
             } else {
-                // param doesn't belong to any option
-                $result[] = $p;
+                // param doesn't belong to any option, define it is arg
+                $args[] = $p;
             }
         }
 
-        return $result;
-    }
+        unset($params);
 
+        if ($mergeOpts) {
+            return [$fullScript, $script, $args, array_merge($sOpts, $lOpts)];
+        }
+
+        return [$fullScript, $script, $args, $sOpts, $lOpts];
+    }
 
     /**
      * Logs data to stdout

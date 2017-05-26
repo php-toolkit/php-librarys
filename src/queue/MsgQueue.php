@@ -46,7 +46,7 @@ class MsgQueue extends BaseQueue
         }
 
         $this->config = array_merge($this->config, $config);
-        
+
         $this->id = !empty($config['id']) ? (int)$config['id'] : ftok(__FILE__, $this->config['uniKey']);
         $this->msgType = (int)$this->config['msgType'];
 
@@ -59,7 +59,7 @@ class MsgQueue extends BaseQueue
     /**
      * {@inheritdoc}
      */
-    public function push($data, $priority = self::PRIORITY_NORM)
+    protected function doPush($data, $priority = self::PRIORITY_NORM)
     {
         // 如果队列满了，这里会阻塞
         // bool msg_send(
@@ -81,10 +81,9 @@ class MsgQueue extends BaseQueue
     }
 
     /**
-     * pop data
-     * @return mixed Return False is failed.
+     * {@inheritDoc}
      */
-    public function pop()
+    protected function doPop()
     {
         // bool msg_receive(
         //      resource $queue, int $desiredmsgtype, int &$msgtype, int $maxsize,
@@ -134,7 +133,7 @@ class MsgQueue extends BaseQueue
     {
         msg_set_queue($this->queues[$queue], $options);
     }
-    
+
     /**
      * @param int $id
      * @return bool

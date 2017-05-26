@@ -23,19 +23,13 @@ class RedisQueue extends BaseQueue
     /**
      * {@inheritDoc}
      */
-    public function push($data, $priority = self::PRIORITY_NORM)
+    protected function doPush($data, $priority = self::PRIORITY_NORM)
     {
-        try {
-            $data = serialize($data);
-            $channels = array_values($this->getChannels());
+        $data = serialize($data);
+        $channels = array_values($this->getChannels());
 
-            if (isset($channels[$priority])) {
-                return $this->redis->lPush($channels[$priority], $data);
-            }
-
-        } catch (\Exception $e) {
-            $this->errCode = $e->getCode() > 0 ? $e->getCode() : -__LINE__;
-            $this->errMsg = $e->getMessage();
+        if (isset($channels[$priority])) {
+            return $this->redis->lPush($channels[$priority], $data);
         }
 
         return false;
@@ -44,20 +38,15 @@ class RedisQueue extends BaseQueue
     /**
      * {@inheritDoc}
      */
-    public function pop()
+    protected function doPop()
     {
         $data = null;
 
-        try {
-            foreach ($this->getChannels() as $channel) {
-                if ($data = $this->redis->rPop($channel)) {
-                    $data = unserialize($data);
-                    break;
-                }
+        foreach ($this->getChannels() as $channel) {
+            if ($data = $this->redis->rPop($channel)) {
+                $data = unserialize($data);
+                break;
             }
-        } catch (\Exception $e) {
-            $this->errCode = $e->getCode() > 0 ? $e->getCode() : -__LINE__;
-            $this->errMsg = $e->getMessage();
         }
 
         return $data;

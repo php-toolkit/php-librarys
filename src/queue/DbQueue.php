@@ -22,46 +22,106 @@ class DbQueue extends BaseQueue
     /**
      * @var string
      */
-    private $tableName = 'my_queue';
+    private $tableName = 'msg_queue';
+
+    /**
+     * DbQueue constructor.
+     * @param array $config
+     */
+    public function __construct(array $config = [])
+    {
+        foreach ($config as $name => $value) {
+            $this->$name = $value;
+        }
+    }
 
     /**
      * {@inheritDoc}
      */
-    public function pop()
+    protected function doPop()
     {
-//        return $this->db->pop();
+        $st = $this->db->query(sprintf(
+            "SELECT `id`,`data` FROM %s WHERE queue = %s ORDER BY `priority` DESC, `id` ASC LIMIT 1",
+            $this->tableName,
+            $this->id
+        ));
+
+        if ($row = $st->fetch(\PDO::FETCH_ASSOC)) {
+            $row['data'] = unserialize($row['data']);
+        }
+
+        return $row;
     }
 
     /**
-     * push data
-     * @param mixed $data
-     * @return bool
+     * {@inheritdoc}
      */
-    public function push($data, $priority = self::PRIORITY_NORM)
+    protected function doPush($data, $priority = self::PRIORITY_NORM)
     {
-        // TODO: Implement push() method.
+        return $this->db->exec(sprintf(
+            "INSERT INTO %s (`queue`, `data`, `priority`, `created_at`) VALUES (%s, %s, %d, %d)",
+            $this->tableName,
+            $this->id,
+            serialize($data),
+            $priority,
+            time()
+        ));
     }
 
     /**
+     *
+     * ```php
+     * $dqe->createTable($dqe->createMysqlTableSql());
+     * ```
+     * @param string $sql
      * @return int
      */
-    public function createTable()
+    public function createTable($sql)
+    {
+        return $this->db->exec($sql);
+    }
+
+    /**
+     * @return string
+     */
+    public function createMysqlTableSql()
     {
         $tName = $this->tableName;
-        $sql = <<<EOF
-CREATE TABLE `$tName` (
+        return <<<EOF
+CREATE TABLE IF NOT EXISTS `$tName` (
 	`id` INT(11) NOT NULL AUTO_INCREMENT,
-	`channel` VARCHAR(48) NOT NULL,
-	`data` TEXT NOT NULL,
-	`created_at` INT(10) NOT NULL,
-	`started_at` INT(10) NOT NULL DEFAULT 0,
-	`finished_at` INT(10) NOT NULL DEFAULT 0,
-	KEY (`channel`, `started_at`),
+	`queue` CHAR(48) NOT NULL COMMENT 'queue name', 
+	`data` TEXT NOT NULL COMMENT 'task data',
+	`priority` TINYINT(2) UNSIGNED NOT NULL DEFAULT 1,
+	`created_at` INT(10) UNSIGNED NOT NULL,
+	`started_at` INT(10) UNSIGNED NOT NULL DEFAULT 0,
+	`finished_at` INT(10) UNSIGNED NOT NULL DEFAULT 0,
+	KEY (`queue`, `created_at`),
 	PRIMARY KEY (`iId`)
 )
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 EOF;
-        return $this->db->exec($sql);
+    }
+
+    /**
+     * @return int
+     */
+    public function createSqliteTableSql()
+    {
+        $tName = $this->tableName;
+        return <<<EOF
+CREATE TABLE IF NOT EXISTS `$tName` (
+	`id` INTEGER PRIMARY KEY NOT NULL,
+	`queue` CHAR(48) NOT NULL COMMENT 'queue name', 
+	`data` TEXT NOT NULL COMMENT 'task data',
+	`priority` INTEGER(2) NOT NULL DEFAULT 1,
+	`created_at` INTEGER(10) NOT NULL,
+	`started_at` INTEGER(10) NOT NULL DEFAULT 0,
+	`finished_at` INTEGER(10) NOT NULL DEFAULT 0
+);
+CREATE INDEX idxQueue on $tName(queue);
+CREATE INDEX idxCreatedAt on $tName(created_at);
+EOF;
     }
 }

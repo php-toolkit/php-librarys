@@ -8,12 +8,16 @@
 
 namespace inhere\library\queue;
 
+use inhere\library\event\TraitSimpleEvent;
+
 /**
  * Class BaseQueue
  * @package inhere\library\queue
  */
 abstract class BaseQueue implements QueueInterface
 {
+    use TraitSimpleEvent;
+
     /**
      * The queue id(name)
      * @var string|int
@@ -39,6 +43,58 @@ abstract class BaseQueue implements QueueInterface
      * @var array
      */
     private static $intChannels = [];
+
+    /**
+     * {@inheritDoc}
+     */
+    public function push($data, $priority = self::PRIORITY_NORM)
+    {
+        $status = false;
+        $this->fire(self::EVENT_BEFORE_PUSH, [$data, $priority]);
+
+        try {
+            $status = $this->doPush($data, $priority);
+        } catch (\Exception $e) {
+            $this->errCode = $e->getCode() > 0 ? $e->getCode() : __LINE__;
+            $this->errMsg = $e->getMessage();
+        }
+
+        $this->fire(self::EVENT_AFTER_PUSH, [$data, $priority, $status]);
+
+        return $status;
+    }
+
+    /**
+     * @param $data
+     * @param int $priority
+     * @return bool
+     */
+    abstract protected function doPush($data, $priority = self::PRIORITY_NORM);
+
+    /**
+     * {@inheritDoc}
+     */
+    public function pop()
+    {
+        $data = null;
+        $this->fire(self::EVENT_BEFORE_POP, [$this]);
+
+        try {
+            $data = $this->doPop();
+        } catch (\Exception $e) {
+            $this->errCode = $e->getCode() > 0 ? $e->getCode() : __LINE__;
+            $this->errMsg = $e->getMessage();
+        }
+
+        $this->fire(self::EVENT_AFTER_POP, [$data, $this]);
+
+        return $data;
+    }
+
+    /**
+     * @return mixed
+     */
+    abstract protected function doPop();
 
     /**
      * @return array
@@ -82,10 +138,13 @@ abstract class BaseQueue implements QueueInterface
 
     /**
      * @param string $id
+     * @return $this
      */
     public function setId($id)
     {
         $this->id = $id;
+
+        return $this;
     }
 
     /**

@@ -414,29 +414,25 @@ class LiteLogger
      */
     public function __destruct()
     {
-        self::flushAll();
+        $this->flush();
     }
 
     public function emerg($message, array $context = [])
     {
         $this->log(self::EMERGENCY, $message, $context);
-        // $this->flush();
     }
 
     public function error($message, array $context = [])
     {
         $this->log(self::ERROR, $message, $context);
-        // $this->flush();
     }
 
     public function alert($message, array $context = [])
     {
         $this->log(self::ALERT, $message, $context);
-        // $this->flush();
     }
 
     /**
-     * 发生异常直接写入
      * @param \Exception $e
      * @param array $context
      * @param bool $logRequest
@@ -460,13 +456,12 @@ class LiteLogger
                     'METHOD ' . $this->getServer('REQUEST_METHOD'),
                     'URI ' . $this->getServer('REQUEST_URI'),
                     'REFERRER ' . $this->getServer('HTTP_REFERER'),
-                ]);
+                ]) . "\n";
 
             $context['request'] = $_REQUEST;
         }
 
         $this->log('exception', $message, $context);
-        $this->flush();
     }
 
     /**
@@ -726,7 +721,7 @@ class LiteLogger
         }
 
         if ($this->splitType === 'hour') {
-            return $this->name . '.' . date('Ymd.H') . '.log';
+            return $this->name . '.' . date('Ymd_H') . '.log';
         }
 
         return $this->name . '.' . date('Ymd') . '.log';

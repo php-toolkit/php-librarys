@@ -16,26 +16,6 @@ namespace inhere\library\helpers;
 class FormatHelper
 {
     /**
-     * Format a number into a human readable format
-     * e.g. 24962496 => 23.81M
-     * @param     $size
-     * @param int $precision
-     * @return string
-     */
-    public static function formatBytes($size, $precision = 2)
-    {
-        if (!$size) {
-            return '0';
-        }
-
-        $base = log($size) / log(1024);
-        $suffixes = array('b', 'k', 'M', 'G', 'T');
-        $floorBase = floor($base);
-
-        return round(1024 ** ($base - $floorBase), $precision) . $suffixes[(int)$floorBase];
-    }
-
-    /**
      * formatTime
      * @param  int $secs
      * @return string
@@ -67,16 +47,33 @@ class FormatHelper
                 }
             }
         }
+
+        return date('Y-m-d H:i:s', $secs);
+    }
+
+    /**
+     * @param string $mTime value is microtime(1)
+     * @return string
+     */
+    public static function microTime($mTime = null)
+    {
+        if (!$mTime) {
+            $mTime = microtime(true);
+        }
+
+        list($ts, $ms) = explode('.', sprintf('%.4f', $mTime));
+
+        return date('Y/m/d H:i:s', $ts) . '.' . $ms;
     }
 
     /**
      * @param $memory
      * @return string
      * ```
-     * Helper::formatMemory(memory_get_usage(true));
+     * Helper::memory(memory_get_usage(true));
      * ```
      */
-    public static function formatMemory($memory)
+    public static function memory($memory)
     {
         if ($memory >= 1024 * 1024 * 1024) {
             return sprintf('%.1f GiB', $memory / 1024 / 1024 / 1024);
@@ -97,10 +94,10 @@ class FormatHelper
      * @param int $size
      * @return string
      * ```
-     * Helper::formatMemory(memory_get_usage(true));
+     * Helper::size(memory_get_usage(true));
      * ```
      */
-    public static function formatSize($size)
+    public static function size($size)
     {
         if ($size >= 1024 * 1024 * 1024) {
             return sprintf('%.1f Gb', $size / 1024 / 1024 / 1024);
@@ -117,6 +114,25 @@ class FormatHelper
         return sprintf('%d b', $size);
     }
 
+    /**
+     * Format a number into a human readable format
+     * e.g. 24962496 => 23.81M
+     * @param     $size
+     * @param int $precision
+     * @return string
+     */
+    public static function formatBytes($size, $precision = 2)
+    {
+        if (!$size) {
+            return '0';
+        }
+
+        $base = log($size) / log(1024);
+        $suffixes = array('b', 'k', 'M', 'G', 'T');
+        $floorBase = floor($base);
+
+        return round(1024 ** ($base - $floorBase), $precision) . $suffixes[(int)$floorBase];
+    }
 
     /**
      * Convert a shorthand byte value from a PHP configuration directive to an integer value

@@ -6,10 +6,11 @@
  * Time: 下午12:46
  */
 
-require dirname(__DIR__) . '/../../autoload.php';
+use inhere\library\utils\LiteLogger;
 
+require __DIR__ . '/s-autoload.php';
 
-$lgr = \inhere\library\utils\LiteLogger::make([
+$lgr = LiteLogger::make([
     'splitType' => 'hour',
     'basePath' => __DIR__,
 ], 'test');
@@ -25,6 +26,6 @@ $lgr->warning('a warning message');
 $lgr->error('a error message');
 $lgr->ex(new \RuntimeException('a exception message'));
 
-$lgr->flush();
+//$lgr->flush();
 
 print_r($lgr);

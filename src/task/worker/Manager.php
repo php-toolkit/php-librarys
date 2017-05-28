@@ -156,7 +156,7 @@ class Manager extends Base implements ProcessLogInterface
             $this->runAsDaemon();
         }
 
-        $this->stdout("Create queue msgId = {$this->queue->getMsgId()}");
+        $this->stdout("Create queue msgId = {$this->queue->getId()}");
 
         $this->queue = new MsgQueue($this->config['queue']);
 
@@ -289,7 +289,7 @@ EOF;
      */
     protected function showStatus($command, $watch = false)
     {
-        $this->stdout("un-completed!", true, 0);
+        $this->stdout("un-completed! $command, $watch", true, 0);
     }
 
     /**
@@ -307,6 +307,9 @@ EOF;
         $this->quit();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function installSignals($isMaster = true)
     {
         // ignore

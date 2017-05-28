@@ -17,20 +17,20 @@ interface ProcessLogInterface
     /**
      * Log levels can be enabled from the command line with -v, -vv, -vvv
      */
-    const LOG_EMERG = -8;
-    const LOG_ERROR = -6;
-    const LOG_WARN = -4;
-    const LOG_NOTICE = -2;
-    const LOG_INFO = 0;
-    const LOG_PROC_INFO = 2;
-    const LOG_WORKER_INFO = 4;
-    const LOG_DEBUG = 6;
-    const LOG_CRAZY = 8;
+    const EMERG = -8;
+    const ERROR = -6;
+    const WARN = -4;
+    const NOTICE = -2;
+    const INFO = 0;
+    const PROC_INFO = 2;
+    const WORKER_INFO = 4;
+    const DEBUG = 6;
+    const CRAZY = 8;
 
     /**
      * Log file save type.
      */
-    const LOG_SPLIT_NO = '';
-    const LOG_SPLIT_DAY = 'day';
-    const LOG_SPLIT_HOUR = 'hour';
+    const SPLIT_NO = '';
+    const SPLIT_DAY = 'day';
+    const SPLIT_HOUR = 'hour';
 }

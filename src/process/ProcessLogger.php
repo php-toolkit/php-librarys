@@ -9,6 +9,7 @@
 namespace inhere\library\process;
 
 use inhere\library\helpers\CliHelper;
+use inhere\library\helpers\FormatHelper;
 
 /**
  * Class ProcessLogger
@@ -19,7 +20,12 @@ class ProcessLogger implements ProcessLogInterface
     /**
      * @var int
      */
-    protected $level = 0;
+    protected $level = 4;
+
+    /**
+     * @var bool
+     */
+    protected $daemon = false;
 
     /**
      * current log file
@@ -31,7 +37,7 @@ class ProcessLogger implements ProcessLogInterface
      * Holds the resource for the log file
      * @var resource
      */
-    protected $fileHandle;
+    private $fileHandle;
 
     /**
      * will write log by `syslog()`
@@ -50,14 +56,14 @@ class ProcessLogger implements ProcessLogInterface
      * @var array $levels Logging levels
      */
     protected static $levels = [
-        self::LOG_EMERG => 'EMERGENCY',
-        self::LOG_ERROR => 'ERROR',
-        self::LOG_WARN => 'WARNING',
-        self::LOG_INFO => 'INFO',
-        self::LOG_PROC_INFO => 'PROC_INFO',
-        self::LOG_WORKER_INFO => 'WORKER_INFO',
-        self::LOG_DEBUG => 'DEBUG',
-        self::LOG_CRAZY => 'CRAZY',
+        self::EMERG => 'EMERGENCY',
+        self::ERROR => 'ERROR',
+        self::WARN => 'WARNING',
+        self::INFO => 'INFO',
+        self::PROC_INFO => 'PROC_INFO',
+        self::WORKER_INFO => 'WORKER_INFO',
+        self::DEBUG => 'DEBUG',
+        self::CRAZY => 'CRAZY',
     ];
 
     /**
@@ -78,28 +84,50 @@ class ProcessLogger implements ProcessLogInterface
      */
     protected function init()
     {
-        $this->level = (int)$this->level;
         $this->fileHandle = null;
+        $this->level = (int)$this->level;
         $this->toSyslog = (bool)$this->toSyslog;
+        $this->daemon = (bool)$this->daemon;
 
         if ($this->file === 'syslog') {
             $this->file = null;
             $this->toSyslog = true;
         }
 
-        if ($this->spiltType && !in_array($this->spiltType, [self::LOG_SPLIT_DAY, self::LOG_SPLIT_HOUR])) {
-            $this->spiltType = self::LOG_SPLIT_DAY;
+        if ($this->spiltType && !in_array($this->spiltType, [self::SPLIT_DAY, self::SPLIT_HOUR])) {
+            $this->spiltType = self::SPLIT_DAY;
         }
+
+        // open Log File
+        $this->openFile();
     }
 
     /**
-     * debug log
+     * Debug log
      * @param  string $msg
      * @param  array $data
      */
     public function debug($msg, array $data = [])
     {
-        $this->log($msg, self::LOG_DEBUG, $data);
+        $this->log($msg, self::DEBUG, $data);
+    }
+
+    /**
+     * Exception log
+     * @param \Exception $e
+     * @param string $preMsg
+     */
+    public function ex(\Exception $e, $preMsg = '')
+    {
+        $preMsg = $preMsg ? "$preMsg " : '';
+
+        $this->log(sprintf(
+            "{$preMsg}Exception: %s On %s Line %s\nCode Trace:\n%s",
+            $e->getMessage(),
+            $e->getFile(),
+            $e->getLine(),
+            $e->getTraceAsString()
+        ), self::ERROR);
     }
 
     /**
@@ -109,7 +137,7 @@ class ProcessLogger implements ProcessLogInterface
      * @param array $data
      * @return bool
      */
-    public function log($msg, $level = self::LOG_INFO, array $data = [])
+    public function log($msg, $level = self::INFO, array $data = [])
     {
         if ($level > $this->level) {
             return true;
@@ -121,18 +149,14 @@ class ProcessLogger implements ProcessLogInterface
             return $this->sysLog($msg . ' ' . $data, $level);
         }
 
-        $label = isset(self::$levels[$level]) ? self::$levels[$level] : self::LOG_INFO;
+        $label = isset(self::$levels[$level]) ? self::$levels[$level] : self::INFO;
+        $ds = FormatHelper::microTime(microtime(true));
 
-        list($ts, $ms) = explode('.', sprintf('%.4f', microtime(true)));
-        $ds = date('Y/m/d H:i:s', $ts) . '.' . $ms;
-
-        $logString = sprintf(
-            '[%s] [%s:%d] [%s] %s %s' . PHP_EOL,
-            $ds, $this->getPidRole(), $this->pid, $label, trim($msg), $data
-        );
+        // [$this->getPidRole():$this->pid] $msg
+        $logString = sprintf("[%s] [%s] %s %s\n", $ds, $label, trim($msg), $data);
 
         // if not in daemon, print log to \STDOUT
-        if (!$this->isDaemon()) {
+        if (!$this->daemon) {
             $this->stdout($logString, false);
         }
 
@@ -155,22 +179,16 @@ class ProcessLogger implements ProcessLogInterface
             return false;
         }
 
-        static $lastCheckTime;
-
-        if (!$lastCheckTime) {
-            $lastCheckTime = time();
+        if (!$this->spiltType) {
+            return $this->file;
         }
 
-        if (time() - $lastCheckTime < self::LOG_CHECK_INTERVAL) {
-            $lastCheckTime = time();
-            return false;
-        }
+        $dtStr = $this->getLogFileDate();
 
-        $lastCheckTime = time();
-        $logFile = $this->genLogFile(true);
+        // update file. $dtStr is '_Y-m-d' or '_Y-m-d_H'
+        if (!strpos($file, '_' . $dtStr)) {
+            $logFile = $this->genLogFile(true);
 
-        // update
-        if ($file !== $logFile) {
             if ($this->fileHandle) {
                 fclose($this->fileHandle);
             }
@@ -189,7 +207,7 @@ class ProcessLogger implements ProcessLogInterface
     /**
      * Opens the log file. If already open, closes it first.
      */
-    protected function openLogFile()
+    protected function openFile()
     {
         if ($logFile = $this->genLogFile(true)) {
             if ($this->fileHandle) {
@@ -222,17 +240,42 @@ class ProcessLogger implements ProcessLogInterface
         $name = isset($info['filename']) ? $info['filename'] : 'gw_manager';
         $ext = isset($info['extension']) ? $info['extension'] : 'log';
 
-        if ($type === self::LOG_SPLIT_DAY) {
-            $str = date('Y-m-d');
-        } else {
-            $str = date('Y-m-d_H');
-        }
-
         if ($createDir && !is_dir($dir)) {
             @mkdir($dir, 0755, true);
         }
 
+        $str = $this->getLogFileDate();
+
         return "{$dir}/{$name}_{$str}.{$ext}";
+    }
+
+    /**
+     * close
+     */
+    public function close()
+    {
+        // close logFileHandle
+        if ($this->fileHandle) {
+            fclose($this->fileHandle);
+
+            $this->fileHandle = null;
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getLogFileDate()
+    {
+        $str = '';
+
+        if ($this->spiltType === self::SPLIT_DAY) {
+            $str = date('Y-m-d');
+        } elseif ($this->spiltType === self::SPLIT_HOUR) {
+            $str = date('Y-m-d_H');
+        }
+
+        return $str;
     }
 
     /**
@@ -266,21 +309,21 @@ class ProcessLogger implements ProcessLogInterface
     protected function sysLog($msg, $level)
     {
         switch ($level) {
-            case self::LOG_EMERG:
+            case self::EMERG:
                 $priority = LOG_EMERG;
                 break;
-            case self::LOG_ERROR:
+            case self::ERROR:
                 $priority = LOG_ERR;
                 break;
-            case self::LOG_WARN:
+            case self::WARN:
                 $priority = LOG_WARNING;
                 break;
-            case self::LOG_DEBUG:
+            case self::DEBUG:
                 $priority = LOG_DEBUG;
                 break;
-            case self::LOG_INFO:
-            case self::LOG_PROC_INFO:
-            case self::LOG_WORKER_INFO:
+            case self::INFO:
+            case self::PROC_INFO:
+            case self::WORKER_INFO:
             default:
                 $priority = LOG_INFO;
                 break;
@@ -308,5 +351,13 @@ class ProcessLogger implements ProcessLogInterface
     public function getFile()
     {
         return $this->file;
+    }
+
+    /**
+     * __destruct
+     */
+    public function __destruct()
+    {
+        $this->close();
     }
 }

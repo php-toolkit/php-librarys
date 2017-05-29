@@ -24,11 +24,6 @@ trait ProcessControlTrait
     protected $supportPC = true;
 
     /**
-     * @var int
-     */
-    protected $pid = 0;
-
-    /**
      * @var string
      */
     protected $pidFile;

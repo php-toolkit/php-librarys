@@ -97,6 +97,19 @@ abstract class BaseQueue implements QueueInterface
     abstract protected function doPop();
 
     /**
+     * get Priorities
+     * @return array
+     */
+    public function getPriorities()
+    {
+        return [
+            self::PRIORITY_HIGH,
+            self::PRIORITY_NORM,
+            self::PRIORITY_LOW,
+        ];
+    }
+
+    /**
      * @return array
      */
     public function getChannels()
@@ -119,13 +132,29 @@ abstract class BaseQueue implements QueueInterface
     {
         if (!self::$intChannels) {
                 self::$intChannels = [
-                'high' => $this->id . self::PRIORITY_HIGH,
-                'norm' => $this->id,
-                'low' => $this->id . self::PRIORITY_LOW,
+                'high' => $this->id + self::PRIORITY_HIGH,
+                'norm' => (int)$this->id,
+                'low' => $this->id + self::PRIORITY_LOW,
             ];
         }
 
         return self::$intChannels;
+    }
+
+    /**
+     * __destruct
+     */
+    public function __destruct()
+    {
+        $this->close();
+    }
+
+    /**
+     * close
+     */
+    public function close()
+    {
+        $this->clearEvents();
     }
 
     /**

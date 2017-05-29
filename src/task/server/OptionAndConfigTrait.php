@@ -68,7 +68,7 @@ trait OptionAndConfigTrait
      */
     protected function parseCliOptions()
     {
-        $result = CliHelper::parseOptArg([
+        $result = CliHelper::parseOptArgs([
             'd', 'daemon', 'w', 'watch', 'h', 'help', 'V', 'version', 'no-test', 'watch-status'
         ]);
         $this->fullScript = implode(' ', $GLOBALS['argv']);

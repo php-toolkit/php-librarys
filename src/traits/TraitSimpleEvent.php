@@ -108,6 +108,11 @@ trait TraitSimpleEvent
         return false;
     }
 
+    public function clearEvents()
+    {
+        $this->events = $this->eventHandlers = [];
+    }
+
     /**
      * @param $event
      * @return bool

@@ -4,24 +4,21 @@ namespace inhere\library\task\worker;
 
 use inhere\library\helpers\CliHelper;
 use inhere\library\helpers\PhpHelper;
-use inhere\library\queue\MsgQueue;
+use inhere\library\process\ProcessLogger;
+use inhere\library\queue\SysVQueue;
 use inhere\library\task\Base;
 use inhere\library\task\ProcessControlTrait;
-use inhere\library\task\ProcessLogInterface;
-use inhere\library\task\ProcessLogTrait;
 
 /**
  * Class Manager - task workers manager
  * @package inhere\library\task\worker
  */
-class Manager extends Base implements ProcessLogInterface
+class Manager extends Base
 {
     use OptionAndConfigTrait;
     use ProcessControlTrait;
-    use ProcessLogTrait;
     use ProcessManageTrait;
 
-    const VERSION = '0.1.0';
 
     /**
      * some MIN values
@@ -158,7 +155,7 @@ class Manager extends Base implements ProcessLogInterface
 
         $this->stdout("Create queue msgId = {$this->queue->getId()}");
 
-        $this->queue = new MsgQueue($this->config['queue']);
+        $this->queue = new SysVQueue($this->config['queue']);
 
         // save Pid File
         $this->savePidFile();
@@ -186,13 +183,8 @@ class Manager extends Base implements ProcessLogInterface
         $this->delPidFile();
 
         // close logFileHandle
-        if ($this->logFileHandle) {
-            fclose($this->logFileHandle);
 
-            $this->logFileHandle = null;
-        }
-
-        $this->log("Manager stopped\n", self::LOG_PROC_INFO);
+        $this->log("Manager stopped\n", ProcessLogger::PROC_INFO);
         $this->quit();
     }
 
@@ -316,7 +308,7 @@ EOF;
         pcntl_signal(SIGPIPE, SIG_IGN, false);
 
         if ($isMaster) {
-            $this->log('Registering signal handlers for master(parent) process', self::LOG_DEBUG);
+            $this->log('Registering signal handlers for master(parent) process', ProcessLogger::DEBUG);
 
             pcntl_signal(SIGTERM, [$this, 'signalHandler'], false);
             pcntl_signal(SIGINT, [$this, 'signalHandler'], false);
@@ -328,7 +320,7 @@ EOF;
             pcntl_signal(SIGCHLD, [$this, 'signalHandler'], false);
 
         } else {
-            $this->log("Registering signal handlers for current worker process", self::LOG_DEBUG);
+            $this->log("Registering signal handlers for current worker process", ProcessLogger::DEBUG);
 
             pcntl_signal(SIGTERM, [$this, 'signalHandler'], false);
         }
@@ -347,24 +339,23 @@ EOF;
                 case SIGINT: // Ctrl + C
                 case SIGTERM:
                     $sigText = $sigNo === SIGINT ? 'SIGINT' : 'SIGTERM';
-                    $this->log("Shutting down(signal:$sigText)...", self::LOG_PROC_INFO);
+                    $this->log("Shutting down(signal:$sigText)...", ProcessLogger::PROC_INFO);
                     $this->stopWork();
                     $stopCount++;
 
                     if ($stopCount < 5) {
                         $this->stopWorkers();
                     } else {
-                        $this->log('Stop workers failed by(signal:SIGTERM), force kill workers by(signal:SIGKILL)', self::LOG_PROC_INFO);
+                        $this->log('Stop workers failed by(signal:SIGTERM), force kill workers by(signal:SIGKILL)', ProcessLogger::PROC_INFO);
                         $this->stopWorkers(SIGKILL);
                     }
                     break;
                 case SIGHUP:
-                    $this->log('Restarting workers(signal:SIGHUP)', self::LOG_PROC_INFO);
-                    $this->openLogFile();
+                    $this->log('Restarting workers(signal:SIGHUP)', ProcessLogger::PROC_INFO);
                     $this->stopWorkers();
                     break;
                 case SIGUSR1: // reload workers and reload handlers
-//                    $this->log('Reloading workers and handlers(signal:SIGUSR1)', self::LOG_PROC_INFO);
+//                    $this->log('Reloading workers and handlers(signal:SIGUSR1)', ProcessLogger::PROC_INFO);
 //                    $this->stopWork();
 //                    $this->start();
                     break;
@@ -376,7 +367,7 @@ EOF;
 
         } else {
             $this->stopWork();
-            $this->log("Received 'stopWork' signal(signal:SIGTERM), will be exiting.", self::LOG_PROC_INFO);
+            $this->log("Received 'stopWork' signal(signal:SIGTERM), will be exiting.", ProcessLogger::PROC_INFO);
         }
     }
 

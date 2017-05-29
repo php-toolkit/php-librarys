@@ -33,6 +33,8 @@ class DbQueue extends BaseQueue
         foreach ($config as $name => $value) {
             $this->$name = $value;
         }
+
+        $this->id = $config['id'] ?? 'db';
     }
 
     /**

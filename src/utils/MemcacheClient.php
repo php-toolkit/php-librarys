@@ -133,6 +133,18 @@ class MemcacheClient // extends AbstractCacheDriver
         );
     }
 
+    /**
+     * @param $host
+     * @param int $port
+     * @param int $weight
+     * @param bool $persistent
+     * @param int $timeout
+     * @param int $retry_interval
+     * @param bool $status
+     * @param callable|null $failure_callback
+     * @param int $timeoutMs
+     * @return bool
+     */
     public function addServer(
         $host, $port = 11211, $weight = 0, $persistent = true, $timeout = 1,
         $retry_interval = 15, $status = true, callable $failure_callback = null, $timeoutMs = 0
@@ -193,6 +205,10 @@ class MemcacheClient // extends AbstractCacheDriver
         return $this->driver->set($key, $value, $flag, $expire);
     }
 
+    /**
+     * @param $key
+     * @return bool
+     */
     public function exists($key)
     {
         return (bool)$this->get($key);

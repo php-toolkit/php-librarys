@@ -214,7 +214,7 @@ class LiteLogger
         }
 
         // register shutdown function
-        if (self::$shutdownRegistered) {
+        if (!self::$shutdownRegistered) {
             register_shutdown_function(function () {
                 // make regular flush before other shutdown functions, which allows session data collection and so on
                 self::flushAll();
@@ -223,6 +223,8 @@ class LiteLogger
                 // ensure "flush()" is called last when there are multiple shutdown functions
                 register_shutdown_function([self::class, 'flushAll'], true);
             });
+
+            self::$shutdownRegistered = true;
         }
 
         return self::$loggers[$name];
@@ -328,7 +330,7 @@ class LiteLogger
             return $level;
         }
 
-        return isset(self::$levelMap[$level]) ? self::$levelMap[$level] : 'unknown';
+        return isset(self::$levelMap[$level]) ? self::$levelMap[$level] : 'info';
     }
 
     /**
@@ -472,7 +474,7 @@ class LiteLogger
     public function trace($message = '', array $context = [])
     {
         // 不在记录的级别内
-        if ($this->levels && !in_array(self::getLevelName(self::TRACE), $this->levels, true)) {
+        if ($this->isCanRecord(self::TRACE)) {
             return null;
         }
 
@@ -525,17 +527,16 @@ class LiteLogger
      * @param string $message
      * @param array $context
      * @param array $extra
-     * @return null|void
+     * @return null|bool
      */
     public function log($level, $message, array $context = [], array $extra = [])
     {
-        $levelName = self::getLevelName($level);
-
         // 不在记录的级别内
-        if ($this->levels && !in_array(strtolower($levelName), $this->levels, true)) {
+        if ($this->isCanRecord($level)) {
             return null;
         }
 
+        $levelName = self::getLevelName($level);
         $record = array(
             'message' => (string) $message,
             'context' => $context,
@@ -549,14 +550,14 @@ class LiteLogger
         // serve is running in php build in server env.
         if ($this->logConsole && (PhpHelper::isBuiltInServer() || PhpHelper::isCli())) {
             defined('STDOUT') or define('STDOUT', fopen('php://stdout', 'wb'));
-            fwrite(STDOUT, "[{$record['datetime']}] [$levelName] $message" . PHP_EOL);
+            fwrite(STDOUT, "[{$record['datetime']}] [$levelName] $message\n");
         }
 
         $this->_records[] = $record;
 
         // 检查阀值
         if ($this->logThreshold > 0 && count($this->_records) >= $this->logThreshold) {
-            $this->flush();
+            return $this->flush();
         }
 
         return null;
@@ -650,6 +651,20 @@ class LiteLogger
 
             $this->levels = strpos($levels, ',') ? array_map('trim', explode(',', $levels)) : [$levels];
         }
+    }
+
+    /**
+     * @param $level
+     * @return bool
+     */
+    protected function isCanRecord($level)
+    {
+        // 不在记录的级别内
+        if ($this->levels && !in_array(self::getLevelName($level), $this->levels, true)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

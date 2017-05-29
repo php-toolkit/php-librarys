@@ -154,7 +154,7 @@ class CliHelper
      * @param bool $mergeOpts
      * @return array
      */
-    public static function parseOptArg($noValues = [], $mergeOpts = false)
+    public static function parseOptArgs($noValues = [], $mergeOpts = false)
     {
         $args = $sOpts = $lOpts = [];
         $params = $GLOBALS['argv'];

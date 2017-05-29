@@ -47,7 +47,18 @@ interface QueueInterface
      */
     public function pop();
 
+    /**
+     * @return string|int
+     */
     public function getId();
 
+    /**
+     * @return int
+     */
     public function getErrCode();
+
+    /**
+     * @return int
+     */
+    public function getErrMsg();
 }

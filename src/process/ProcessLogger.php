@@ -99,7 +99,7 @@ class ProcessLogger implements ProcessLogInterface
         }
 
         // open Log File
-        $this->openFile();
+        $this->open();
     }
 
     /**
@@ -207,7 +207,7 @@ class ProcessLogger implements ProcessLogInterface
     /**
      * Opens the log file. If already open, closes it first.
      */
-    protected function openFile()
+    public function open()
     {
         if ($logFile = $this->genLogFile(true)) {
             if ($this->fileHandle) {
@@ -220,6 +220,19 @@ class ProcessLogger implements ProcessLogInterface
             if (!$this->fileHandle) {
                 $this->stderr("Could not open the log file {$logFile}");
             }
+        }
+    }
+
+    /**
+     * close
+     */
+    public function close()
+    {
+        // close logFileHandle
+        if ($this->fileHandle) {
+            fclose($this->fileHandle);
+
+            $this->fileHandle = null;
         }
     }
 
@@ -247,19 +260,6 @@ class ProcessLogger implements ProcessLogInterface
         $str = $this->getLogFileDate();
 
         return "{$dir}/{$name}_{$str}.{$ext}";
-    }
-
-    /**
-     * close
-     */
-    public function close()
-    {
-        // close logFileHandle
-        if ($this->fileHandle) {
-            fclose($this->fileHandle);
-
-            $this->fileHandle = null;
-        }
     }
 
     /**

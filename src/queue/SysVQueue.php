@@ -6,10 +6,10 @@
 namespace inhere\library\queue;
 
 /**
- * Class MsgQueue
+ * Class SysVQueue - by system v message queue
  * @package inhere\library\queue
  */
-class MsgQueue extends BaseQueue
+class SysVQueue extends BaseQueue
 {
     /**
      * @var int
@@ -115,7 +115,7 @@ class MsgQueue extends BaseQueue
     /**
      * @return array
      */
-    public static function allQueues()
+    public function allQueues()
     {
         $aQueues = [];
 
@@ -148,19 +148,13 @@ class MsgQueue extends BaseQueue
      */
     public function close()
     {
+        parent::close();
+
         foreach ($this->queues as $queue) {
             if ($queue) {
                 msg_remove_queue($queue);
             }
         }
-    }
-
-    /**
-     * __destruct
-     */
-    public function __destruct()
-    {
-        $this->close();
     }
 
     /**

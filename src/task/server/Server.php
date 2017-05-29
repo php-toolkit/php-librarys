@@ -8,24 +8,19 @@
 
 namespace inhere\library\task\server;
 
-use inhere\library\queue\MsgQueue;
+use inhere\library\process\ProcessLogger;
+use inhere\library\queue\SysVQueue;
 use inhere\library\queue\QueueInterface;
 use inhere\library\task\Base;
-use inhere\library\task\ProcessLogInterface;
-use inhere\library\task\ProcessLogTrait;
-use inhere\library\task\ProcessControlTrait;
-use inhere\library\traits\TraitSimpleConfig;
 
 /**
  * Class Server - task server
  *
  * @package inhere\library\task\server
  */
-class Server extends Base implements ProcessLogInterface
+class Server extends Base
 {
     use OptionAndConfigTrait;
-    use ProcessLogTrait;
-    use ProcessControlTrait;
 
     /**
      * @var array
@@ -37,22 +32,25 @@ class Server extends Base implements ProcessLogInterface
         'server'    => '0.0.0.0:9998',
         'serverType' => 'udp',
 
-
         // the master process pid save file
         'pidFile' => 'task-svr.pid',
 
         'queue' => [
+            'driver' => 'sysv',
             'msgType' => 2,
             'bufferSize' => 8192,
         ],
 
         // log
-        'logLevel' => 4,
-        // 'day' 'hour', if is empty, not split.
-        'logSplit' => 'day',
-        // will write log by `syslog()`
-        'logSyslog' => false,
-        'logFile' => 'task-mgr.log',
+        'logger' => [
+            'level' => ProcessLogger::WORKER_INFO,
+            // 'day' 'hour', if is empty, not split.
+            'splitType' => ProcessLogger::SPLIT_DAY,
+            // log file
+            'file' => 'task-server.log',
+            // will write log by `syslog()`
+            'toSyslog' => false,
+        ],
     ];
 
     /**
@@ -119,14 +117,14 @@ class Server extends Base implements ProcessLogInterface
             $this->runAsDaemon();
         }
 
-        $this->queue = new MsgQueue($this->config['queue']);
-        $this->stdout("Create queue msgId = {$this->queue->getMsgId()}");
+        $this->queue = new SysVQueue($this->config['queue']);
+        $this->stdout("Create queue msgId = {$this->queue->getId()}");
 
         // save Pid File
         $this->savePidFile();
 
         // open Log File
-        $this->openLogFile();
+        $this->lgr = new ProcessLogger($this->config['logger']);
 
 //        if ($username = $this->config['user']) {
 //            $this->changeScriptOwner($username, $this->config['group']);
@@ -148,13 +146,8 @@ class Server extends Base implements ProcessLogInterface
         $this->delPidFile();
 
         // close logFileHandle
-        if ($this->logFileHandle) {
-            fclose($this->logFileHandle);
 
-            $this->logFileHandle = null;
-        }
-
-        $this->log("Manager stopped\n", self::LOG_PROC_INFO);
+        $this->log("Manager stopped\n", ProcessLogger::PROC_INFO);
         $this->quit();
     }
 
@@ -173,7 +166,7 @@ class Server extends Base implements ProcessLogInterface
         $socket = stream_socket_server($bind, $errNo, $errStr, STREAM_SERVER_BIND);
 
         if (!$socket) {
-            $this->log("$errStr ($errNo)", self::LOG_ERROR);
+            $this->log("$errStr ($errNo)", ProcessLogger::ERROR);
             $this->stopWork();
             return -50;
         }
@@ -189,7 +182,7 @@ class Server extends Base implements ProcessLogInterface
             $pkt = stream_socket_recvfrom($socket, $this->config['bufferSize'], 0, $peer);
 
             if ($pkt == false) {
-                $this->log("udp error", self::LOG_ERROR);
+                $this->log("udp error", ProcessLogger::ERROR);
             }
 
             // 如果队列满了，这里会阻塞
@@ -219,7 +212,7 @@ class Server extends Base implements ProcessLogInterface
             case SIGINT: // Ctrl + C
             case SIGTERM:
                 $sigText = $sigNo === SIGINT ? 'SIGINT' : 'SIGTERM';
-                $this->log("Shutting down(signal:$sigText)...", self::LOG_PROC_INFO);
+                $this->log("Shutting down(signal:$sigText)...", ProcessLogger::PROC_INFO);
                 $this->stopWork();
                 break;
             default:

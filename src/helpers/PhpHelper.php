@@ -264,8 +264,9 @@ class PhpHelper
     {
         ob_start();
         var_dump(...$args);
+        $string = ob_get_clean();
 
-        return ob_get_clean();
+        return preg_replace("/=>\n\s+/", '=> ', $string);
     }
 
     /**

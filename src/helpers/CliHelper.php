@@ -149,51 +149,72 @@ class CliHelper
      * --long-param <value>
      * <value>
      *
-     * @link http://php.net/manual/zh/function.getopt.php#83414
+     * @link https://github.com/inhere/php-console/blob/master/src/io/Input.php
      * @param array $noValues List of parameters without values
      * @param bool $mergeOpts
      * @return array
      */
     public static function parseOptArgs($noValues = [], $mergeOpts = false)
     {
-        $args = $sOpts = $lOpts = [];
         $params = $GLOBALS['argv'];
         reset($params);
+
+        $args = $sOpts = $lOpts = [];
         $fullScript = implode(' ', $params);
         $script = array_shift($params);
 
         while (list(, $p) = each($params)) {
+            // is options
             if ($p{0} === '-') {
                 $isLong = false;
-                $pName = substr($p, 1);
+                $opt = substr($p, 1);
                 $value = true;
 
-                if ($pName{0} === '-') {
-                    // long-opt (--<param>)
+                // long-opt: (--<opt>)
+                if ($opt{0} === '-') {
                     $isLong = true;
-                    $pName = substr($pName, 1);
+                    $opt = substr($opt, 1);
 
-                    if (strpos($p, '=') !== false) {
-                        // value specified inline (--<param>=<value>)
-                        list($pName, $value) = explode('=', substr($p, 2), 2);
+                    // long-opt: value specified inline (--<opt>=<value>)
+                    if (strpos($opt, '=') !== false) {
+                        list($opt, $value) = explode('=', $opt, 2);
                     }
+
+                    // short-opt: value specified inline (-<opt>=<value>)
+                } elseif (strlen($opt) > 2 && $opt{1} === '=') {
+                    list($opt, $value) = explode('=', $opt, 2);
                 }
 
                 // check if next parameter is a descriptor or a value
-                $nxParam = current($params);
+                $nxp = current($params);
 
-                if (!in_array($pName, $noValues) && $value === true && $nxParam !== false && $nxParam{0} !== '-') {
+                if (!in_array($opt, $noValues) && $value === true && $nxp !== false && $nxp{0} !== '-') {
                     list(, $value) = each($params);
+
+                    // short-opt: bool opts. like -e -abc
+                } elseif (!$isLong && $value === true) {
+                    foreach (str_split($opt) as $char) {
+                        $sOpts[$char] = true;
+                    }
+
+                    continue;
                 }
 
                 if ($isLong) {
-                    $lOpts[$pName] = $value;
+                    $lOpts[$opt] = $value;
                 } else {
-                    $sOpts[$pName] = $value;
+                    $sOpts[$opt] = $value;
                 }
+
+                // arguments: param doesn't belong to any option, define it is args
             } else {
-                // param doesn't belong to any option, define it is arg
-                $args[] = $p;
+                // value specified inline (<arg>=<value>)
+                if (strpos($p, '=') !== false) {
+                    list($name, $value) = explode('=', $p, 2);
+                    $args[$name] = $value;
+                } else {
+                    $args[] = $p;
+                }
             }
         }
 

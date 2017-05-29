@@ -23,11 +23,6 @@ class ProcessLogger implements ProcessLogInterface
     protected $level = 4;
 
     /**
-     * @var bool
-     */
-    protected $daemon = false;
-
-    /**
      * current log file
      * @var string
      */
@@ -44,6 +39,11 @@ class ProcessLogger implements ProcessLogInterface
      * @var bool
      */
     protected $toSyslog = false;
+
+    /**
+     * @var bool
+     */
+    protected $toConsole = false;
 
     /**
      * 'day' 'hour', if is empty, not split.
@@ -87,7 +87,7 @@ class ProcessLogger implements ProcessLogInterface
         $this->fileHandle = null;
         $this->level = (int)$this->level;
         $this->toSyslog = (bool)$this->toSyslog;
-        $this->daemon = (bool)$this->daemon;
+        $this->toConsole = (bool)$this->toConsole;
 
         if ($this->file === 'syslog') {
             $this->file = null;
@@ -156,7 +156,7 @@ class ProcessLogger implements ProcessLogInterface
         $logString = sprintf("[%s] [%s] %s %s\n", $ds, $label, trim($msg), $data);
 
         // if not in daemon, print log to \STDOUT
-        if (!$this->daemon) {
+        if (!$this->toConsole) {
             $this->stdout($logString, false);
         }
 

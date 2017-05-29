@@ -123,6 +123,8 @@ class Server extends Base
         // save Pid File
         $this->savePidFile();
 
+        $this->config['logger']['toConsole'] = $this->config['daemon'];
+
         // open Log File
         $this->lgr = new ProcessLogger($this->config['logger']);
 

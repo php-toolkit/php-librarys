@@ -75,12 +75,15 @@ class Manager extends Base
         ],
 
         // log
-        'logLevel' => 4,
-        // 'day' 'hour', if is empty, not split.
-        'logSplit' => 'day',
-        // will write log by `syslog()`
-        'logSyslog' => false,
-        'logFile' => 'task-mgr.log',
+        'logger' => [
+            'level' => ProcessLogger::WORKER_INFO,
+            // 'day' 'hour', if is empty, not split.
+            'splitType' => ProcessLogger::SPLIT_DAY,
+            // log file
+            'file' => 'task-worker-mgr.log',
+            // will write log by `syslog()`
+            'toSyslog' => false,
+        ],
     ];
 
     protected $workerNum = 2;
@@ -160,8 +163,11 @@ class Manager extends Base
         // save Pid File
         $this->savePidFile();
 
+        $this->config['logger']['toConsole'] = $this->config['daemon'];
+
         // open Log File
-        $this->openLogFile();
+        $this->lgr = new ProcessLogger($this->config['logger']);
+
 
 //        if ($username = $this->config['user']) {
 //            $this->changeScriptOwner($username, $this->config['group']);

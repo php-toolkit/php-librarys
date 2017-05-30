@@ -12,6 +12,11 @@ namespace inhere\library\queue;
 class SysVQueue extends BaseQueue
 {
     /**
+     * @var string
+     */
+    protected $driver = QueueFactory::DRIVER_SYSV;
+
+    /**
      * @var int
      */
     private $msgType = 1;
@@ -24,7 +29,7 @@ class SysVQueue extends BaseQueue
     /**
      * @var array
      */
-    private $config = [
+    protected $config = [
         'id' => 0, // int
         'uniKey' => 0, // int|string
         'msgType' => 1,
@@ -35,10 +40,9 @@ class SysVQueue extends BaseQueue
     ];
 
     /**
-     * MsgQueue constructor.
-     * @param array $config
+     * {@inheritDoc}
      */
-    public function __construct(array $config = [])
+    protected function init()
     {
         // php --rf msg_send
         if (!function_exists('msg_receive')) {
@@ -48,13 +52,8 @@ class SysVQueue extends BaseQueue
             );
         }
 
-        $this->setConfig($config);
+        parent::init();
 
-        $this->init();
-    }
-
-    protected function init()
-    {
         $this->config['id'] = (int)$this->config['id'];
         $this->config['bufferSize'] = (int)$this->config['bufferSize'];
         $this->config['blocking'] = (bool)$this->config['blocking'];
@@ -89,9 +88,8 @@ class SysVQueue extends BaseQueue
             return msg_send(
                 $this->queues[$priority],
                 $this->msgType,
-                $data,
-
-                $this->config['serialize'],
+                $this->encode($data),
+                false,
                 $this->config['blocking'],
                 $this->errCode
             );
@@ -119,7 +117,7 @@ class SysVQueue extends BaseQueue
                 $this->msgType,   // $this->msgType,
                 $this->config['bufferSize'],
                 $data,
-                $this->config['serialize'],
+                false,
 
                 // 0: 默认值，无消息后会阻塞等待。(这里不能用它，不然无法读取后面两个队列的数据)
                 // MSG_IPC_NOWAIT 无消息后不等待
@@ -130,6 +128,7 @@ class SysVQueue extends BaseQueue
             );
 
             if ($success) {
+                $data = $this->decode($data);
                 break;
             }
         }
@@ -230,19 +229,4 @@ class SysVQueue extends BaseQueue
         return msg_stat_queue($this->queues[$queue]);
     }
 
-    /**
-     * @return array
-     */
-    public function getConfig()
-    {
-        return $this->config;
-    }
-
-    /**
-     * @param array $config
-     */
-    public function setConfig(array $config)
-    {
-        $this->config = array_merge($this->config, $config);
-    }
 }

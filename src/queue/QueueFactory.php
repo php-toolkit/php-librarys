@@ -14,22 +14,20 @@ namespace inhere\library\queue;
  */
 final class QueueFactory
 {
-    const DRIVER_REDIS = 'redis';
-    const DRIVER_MYSQL = 'mysql';
-    const DRIVER_SQLITE = 'sqlite';
-    const DRIVER_SYSV = 'sysv';
+    const DRIVER_DB = 'db';
     const DRIVER_PHP = 'PHP';
+    const DRIVER_SYSV = 'sysv';
+    const DRIVER_REDIS = 'redis';
 
     /**
      * driver map
      * @var array
      */
     private static $driverMap = [
-        'redis' => RedisQueue::class,
-        'mysql' => DbQueue::class,
-        'sqlite' => DbQueue::class,
-        'sysv' => SysVQueue::class,
+        'db' => DbQueue::class,
         'php' => PhpQueue::class,
+        'sysv' => SysVQueue::class,
+        'redis' => RedisQueue::class,
     ];
 
     /**

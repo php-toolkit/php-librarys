@@ -15,18 +15,25 @@ namespace inhere\library\queue;
 class PhpQueue extends BaseQueue
 {
     /**
+     * @var string
+     */
+    protected $driver = QueueFactory::DRIVER_PHP;
+
+    /**
      * @var \SplQueue[]
      */
     private $queues = [];
 
     /**
-     * PhpQueue constructor.
-     * @param array $config
+     * {@inheritdoc}
      */
-    public function __construct(array $config = [])
+    protected function init()
     {
-        // ...
-        $this->id = $config['id'] ?? 'php';
+        parent::init();
+
+        if (!$this->id) {
+            $this->id = $this->driver;
+        }
 
         // create queues
         foreach ($this->getPriorities() as $level) {
@@ -41,7 +48,7 @@ class PhpQueue extends BaseQueue
     protected function doPush($data, $priority = self::PRIORITY_NORM)
     {
         if (isset($this->queues[$priority])) {
-            $this->queues[$priority]->enqueue($data); // can use push().
+            $this->queues[$priority]->enqueue($this->encode($data)); // can use push().
         }
 
         return true;
@@ -58,7 +65,7 @@ class PhpQueue extends BaseQueue
             // valid()
             if (!$queue->isEmpty()) {
                 // can use shift().
-                $data = $queue->dequeue();
+                $data = $this->decode($queue->dequeue());
                 break;
             }
         }

@@ -6,10 +6,10 @@
  * Time: 上午10:12
  */
 
-namespace inhere\library\task\server;
+namespace inhere\library\task\worker;
 
 /**
- * Class TaskWrapper
+ * Class TaskWrapper - Task Data Wrapper
  * @package inhere\library\task\server
  */
 final class TaskWrapper

@@ -16,7 +16,22 @@ class Client
 {
     private $server;
 
-    public function __construct($host, $port = 80, $config = [])
+    public function __construct($host, $port = 9999, $config = [])
+    {
+
+    }
+
+    public function addTask($handler, $data)
+    {
+
+    }
+
+    public function addHighTask($handler, $data)
+    {
+
+    }
+
+    public function addLowTask($handler, $data)
     {
 
     }

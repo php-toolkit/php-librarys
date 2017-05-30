@@ -5,6 +5,7 @@ namespace inhere\library\task\worker;
 use inhere\library\helpers\CliHelper;
 use inhere\library\helpers\PhpHelper;
 use inhere\library\process\ProcessLogger;
+use inhere\library\queue\QueueFactory;
 use inhere\library\queue\SysVQueue;
 use inhere\library\task\Base;
 use inhere\library\task\ProcessControlTrait;
@@ -54,14 +55,41 @@ class Manager extends Base
     protected $taskHandler;
 
     /**
+     * List of task handlers(functions) available for work
+     * @var array
+     */
+    protected $handlers = [
+        // task name  => task handler(allow:string,closure,class,object),
+        // 'reverse_string' => 'my_reverse_string',
+    ];
+
+    /**
+     * The default task option
+     * @var array
+     */
+    protected static $defaultJobOpt = [
+        // 需要 'worker_num' 个 worker 处理这个 task
+        'worker_num' => 0,
+        // 当设置 focus_on = true, 这些 worker 将专注这一个task
+        'focus_on' => false, // true | false
+        // task 执行超时时间 秒
+        'timeout' => 200,
+    ];
+
+    /**
+     * There are tasks config
+     * @var array
+     */
+    protected $tasksOpts = [
+        // task name => task option // please see self::$defaultJobOpt
+    ];
+
+    /**
      * @var array
      */
     protected $config = [
         'daemon' => false,
         'name' => '',
-
-        'server' => '0.0.0.0:9999',
-        'serverType' => 'udp',
 
         'workerNum' => 2,
         'bufferSize' => 8192,
@@ -70,8 +98,10 @@ class Manager extends Base
         'pidFile' => 'task-mgr.pid',
 
         'queue' => [
+            'driver' => 'sysv',
             'msgType' => 2,
             'bufferSize' => 8192,
+            'serialize' => false,
         ],
 
         // log
@@ -156,18 +186,15 @@ class Manager extends Base
             $this->runAsDaemon();
         }
 
-        $this->stdout("Create queue msgId = {$this->queue->getId()}");
-
-        $this->queue = new SysVQueue($this->config['queue']);
-
         // save Pid File
         $this->savePidFile();
 
-        $this->config['logger']['toConsole'] = $this->config['daemon'];
-
         // open Log File
+        $this->config['logger']['toConsole'] = $this->config['daemon'];
         $this->lgr = new ProcessLogger($this->config['logger']);
 
+        $this->queue = QueueFactory::make($this->config['queue']);
+        $this->log("Create queue Driver={$this->queue->getDriver()} Id={$this->queue->getId()}");
 
 //        if ($username = $this->config['user']) {
 //            $this->changeScriptOwner($username, $this->config['group']);

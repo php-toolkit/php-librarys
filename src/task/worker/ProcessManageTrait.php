@@ -9,6 +9,7 @@
 namespace inhere\library\task\worker;
 
 use inhere\library\helpers\CliHelper;
+use inhere\library\process\ProcessLogger;
 use inhere\library\process\ProcessUtil;
 use inhere\library\queue\QueueInterface;
 
@@ -65,73 +66,6 @@ trait ProcessManageTrait
     ////////////////////////////////////////////////////////////////
 
     /**
-     * startMaster
-     */
-    protected function startManager()
-    {
-        $this->log('Now, Begin monitor runtime status for all workers', self::LOG_DEBUG);
-
-        $this->runWorkersMonitor();
-
-        $this->log('All workers stopped', self::LOG_PROC_INFO);
-        $this->quit();
-    }
-
-    /**
-     * runWorkersMonitor
-     */
-    protected function runWorkersMonitor()
-    {
-        // Main processing loop for the parent process
-        while (!$this->stopWork || count($this->workers)) {
-            $this->dispatchSignals();
-
-            // Check for exited workers
-            $status = null;
-            $exitedPid = pcntl_wait($status, WNOHANG);
-
-            // We run other workers, make sure this is a worker
-            if (isset($this->workers[$exitedPid])) {
-                /*
-                 * If they have exited, remove them from the workers array
-                 * If we are not stopping work, start another in its place
-                 */
-                if ($exitedPid) {
-                    $workerId = $this->workers[$exitedPid]['id'];
-                    $workerJobs = $this->workers[$exitedPid]['jobs'];
-                    $exitCode = pcntl_wexitstatus($status);
-                    unset($this->workers[$exitedPid]);
-
-                    $this->logWorkerStatus($exitedPid, $workerJobs, $exitCode);
-
-                    if (!$this->stopWork) {
-                        $this->startWorker($workerJobs, $workerId, false);
-                    }
-                }
-            }
-
-            if ($this->stopWork) {
-                if (time() - $this->stat['stop_time'] > 60) {
-                    $this->log('Workers have not exited, force killing.', self::LOG_PROC_INFO);
-                    $this->stopWorkers(SIGKILL);
-                    // $this->killProcess($pid, SIGKILL);
-                }
-            } else {
-                // If any workers have been running 150% of max run time, forcibly terminate them
-                foreach ($this->workers as $pid => $worker) {
-                    if (!empty($worker['start_time']) && time() - $worker['start_time'] > $this->maxLifetime * 1.5) {
-                        $this->logWorkerStatus($pid, $worker['jobs'], self::CODE_MANUAL_KILLED);
-                        $this->sendSignal($pid, SIGKILL);
-                    }
-                }
-            }
-
-            // php will eat up your cpu if you don't have this
-            usleep(10000);
-        }
-    }
-
-    /**
      * @param int $workerNum
      * @return array
      */
@@ -169,9 +103,9 @@ trait ProcessManageTrait
         $this->masterPid = $this->pid;
         $this->pid = getmypid();
 
-        $eCode = $this->handleTasks($this->queue);
+        $eCode = $this->receiveTasks($this->queue);
 
-        $this->log("Worker #$id exited(Exit-Code:$eCode)", self::LOG_PROC_INFO);
+        $this->log("Worker #$id exited(Exit-Code:$eCode)", ProcessLogger::PROC_INFO);
         $this->quit($eCode);
     }
 
@@ -180,7 +114,7 @@ trait ProcessManageTrait
      * @param QueueInterface $queue
      * @return int
      */
-    protected function handleTasks(QueueInterface $queue)
+    protected function receiveTasks(QueueInterface $queue)
     {
         $eCode = 0;
 
@@ -188,16 +122,86 @@ trait ProcessManageTrait
             $this->dispatchSignals();
 
             if($data = $queue->pop()) {
-                $this->log("workerId=$this->id data=$data", self::LOG_WORKER_INFO);
+                $this->log("read queue workerId=$this->id data=$data", ProcessLogger::WORKER_INFO);
                 $this->handleTask($data);
+            } elseif ($err = $queue->getErrMsg()) {
+                $this->log("queue errCode={$queue->getErrCode()} errMsg=$err", ProcessLogger::ERROR);
             } else {
-                $this->log("queue errNo={$queue->getErrCode()}", self::LOG_ERROR);
+                $this->log("queue is empty, sleep 5s. wait next read.", ProcessLogger::CRAZY);
+                sleep(5);
+                continue;
             }
 
             usleep(50000);
         }
 
         return $eCode;
+    }
+
+    /**
+     * startMaster
+     */
+    protected function startManager()
+    {
+        $this->log('Now, Begin monitor runtime status for all workers', ProcessLogger::DEBUG);
+
+        $this->runWorkersMonitor();
+
+        $this->log('All workers stopped', ProcessLogger::PROC_INFO);
+        $this->quit();
+    }
+
+    /**
+     * runWorkersMonitor
+     */
+    protected function runWorkersMonitor()
+    {
+        // Main processing loop for the parent process
+        while (!$this->stopWork || count($this->workers)) {
+            $this->dispatchSignals();
+
+            // Check for exited workers
+            $status = null;
+            $exitedPid = pcntl_wait($status, WNOHANG);
+
+            // We run other workers, make sure this is a worker
+            if (isset($this->workers[$exitedPid])) {
+                /*
+                 * If they have exited, remove them from the workers array
+                 * If we are not stopping work, start another in its place
+                 */
+                if ($exitedPid) {
+                    $workerId = $this->workers[$exitedPid]['id'];
+                    $workerJobs = $this->workers[$exitedPid]['jobs'];
+                    $exitCode = pcntl_wexitstatus($status);
+                    unset($this->workers[$exitedPid]);
+
+                    $this->logWorkerStatus($exitedPid, $workerJobs, $exitCode);
+
+                    if (!$this->stopWork) {
+                        $this->startWorker($workerJobs, $workerId, false);
+                    }
+                }
+            }
+
+            if ($this->stopWork) {
+                if (time() - $this->stat['stopTime'] > 60) {
+                    $this->log('Workers exiting timeout, will force killing.', ProcessLogger::PROC_INFO);
+                    $this->stopWorkers(SIGKILL);
+                }
+            } else {
+                // If any workers have been running 150% of max run time, forcibly terminate them
+                foreach ($this->workers as $pid => $worker) {
+                    if (!empty($worker['startTime']) && time() - $worker['startTime'] > $this->maxLifetime * 1.5) {
+                        $this->logWorkerStatus($pid, $worker['jobs'], self::CODE_MANUAL_KILLED);
+                        $this->sendSignal($pid, SIGKILL);
+                    }
+                }
+            }
+
+            // php will eat up your cpu if you don't have this
+            usleep(10000);
+        }
     }
 
     /**
@@ -245,16 +249,16 @@ trait ProcessManageTrait
     protected function stopWorkers($signal = SIGTERM)
     {
         if (!$this->workers) {
-            $this->log('No child process(worker) need to stop', self::LOG_PROC_INFO);
+            $this->log('No child process(worker) need to stop', ProcessLogger::PROC_INFO);
             return false;
         }
 
         return ProcessUtil::stopChildren($this->workers, $signal, [
             'beforeStops' => function ($sigText) {
-                $this->log("Stopping workers({$sigText}) ...", self::LOG_PROC_INFO);
+                $this->log("Stopping workers({$sigText}) ...", ProcessLogger::PROC_INFO);
             },
             'beforeStop' => function ($pid, $info) {
-                $this->log("Stopping worker #{$info['id']}(PID:$pid)", self::LOG_PROC_INFO);
+                $this->log("Stopping worker #{$info['id']}(PID:$pid)", ProcessLogger::PROC_INFO);
             },
         ]);
     }
@@ -284,7 +288,7 @@ trait ProcessManageTrait
                 break;
         }
 
-        $this->log($message, self::LOG_PROC_INFO);
+        $this->log($message, ProcessLogger::PROC_INFO);
     }
 
     /**

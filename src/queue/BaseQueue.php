@@ -19,6 +19,11 @@ abstract class BaseQueue implements QueueInterface
     use TraitSimpleEvent;
 
     /**
+     * @var string
+     */
+    protected $driver;
+
+    /**
      * The queue id(name)
      * @var string|int
      */
@@ -37,12 +42,43 @@ abstract class BaseQueue implements QueueInterface
     /**
      * @var array
      */
+    protected $config = [
+        'id' => null,
+        'serialize' => true,
+    ];
+
+    /**
+     * @var array
+     */
     private $channels = [];
 
     /**
      * @var array
      */
     private $intChannels = [];
+
+    /**
+     * MsgQueue constructor.
+     * @param array $config
+     */
+    public function __construct(array $config = [])
+    {
+        $this->setConfig($config);
+
+        $this->init();
+    }
+
+    /**
+     * init
+     */
+    protected function init()
+    {
+        $this->config['serialize'] = (bool)$this->config['serialize'];
+
+        if (isset($this->config['id'])) {
+            $this->id = $this->config['id'];
+        }
+    }
 
     /**
      * {@inheritDoc}
@@ -143,6 +179,32 @@ abstract class BaseQueue implements QueueInterface
     }
 
     /**
+     * @param mixed $data
+     * @return mixed
+     */
+    protected function encode($data)
+    {
+        if (!$this->config['serialize']) {
+            return $data;
+        }
+
+        return serialize($data);
+    }
+
+    /**
+     * @param mixed $data
+     * @return mixed
+     */
+    protected function decode($data)
+    {
+        if (!$this->config['serialize']) {
+            return $data;
+        }
+
+        return unserialize($data);
+    }
+
+    /**
      * __destruct
      */
     public function __destruct()
@@ -191,5 +253,29 @@ abstract class BaseQueue implements QueueInterface
     public function getErrMsg()
     {
         return $this->errMsg;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDriver(): string
+    {
+        return $this->driver;
+    }
+
+    /**
+     * @return array
+     */
+    public function getConfig()
+    {
+        return $this->config;
+    }
+
+    /**
+     * @param array $config
+     */
+    public function setConfig(array $config)
+    {
+        $this->config = array_merge($this->config, $config);
     }
 }

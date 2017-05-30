@@ -15,6 +15,11 @@ namespace inhere\library\queue;
 class DbQueue extends BaseQueue
 {
     /**
+     * @var string
+     */
+    protected $driver = QueueFactory::DRIVER_DB;
+
+    /**
      * @var \PDO
      */
     private $db;
@@ -25,16 +30,49 @@ class DbQueue extends BaseQueue
     private $tableName = 'msg_queue';
 
     /**
+     * @var array
+     */
+    protected $config = [
+        'id' => null,
+        'serialize' => true,
+        'tableName' => '',
+    ];
+
+    /**
      * DbQueue constructor.
      * @param array $config
      */
     public function __construct(array $config = [])
     {
-        foreach ($config as $name => $value) {
-            $this->$name = $value;
+        if (isset($config['db'])) {
+            $this->setDb($config['db']);
+            unset($config['db']);
         }
 
-        $this->id = $config['id'] ?? 'db';
+        parent::__construct($config);
+
+        if (!empty($this->config['tableName'])) {
+            $this->setTableName($this->config['tableName']);
+        }
+
+        if (!$this->id) {
+            $this->id = $this->driver;
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function doPush($data, $priority = self::PRIORITY_NORM)
+    {
+        return $this->db->exec(sprintf(
+            "INSERT INTO %s (`queue`, `data`, `priority`, `created_at`) VALUES (%s, %s, %d, %d)",
+            $this->tableName,
+            $this->id,
+            $this->encode($data),
+            $priority,
+            time()
+        ));
     }
 
     /**
@@ -49,25 +87,52 @@ class DbQueue extends BaseQueue
         ));
 
         if ($row = $st->fetch(\PDO::FETCH_ASSOC)) {
-            $row['data'] = unserialize($row['data']);
+            $row['data'] = $this->decode($row['data']);
         }
 
         return $row;
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
-    protected function doPush($data, $priority = self::PRIORITY_NORM)
+    public function close()
     {
-        return $this->db->exec(sprintf(
-            "INSERT INTO %s (`queue`, `data`, `priority`, `created_at`) VALUES (%s, %s, %d, %d)",
-            $this->tableName,
-            $this->id,
-            serialize($data),
-            $priority,
-            time()
-        ));
+        parent::close();
+
+        $this->db = null;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTableName(): string
+    {
+        return $this->tableName;
+    }
+
+    /**
+     * @param string $tableName
+     */
+    public function setTableName(string $tableName)
+    {
+        $this->tableName = $tableName;
+    }
+
+    /**
+     * @return \PDO
+     */
+    public function getDb(): \PDO
+    {
+        return $this->db;
+    }
+
+    /**
+     * @param \PDO $db
+     */
+    public function setDb(\PDO $db)
+    {
+        $this->db = $db;
     }
 
     /**

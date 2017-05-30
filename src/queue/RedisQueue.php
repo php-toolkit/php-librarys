@@ -15,6 +15,11 @@ namespace inhere\library\queue;
 class RedisQueue extends BaseQueue
 {
     /**
+     * @var string
+     */
+    protected $driver = QueueFactory::DRIVER_REDIS;
+
+    /**
      * redis
      * @var \Redis
      */
@@ -22,14 +27,20 @@ class RedisQueue extends BaseQueue
 
     /**
      * RedisQueue constructor.
-     * @param \Redis|null $redis
      * @param array $config
      */
-    public function __construct(\Redis $redis = null, array $config = [])
+    public function __construct(array $config = [])
     {
-        $this->redis = $redis;
+        if (isset($config['redis'])) {
+            $this->setRedis($config['redis']);
+            unset($config['redis']);
+        }
 
-        $this->id = $config['id'] ?? 'redis';
+        parent::__construct($config);
+
+        if (!$this->id) {
+            $this->id = $this->driver;
+        }
     }
 
     /**
@@ -37,10 +48,11 @@ class RedisQueue extends BaseQueue
      */
     protected function doPush($data, $priority = self::PRIORITY_NORM)
     {
-        $data = serialize($data);
         $channels = array_values($this->getChannels());
 
         if (isset($channels[$priority])) {
+            $data = $this->encode($data);
+
             return $this->redis->lPush($channels[$priority], $data);
         }
 
@@ -56,7 +68,7 @@ class RedisQueue extends BaseQueue
 
         foreach ($this->getChannels() as $channel) {
             if ($data = $this->redis->rPop($channel)) {
-                $data = unserialize($data);
+                $data = $this->decode($data);
                 break;
             }
         }

@@ -53,6 +53,11 @@ interface QueueInterface
     public function getId();
 
     /**
+     * @return string
+     */
+    public function getDriver();
+
+    /**
      * @return int
      */
     public function getErrCode();

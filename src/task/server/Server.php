@@ -9,7 +9,7 @@
 namespace inhere\library\task\server;
 
 use inhere\library\process\ProcessLogger;
-use inhere\library\queue\SysVQueue;
+use inhere\library\queue\QueueFactory;
 use inhere\library\queue\QueueInterface;
 use inhere\library\task\Base;
 
@@ -39,6 +39,7 @@ class Server extends Base
             'driver' => 'sysv',
             'msgType' => 2,
             'bufferSize' => 8192,
+            'serialize' => false,
         ],
 
         // log
@@ -113,20 +114,20 @@ class Server extends Base
 
         // If we want run as daemon, fork here and exit
         if ($this->config['daemon']) {
-            $this->stdout('Run the worker manager in the background');
             $this->runAsDaemon();
+            $this->stdout("Run the task server in the background(PID: $this->pid)");
         }
-
-        $this->queue = new SysVQueue($this->config['queue']);
-        $this->stdout("Create queue msgId = {$this->queue->getId()}");
 
         // save Pid File
         $this->savePidFile();
 
-        $this->config['logger']['toConsole'] = $this->config['daemon'];
+        $this->config['logger']['toConsole'] = !$this->config['daemon'];
 
         // open Log File
         $this->lgr = new ProcessLogger($this->config['logger']);
+
+        $this->queue = QueueFactory::make($this->config['queue']);
+        $this->log("Create queue Driver={$this->queue->getDriver()} Id={$this->queue->getId()}");
 
 //        if ($username = $this->config['user']) {
 //            $this->changeScriptOwner($username, $this->config['group']);
@@ -137,7 +138,6 @@ class Server extends Base
     {
         // ... ...
     }
-
 
     /**
      * afterRun
@@ -185,18 +185,22 @@ class Server extends Base
 
             if ($pkt == false) {
                 $this->log("udp error", ProcessLogger::ERROR);
+                continue;
             }
 
             // 如果队列满了，这里会阻塞
-            $ret = $this->queue->push($pkt) ? "OK\n" : "ER\n";
+            $ret = $this->queue->push($pkt) ? 'OK' : 'ERR';
 
-            stream_socket_sendto($socket, $ret, 0, $peer);
+            stream_socket_sendto($socket, "$ret\n", 0, $peer);
             usleep(50000);
         }
 
         return 0;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function installSignals()
     {
         // ignore
@@ -213,8 +217,8 @@ class Server extends Base
         switch ($sigNo) {
             case SIGINT: // Ctrl + C
             case SIGTERM:
-                $sigText = $sigNo === SIGINT ? 'SIGINT' : 'SIGTERM';
-                $this->log("Shutting down(signal:$sigText)...", ProcessLogger::PROC_INFO);
+                $sigText = $sigNo === SIGINT ? 'SIGINT(Ctrl+C)' : 'SIGTERM';
+                $this->log("Shutting down($sigNo:$sigText)...", ProcessLogger::PROC_INFO);
                 $this->stopWork();
                 break;
             default:

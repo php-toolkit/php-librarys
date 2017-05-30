@@ -297,9 +297,9 @@ EOF;
     protected function dumpInfo($allInfo = false)
     {
         if ($allInfo) {
-            $this->stdout("There are all information of the manager:\n" . PhpHelper::printR($this));
+            $this->stdout("There are all information of the manager:\n" . PhpHelper::printVar($this));
         } else {
-            $this->stdout("There are configure information:\n" . PhpHelper::printR($this->config));
+            $this->stdout("There are configure information:\n" . PhpHelper::printVar($this->config));
         }
 
         $this->quit();

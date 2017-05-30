@@ -31,6 +31,7 @@ class PhpQueue extends BaseQueue
         // create queues
         foreach ($this->getPriorities() as $level) {
             $this->queues[$level] = new \SplQueue();
+            $this->queues[$level]->setIteratorMode(\SplQueue::IT_MODE_DELETE);
         }
     }
 
@@ -54,13 +55,52 @@ class PhpQueue extends BaseQueue
         $data = null;
 
         foreach ($this->queues as $queue) {
-            // can use shift().
-            if ($data = $queue->dequeue()) {
+            // valid()
+            if (!$queue->isEmpty()) {
+                // can use shift().
+                $data = $queue->dequeue();
                 break;
             }
         }
 
+        // reset($this->queues);
         return $data;
+    }
+
+    /**
+     * @return \SplQueue[]
+     */
+    public function getQueues(): array
+    {
+        return $this->queues;
+    }
+
+    /**
+     * @param int $priority
+     * @return \SplQueue|false
+     */
+    public function getQueue($priority = self::PRIORITY_NORM)
+    {
+        if (!isset($this->getPriorities()[$priority])) {
+            return false;
+        }
+
+        return $this->queues[$priority];
+    }
+
+    /**
+     * @param int $priority
+     * @return array|null
+     */
+    public function getStat($priority = self::PRIORITY_NORM)
+    {
+        if ($q = $this->getQueue($priority)) {
+            return [
+                'num' => $q->count(),
+            ];
+        }
+
+        return null;
     }
 
     /**

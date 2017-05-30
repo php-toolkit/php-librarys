@@ -3,6 +3,20 @@
  * function collection
  */
 
+if ( !function_exists('dump_v') ) {
+    function dump_v(...$args)
+    {
+        return \inhere\library\helpers\PhpHelper::dumpVar($args);
+    }
+}
+
+if ( !function_exists('print_v') ) {
+    function print_v(...$args)
+    {
+        return \inhere\library\helpers\PhpHelper::printVar($args);
+    }
+}
+
 if ( !function_exists('local_env') ) {
     function local_env($name = null, $default = null)
     {

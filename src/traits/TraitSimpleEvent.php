@@ -6,11 +6,11 @@
  * Time: 16:17
  */
 
-namespace inhere\library\event;
+namespace inhere\library\traits;
 
 /**
  * Class TraitSimpleEvent
- * @package inhere\library\event
+ * @package inhere\library\traits
  */
 trait TraitSimpleEvent
 {

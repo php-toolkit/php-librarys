@@ -17,7 +17,7 @@ class SysVQueue extends BaseQueue
     private $msgType = 1;
 
     /**
-     * @var array
+     * @var resource[]
      */
     private $queues = [];
 
@@ -25,11 +25,13 @@ class SysVQueue extends BaseQueue
      * @var array
      */
     private $config = [
+        'id' => 0, // int
         'uniKey' => 0, // int|string
         'msgType' => 1,
         'blocking' => 1, // 0|1
-        'serialize' => false,
-        'bufferSize' => 8192, // 65525
+        'serialize' => true, // if set False, cannot direct save array|object
+        'bufferSize' => 2048, // 8192 65525
+        'removeOnClose' => true, // Whether remove message queue on close.
     ];
 
     /**
@@ -38,6 +40,7 @@ class SysVQueue extends BaseQueue
      */
     public function __construct(array $config = [])
     {
+        // php --rf msg_send
         if (!function_exists('msg_receive')) {
             throw new \RuntimeException(
                 'Is not support msg queue of the current system(must enable sysvmsg for php).',
@@ -45,9 +48,24 @@ class SysVQueue extends BaseQueue
             );
         }
 
-        $this->config = array_merge($this->config, $config);
+        $this->setConfig($config);
 
-        $this->id = !empty($config['id']) ? (int)$config['id'] : ftok(__FILE__, $this->config['uniKey']);
+        $this->init();
+    }
+
+    protected function init()
+    {
+        $this->config['id'] = (int)$this->config['id'];
+        $this->config['bufferSize'] = (int)$this->config['bufferSize'];
+        $this->config['blocking'] = (bool)$this->config['blocking'];
+        $this->config['removeOnClose'] = (bool)$this->config['removeOnClose'];
+
+        if ($this->config['id'] > 0) {
+            $this->id = $this->config['id'];
+        } else {
+            $this->id = $this->config['id'] = ftok(__FILE__, $this->config['uniKey']);
+        }
+
         $this->msgType = (int)$this->config['msgType'];
 
         // create queues
@@ -63,7 +81,8 @@ class SysVQueue extends BaseQueue
     {
         // 如果队列满了，这里会阻塞
         // bool msg_send(
-        //      resource $queue, int $msgtype, mixed $message [, bool $serialize = true [, bool $blocking = true [, int &$errorcode ]]]
+        //      resource $queue, int $msgtype, mixed $message
+        //      [, bool $serialize = true [, bool $blocking = true [, int &$errorcode ]]]
         // )
 
         if (isset($this->queues[$priority])) {
@@ -71,6 +90,7 @@ class SysVQueue extends BaseQueue
                 $this->queues[$priority],
                 $this->msgType,
                 $data,
+
                 $this->config['serialize'],
                 $this->config['blocking'],
                 $this->errCode
@@ -95,12 +115,17 @@ class SysVQueue extends BaseQueue
         foreach ($this->queues as $queue) {
             $success = msg_receive(
                 $queue,
-                0,
-                $this->msgType,
+                0,  // 0 $this->msgType,
+                $this->msgType,   // $this->msgType,
                 $this->config['bufferSize'],
                 $data,
                 $this->config['serialize'],
-                0,
+
+                // 0: 默认值，无消息后会阻塞等待。(这里不能用它，不然无法读取后面两个队列的数据)
+                // MSG_IPC_NOWAIT 无消息后不等待
+                // MSG_EXCEPT
+                // MSG_NOERROR 消息超过大小限制时，截断数据而不报错
+                MSG_IPC_NOWAIT | MSG_NOERROR,
                 $this->errCode
             );
 
@@ -113,13 +138,34 @@ class SysVQueue extends BaseQueue
     }
 
     /**
+     * @return resource[]
+     */
+    public function getQueues(): array
+    {
+        return $this->queues;
+    }
+
+    /**
+     * @param int $priority
+     * @return resource|false
+     */
+    public function getQueue($priority = self::PRIORITY_NORM)
+    {
+        if (!isset($this->getPriorities()[$priority])) {
+            return false;
+        }
+
+        return $this->queues[$priority];
+    }
+
+    /**
      * @return array
      */
     public function allQueues()
     {
         $aQueues = [];
 
-        exec('ipcs -q | grep "^[0-9]" | cut -d " " -f 1', $aQueues);
+        exec('ipcs -q', $aQueues);
 
         return $aQueues;
     }
@@ -129,7 +175,7 @@ class SysVQueue extends BaseQueue
      * @param array $options
      * @param int $queue
      */
-    public function setOptions(array $options = [], $queue = self::PRIORITY_NORM)
+    public function setQueueOptions(array $options = [], $queue = self::PRIORITY_NORM)
     {
         msg_set_queue($this->queues[$queue], $options);
     }
@@ -150,11 +196,29 @@ class SysVQueue extends BaseQueue
     {
         parent::close();
 
-        foreach ($this->queues as $queue) {
+        foreach ($this->queues as $key => $queue) {
             if ($queue) {
-                msg_remove_queue($queue);
+                if ($this->config['removeOnClose']) {
+                    msg_remove_queue($queue);
+                }
+
+                $this->queues[$key] = null;
             }
         }
+    }
+
+    /**
+     * @return array
+     */
+    public function getStats()
+    {
+        $stats = [];
+
+        foreach ($this->queues as $queue) {
+            $stats[] = msg_stat_queue($queue);
+        }
+
+        return $stats;
     }
 
     /**
@@ -172,5 +236,13 @@ class SysVQueue extends BaseQueue
     public function getConfig()
     {
         return $this->config;
+    }
+
+    /**
+     * @param array $config
+     */
+    public function setConfig(array $config)
+    {
+        $this->config = array_merge($this->config, $config);
     }
 }

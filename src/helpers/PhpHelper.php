@@ -274,7 +274,7 @@ class PhpHelper
      * @param array ...$args
      * @return string
      */
-    public static function printR(...$args)
+    public static function printVar(...$args)
     {
         ob_start();
 

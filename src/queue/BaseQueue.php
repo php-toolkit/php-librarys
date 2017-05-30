@@ -8,7 +8,7 @@
 
 namespace inhere\library\queue;
 
-use inhere\library\event\TraitSimpleEvent;
+use inhere\library\traits\TraitSimpleEvent;
 
 /**
  * Class BaseQueue
@@ -37,12 +37,12 @@ abstract class BaseQueue implements QueueInterface
     /**
      * @var array
      */
-    private static $channels = [];
+    private $channels = [];
 
     /**
      * @var array
      */
-    private static $intChannels = [];
+    private $intChannels = [];
 
     /**
      * {@inheritDoc}
@@ -114,15 +114,15 @@ abstract class BaseQueue implements QueueInterface
      */
     public function getChannels()
     {
-        if (!self::$channels) {
-            self::$channels = [
+        if (!$this->channels) {
+            $this->channels = [
                 'high' => $this->id . self::PRIORITY_HIGH_SUFFIX,
                 'norm' => $this->id,
                 'low' => $this->id . self::PRIORITY_LOW_SUFFIX,
             ];
         }
 
-        return self::$channels;
+        return $this->channels;
     }
 
     /**
@@ -130,15 +130,16 @@ abstract class BaseQueue implements QueueInterface
      */
     public function getIntChannels()
     {
-        if (!self::$intChannels) {
-                self::$intChannels = [
-                'high' => $this->id + self::PRIORITY_HIGH,
-                'norm' => (int)$this->id,
-                'low' => $this->id + self::PRIORITY_LOW,
+        if (!$this->intChannels) {
+            $id = (int)$this->id;
+            $this->intChannels = [
+                'high' => $id + self::PRIORITY_HIGH,
+                'norm' => $id + self::PRIORITY_NORM,
+                'low' => $id + self::PRIORITY_LOW,
             ];
         }
 
-        return self::$intChannels;
+        return $this->intChannels;
     }
 
     /**

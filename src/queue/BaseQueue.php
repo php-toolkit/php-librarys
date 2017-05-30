@@ -8,16 +8,12 @@
 
 namespace inhere\library\queue;
 
-use inhere\library\traits\TraitSimpleEvent;
-
 /**
  * Class BaseQueue
  * @package inhere\library\queue
  */
 abstract class BaseQueue implements QueueInterface
 {
-    use TraitSimpleEvent;
-
     /**
      * @var string
      */
@@ -46,6 +42,11 @@ abstract class BaseQueue implements QueueInterface
         'id' => null,
         'serialize' => true,
     ];
+
+    /**
+     * @var array
+     */
+    private $_events = [];
 
     /**
      * @var array
@@ -132,6 +133,60 @@ abstract class BaseQueue implements QueueInterface
      */
     abstract protected function doPop();
 
+//////////////////////////////////////////////////////////////////////
+/// events method
+//////////////////////////////////////////////////////////////////////
+
+    /**
+     * register a event callback
+     * @param string $name event name
+     * @param callable $cb event callback
+     * @param bool $replace replace exists's event cb
+     * @return $this
+     */
+    public function on($name, callable $cb, $replace = false)
+    {
+        if ($replace || !isset($this->_events[$name])) {
+            $this->_events[$name] = $cb;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string $name
+     * @param array $args
+     * @return mixed
+     */
+    protected function fire($name, array $args = [])
+    {
+        if (!isset($this->_events[$name]) || !($cb = $this->_events[$name])) {
+            return null;
+        }
+
+        return call_user_func_array($cb, $args);
+    }
+
+    /**
+     * @param $name
+     * @return null
+     */
+    public function off($name)
+    {
+        $cb = null;
+
+        if (isset($this->_events[$name])) {
+            $cb = $this->_events[$name];
+            unset($this->_events[$name]);
+        }
+
+        return $cb;
+    }
+
+//////////////////////////////////////////////////////////////////////
+/// helper method
+//////////////////////////////////////////////////////////////////////
+
     /**
      * get Priorities
      * @return array
@@ -212,12 +267,16 @@ abstract class BaseQueue implements QueueInterface
         $this->close();
     }
 
+//////////////////////////////////////////////////////////////////////
+/// getter/setter method
+//////////////////////////////////////////////////////////////////////
+
     /**
      * close
      */
     public function close()
     {
-        $this->clearEvents();
+        $this->_events = [];
     }
 
     /**

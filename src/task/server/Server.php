@@ -183,19 +183,51 @@ class Server extends Base
             $peer = '';
             $pkt = stream_socket_recvfrom($socket, $this->config['bufferSize'], 0, $peer);
 
-            if ($pkt == false) {
+            if ($pkt === false) {
                 $this->log("udp error", ProcessLogger::ERROR);
                 continue;
             }
 
-            // 如果队列满了，这里会阻塞
-            $ret = $this->queue->push($pkt) ? 'OK' : 'ERR';
+            $ret = $this->handleCommand($pkt);
 
-            stream_socket_sendto($socket, "$ret\n", 0, $peer);
-            usleep(50000);
+            stream_socket_sendto($socket, "{$ret}\n.\n", 0, $peer);
+            usleep(10000);
         }
 
         return 0;
+    }
+
+    protected function handleCommand($pkt)
+    {
+        $pkt = trim($pkt);
+        $cmd = $pkt;
+        $data = '';
+
+        // push data
+        if (strpos($pkt,' ')) {
+            // return 'ERR data format error';
+            list($cmd, $data) = explode(' ', $pkt, 2);
+        }
+
+        switch ($cmd) {
+            case 'pop':
+                $ret = $this->queue->pop();
+                break;
+
+            case 'push':
+                $ret = $this->queue->push($pkt) ? 'OK' : 'ERR push failed';
+                break;
+
+            case 'stat':
+                $ret = 'unsupported';
+                break;
+
+            default:
+                $ret = 'ERR unsupported command ['. $cmd . ']';
+                break;
+        }
+
+        return $ret;
     }
 
     /**

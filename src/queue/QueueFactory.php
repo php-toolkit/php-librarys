@@ -15,7 +15,10 @@ namespace inhere\library\queue;
 final class QueueFactory
 {
     const DRIVER_DB = 'db';
-    const DRIVER_PHP = 'PHP';
+    const DRIVER_PHP = 'php';
+    const DRIVER_LDB = 'levelDb';
+    const DRIVER_RDB = 'rocksDb';
+    const DRIVER_SSDB = 'ssdb';
     const DRIVER_SYSV = 'sysv';
     const DRIVER_REDIS = 'redis';
 

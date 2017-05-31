@@ -113,7 +113,7 @@ class PhpQueue extends BaseQueue
     /**
      * close
      */
-    public function close()
+    protected function close()
     {
         parent::close();
 

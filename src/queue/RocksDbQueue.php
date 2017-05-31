@@ -33,8 +33,6 @@ class RocksDbQueue extends BaseQueue
      */
     public function __construct(array $config = [])
     {
-        throw new \Exception("Not available");
-
         if (isset($config['rdb'])) {
             $this->setRocksDb($config['rdb']);
             unset($config['rdb']);

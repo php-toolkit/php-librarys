@@ -274,7 +274,7 @@ abstract class BaseQueue implements QueueInterface
     /**
      * close
      */
-    public function close()
+    protected function close()
     {
         $this->_events = [];
     }

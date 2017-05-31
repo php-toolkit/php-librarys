@@ -47,7 +47,7 @@ class SysVQueue extends BaseQueue
         // php --rf msg_send
         if (!function_exists('msg_receive')) {
             throw new \RuntimeException(
-                'Is not support msg queue of the current system(must enable sysvmsg for php).',
+                'To enable System V semaphore,shared-memory,messages support compile PHP with the option --enable-sysvsem --enable-sysvshm --enable-sysvmsg.',
                 -500
             );
         }
@@ -191,7 +191,7 @@ class SysVQueue extends BaseQueue
     /**
      * close
      */
-    public function close()
+    protected function close()
     {
         parent::close();
 

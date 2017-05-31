@@ -96,7 +96,7 @@ class DbQueue extends BaseQueue
     /**
      * {@inheritDoc}
      */
-    public function close()
+    protected function close()
     {
         parent::close();
 

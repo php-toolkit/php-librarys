@@ -33,14 +33,27 @@ class SimpleResponse
         ObjectHelper::loadAttrs($this, $config);
     }
 
+    /**
+     * @param $name
+     * @param $value
+     */
     public function header($name, $value)
     {
         header("$name: $value");
     }
 
-    public function write($content)
+    /**
+     * @param $content
+     * @param null|string $name
+     * @return $this
+     */
+    public function write($content, $name = null)
     {
-        $this->body[] = $content;
+        if ($name) {
+            $this->body[$name] = $content;
+        } else {
+            $this->body[] = $content;
+        }
 
         return $this;
     }
@@ -61,67 +74,54 @@ class SimpleResponse
 
         $content = implode('', $this->body);
 
-        if ( !$content ) {
+        if (!$content) {
             throw new \RuntimeException('No content to display.');
         }
 
-//        \App::logger()->debug('Send text content.');
-
         echo $content;
 
-        $this->bodys = [];
+        $this->body = [];
 
         return true;
     }
 
     /**
      * output json response
-     * @param  array  $data
+     * @param  array $data
      * @return mixed
      */
     public function json(array $data)
     {
         header($_SERVER['SERVER_PROTOCOL'] . ' 200 OK');
-        header('Content-type: application/json; charset='.$this->charset);
+        header('Content-type: application/json; charset=' . $this->charset);
 
         echo json_encode($data);
 
         return true;
     }
 
+    /**
+     * @param $data
+     * @param int $code
+     * @param string $msg
+     * @return mixed
+     */
     public function formatJson($data, $code = 0, $msg = '')
     {
         // if `$data` is integer, equals to `formatJson(int $code, string $msg )`
-        if ( is_numeric($data) ) {
+        if (is_numeric($data)) {
             $jsonData = [
-                'code'     => (int)$data,
-                'msg'      => $code,
-                'data'     => [],
+                'code' => (int)$data,
+                'msg' => $code,
+                'data' => [],
             ];
         } else {
             $jsonData = [
-                'code'     => (int)$code,
-                'msg'      => $msg ?: 'successful!',
-                'data'     => (array)$data,
+                'code' => (int)$code,
+                'msg' => $msg ?: 'successful!',
+                'data' => (array)$data,
             ];
         }
-
-        return $this->json($jsonData);
-    }
-
-    /**
-     * @param int $status
-     * @param string $msg
-     * @param array $data
-     * @return mixed
-     */
-    public function formatJson2($status = 200, $msg = '', $data = [])
-    {
-        $jsonData = [
-            'status'  => (int)$status,
-            'message' => $msg ?: 'successful!',
-            'data'    => $data,
-        ];
 
         return $this->json($jsonData);
     }

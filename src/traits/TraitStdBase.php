@@ -8,10 +8,10 @@
 
 namespace inhere\library\traits;
 
-use inhere\library\exceptions\SetPropertyException;
-use inhere\library\exceptions\GetPropertyException;
-use inhere\library\exceptions\NotFoundException;
-use inhere\library\exceptions\UnknownCalledException;
+use inhere\exceptions\SetPropertyException;
+use inhere\exceptions\GetPropertyException;
+use inhere\exceptions\NotFoundException;
+use inhere\exceptions\UnknownCalledException;
 
 /**
  * Class TraitStaBase
@@ -146,13 +146,12 @@ trait TraitStdBase
      * @return mixed
      * @throws UnknownCalledException
      */
-    static public function __callStatic($method, $args)
+    public static function __callStatic($method, $args)
     {
-        if (method_exists(get_called_class(), $method)) {
-
-            return call_user_func_array(array(get_called_class(), $method), (array)$args);
+        if (method_exists(self::class, $method)) {
+            return call_user_func_array([self::class, $method], (array)$args);
         }
 
-        throw new UnknownCalledException('Called a Unknown static method! [ ' . get_called_class() . "::{$method}()]");
+        throw new UnknownCalledException('Called a Unknown static method! [ ' . self::class . "::{$method}()]");
     }
 }

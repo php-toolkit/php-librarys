@@ -9,10 +9,10 @@
 namespace inhere\library\traits;
 
 /**
- * Class TraitSimpleEvent
+ * Class EventTrait
  * @package inhere\library\traits
  */
-trait TraitSimpleEvent
+trait EventTrait
 {
     /**
      * set the supported events, if you need.
@@ -81,7 +81,7 @@ trait TraitSimpleEvent
 
         // is a once event, remove it
         if ($this->events[$event]) {
-            return $this->removeEvent($event);
+            return $this->off($event);
         }
 
         return true;
@@ -89,25 +89,24 @@ trait TraitSimpleEvent
 
     /**
      * remove event and it's handlers
-     * @param $event
-     * @return bool
+     * @param string $event
+     * @return mixed
      */
     public function off($event)
     {
-        return $this->removeEvent($event);
-    }
-
-    public function removeEvent($event)
-    {
         if ($this->hasEvent($event)) {
-            unset($this->events[$event], $this->eventHandlers[$event]);
+            $handler = $this->eventHandlers[$event];
 
-            return true;
+            unset($this->events[$event], $this->eventHandlers[$event]);
+            return $handler;
         }
 
-        return false;
+        return null;
     }
 
+    /**
+     * clearEvents
+     */
     public function clearEvents()
     {
         $this->events = $this->eventHandlers = [];
@@ -180,7 +179,7 @@ trait TraitSimpleEvent
     /**
      * @return int
      */
-    public function countEvents()
+    public function getEventCount()
     {
         return count($this->events);
     }

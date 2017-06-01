@@ -83,6 +83,7 @@ class SimpleRequest
      *     'status' => 1
      * ]
      * @param bool $onlyValue If true, only return values. you can use 'list' received.
+     *
      * ```
      * list($name, $password) = $this->getMulti($needKeys);
      * ```

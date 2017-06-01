@@ -11,7 +11,7 @@ namespace inhere\library\task;
 use inhere\library\helpers\CliHelper;
 use inhere\library\process\ProcessLogger;
 use inhere\library\queue\QueueInterface;
-use inhere\library\traits\TraitSimpleConfig;
+use inhere\library\traits\ConfigTrait;
 
 /**
  * Class Base
@@ -19,7 +19,7 @@ use inhere\library\traits\TraitSimpleConfig;
  */
 abstract class Base
 {
-    use TraitSimpleConfig;
+    use ConfigTrait;
     use ProcessControlTrait;
 
     const VERSION = '0.1.0';

@@ -9,23 +9,22 @@
 namespace inhere\library\traits;
 
 /**
- * Class TraitSimpleFixedEvent
+ * Class FixedEventTrait
  * @package inhere\library\traits
  */
-trait TraitSimpleFixedEvent
+trait FixedEventTrait
 {
     /**
      * @var \SplFixedArray
      */
-    protected $callbacks;
+    protected $eventHandlers;
 
     /**
-     * @return array
+     * @return string[]
      */
     public function getSupportedEvents(): array
     {
         // return [ self::ON_CONNECT, self::ON_HANDSHAKE, self::ON_OPEN, self::ON_MESSAGE, self::ON_CLOSE, self::ON_ERROR];
-
         return [];
     }
 
@@ -39,28 +38,49 @@ trait TraitSimpleFixedEvent
     }
 
     /**
-     * @return \SplFixedArray
+     * @param $event
+     * @return bool
      */
-    public function getCallbacks(): \SplFixedArray
+    public function hasEventHandler($event)
     {
-        return $this->callbacks;
+        if (false === ($key = array_search($event, $this->getSupportedEvents(), true))) {
+            return false;
+        }
+
+        return isset($this->eventHandlers[$key]);
     }
 
     /**
-     * @param $event
+     * @return \SplFixedArray
+     */
+    public function getEventHandlers(): \SplFixedArray
+    {
+        return $this->eventHandlers;
+    }
+
+    /**
+     * @return int
+     */
+    public function getEventCount()
+    {
+        return $this->eventHandlers->count();
+    }
+
+    /**
+     * @param string $event
      * @return callable
      */
-    public function getCallback($event)
+    public function getEventHandler(string $event)
     {
         if (false === ($key = array_search($event, $this->getSupportedEvents(), true))) {
             return null;
         }
 
-        if (!isset($this->callbacks[$key])) {
+        if (!isset($this->eventHandlers[$key])) {
             return null;
         }
 
-        return $this->callbacks[$key];
+        return $this->eventHandlers[$key];
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -72,7 +92,6 @@ trait TraitSimpleFixedEvent
      * @param string $event event name
      * @param callable $cb event callback
      * @param bool $replace replace exists's event cb
-     * @return $this
      */
     public function on(string $event, callable $cb, bool $replace = false)
     {
@@ -83,37 +102,35 @@ trait TraitSimpleFixedEvent
         }
 
         // init property
-        if ($this->callbacks === null) {
-            $this->callbacks = new \SplFixedArray(count($this->getSupportedEvents()));
+        if ($this->eventHandlers === null) {
+            $this->eventHandlers = new \SplFixedArray(count($this->getSupportedEvents()));
         }
 
-        if (!$replace && isset($this->callbacks[$key])) {
+        if (!$replace && isset($this->eventHandlers[$key])) {
             throw new \InvalidArgumentException("The want registered event [$event] have been registered! don't allow replace.");
         }
 
-        $this->callbacks[$key] = $cb;
-
-        return $this;
+        $this->eventHandlers[$key] = $cb;
     }
 
     /**
      * remove event handler
-     * @param $event
+     * @param string $event
      * @return bool
      */
-    public function off($event)
+    public function off(string $event)
     {
         if (false === ($key = array_search($event, $this->getSupportedEvents(), true))) {
-            return false;
+            return null;
         }
 
-        if (!isset($this->callbacks[$key]) || !($cb = $this->callbacks[$key])) {
-            return true;
+        if (!isset($this->eventHandlers[$key]) || !($cb = $this->eventHandlers[$key])) {
+            return null;
         }
 
-        $this->callbacks[$key] = null;
+        $this->eventHandlers[$key] = null;
 
-        return true;
+        return $cb;
     }
 
     /**
@@ -121,13 +138,13 @@ trait TraitSimpleFixedEvent
      * @param array $args
      * @return mixed
      */
-    protected function trigger(string $event, array $args = [])
+    protected function fire(string $event, array $args = [])
     {
         if (false === ($key = array_search($event, $this->getSupportedEvents(), true))) {
             throw new \InvalidArgumentException("Trigger a not exists's event: $event.");
         }
 
-        if (!isset($this->callbacks[$key]) || !($cb = $this->callbacks[$key])) {
+        if (!isset($this->eventHandlers[$key]) || !($cb = $this->eventHandlers[$key])) {
             return null;
         }
 

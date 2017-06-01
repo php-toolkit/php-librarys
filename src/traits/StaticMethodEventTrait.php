@@ -12,7 +12,7 @@ namespace inhere\library\event;
  * Class TraitSimpleStaticEvent
  * @package inhere\library\event
  */
-trait TraitSimpleStaticEvent
+trait StaticMethodEventTrait
 {
     /**
      * set the supported events, if you need.
@@ -85,7 +85,7 @@ trait TraitSimpleStaticEvent
 
         // is a once event, remove it
         if (self::$events[$event]) {
-            return self::removeEvent($event);
+            return self::off($event);
         }
 
         return true;
@@ -97,11 +97,6 @@ trait TraitSimpleStaticEvent
      * @return bool
      */
     public static function off($event)
-    {
-        return self::removeEvent($event);
-    }
-
-    public static function removeEvent($event)
     {
         if (self::hasEvent($event)) {
             unset(self::$events[$event], self::$eventHandlers[$event]);

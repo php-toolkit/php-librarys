@@ -14,7 +14,7 @@ namespace inhere\library\process;
  */
 class SharedMemory
 {
-    const DRIVER_SYSV = 'sysvsem'; // require enable  --enable-sysvsem
+    const DRIVER_SYSV = 'sysvshm'; // require enable  --enable-sysvshm
     const DRIVER_SHMOP = 'shmop'; // require enable --enable-shmop
 
     /**
@@ -85,7 +85,7 @@ class SharedMemory
     {
         // Now lets delete the block and close the shared memory segment
         if (!shmop_delete($this->shm)) {
-            throw new \RuntiemException("Couldn't mark shared memory block for deletion.", __LINE__);
+            throw new \RuntimeException("Couldn't mark shared memory block for deletion.", __LINE__);
         }
 
         shmop_close($this->shm);
@@ -232,7 +232,7 @@ class SharedMemory
         }
 
         if (!$st = @stat($pathname)) {
-            return -1;
+            return time();
         }
 
         $key = sprintf("%u", (($st['ino'] & 0xffff) | (($st['dev'] & 0xff) << 16) | (($projectId & 0xff) << 24)));
@@ -240,6 +240,9 @@ class SharedMemory
         return $key;
     }
 
+    /**
+     * @return array
+     */
     public function driverMap()
     {
         return [
@@ -250,7 +253,7 @@ class SharedMemory
             ],
             self::DRIVER_SYSV => [
                 'shm_attach',
-                'To use sysvsem you will need to compile PHP with the --enable-sysvsem parameter in your configure line.'
+                'To use sysvsem you will need to compile PHP with the --enable-sysvshm parameter in your configure line.'
             ],
         ];
     }

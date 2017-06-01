@@ -109,6 +109,19 @@ class IPC
 
     }
 
+    protected function createSockPair()
+    {
+        // @link http://php.net/manual/zh/function.socket-create-pair.php
+    }
+
+    protected function createSockDomain()
+    {
+        // $socket = socket_create(AF_UNIX, SOCK_STREAM, SOL_TCP);
+        $socket = socket_create(AF_UNIX, SOCK_DGRAM, SOL_UDP);
+        $bindRes = socket_bind($socket, $this->socketfile);
+        $listenRes = socket_listen($socket, 9999);
+    }
+
     /**
      * @return array
      */

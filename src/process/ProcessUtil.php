@@ -111,6 +111,30 @@ class ProcessUtil
     }
 
     /**
+     * wait child exit.
+     * @param  callable $onExit
+     * @return bool
+     */
+    public static function wait(callable $onExit)
+    {
+        $status = null;
+
+        //pid<0：子进程都没了
+        //pid>0：捕获到一个子进程退出的情况
+        //pid=0：没有捕获到退出的子进程
+        while (($pid = pcntl_waitpid(-1, $status, WNOHANG)) >= 0) {
+            if ($pid) {
+                // ... (callback, pid, exitCode, status)
+                call_user_func($onExit, $pid, pcntl_wexitstatus($status), $status);
+            } else {
+                usleep(50000);
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Stops all running children
      * @param array $children
      * [

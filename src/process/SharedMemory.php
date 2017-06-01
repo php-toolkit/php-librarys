@@ -14,6 +14,9 @@ namespace inhere\library\process;
  */
 class SharedMemory
 {
+    const DRIVER_SYSV = 'sysvsem'; // require enable  --enable-sysvsem
+    const DRIVER_SHMOP = 'shmop'; // require enable --enable-shmop
+
     /**
      * @var int
      */
@@ -32,6 +35,7 @@ class SharedMemory
         'serialize' => true,
 
         'size' => 256000,
+        'driver' => self::DRIVER_SHMOP,
         'uniKey' => 'php_shm', // shared memory, semaphore
         'tmpPath' => './', // tmp path
     ];
@@ -51,6 +55,7 @@ class SharedMemory
 
         $this->setConfig($config);
 
+        $this->config['size'] = (int)$this->config['size'];
         $this->config['serialize'] = (bool)$this->config['serialize'];
 
         if ($this->config['id'] > 0) {
@@ -78,6 +83,11 @@ class SharedMemory
      */
     public function close()
     {
+        // Now lets delete the block and close the shared memory segment
+        if (!shmop_delete($this->shm)) {
+            throw new \RuntiemException("Couldn't mark shared memory block for deletion.", __LINE__);
+        }
+
         shmop_close($this->shm);
     }
 
@@ -107,7 +117,12 @@ class SharedMemory
     public function read()
     {
         // $shm = shmop_open($this->id, 'w', 0600, 0);
-        return shmop_read($this->shm, 0, shmop_size($this->shm));
+        return shmop_read($this->shm, 0, $this->size());
+    }
+
+    public function size()
+    {
+        return shmop_size($this->shm);
     }
 
     /**
@@ -223,6 +238,21 @@ class SharedMemory
         $key = sprintf("%u", (($st['ino'] & 0xffff) | (($st['dev'] & 0xff) << 16) | (($projectId & 0xff) << 24)));
 
         return $key;
+    }
+
+    public function driverMap()
+    {
+        return [
+            // driver => [check function, error msg]
+            self::DRIVER_SHMOP => [
+                'shmop_open',
+                'To use shmop you will need to compile PHP with the --enable-shmop parameter in your configure line.'
+            ],
+            self::DRIVER_SYSV => [
+                'shm_attach',
+                'To use sysvsem you will need to compile PHP with the --enable-sysvsem parameter in your configure line.'
+            ],
+        ];
     }
 
     /**

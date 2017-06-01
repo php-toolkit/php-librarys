@@ -36,7 +36,6 @@ class ShmQueue extends BaseQueue
      */
     protected function init()
     {
-        // To use shmop you will need to compile PHP with the --enable-shmop parameter in your configure line.
         parent::init();
 
         if ($this->config['id'] > 0) {

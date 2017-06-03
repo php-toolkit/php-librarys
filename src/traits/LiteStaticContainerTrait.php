@@ -6,13 +6,13 @@
  * Time: 9:22
  */
 
-namespace inhere\library\di;
+namespace inhere\library\traits;
 
 /**
- * Class TraitStaticContainer
- * @package inhere\library\di
+ * Class LiteStaticContainerTrait
+ * @package inhere\library\traits
  */
-trait TraitStaticContainer
+trait LiteStaticContainerTrait
 {
     /**
      * all raw register service list
@@ -141,7 +141,11 @@ trait TraitStaticContainer
         return array_keys(self::$services);
     }
 
-    public static function __isset($name)
+    /**
+     * @param $name
+     * @return bool
+     */
+    public function __isset($name)
     {
         return static::has($name);
     }

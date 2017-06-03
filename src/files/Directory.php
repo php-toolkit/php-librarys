@@ -10,8 +10,8 @@
 namespace inhere\library\files;
 
 use DirectoryIterator;
-use inhere\library\exceptions\FileSystemException;
-use inhere\library\exceptions\NotFoundException;
+use inhere\exceptions\FileSystemException;
+use inhere\exceptions\NotFoundException;
 
 /**
  * Class Directory

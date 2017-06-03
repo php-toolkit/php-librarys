@@ -8,7 +8,7 @@
 
 namespace inhere\library\helpers;
 
-use inhere\library\exceptions\NotFoundException;
+use inhere\exceptions\NotFoundException;
 
 /**
  * Class JsonHelper

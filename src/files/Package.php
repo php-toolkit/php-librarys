@@ -8,7 +8,7 @@
 
 namespace inhere\library\files;
 
-use inhere\library\exceptions\NotFoundException;
+use inhere\exceptions\NotFoundException;
 use inhere\library\files\compress\AbstractCompressor;
 use inhere\library\helpers\ObjectHelper;
 use inhere\library\StdBase;

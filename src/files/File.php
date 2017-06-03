@@ -10,11 +10,11 @@
 
 namespace inhere\library\files;
 
-use inhere\library\exceptions\FileNotFoundException;
-use inhere\library\exceptions\FileReadException;
-use inhere\library\exceptions\IOException;
-use inhere\library\helpers\StrHelper;
-use inhere\library\exceptions\FileSystemException;
+use inhere\exceptions\FileNotFoundException;
+use inhere\exceptions\FileReadException;
+use inhere\exceptions\IOException;
+use inhere\library\helpers\StringHelper;
+use inhere\exceptions\FileSystemException;
 
 /**
  * Class File
@@ -331,7 +331,7 @@ class File extends FileSystem
         foreach ($fileArr as $v) {
             #删除注释、空白
             if ($deleteSpace) {
-                $data .= StrHelper::deleteStripSpace($v);
+                $data .= StringHelper::deleteStripSpace($v);
             }#不删除注释、空白
             else {
                 $o_data = file_get_contents($v);

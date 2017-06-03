@@ -9,7 +9,7 @@
 namespace inhere\library\files;
 
 use ArrayObject;
-use inhere\library\exceptions\InvalidArgumentException;
+use inhere\exceptions\InvalidArgumentException;
 use inhere\library\helpers\ObjectHelper;
 use inhere\library\StdBase;
 

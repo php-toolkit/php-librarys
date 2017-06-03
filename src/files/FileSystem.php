@@ -10,10 +10,10 @@
 
 namespace inhere\library\files;
 
-use inhere\library\exceptions\IOException;
-use inhere\library\exceptions\NotFoundException;
+use inhere\exceptions\IOException;
+use inhere\exceptions\NotFoundException;
 use inhere\library\helpers\ArrHelper;
-use inhere\library\helpers\StrHelper;
+use inhere\library\helpers\StringHelper;
 
 /**
  * Class FileSystem
@@ -80,7 +80,7 @@ abstract class FileSystem
     public static function exists($files, $ext = null)
     {
         $ext = $ext ? trim($ext, '. ') : null;
-        $files = StrHelper::toArray($files);
+        $files = StringHelper::toArray($files);
 
         foreach ($files as $file) {
             $file = trim($file);

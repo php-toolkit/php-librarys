@@ -24,10 +24,10 @@
 
 namespace inhere\library\files;
 
-use inhere\library\exceptions\InvalidArgumentException;
-use inhere\library\exceptions\InvalidConfigException;
-use inhere\library\exceptions\ExtensionMissException;
-use inhere\library\exceptions\FileSystemException;
+use inhere\exceptions\InvalidArgumentException;
+use inhere\exceptions\InvalidConfigException;
+use inhere\exceptions\ExtensionMissException;
+use inhere\exceptions\FileSystemException;
 
 /**
  * Class Picture

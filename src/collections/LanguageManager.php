@@ -12,7 +12,7 @@ use inhere\exceptions\InvalidArgumentException;
 use inhere\exceptions\NotFoundException;
 use inhere\library\files\FileSystem;
 use inhere\library\helpers\ObjectHelper;
-use inhere\library\helpers\StrHelper;
+use inhere\library\helpers\StringHelper;
 use inhere\library\StdBase;
 
 /**
@@ -128,7 +128,7 @@ class LanguageManager extends StdBase
         $value = $this->findTranslationText($fileKey, $key) ?: $this->tranByFallbackLang($fileKey, $key, $default);
 
         if (!$value) {
-            $value = ucfirst(StrHelper::toUnderscoreCase(str_replace(['-', '_'], ' ', $key), ' '));
+            $value = ucfirst(StringHelper::toUnderscoreCase(str_replace(['-', '_'], ' ', $key), ' '));
         }
 
         $args = $args ? (array)$args : [];

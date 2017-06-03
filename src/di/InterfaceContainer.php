@@ -7,8 +7,8 @@
 
 namespace inhere\library\di;
 
-use inhere\library\exceptions\NotFoundException;
-use inhere\library\exceptions\ContainerException;
+use inhere\exceptions\NotFoundException;
+use inhere\exceptions\ContainerException;
 
 interface InterfaceContainer
 {

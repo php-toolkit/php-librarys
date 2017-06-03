@@ -6,13 +6,13 @@
  * Time: 9:22
  */
 
-namespace inhere\library\di;
+namespace inhere\library\traits;
 
 /**
- * Class TraitSimpleContainer
+ * Class LiteContainerTrait
  * @package inhere\library\traits
  */
-trait TraitSimpleContainer
+trait LiteContainerTrait
 {
     /**
      * all raw register service list
@@ -143,6 +143,10 @@ trait TraitSimpleContainer
         return array_keys(self::$services);
     }
 
+    /**
+     * @param $name
+     * @return bool
+     */
     public function __isset($name)
     {
         return $this->has($name);

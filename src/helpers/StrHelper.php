@@ -10,6 +10,7 @@ namespace inhere\library\helpers;
 
 /**
  * Class StrHelper
+ * @deprecated please `StringHelper` instead.
  * @package inhere\library\helpers
  */
 class StrHelper extends StringHelper

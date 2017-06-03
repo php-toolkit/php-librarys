@@ -12,15 +12,15 @@ namespace inhere\library\lock;
  * Class Lock
  * @package inhere\library\lock
  */
-class Lock
+class Lock implements LockInterface
 {
     const DRIVER_FILE = 'File';
     const DRIVER_DB   = 'Database';
-    const DRIVER_SEM  = 'Semaphore';
     const DRIVER_MEM  = 'Memcache';
+    const DRIVER_SEM  = 'Semaphore';
 
     /**
-     * @var DriverInterface
+     * @var LockInterface
      */
     private $driver;
 
@@ -36,20 +36,37 @@ class Lock
 
     /**
      * Lock constructor.
-     * @param string $driverName
      * @param array $options
+     * @param string $driverName
      */
-    public function __construct($driverName = self::DRIVER_FILE, array $options = [])
+    public function __construct(array $options = [], $driverName = null)
     {
-        if (in_array($driverName, self::$driverMap)) {
-            $class = $driverName . 'Lock';
-
-            $this->driver = new $class($options);
-        }
+        $this->driver = LockFactory::make($options, $driverName);
     }
 
     /**
-     * @return DriverInterface
+     * {@inheritDoc}
+     */
+    public function lock($key, $timeout = Lock::EXPIRE)
+    {
+        $this->driver->lock($key, $timeout);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function unlock($key)
+    {
+        return $this->driver->unlock($key);
+    }
+
+    public function close()
+    {
+        $this->driver->close();
+    }
+
+    /**
+     * @return LockInterface
      */
     public function getDriver()
     {
@@ -57,18 +74,18 @@ class Lock
     }
 
     /**
-     * @param DriverInterface $driver
+     * @param LockInterface $driver
      */
-    public function setDriver(DriverInterface $driver)
+    public function setDriver(LockInterface $driver)
     {
         $this->driver = $driver;
     }
 
     /**
-     * @return array
+     * {@inheritDoc}
      */
-    public static function getDriverMap()
+    public static function isSupported()
     {
-        return self::$driverMap;
+        return LockFactory::isSupported();
     }
 }

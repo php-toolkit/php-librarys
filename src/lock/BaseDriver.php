@@ -14,7 +14,7 @@ use inhere\library\traits\LiteOptionsTrait;
  * Class BaseDriver
  * @package inhere\library\lock
  */
-abstract class BaseDriver implements DriverInterface
+abstract class BaseDriver implements LockInterface
 {
     use LiteOptionsTrait;
 
@@ -46,6 +46,28 @@ abstract class BaseDriver implements DriverInterface
     protected function init()
     {
         // ... ...
+    }
+
+    /**
+     * @param $key
+     * @param \Closure $closure
+     * @param int $timeout
+     * @return bool|mixed
+     */
+    public function lockDo($key, \Closure $closure, $timeout = 3)
+    {
+        $ret = false;
+
+        // lock
+        if ($this->lock($key, $timeout)) {
+            // operate data
+            $ret = $closure();
+
+            // unlock
+            $this->unlock($key);
+        }
+
+        return $ret;
     }
 
     /**

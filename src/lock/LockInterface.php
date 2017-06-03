@@ -9,10 +9,10 @@
 namespace inhere\library\lock;
 
 /**
- * Interface DriverInterface
+ * Interface LockInterface
  * @package inhere\library\lock
  */
-interface DriverInterface
+interface LockInterface
 {
     /**
      * seconds

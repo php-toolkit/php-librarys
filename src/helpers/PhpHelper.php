@@ -256,6 +256,26 @@ class PhpHelper
     }
 
     /**
+     * @param $pathname
+     * @param $projectId
+     * @return int|string
+     */
+    public static function ftok($pathname, $projectId)
+    {
+        if (function_exists('ftok')) {
+            return ftok($pathname, $projectId);
+        }
+
+        if (!$st = @stat($pathname)) {
+            return -1;
+        }
+
+        $key = sprintf("%u", (($st['ino'] & 0xffff) | (($st['dev'] & 0xff) << 16) | (($projectId & 0xff) << 24)));
+
+        return $key;
+    }
+
+    /**
      * dump vars
      * @param array ...$args
      * @return string

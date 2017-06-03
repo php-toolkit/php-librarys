@@ -8,6 +8,8 @@
 
 namespace inhere\library\lock;
 
+use inhere\library\helpers\PhpHelper;
+
 /**
  * Class SemaphoreLock - Semaphore
  * @package inhere\library\lock
@@ -15,35 +17,38 @@ namespace inhere\library\lock;
 class SemaphoreLock extends BaseDriver
 {
     /**
+     * A numeric shared memory segment ID
      * @var int
      */
-    private $semId;
+    private $key;
 
     /**
+     * The semaphore id
      * @var resource
      */
-    private $sem;
+    private $semId;
 
     /**
      * @var array
      */
     protected $options = [
-        'id' => null,
-        'uniKey' => 'php_sem',
+        'key' => null,
+        'project' => 'php_sem',
+        'permission' => 0664,
     ];
 
     protected function init()
     {
         parent::init();
 
-        if ($this->options['semId'] > 0) {
-            $this->semId = (int)$this->options['id'];
+        if ($this->options['key'] > 0) {
+            $this->key = (int)$this->options['key'];
         } else {
-            // 定义共享内存,信号量key
-            $this->semId = $this->options['semId'] = $this->ftok(__FILE__, $this->options['uniKey']);
+            // 定义信号量key
+            $this->key = $this->options['key'] = PhpHelper::ftok(__FILE__, $this->options['project']);
         }
 
-        $this->sem = sem_get($this->semId);
+        $this->semId = sem_get($this->key, 1, $this->options['permission']);
     }
 
     /**
@@ -53,7 +58,7 @@ class SemaphoreLock extends BaseDriver
      */
     public function lock($key, $timeout = self::EXPIRE)
     {
-        return sem_acquire($this->sem);
+        return sem_acquire($this->semId);
     }
 
     /**
@@ -62,7 +67,7 @@ class SemaphoreLock extends BaseDriver
      */
     public function unlock($key)
     {
-        return sem_release($this->sem);
+        return sem_release($this->semId);
     }
 
     /**
@@ -72,9 +77,9 @@ class SemaphoreLock extends BaseDriver
     {
         parent::close();
 
-        sem_remove($this->sem);
+        sem_remove($this->semId);
 
-        $this->sem = null;
+        $this->semId = null;
     }
 
     /**
@@ -83,25 +88,5 @@ class SemaphoreLock extends BaseDriver
     public static function isSupported()
     {
         return function_exists('sem_get');
-    }
-
-    /**
-     * @param $pathname
-     * @param $projectId
-     * @return int|string
-     */
-    private function ftok($pathname, $projectId)
-    {
-        if (function_exists('ftok')) {
-            return ftok($pathname, $projectId);
-        }
-
-        if (!$st = @stat($pathname)) {
-            return time();
-        }
-
-        $key = sprintf("%u", (($st['ino'] & 0xffff) | (($st['dev'] & 0xff) << 16) | (($projectId & 0xff) << 24)));
-
-        return $key;
     }
 }

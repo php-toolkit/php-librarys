@@ -108,7 +108,7 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * @param array $data
-     * @return $this
+     * @return static
      */
     public function sets(array $data)
     {

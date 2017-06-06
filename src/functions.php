@@ -20,7 +20,7 @@ if ( !function_exists('print_v') ) {
 if ( !function_exists('local_env') ) {
     function local_env($name = null, $default = null)
     {
-        return inhere\library\collections\Local::env($name, $default);
+        //return inhere\library\collections\Local::env($name, $default);
     }
 }
 

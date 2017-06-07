@@ -14,10 +14,10 @@ use inhere\exceptions\NotFoundException;
 use inhere\exceptions\UnknownCalledException;
 
 /**
- * Class TraitStaBase
+ * Class StdObjectTrait
  * @package inhere\library\traits
  */
-trait TraitStdBase
+trait StdObjectTrait
 {
     /**
      * get called class full name

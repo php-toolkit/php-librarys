@@ -9,12 +9,25 @@
 
 namespace inhere\library\helpers;
 
+use inhere\library\collections\CollectionInterface;
+
 /**
  * Class ArrayHelper
  * @package inhere\library\helpers
  */
 class ArrayHelper
 {
+    /**
+     * Determine whether the given value is array accessible.
+     *
+     * @param  mixed $value
+     * @return bool
+     */
+    public static function accessible($value)
+    {
+        return is_array($value) || $value instanceof \ArrayAccess;
+    }
+
     /**
      * @param mixed $array
      * @return \Traversable
@@ -29,6 +42,33 @@ class ArrayHelper
     }
 
     /**
+     * php数组转换成为对象
+     * @param array $array
+     * @param string $class
+     * @return mixed
+     */
+    public static function toObject(array $array, $class = \stdClass::class)
+    {
+        if (!is_array($array)) {
+            return $array;
+        }
+
+        $object = new $class();
+
+        foreach ($array as $name => $value) {
+            $name = trim($name);
+
+            if (!$name || is_numeric($name)) {
+                continue;
+            }
+
+            $object->$name = is_array($value) ? self::toObject($value) : $value;
+        }
+
+        return $object;
+    }
+
+    /**
      * Get Multi - 获取多个, 可以设置默认值
      * @param array $data array data
      * @param array $needKeys
@@ -40,42 +80,38 @@ class ArrayHelper
      * @param bool|false $unsetKey
      * @return array
      */
-    public static function getMulti(array &$data, array $needKeys = [], $unsetKey = false)
+    public static function gets(array &$data, array $needKeys = [], $unsetKey = false)
     {
         $needed = [];
 
-        foreach ($needKeys as $key => $value) {
+        foreach ($needKeys as $key => $default) {
             if (is_int($key)) {
-                $key = $value;
+                $key = $default;
                 $default = null;
-            } else {
-                $default = $value;
             }
 
             if (isset($data[$key])) {
-                $values[$key] = $data[$key];
+                $value = $data[$key];
+
+                if (is_int($default)) {
+                    $value = (int)$value;
+                } elseif (is_string($default)) {
+                    $value = trim($value);
+                } elseif (is_array($default)) {
+                    $value = (array)$value;
+                }
+
+                $needed[$key] = $value;
 
                 if ($unsetKey) {
                     unset($data[$key]);
                 }
             } else {
-                $values[$key] = $default;
+                $needed[$key] = $default;
             }
         }
 
         return $needed;
-    }
-
-    /**
-     * get value from an array
-     * @param $arr
-     * @param $key
-     * @param null $default
-     * @return mixed
-     */
-    public static function get($key, $arr, $default = null)
-    {
-        return $arr[$key] ?? $default;
     }
 
     /**
@@ -109,25 +145,6 @@ class ArrayHelper
     }
 
     /**
-     * remove the $key of the $arr, and return value.
-     * @param string $key
-     * @param array $arr
-     * @param mixed $default
-     * @return mixed
-     */
-    public static function remove($key, array &$arr, $default = null)
-    {
-        if (isset($arr[$key])) {
-            $value = $arr[$key];
-            unset($arr[$key]);
-        } else {
-            $value = $default;
-        }
-
-        return $value;
-    }
-
-    /**
      * 清理数组值的空白
      * @param array $data
      * @return array|string
@@ -146,135 +163,6 @@ class ArrayHelper
     }
 
     /**
-     * php数组转换成为对象
-     * @param array $array
-     * @param string $class
-     * @return mixed
-     */
-    public static function toObject(array $array, $class = \stdClass::class)
-    {
-        if (!is_array($array)) {
-            return $array;
-        }
-
-        $object = new $class();
-
-        foreach ($array as $name => $value) {
-            $name = trim($name);
-
-            if (!$name || is_numeric($name)) {
-                continue;
-            }
-
-            $object->$name = is_array($value) ? self::toObject($value) : $value;
-        }
-
-        return $object;
-    }
-
-    public static function arrayToObject($array, $class = \stdClass::class)
-    {
-        return self::toObject($array, $class);
-    }
-
-    /**
-     * array 递归 转换成 字符串
-     * @param  array $array [大于1200字符 strlen($string)>1200
-     * @param int $length
-     * @param array|int $cycles [至多循环六次 $num >= 6
-     * @param bool $showKey
-     * @param bool $addMark
-     * @param  string $separator [description]
-     * @param string $string
-     * @return string [type]            [description]
-     */
-    public static function toString($array, $length = 800, $cycles = 6, $showKey = true, $addMark = false, $separator = ', ', $string = '')
-    {
-
-        if (!is_array($array) || empty($array)) {
-            return '';
-        }
-
-        $mark = $addMark ? '\'' : '';
-        $num = 0;
-
-        foreach ($array as $key => $value) {
-            $num++;
-
-            if ($num >= $cycles || strlen($string) > (int)$length) {
-                $string .= '... ...';
-                break;
-            }
-
-            $keyStr = $showKey ? $key . '=>' : '';
-
-            if (is_array($value)) {
-                $string .= $keyStr . 'Array(' . self::toString($value, $length, $cycles, $showKey, $addMark, $separator, $string) . ')' . $separator;
-            } else if (is_object($value)) {
-                $string .= $keyStr . 'Object(' . get_class($value) . ')' . $separator;
-            } else if (is_resource($value)) {
-                $string .= $keyStr . 'Resource(' . get_resource_type($value) . ')' . $separator;
-            } else {
-                $value = strlen($value) > 150 ? substr($value, 0, 150) : $value;
-                $string .= $mark . $keyStr . trim(htmlspecialchars($value)) . $mark . $separator;
-            }
-        }
-
-        return trim($string, $separator);
-    }
-
-    public static function toStringNoKey($array, $length = 800, $cycles = 6, $showKey = false, $addMark = true, $separator = ', ')
-    {
-        return static::toString($array, $length, $cycles, $showKey, $addMark, $separator);
-    }
-
-    public static function getFormatString($array, $length = 400)
-    {
-        $string = var_export($array, true);
-
-        # 将非空格替换为一个空格
-        $string = preg_replace('/[\n\r\t]/', ' ', $string);
-        # 去掉两个空格以上的
-        $string = preg_replace('/\s(?=\s)/', '', $string);
-        $string = trim($string);
-
-        if (strlen($string) > $length) {
-            $string = substr($string, 0, $length) . '...';
-        }
-
-        return $string;
-    }
-
-    public static function toLimitOut($array) //, $cycles=1
-    {
-        if (!is_array($array)) {
-            return $array;
-        }
-
-        static $num = 1;
-
-        foreach ($array as $key => $value) {
-            // if ( $num >= $cycles) {
-            //     break;
-            // }
-
-            if (is_array($value) || is_object($value)) {
-                $value = gettype($value) . '(...)';
-            } else if (is_string($value) || is_numeric($value)) {
-                $value = strlen(trim($value));
-            } else {
-                $value = gettype($value) . "($value)";
-            }
-
-            $array[$key] = $value;
-        }
-
-        $num++;
-
-        return $array;
-    }
-
-    /**
      * 不区分大小写检测数据键名是否存在
      * @param $key
      * @param $arr
@@ -283,6 +171,24 @@ class ArrayHelper
     public static function keyExists($key, $arr)
     {
         return array_key_exists(strtolower($key), array_change_key_case($arr));
+    }
+
+    /**
+     * @param $arr
+     * @return array
+     */
+    public static function valueToLower($arr)
+    {
+        return self::changeValueCase($arr);
+    }
+
+    /**
+     * @param $arr
+     * @return array
+     */
+    public static function valueToUpper($arr)
+    {
+        return self::changeValueCase($arr, 1);
     }
 
     /**
@@ -306,16 +212,6 @@ class ArrayHelper
         }
 
         return $newArr;
-    }
-
-    public static function valueToLower($arr)
-    {
-        return self::changeValueCase($arr);
-    }
-
-    public static function valueToUpper($arr)
-    {
-        return self::changeValueCase($arr, 1);
     }
 
     /**
@@ -419,6 +315,7 @@ class ArrayHelper
                 return true;
             }
         }
+
         return false;
     }
 
@@ -447,4 +344,521 @@ class ArrayHelper
 
         return $keyMaxWidth;
     }
+
+    ////////////////////////////////////////////////////////////
+    /// from laravel
+    ////////////////////////////////////////////////////////////
+
+    /**
+     * Collapse an array of arrays into a single array.
+     *
+     * @param  array $array
+     * @return array
+     */
+    public static function collapse($array)
+    {
+        $results = [];
+
+        foreach ($array as $values) {
+            if ($values instanceof CollectionInterface) {
+                $values = $values->all();
+            } elseif (!is_array($values)) {
+                continue;
+            }
+
+            $results = array_merge($results, $values);
+        }
+
+        return $results;
+    }
+
+    /**
+     * Cross join the given arrays, returning all possible permutations.
+     *
+     * @param  array ...$arrays
+     * @return array
+     */
+    public static function crossJoin(...$arrays)
+    {
+        return array_reduce($arrays, function ($results, $array) {
+            return static::collapse(array_map(function ($parent) use ($array) {
+                return array_map(function ($item) use ($parent) {
+                    return array_merge($parent, [$item]);
+                }, $array);
+            }, $results));
+        }, [[]]);
+    }
+
+    /**
+     * Divide an array into two arrays. One with keys and the other with values.
+     *
+     * @param  array $array
+     * @return array
+     */
+    public static function divide($array)
+    {
+        return [array_keys($array), array_values($array)];
+    }
+
+    /**
+     * Flatten a multi-dimensional associative array with dots.
+     *
+     * @param  array $array
+     * @param  string $prepend
+     * @return array
+     */
+    public static function dot($array, $prepend = '')
+    {
+        $results = [];
+
+        foreach ($array as $key => $value) {
+            if (is_array($value) && !empty($value)) {
+                $results = array_merge($results, static::dot($value, $prepend . $key . '.'));
+            } else {
+                $results[$prepend . $key] = $value;
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Get all of the given array except for a specified array of items.
+     *
+     * @param  array $array
+     * @param  array|string $keys
+     * @return array
+     */
+    public static function except($array, $keys)
+    {
+        static::forget($array, $keys);
+
+        return $array;
+    }
+
+    /**
+     * Determine if the given key exists in the provided array.
+     *
+     * @param  \ArrayAccess|array $array
+     * @param  string|int $key
+     * @return bool
+     */
+    public static function exists($array, $key)
+    {
+        if ($array instanceof \ArrayAccess) {
+            return $array->offsetExists($key);
+        }
+        return array_key_exists($key, $array);
+    }
+
+    /**
+     * Add an element to an array using "dot" notation if it doesn't exist.
+     *
+     * @param  array $array
+     * @param  string $key
+     * @param  mixed $value
+     * @return array
+     */
+    public static function add($array, $key, $value)
+    {
+        if (static::has($array, $key)) {
+            static::set($array, $key, $value);
+        }
+
+        return $array;
+    }
+
+    /**
+     * Get an item from an array using "dot" notation.
+     *
+     * @param  \ArrayAccess|array $array
+     * @param  string $key
+     * @param  mixed $default
+     * @return mixed
+     */
+    public static function get($array, $key, $default = null)
+    {
+        if (!static::accessible($array)) {
+            return value($default);
+        }
+
+        if (is_null($key)) {
+            return $array;
+        }
+
+        if (static::exists($array, $key)) {
+            return $array[$key];
+        }
+
+        foreach (explode('.', $key) as $segment) {
+            if (static::accessible($array) && static::exists($array, $segment)) {
+                $array = $array[$segment];
+            } else {
+                return value($default);
+            }
+        }
+        return $array;
+    }
+
+    /**
+     * Set an array item to a given value using "dot" notation.
+     *
+     * If no key is given to the method, the entire array will be replaced.
+     *
+     * @param  array   $array
+     * @param  string  $key
+     * @param  mixed   $value
+     * @return array
+     */
+    public static function set(&$array, $key, $value)
+    {
+        if (is_null($key)) {
+            return $array = $value;
+        }
+
+        $keys = explode('.', $key);
+
+        while (count($keys) > 1) {
+            $key = array_shift($keys);
+            // If the key doesn't exist at this depth, we will just create an empty array
+            // to hold the next value, allowing us to create the arrays to hold final
+            // values at the correct depth. Then we'll keep digging into the array.
+            if (! isset($array[$key]) || ! is_array($array[$key])) {
+                $array[$key] = [];
+            }
+            $array = &$array[$key];
+        }
+
+        $array[array_shift($keys)] = $value;
+
+        return $array;
+    }
+
+    /**
+     * Flatten a multi-dimensional array into a single level.
+     *
+     * @param  array $array
+     * @param  int $depth
+     * @return array
+     */
+    public static function flatten($array, $depth = INF)
+    {
+        return array_reduce($array, function ($result, $item) use ($depth) {
+            $item = $item instanceof CollectionInterface ? $item->all() : $item;
+            if (!is_array($item)) {
+                return array_merge($result, [$item]);
+            } elseif ($depth === 1) {
+                return array_merge($result, array_values($item));
+            } else {
+                return array_merge($result, static::flatten($item, $depth - 1));
+            }
+        }, []);
+    }
+
+    /**
+     * Remove one or many array items from a given array using "dot" notation.
+     *
+     * @param  array $array
+     * @param  array|string $keys
+     * @return void
+     */
+    public static function forget(&$array, $keys)
+    {
+        $original = &$array;
+        $keys = (array)$keys;
+
+        if (count($keys) === 0) {
+            return;
+        }
+
+        foreach ($keys as $key) {
+
+            // if the exact key exists in the top-level, remove it
+            if (static::exists($array, $key)) {
+                unset($array[$key]);
+                continue;
+            }
+
+            $parts = explode('.', $key);
+
+            // clean up before each pass
+            $array = &$original;
+
+            while (count($parts) > 1) {
+                $part = array_shift($parts);
+
+                if (isset($array[$part]) && is_array($array[$part])) {
+                    $array = &$array[$part];
+                } else {
+                    continue 2;
+                }
+            }
+
+            unset($array[array_shift($parts)]);
+        }
+    }
+
+    /**
+     * Check if an item or items exist in an array using "dot" notation.
+     *
+     * @param  \ArrayAccess|array $array
+     * @param  string|array $keys
+     * @return bool
+     */
+    public static function has($array, $keys)
+    {
+        if (is_null($keys)) {
+            return false;
+        }
+
+        $keys = (array)$keys;
+
+        if (!$array) {
+            return false;
+        }
+
+        if ($keys === []) {
+            return false;
+        }
+
+        foreach ($keys as $key) {
+            $subKeyArray = $array;
+
+            if (static::exists($array, $key)) {
+                continue;
+            }
+
+            foreach (explode('.', $key) as $segment) {
+                if (static::accessible($subKeyArray) && static::exists($subKeyArray, $segment)) {
+                    $subKeyArray = $subKeyArray[$segment];
+                } else {
+
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Push an item onto the beginning of an array.
+     *
+     * @param  array  $array
+     * @param  mixed  $value
+     * @param  mixed  $key
+     * @return array
+     */
+    public static function prepend($array, $value, $key = null)
+    {
+        if (is_null($key)) {
+            array_unshift($array, $value);
+        } else {
+            $array = [$key => $value] + $array;
+        }
+
+        return $array;
+    }
+
+    /**
+     * remove the $key of the $arr, and return value.
+     * @param string $key
+     * @param array $arr
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function remove(&$arr,$key, $default = null)
+    {
+        if (isset($arr[$key])) {
+            $value = $arr[$key];
+            unset($arr[$key]);
+        } else {
+            $value = $default;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Get a value from the array, and remove it.
+     *
+     * @param  array   $array
+     * @param  string  $key
+     * @param  mixed   $default
+     * @return mixed
+     */
+    public static function pull(&$array, $key, $default = null)
+    {
+        $value = static::get($array, $key, $default);
+
+        static::forget($array, $key);
+
+        return $value;
+    }
+
+    /**
+     * Get a subset of the items from the given array.
+     *
+     * @param  array $array
+     * @param  array|string $keys
+     * @return array
+     */
+    public static function only($array, $keys)
+    {
+        return array_intersect_key($array, array_flip((array)$keys));
+    }
+
+    /**
+     * Shuffle the given array and return the result.
+     *
+     * @param  array  $array
+     * @return array
+     */
+    public static function shuffle($array)
+    {
+        shuffle($array);
+
+        return $array;
+    }
+
+    /**
+     * Determines if an array is associative.
+     *
+     * An array is "associative" if it doesn't have sequential numerical keys beginning with zero.
+     *
+     * @param  array $array
+     * @return bool
+     */
+    public static function isAssoc(array $array)
+    {
+        $keys = array_keys($array);
+
+        return array_keys($keys) !== $keys;
+    }
+
+    /**
+     * Filter the array using the given callback.
+     *
+     * @param  array  $array
+     * @param  callable  $callback
+     * @return array
+     */
+    public static function where($array, callable $callback)
+    {
+        return array_filter($array, $callback, ARRAY_FILTER_USE_BOTH);
+    }
+
+    /**
+     * If the given value is not an array, wrap it in one.
+     *
+     * @param  mixed  $value
+     * @return array
+     */
+    public static function wrap($value)
+    {
+        return !is_array($value) ? [$value] : $value;
+    }
+
+
+    ////////////////////////////////////////////////////////////
+    /// other
+    ////////////////////////////////////////////////////////////
+
+    /**
+     * array 递归 转换成 字符串
+     * @param  array $array [大于1200字符 strlen($string)>1200
+     * @param int $length
+     * @param array|int $cycles [至多循环六次 $num >= 6
+     * @param bool $showKey
+     * @param bool $addMark
+     * @param  string $separator [description]
+     * @param string $string
+     * @return string [type]            [description]
+     */
+    public static function toString($array, $length = 800, $cycles = 6, $showKey = true, $addMark = false, $separator = ', ', $string = '')
+    {
+
+        if (!is_array($array) || empty($array)) {
+            return '';
+        }
+
+        $mark = $addMark ? '\'' : '';
+        $num = 0;
+
+        foreach ($array as $key => $value) {
+            $num++;
+
+            if ($num >= $cycles || strlen($string) > (int)$length) {
+                $string .= '... ...';
+                break;
+            }
+
+            $keyStr = $showKey ? $key . '=>' : '';
+
+            if (is_array($value)) {
+                $string .= $keyStr . 'Array(' . self::toString($value, $length, $cycles, $showKey, $addMark, $separator, $string) . ')' . $separator;
+            } else if (is_object($value)) {
+                $string .= $keyStr . 'Object(' . get_class($value) . ')' . $separator;
+            } else if (is_resource($value)) {
+                $string .= $keyStr . 'Resource(' . get_resource_type($value) . ')' . $separator;
+            } else {
+                $value = strlen($value) > 150 ? substr($value, 0, 150) : $value;
+                $string .= $mark . $keyStr . trim(htmlspecialchars($value)) . $mark . $separator;
+            }
+        }
+
+        return trim($string, $separator);
+    }
+
+    public static function toStringNoKey($array, $length = 800, $cycles = 6, $showKey = false, $addMark = true, $separator = ', ')
+    {
+        return static::toString($array, $length, $cycles, $showKey, $addMark, $separator);
+    }
+
+    public static function getFormatString($array, $length = 400)
+    {
+        $string = var_export($array, true);
+
+        # 将非空格替换为一个空格
+        $string = preg_replace('/[\n\r\t]/', ' ', $string);
+        # 去掉两个空格以上的
+        $string = preg_replace('/\s(?=\s)/', '', $string);
+        $string = trim($string);
+
+        if (strlen($string) > $length) {
+            $string = substr($string, 0, $length) . '...';
+        }
+
+        return $string;
+    }
+
+    public static function toLimitOut($array) //, $cycles=1
+    {
+        if (!is_array($array)) {
+            return $array;
+        }
+
+        static $num = 1;
+
+        foreach ($array as $key => $value) {
+            // if ( $num >= $cycles) {
+            //     break;
+            // }
+
+            if (is_array($value) || is_object($value)) {
+                $value = gettype($value) . '(...)';
+            } else if (is_string($value) || is_numeric($value)) {
+                $value = strlen(trim($value));
+            } else {
+                $value = gettype($value) . "($value)";
+            }
+
+            $array[$key] = $value;
+        }
+
+        $num++;
+
+        return $array;
+    }
+
 }

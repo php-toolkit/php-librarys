@@ -276,6 +276,30 @@ class PhpHelper
     }
 
     /**
+     * 本次请求开始时间
+     * @param bool $float
+     * @return mixed
+     */
+    public static function requestTime($float = true)
+    {
+        if ((bool)$float) {
+            return $_SERVER['REQUEST_TIME_FLOAT'];
+        }
+
+        return $_SERVER['REQUEST_TIME'];
+    }
+
+    /**
+     * @return array
+     */
+    public static function userConstants()
+    {
+        $const = get_defined_constants(true);
+
+        return $const['user'] ?? [];
+    }
+
+    /**
      * dump vars
      * @param array ...$args
      * @return string

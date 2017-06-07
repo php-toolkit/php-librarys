@@ -11,7 +11,7 @@ namespace inhere\library\files;
 use ArrayObject;
 use inhere\exceptions\InvalidArgumentException;
 use inhere\library\helpers\ObjectHelper;
-use inhere\library\StdBase;
+use inhere\library\StdObject;
 
 /**
  * Class FileFinder
@@ -46,7 +46,7 @@ use inhere\library\StdBase;
  *
  *
  */
-class FileFinder extends StdBase
+class FileFinder extends StdObject
 {
     /**
      * dir path

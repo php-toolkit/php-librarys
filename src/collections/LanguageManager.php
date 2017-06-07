@@ -13,14 +13,14 @@ use inhere\exceptions\NotFoundException;
 use inhere\library\files\FileSystem;
 use inhere\library\helpers\ObjectHelper;
 use inhere\library\helpers\StringHelper;
-use inhere\library\StdBase;
+use inhere\library\StdObject;
 
 /**
  * Class LanguageManager
  * @package inhere\library\base
  *
  */
-class LanguageManager extends StdBase
+class LanguageManager extends StdObject
 {
     /**
      * current use language

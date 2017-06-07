@@ -167,6 +167,10 @@ abstract class StringHelper
     }
 
 
+    ////////////////////////////////////////////////////////////
+    /// Security
+    ////////////////////////////////////////////////////////////
+
     /**
      * ********************** 生成一定长度的随机字符串函数 **********************
      * @param $length - 随机字符串长度
@@ -174,16 +178,13 @@ abstract class StringHelper
      * @internal param string $chars
      * @return string
      */
-    public static function randStr($length, array $param = array())
+    public static function random($length, array $param = [])
     {
-        $param = array_merge(
-            array(
-                'prefix' => '',
-                'suffix' => '',
-                'chars' => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-            ),
-            $param
-        );
+        $param = array_merge([
+            'prefix' => '',
+            'suffix' => '',
+            'chars' => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+        ], $param);
 
         $chars = $param['chars'];
         $max = strlen($chars) - 1;   //strlen($chars) 计算字符串的长度
@@ -194,6 +195,27 @@ abstract class StringHelper
         }
 
         return $param['prefix'] . $str . $param['suffix'];
+    }
+
+    /**
+     * @return bool|string
+     */
+    public static function genSalt()
+    {
+        return substr(str_replace('+', '.', base64_encode(hex2bin(random_token(32)))), 0, 44);
+    }
+
+    /**
+     * @param int $length
+     * @return bool|string
+     */
+    public static function genUID($length = 7)
+    {
+        if (!is_int($length) || $length > 32 || $length < 1) {
+            $length = 7;
+        }
+
+        return substr(hash('md5', uniqid('', true)), 0, $length);
     }
 
     /**
@@ -515,19 +537,6 @@ abstract class StringHelper
         // 'CMSCategories' => 'cms_categories'
         // 'RangePrice' => 'range_price'
         return self::strtolower(trim(preg_replace('/([A-Z][a-z])/', $sep . '$1', $string), $sep));
-    }
-
-    /**
-     * @param int $length
-     * @return bool|string
-     */
-    public static function genUID($length = 7)
-    {
-        if (!is_int($length) || $length > 32 || $length < 1) {
-            $length = 7;
-        }
-
-        return substr(hash('md5', uniqid('', true)), 0, $length);
     }
 
     /**

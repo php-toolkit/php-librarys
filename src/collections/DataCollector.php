@@ -12,7 +12,7 @@ use RuntimeException;
 use inhere\exceptions\DataParseException;
 
 /**
- * Class DataCollector - 数据收集器 (数据存储器 - DataStorage)
+ * Class DataCollector - 数据收集器 (数据存储器 - DataStorage) complex deep
  * @package inhere\library\collections
  *
  * 支持 链式的子节点 设置 和 值获取

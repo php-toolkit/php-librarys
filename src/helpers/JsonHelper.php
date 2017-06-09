@@ -21,7 +21,7 @@ class JsonHelper
      * @param $data
      * @return string
      */
-    public static function encode($data)
+    public static function encode($data): string
     {
         if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
             return json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
@@ -39,7 +39,7 @@ class JsonHelper
     public static function loadFile($file, $toArray = true)
     {
         if (!file_exists($file)) {
-            throw new NotFoundException("没有找到或不存在资源文件{$file}");
+            throw new NotFoundException("File not found or does not exist resources: {$file}");
         }
 
         if (!$data = file_get_contents($file)) {

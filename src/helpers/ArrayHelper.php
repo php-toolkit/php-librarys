@@ -23,16 +23,31 @@ class ArrayHelper
      * @param  mixed $value
      * @return bool
      */
-    public static function accessible($value)
+    public static function accessible($value): bool
     {
         return is_array($value) || $value instanceof \ArrayAccess;
+    }
+
+    /**
+     * Determines if an array is associative.
+     *
+     * An array is "associative" if it doesn't have sequential numerical keys beginning with zero.
+     *
+     * @param  array $array
+     * @return bool
+     */
+    public static function isAssoc(array $array): bool
+    {
+        $keys = array_keys($array);
+
+        return array_keys($keys) !== $keys;
     }
 
     /**
      * @param mixed $array
      * @return \Traversable
      */
-    public static function toIterator($array)
+    public static function toIterator($array): \Traversable
     {
         if (!$array instanceof \Traversable) {
             $array = new \ArrayObject((array)$array);
@@ -80,7 +95,7 @@ class ArrayHelper
      * @param bool|false $unsetKey
      * @return array
      */
-    public static function gets(array &$data, array $needKeys = [], $unsetKey = false)
+    public static function gets(array &$data, array $needKeys = [], $unsetKey = false): array
     {
         $needed = [];
 
@@ -120,12 +135,7 @@ class ArrayHelper
      * @param  array $new
      * @return array
      */
-    public static function merge($old, array $new)
-    {
-        return self::recursiveMerge($old, $new);
-    }
-
-    public static function recursiveMerge($old, array $new)
+    public static function merge($old, array $new): array
     {
         if (!$old || !is_array($old)) {
             return $new;
@@ -133,7 +143,7 @@ class ArrayHelper
 
         foreach ($new as $key => $value) {
             if (array_key_exists($key, $old) && is_array($value)) {
-                $old[$key] = self::recursiveMerge($old[$key], $new[$key]);
+                $old[$key] = self::merge($old[$key], $new[$key]);
             } elseif (is_int($key)) {
                 $old[] = $value;
             } else {
@@ -164,31 +174,31 @@ class ArrayHelper
 
     /**
      * 不区分大小写检测数据键名是否存在
-     * @param $key
-     * @param $arr
+     * @param int|string $key
+     * @param array $arr
      * @return bool
      */
-    public static function keyExists($key, $arr)
+    public static function keyExists($key, array $arr): bool
     {
         return array_key_exists(strtolower($key), array_change_key_case($arr));
     }
 
     /**
-     * @param $arr
+     * @param array $arr
      * @return array
      */
-    public static function valueToLower($arr)
+    public static function valueToLower(array $arr): array
     {
-        return self::changeValueCase($arr);
+        return self::changeValueCase($arr, 0);
     }
 
     /**
-     * @param $arr
+     * @param array $arr
      * @return array
      */
-    public static function valueToUpper($arr)
+    public static function valueToUpper(array $arr): array
     {
-        return self::changeValueCase($arr, 1);
+        return self::changeValueCase($arr);
     }
 
     /**
@@ -197,7 +207,7 @@ class ArrayHelper
      * @param int $toUpper 1 值大写 0 值小写
      * @return array
      */
-    public static function changeValueCase($arr, $toUpper = 1)
+    public static function changeValueCase($arr, $toUpper = 1): array
     {
         $function = $toUpper ? 'strtoupper' : 'strtolower';
         $newArr = array(); //格式化后的数组
@@ -222,7 +232,7 @@ class ArrayHelper
      * 注： 不分类型， 区分大小写  2 == '2' ‘a' != 'A'
      * @return bool
      */
-    public static function valueExistsAll($check, array $sampleArr)
+    public static function valueExistsAll($check, array $sampleArr): bool
     {
         // 以逗号分隔的会被拆开，组成数组
         if (is_string($check)) {
@@ -240,7 +250,7 @@ class ArrayHelper
      * @param array $sampleArr 只能检查一维数组
      * @return bool
      */
-    public static function valueExistsOne($check, array $sampleArr)
+    public static function valueExistsOne($check, array $sampleArr): bool
     {
         // 以逗号分隔的会被拆开，组成数组
         if (is_string($check)) {
@@ -293,7 +303,7 @@ class ArrayHelper
      * @param bool $type 是否同时验证类型
      * @return bool
      */
-    public static function existsOne($need, $arr, $type = false)
+    public static function existsOne($need, $arr, $type = false): bool
     {
         if (is_array($need)) {
             foreach ((array)$need as $v) {
@@ -330,7 +340,7 @@ class ArrayHelper
      * @param bool $expectInt
      * @return int
      */
-    public static function getKeyMaxWidth(array $data, $expectInt = true)
+    public static function getKeyMaxWidth(array $data, $expectInt = true): int
     {
         $keyMaxWidth = 0;
 
@@ -355,7 +365,7 @@ class ArrayHelper
      * @param  array $array
      * @return array
      */
-    public static function collapse($array)
+    public static function collapse($array): array
     {
         $results = [];
 
@@ -378,7 +388,7 @@ class ArrayHelper
      * @param  array ...$arrays
      * @return array
      */
-    public static function crossJoin(...$arrays)
+    public static function crossJoin(...$arrays): array
     {
         return array_reduce($arrays, function ($results, $array) {
             return static::collapse(array_map(function ($parent) use ($array) {
@@ -395,7 +405,7 @@ class ArrayHelper
      * @param  array $array
      * @return array
      */
-    public static function divide($array)
+    public static function divide($array): array
     {
         return [array_keys($array), array_values($array)];
     }
@@ -407,7 +417,7 @@ class ArrayHelper
      * @param  string $prepend
      * @return array
      */
-    public static function dot($array, $prepend = '')
+    public static function dot($array, $prepend = ''): array
     {
         $results = [];
 
@@ -429,7 +439,7 @@ class ArrayHelper
      * @param  array|string $keys
      * @return array
      */
-    public static function except($array, $keys)
+    public static function except($array, $keys): array
     {
         static::forget($array, $keys);
 
@@ -443,11 +453,12 @@ class ArrayHelper
      * @param  string|int $key
      * @return bool
      */
-    public static function exists($array, $key)
+    public static function exists($array, $key): bool
     {
         if ($array instanceof \ArrayAccess) {
             return $array->offsetExists($key);
         }
+
         return array_key_exists($key, $array);
     }
 
@@ -459,7 +470,7 @@ class ArrayHelper
      * @param  mixed $value
      * @return array
      */
-    public static function add($array, $key, $value)
+    public static function add($array, $key, $value): array
     {
         if (static::has($array, $key)) {
             static::set($array, $key, $value);
@@ -482,7 +493,7 @@ class ArrayHelper
             return value($default);
         }
 
-        if (is_null($key)) {
+        if (null === $key) {
             return $array;
         }
 
@@ -497,6 +508,7 @@ class ArrayHelper
                 return value($default);
             }
         }
+
         return $array;
     }
 
@@ -510,10 +522,10 @@ class ArrayHelper
      * @param  mixed   $value
      * @return array
      */
-    public static function set(&$array, $key, $value)
+    public static function set(&$array, $key, $value): array
     {
-        if (is_null($key)) {
-            return $array = $value;
+        if (null === $key) {
+            return ($array = $value);
         }
 
         $keys = explode('.', $key);
@@ -541,17 +553,20 @@ class ArrayHelper
      * @param  int $depth
      * @return array
      */
-    public static function flatten($array, $depth = INF)
+    public static function flatten($array, $depth = INF): array
     {
         return array_reduce($array, function ($result, $item) use ($depth) {
             $item = $item instanceof CollectionInterface ? $item->all() : $item;
+
             if (!is_array($item)) {
                 return array_merge($result, [$item]);
-            } elseif ($depth === 1) {
-                return array_merge($result, array_values($item));
-            } else {
-                return array_merge($result, static::flatten($item, $depth - 1));
             }
+
+            if ($depth === 1) {
+                return array_merge($result, array_values($item));
+            }
+
+            return array_merge($result, static::flatten($item, $depth - 1));
         }, []);
     }
 
@@ -562,7 +577,7 @@ class ArrayHelper
      * @param  array|string $keys
      * @return void
      */
-    public static function forget(&$array, $keys)
+    public static function forget(&$array, $keys): void
     {
         $original = &$array;
         $keys = (array)$keys;
@@ -605,9 +620,9 @@ class ArrayHelper
      * @param  string|array $keys
      * @return bool
      */
-    public static function has($array, $keys)
+    public static function has($array, $keys): bool
     {
-        if (is_null($keys)) {
+        if (null === $keys) {
             return false;
         }
 
@@ -649,9 +664,9 @@ class ArrayHelper
      * @param  mixed  $key
      * @return array
      */
-    public static function prepend($array, $value, $key = null)
+    public static function prepend($array, $value, $key = null): array
     {
-        if (is_null($key)) {
+        if (null === $key) {
             array_unshift($array, $value);
         } else {
             $array = [$key => $value] + $array;
@@ -703,7 +718,7 @@ class ArrayHelper
      * @param  array|string $keys
      * @return array
      */
-    public static function only($array, $keys)
+    public static function only($array, $keys): array
     {
         return array_intersect_key($array, array_flip((array)$keys));
     }
@@ -714,26 +729,11 @@ class ArrayHelper
      * @param  array  $array
      * @return array
      */
-    public static function shuffle($array)
+    public static function shuffle($array): array
     {
         shuffle($array);
 
         return $array;
-    }
-
-    /**
-     * Determines if an array is associative.
-     *
-     * An array is "associative" if it doesn't have sequential numerical keys beginning with zero.
-     *
-     * @param  array $array
-     * @return bool
-     */
-    public static function isAssoc(array $array)
-    {
-        $keys = array_keys($array);
-
-        return array_keys($keys) !== $keys;
     }
 
     /**
@@ -743,7 +743,7 @@ class ArrayHelper
      * @param  callable  $callback
      * @return array
      */
-    public static function where($array, callable $callback)
+    public static function where($array, callable $callback): array
     {
         return array_filter($array, $callback, ARRAY_FILTER_USE_BOTH);
     }
@@ -754,7 +754,7 @@ class ArrayHelper
      * @param  mixed  $value
      * @return array
      */
-    public static function wrap($value)
+    public static function wrap($value): array
     {
         return !is_array($value) ? [$value] : $value;
     }
@@ -771,13 +771,12 @@ class ArrayHelper
      * @param array|int $cycles [至多循环六次 $num >= 6
      * @param bool $showKey
      * @param bool $addMark
-     * @param  string $separator [description]
+     * @param  string $separator
      * @param string $string
-     * @return string [type]            [description]
+     * @return string
      */
-    public static function toString($array, $length = 800, $cycles = 6, $showKey = true, $addMark = false, $separator = ', ', $string = '')
+    public static function toString($array, $length = 800, $cycles = 6, $showKey = true, $addMark = false, $separator = ', ', $string = ''): string
     {
-
         if (!is_array($array) || empty($array)) {
             return '';
         }
@@ -810,7 +809,7 @@ class ArrayHelper
         return trim($string, $separator);
     }
 
-    public static function toStringNoKey($array, $length = 800, $cycles = 6, $showKey = false, $addMark = true, $separator = ', ')
+    public static function toStringNoKey($array, $length = 800, $cycles = 6, $showKey = false, $addMark = true, $separator = ', '): string
     {
         return static::toString($array, $length, $cycles, $showKey, $addMark, $separator);
     }
@@ -832,13 +831,13 @@ class ArrayHelper
         return $string;
     }
 
-    public static function toLimitOut($array) //, $cycles=1
+    public static function toLimitOut($array): array
     {
         if (!is_array($array)) {
             return $array;
         }
 
-        static $num = 1;
+        // static $num = 1;
 
         foreach ($array as $key => $value) {
             // if ( $num >= $cycles) {
@@ -856,7 +855,7 @@ class ArrayHelper
             $array[$key] = $value;
         }
 
-        $num++;
+        // $num++;
 
         return $array;
     }

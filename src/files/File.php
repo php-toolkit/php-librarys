@@ -28,7 +28,7 @@ class File extends FileSystem
      * @param bool $clearExt 是否去掉文件名中的后缀，仅保留名字
      * @return string
      */
-    public static function getName($file, $clearExt = false)
+    public static function getName($file, $clearExt = false): string
     {
         $filename = basename(trim($file));
 
@@ -36,12 +36,12 @@ class File extends FileSystem
     }
 
     /**
-     * 获得文件扩展名、后缀名,带点 .jpg
+     * 获得文件扩展名、后缀名
      * @param $filename
-     * @param bool $clearPoint
+     * @param bool $clearPoint 是否带点
      * @return string
      */
-    public static function getSuffix($filename, $clearPoint = false)
+    public static function getSuffix($filename, $clearPoint = false): string
     {
         $suffix = strrchr($filename, '.');
 
@@ -49,21 +49,28 @@ class File extends FileSystem
     }
 
     /**
-     * 获得文件扩展名、后缀名,没有带点 jpg
+     * 获得文件扩展名、后缀名
      * @param $path
-     * @param bool $clearPoint
+     * @param bool $clearPoint 是否带点
      * @return string
      */
-    public static function getExtension($path, $clearPoint = false)
+    public static function getExtension($path, $clearPoint = false): string
     {
         $ext = pathinfo($path, PATHINFO_EXTENSION);
 
         return $clearPoint ? $ext : '.' . $ext;
     }
 
-    public static function getInfo($filename, $check = true)
+    /**
+     * @param $filename
+     * @param bool $check
+     * @return array
+     * @throws \inhere\exceptions\NotFoundException
+     * @throws \InvalidArgumentException
+     */
+    public static function info($filename, $check = true): array
     {
-        $check && self::exists($filename);
+        $check && self::check($filename);
 
         return [
             'name' => basename($filename), //文件名
@@ -80,7 +87,7 @@ class File extends FileSystem
      * @param $filename
      * @return array
      */
-    public static function getStat($filename)
+    public static function getStat($filename): array
     {
         return stat($filename);
     }
@@ -91,7 +98,7 @@ class File extends FileSystem
      * @param  string $filename [description], LOCK_EX
      * @return bool
      */
-    public static function save($filename, $data)
+    public static function save($filename, $data): bool
     {
         return file_put_contents($filename, $data) !== false;
     }
@@ -99,8 +106,9 @@ class File extends FileSystem
     /**
      * @param $content
      * @param $path
+     * @throws \inhere\exceptions\IOException
      */
-    public static function write($content, $path)
+    public static function write($content, $path): void
     {
         $handler = static::openHandler($path);
 
@@ -131,7 +139,7 @@ class File extends FileSystem
      * @param string $path The path to the file (for exception printing only).
      * @throws IOException
      */
-    public static function writeToFile($handler, $content, $path = '')
+    public static function writeToFile($handler, $content, $path = ''): void
     {
         if (($result = @fwrite($handler, $content)) === false || ($result < strlen($content))) {
             throw new IOException('The file "' . $path . '" could not be written to. Check your disk space and file permissions.');
@@ -149,7 +157,7 @@ class File extends FileSystem
      *      'case.html'   => 'content' ,
      *  );
      **/
-    public static function createAndWrite(array $fileData = [], $append = false, $mode = 0664)
+    public static function createAndWrite(array $fileData = [], $append = false, $mode = 0664): void
     {
         foreach ($fileData as $file => $content) {
             //检查目录是否存在，不存在就先创建（多级）目录
@@ -183,7 +191,10 @@ class File extends FileSystem
             $streamContext = @stream_context_create(array('http' => array('timeout' => $curlTimeout)));
         }
 
-        if (in_array(ini_get('allow_url_fopen'), ['On', 'on', '1'], true) || !preg_match('/^https?:\/\//', $file)) {
+        if (
+            in_array(ini_get('allow_url_fopen'), ['On', 'on', '1'], true) ||
+            !preg_match('/^https?:\/\//', $file)
+        ) {
             if (!file_exists($file)) {
                 throw new FileNotFoundException("File [{$file}] don't exists!");
             }
@@ -229,8 +240,10 @@ class File extends FileSystem
     /**
      * @param $file
      * @param $target
+     * @throws \inhere\exceptions\IOException
+     * @throws \inhere\exceptions\FileSystemException
      */
-    public static function move($file, $target)
+    public static function move($file, $target): void
     {
         Directory::mkdir(dirname($target));
 
@@ -242,10 +255,12 @@ class File extends FileSystem
     /**
      * @param $filename
      * @return bool
+     * @throws \inhere\exceptions\NotFoundException
+     * @throws \InvalidArgumentException
      */
-    public static function delete($filename)
+    public static function delete($filename): bool
     {
-        return self::exists($filename) && unlink($filename);
+        return self::check($filename) && unlink($filename);
     }
 
     /**
@@ -268,9 +283,17 @@ class File extends FileSystem
         return @file_put_contents($destination, self::getContents($source, false, $streamContext));
     }
 
+    /**
+     * @param $inFile
+     * @param $outFile
+     * @return mixed
+     * @throws \inhere\exceptions\NotFoundException
+     * @throws \InvalidArgumentException
+     * @throws FileNotFoundException
+     */
     public static function combine($inFile, $outFile)
     {
-        self::exists($inFile);
+        self::check($inFile);
 
         $data = '';
         if (is_array($inFile)) {
@@ -278,7 +301,7 @@ class File extends FileSystem
                 if (is_file($value)) {
                     $data .= trim(file_get_contents($value));
                 } else {
-                    throw new FileNotFoundException('文件' . $value . '不存在！！');
+                    throw new FileNotFoundException('File: ' . $value . ' not exists!');
                 }
             }
         }
@@ -289,11 +312,11 @@ class File extends FileSystem
             Trigger::error('文件'.$value.'不存在！！');
         }*/
 
-        $preg_arr = array(
-            '/\/\*.*?\*\/\s*/is'        // 去掉所有多行注释/* .... */
-        , '/\/\/.*?[\r\n]/is'        // 去掉所有单行注释//....
-        , '/(?!\w)\s*?(?!\w)/is'     // 去掉空白行
-        );
+        $preg_arr = [
+            '/\/\*.*?\*\/\s*/is',        // 去掉所有多行注释/* .... */
+            '/\/\/.*?[\r\n]/is',        // 去掉所有单行注释//....
+            '/(?!\w)\s*?(?!\w)/is'     // 去掉空白行
+        ];
 
         $data = preg_replace($preg_arr, '', $data);
 //        $outFile  = $outDir . Data::getRandStr(8) . '.' . $fileType;
@@ -311,10 +334,9 @@ class File extends FileSystem
      * 合并编译多个文件
      * @param $fileArr
      * @param $outFile
-     * @param  boolean $deleteSpace [description]
-     * @return void [type]               [description]
+     * @param  boolean $deleteSpace
      */
-    public static function margePhp($fileArr, $outFile, $deleteSpace = true)
+    public static function margePhp($fileArr, $outFile, $deleteSpace = true): void
     {
         $savePath = dirname($outFile);
 

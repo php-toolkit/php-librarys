@@ -25,7 +25,7 @@ abstract class FileSystem
      * @param $path
      * @return bool
      */
-    public static function isAbsPath($path)
+    public static function isAbsPath($path): bool
     {
         if (!$path || !is_string($path)) {
             return false;
@@ -47,11 +47,11 @@ abstract class FileSystem
      * @param string $file A file path
      * @return bool
      */
-    public static function isAbsolutePath($file)
+    public static function isAbsolutePath($file): bool
     {
         return strspn($file, '/\\', 0, 1)
             || (strlen($file) > 3 && ctype_alpha($file[0])
-                && substr($file, 1, 1) === ':'
+                && $file[1] === ':'
                 && strspn($file, '/\\', 2, 1)
             )
             || null !== parse_url($file, PHP_URL_SCHEME);
@@ -59,10 +59,10 @@ abstract class FileSystem
 
     /**
      * 转换为标准的路径结构
-     * @param  [type] $dirName [description]
-     * @return mixed|string [type]          [description]
+     * @param  string $dirName
+     * @return string
      */
-    public static function pathFormat($dirName)
+    public static function pathFormat($dirName): string
     {
         $dirName = str_ireplace('\\', '/', trim($dirName));
 
@@ -70,32 +70,51 @@ abstract class FileSystem
     }
 
     /**
-     * [checkFileExists 检查文件是否存在 和 判断后缀名是否正确
-     * @param  string | array $files 要检查的文件(文件列表)
-     * @param  string $ext 是否检查后缀
-     * @throws \InvalidArgumentException
-     * @throws NotFoundException
-     * @return array|string [type]        [description]
+     * 检查文件/夹/链接是否存在
+     * @param string $file 要检查的目标
+     * @param null|string $type
+     * @return array|string
      */
-    public static function exists($files, $ext = null)
+    public static function exists($file, $type = null)
     {
-        $ext = $ext ? trim($ext, '. ') : null;
-        $files = StringHelper::toArray($files);
-
-        foreach ($files as $file) {
-            $file = trim($file);
-
-            if (!file_exists($file)) {
-                throw new NotFoundException("文件 {$file} 不存在！");
-            }
-
-            // if ( $ext && strrchr($file,'.') != '.'.$ext ) {
-            if ($ext && preg_match("/\.($ext)$/i", $file)) {
-                throw new \InvalidArgumentException("{$file} 不是 {$ext} 文件！");
-            }
+        if (!$type) {
+            return file_exists($file);
         }
 
-        return $files;
+        $ret = false;
+
+        if ($type === 'file') {
+            $ret = is_file($file);
+        } elseif ($type === 'dir') {
+            $ret = is_dir($file);
+        } elseif ($type === 'link') {
+            $ret = is_link($file);
+        }
+
+        return $ret;
+    }
+
+    /**
+     * @param string $file
+     * @param null|string|array $ext eg: 'jpg|gif'
+     * @throws NotFoundException
+     * @throws \InvalidArgumentException
+     */
+    public static function check(string $file, $ext = null): void
+    {
+        if (!$file || !file_exists($file)) {
+            throw new NotFoundException("File {$file} not exists！");
+        }
+
+        if ($ext) {
+            if (is_array($ext)) {
+                $ext = implode('|', $ext);
+            }
+
+            if (preg_match("/\.($ext)$/i", $file)) {
+                throw new \InvalidArgumentException("{$file} extension is not match: {$ext}");
+            }
+        }
     }
 
     /**
@@ -107,14 +126,14 @@ abstract class FileSystem
      * @throws IOException When target file or directory already exists
      * @throws IOException When origin cannot be renamed
      */
-    public function rename($origin, $target, $overwrite = false)
+    public static function rename($origin, $target, $overwrite = false): void
     {
         // we check that target does not exist
-        if (!$overwrite && $this->isReadable($target)) {
+        if (!$overwrite && static::isReadable($target)) {
             throw new IOException(sprintf('Cannot rename because the target "%s" already exists.', $target), 0, null, $target);
         }
 
-        if (true !== @rename($origin, $target)) {
+        if (true !== rename($origin, $target)) {
             throw new IOException(sprintf('Cannot rename "%s" to "%s".', $origin, $target), 0, null, $target);
         }
     }
@@ -126,7 +145,7 @@ abstract class FileSystem
      * @return bool
      * @throws IOException When windows path is longer than 258 characters
      */
-    public static function isReadable($filename)
+    public static function isReadable($filename): bool
     {
         if ('\\' === DIRECTORY_SEPARATOR && strlen($filename) > 258) {
             throw new IOException('Could not check if file is readable because path length exceeds 258 characters.', 0, null, $filename);
@@ -143,14 +162,14 @@ abstract class FileSystem
      *
      * @throws IOException On any directory creation failure
      */
-    public static function mkdir($dirs, $mode = 0777)
+    public static function mkdir($dirs, $mode = 0777): void
     {
         foreach (ArrayHelper::toIterator($dirs) as $dir) {
             if (is_dir($dir)) {
                 continue;
             }
 
-            if (true !== @mkdir($dir, $mode, true)) {
+            if (true !== mkdir($dir, $mode, true)) {
                 $error = error_get_last();
                 if (!is_dir($dir)) {
                     // The directory was not created by a concurrent process. Let's throw an exception with a developer friendly error message if we have one
@@ -174,12 +193,13 @@ abstract class FileSystem
      *
      * @throws IOException When the change fail
      */
-    public static function chmod($files, $mode, $umask = 0000, $recursive = false)
+    public static function chmod($files, $mode, $umask = 0000, $recursive = false): void
     {
         foreach (ArrayHelper::toIterator($files) as $file) {
             if (true !== @chmod($file, $mode & ~$umask)) {
                 throw new IOException(sprintf('Failed to chmod file "%s".', $file), 0, null, $file);
             }
+
             if ($recursive && is_dir($file) && !is_link($file)) {
                 self::chmod(new \FilesystemIterator($file), $mode, $umask, true);
             }
@@ -195,18 +215,18 @@ abstract class FileSystem
      *
      * @throws IOException When the change fail
      */
-    public static function chown($files, $user, $recursive = false)
+    public static function chown($files, $user, $recursive = false): void
     {
         foreach (ArrayHelper::toIterator($files) as $file) {
             if ($recursive && is_dir($file) && !is_link($file)) {
                 self::chown(new \FilesystemIterator($file), $user, true);
             }
             if (is_link($file) && function_exists('lchown')) {
-                if (true !== @lchown($file, $user)) {
+                if (true !== lchown($file, $user)) {
                     throw new IOException(sprintf('Failed to chown file "%s".', $file), 0, null, $file);
                 }
             } else {
-                if (true !== @chown($file, $user)) {
+                if (true !== chown($file, $user)) {
                     throw new IOException(sprintf('Failed to chown file "%s".', $file), 0, null, $file);
                 }
             }
@@ -218,7 +238,7 @@ abstract class FileSystem
      * @param int $mode
      * @return bool
      */
-    public static function chmodDir($path, $mode = 0664)
+    public static function chmodDir($path, $mode = 0664): bool
     {
         if (!is_dir($path)) {
             return @chmod($path, $mode);
@@ -230,13 +250,18 @@ abstract class FileSystem
                 $fullPath = $path . '/' . $file;
                 if (is_link($fullPath)) {
                     return false;
-                } elseif (!is_dir($fullPath) && !@chmod($fullPath, $mode)) {
+                }
+
+                if (!is_dir($fullPath) && !@chmod($fullPath, $mode)) {
                     return false;
-                } elseif (!self::chmodDir($fullPath, $mode)) {
+                }
+
+                if (!self::chmodDir($fullPath, $mode)) {
                     return false;
                 }
             }
         }
+
         closedir($dh);
         return @chmod($path, $mode) ? true : false;
     }
@@ -245,7 +270,7 @@ abstract class FileSystem
      * @param string $dir
      * @return string
      */
-    public static function availableSpace($dir = '.')
+    public static function availableSpace($dir = '.'): string
     {
         $base = 1024;
         $bytes = disk_free_space($dir);
@@ -254,23 +279,23 @@ abstract class FileSystem
 
         //echo $bytes . '<br />';
 
-        return sprintf('%1.2f' , $bytes / pow($base,$class)) . ' ' . $suffix[$class];
+        // pow($base, $class)
+        return sprintf('%1.2f' , $bytes / ($base ** $class)) . ' ' . $suffix[$class];
     }
 
     /**
      * @param string $dir
      * @return string
      */
-    public static function totalSpace($dir = '.')
+    public static function totalSpace($dir = '.'): string
     {
         $base = 1024;
         $bytes = disk_total_space($dir);
         $suffix = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
         $class = min((int)log($bytes , $base) , count($suffix) - 1);
 
-        //echo $bytes . '<br />';
-
-        return sprintf('%1.2f' , $bytes / pow($base,$class)) . ' ' . $suffix[$class];
+        // pow($base, $class)
+        return sprintf('%1.2f' , $bytes / ($base ** $class)) . ' ' . $suffix[$class];
     }
 
     /**
@@ -283,7 +308,7 @@ abstract class FileSystem
      *                  返回值在二进制计数法中，四位由高到低分别代表
      *                  可执行rename()函数权限 |可对文件追加内容权限 |可写入文件权限|可读取文件权限。
      */
-    public static function pathModeInfo($file_path)
+    public static function pathModeInfo($file_path): int
     {
         /* 如果不存在，则不可读、不可写、不可改 */
         if (!file_exists($file_path)) {
@@ -292,7 +317,7 @@ abstract class FileSystem
 
         $mark = 0;
 
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+        if (0 === stripos(PHP_OS, 'WIN')) {
 
             /* 测试文件 */
             $test_file = $file_path . '/cf_test.txt';

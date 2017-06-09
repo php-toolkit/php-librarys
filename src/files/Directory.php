@@ -19,8 +19,13 @@ use inhere\exceptions\NotFoundException;
  */
 class Directory extends FileSystem
 {
-    //判断文件夹是否为空
-    public static function isEmpty($dir)
+    /**
+     * 判断文件夹是否为空
+     * @param $dir
+     * @return bool
+     * @throws FileSystemException
+     */
+    public static function isEmpty($dir): bool
     {
         $handler = opendir($dir);
 
@@ -47,7 +52,7 @@ class Directory extends FileSystem
      * @throws NotFoundException
      * @return array
      */
-    public static function ls($dirName)
+    public static function ls($dirName): array
     {
         $list = [];
 
@@ -64,8 +69,16 @@ class Directory extends FileSystem
         return $list;
     }
 
-    //只获得目录结构
-    public static function getList($dirName, $pid = 0, $son = 0, array $list = [])
+    /**
+     * 只获得目录结构
+     * @param $dirName
+     * @param int $pid
+     * @param int $son
+     * @param array $list
+     * @return array
+     * @throws NotFoundException
+     */
+    public static function getList($dirName, $pid = 0, $son = 0, array $list = []): array
     {
         $dirName = self::pathFormat($dirName);
 
@@ -102,7 +115,7 @@ class Directory extends FileSystem
      * @return array
      * @throws NotFoundException
      */
-    public static function simpleInfo($dir, $ext = null, $recursive = false)
+    public static function simpleInfo($dir, $ext = null, $recursive = false): array
     {
         $list = [];
         $dir = self::pathFormat($dir);
@@ -143,7 +156,7 @@ class Directory extends FileSystem
      * @return array
      * @throws NotFoundException
      */
-    public static function getFiles($path, $ext = null, $recursive = false, &$list = [])
+    public static function getFiles($path, $ext = null, $recursive = false, &$list): array
     {
         $path = self::pathFormat($path);
 
@@ -177,6 +190,7 @@ class Directory extends FileSystem
      * @param bool|false $recursive
      *
      * @return array|\ArrayObject
+     * @throws \inhere\exceptions\InvalidArgumentException
      */
     public static function findFiles($dir, array $options = [], $recursive = false)
     {
@@ -192,9 +206,10 @@ class Directory extends FileSystem
      * @param $recursive int|bool 是否包含子目录
      * @param array $list
      * @return array
+     * @throws \InvalidArgumentException
      * @throws NotFoundException
      */
-    public static function getFilesInfo($dirName, $ext = null, $recursive = 0, &$list = [])
+    public static function getFilesInfo($dirName, $ext = null, $recursive = 0, &$list): array
     {
         $dirName = self::pathFormat($dirName);
 
@@ -212,7 +227,7 @@ class Directory extends FileSystem
 
             // 匹配文件 如果没有传入$ext 则全部遍历，传入了则按传入的类型来查找
             if (is_file($file) && (!$ext || preg_match("/\.($ext)$/i", $file))) {
-                $list[$id] = File::getInfo($file);
+                $list[$id] = File::info($file);
 
                 //是否遍历子目录
             } elseif ($recursive) {
@@ -230,13 +245,19 @@ class Directory extends FileSystem
      * @param bool $recursive
      * @return bool
      */
-    public static function create($path, $mode = 0775, $recursive = true)
+    public static function create($path, $mode = 0775, $recursive = true): bool
     {
-        return (is_dir($path) || mkdir($path, $mode, $recursive)) && is_writable($path);
+        return (is_dir($path) || @mkdir($path, $mode, $recursive)) && is_writable($path);
     }
 
-    //复制目录内容
-    public static function copy($oldDir, $newDir)
+    /**
+     * 复制目录内容
+     * @param $oldDir
+     * @param $newDir
+     * @return bool
+     * @throws NotFoundException
+     */
+    public static function copy($oldDir, $newDir): bool
     {
         $oldDir = self::pathFormat($oldDir);
         $newDir = self::pathFormat($newDir);
@@ -258,7 +279,7 @@ class Directory extends FileSystem
             if (is_dir($v)) {
                 self::copy($v, $newFile);
             } else {
-                @copy($v, $newFile);//是文件就复制过来
+                copy($v, $newFile);//是文件就复制过来
                 @chmod($newFile, 0664);// 权限 0777
             }
         }
@@ -272,7 +293,7 @@ class Directory extends FileSystem
      * @param  boolean $delSelf 默认最后删掉自己
      * @return bool
      */
-    public static function delete($dirName, $delSelf = true)
+    public static function delete($dirName, $delSelf = true): bool
     {
         $dirPath = self::pathFormat($dirName);
 
@@ -289,8 +310,13 @@ class Directory extends FileSystem
         return true;
     }
 
-    // 比较文件路径
-    public static function comparePath($newPath, $oldPath)
+    /**
+     * 比较文件路径
+     * @param $newPath
+     * @param $oldPath
+     * @return string
+     */
+    public static function comparePath($newPath, $oldPath): string
     {
         $oldDirName = basename(rtrim($oldPath, '/'));
         $newPath_arr = explode('/', rtrim($newPath, '/'));

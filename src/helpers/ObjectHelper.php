@@ -20,10 +20,28 @@ class ObjectHelper
      * @param $object
      * @param array $options
      */
-    public static function loadAttrs($object, array $options)
+    public static function setAttrs($object, array $options)
     {
         foreach ($options as $property => $value) {
             $object->$property = $value;
+        }
+    }
+
+    /**
+     * 给对象设置属性值
+     * @param $object
+     * @param array $options
+     */
+    public static function smartLoad($object, array $options)
+    {
+        foreach ($options as $property => $value) {
+            $setter = 'set' . ucfirst($property);
+
+            if (method_exists($object, $setter)) {
+                $object->$setter($value);
+            } else {
+                $object->$property = $value;
+            }
         }
     }
 
@@ -55,13 +73,21 @@ class ObjectHelper
         return $data;
     }
 
-    //定义一个用来序列化对象的函数
+    /**
+     * 定义一个用来序列化对象的函数
+     * @param $obj
+     * @return string
+     */
     public static function encode($obj)
     {
         return base64_encode(gzcompress(serialize($obj)));
     }
 
-    //反序列化
+    /**
+     * 反序列化
+     * @param $txt
+     * @return mixed
+     */
     public static function decode($txt)
     {
         return unserialize(gzuncompress(base64_decode($txt)), null);

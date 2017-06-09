@@ -90,14 +90,6 @@ class LanguageManager extends StdObject
     const DEFAULT_FILE_KEY = '__default';
 
     /**
-     * @param array $options
-     */
-    public function __construct(array $options = [])
-    {
-        ObjectHelper::loadAttrs($this, $options);
-    }
-
-    /**
      *
      * how to use language translate ? please see '/doc/language.md'
      *

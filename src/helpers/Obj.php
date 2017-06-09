@@ -10,7 +10,7 @@ namespace inhere\library\helpers;
 
 /**
  * Class Obj
- *  alias of the StringHelper
+ *  alias of the ObjectHelper
  * @package inhere\library\helpers
  */
 class Obj extends ObjectHelper

@@ -10,7 +10,6 @@ namespace inhere\library\files;
 
 use ArrayObject;
 use inhere\exceptions\InvalidArgumentException;
-use inhere\library\helpers\ObjectHelper;
 use inhere\library\StdObject;
 
 /**
@@ -114,7 +113,7 @@ class FileFinder extends StdObject
          */
         $this->reset();
 
-        ObjectHelper::loadAttrs($this, $config);
+        parent::__construct($config);
     }
 
     public function reset()

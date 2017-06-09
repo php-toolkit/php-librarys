@@ -103,7 +103,7 @@ abstract class Read extends File
         $content = array();
 
         // 判断php版本（因为要用到SplFileObject，PHP>=5.1.0）
-        if (version_compare(PHP_VERSION, '5.1.0', '>=')) {
+        if (class_exists('SplFileObject', false)) {
             $count = $endLine - $startLine;
 
             try {
@@ -131,7 +131,7 @@ abstract class Read extends File
             }
 
             # 读取文件行内容
-            for ($i; $i <= $endLine; ++$i) {
+            for (; $i <= $endLine; ++$i) {
                 $content[] = fgets($openFile);
             }
 
@@ -142,7 +142,7 @@ abstract class Read extends File
     }
 
     /**
-     * [symmetry  得到当前行对称上下几($lineNum)行的内容 ]
+     * symmetry  得到当前行对称上下几($lineNum)行的内容
      * @param string $fileName 含完整路径的文件
      * @param  integer $current [当前行数]
      * @param  integer $lineNum [获取行数] = $lineNum*2+1

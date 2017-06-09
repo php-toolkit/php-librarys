@@ -25,6 +25,13 @@ abstract class StdObject
      */
     public function __construct(array $options = [])
     {
-        ObjectHelper::loadAttrs($this, $options);
+        ObjectHelper::setAttrs($this, $options);
+
+        $this->init();
+    }
+
+    protected function init()
+    {
+        // init
     }
 }

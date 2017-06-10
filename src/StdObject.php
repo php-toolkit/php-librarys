@@ -21,17 +21,20 @@ abstract class StdObject
 
     /**
      * StdObject constructor.
-     * @param array $options
+     * @param array $config
      */
-    public function __construct(array $options = [])
+    public function __construct(array $config = [])
     {
-        ObjectHelper::setAttrs($this, $options);
+        ObjectHelper::setAttrs($this, $config);
 
         $this->init();
     }
 
+    /**
+     * init
+     */
     protected function init()
     {
-        // init
+        // init something ...
     }
 }

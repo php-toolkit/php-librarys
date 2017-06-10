@@ -25,7 +25,7 @@ trait StdObjectTrait
      */
     final public static function fullName()
     {
-        return get_called_class();
+        return static::class;
     }
 
     /**

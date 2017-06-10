@@ -15,59 +15,25 @@ namespace inhere\library\helpers;
  */
 abstract class DataHelper
 {
+
     /**
-     * Get a value from $_POST / $_GET
-     * if unavailable, take a default value
-     *
-     * @param string $key Value key
-     * @param mixed $default_value (optional)
-     * @return mixed Value
+     * 定义一个用来序列化对象的函数
+     * @param $obj
+     * @return string
      */
-    public static function getValue($key, $default_value = false)
+    public static function encode($obj)
     {
-        if (!$key || !is_string($key)) {
-            return false;
-        }
-
-        $ret = $_POST[$key] ?? $_GET[$key] ?? $default_value;
-
-        if (is_string($ret)) {
-            return stripslashes(urldecode(preg_replace('/((\%5C0+)|(\%00+))/i', '', urlencode($ret))));
-        }
-
-        return $ret;
+        return base64_encode(gzcompress(serialize($obj)));
     }
 
-
     /**
-     * Get all values from $_POST/$_GET
+     * 反序列化
+     * @param $txt
      * @return mixed
      */
-    public static function getAllValues()
+    public static function decode($txt)
     {
-        return $_POST + $_GET;
-    }
-
-    /**
-     * @param $key
-     * @return bool
-     */
-    public static function hasKey($key)
-    {
-        if (!$key || !is_string($key)) {
-            return false;
-        }
-
-        return isset($_POST[$key]) ? true : isset($_GET[$key]);
-    }
-
-    public static function safePostVars()
-    {
-        if (!$_POST || !is_array($_POST)) {
-            $_POST = array();
-        } else {
-            $_POST = array_map(array(__CLASS__, 'htmlentitiesUTF8'), $_POST);
-        }
+        return unserialize(gzuncompress(base64_decode($txt)));
     }
 
     /**
@@ -95,6 +61,10 @@ abstract class DataHelper
         return htmlentities((string)$string, $type, 'utf-8');
     }
 
+    /**
+     * @param $string
+     * @return string
+     */
     public static function htmlentitiesDecodeUTF8($string)
     {
         if (is_array($string)) {
@@ -105,19 +75,11 @@ abstract class DataHelper
         return html_entity_decode((string)$string, ENT_QUOTES, 'utf-8');
     }
 
-
     /**
-     * Convert \n and \r\n and \r to <br />
-     *
-     * @param string $str String to transform
-     * @return string New string
+     * @param $argc
+     * @param $argv
+     * @return null
      */
-    public static function nl2br($str)
-    {
-        return str_replace(array("\r\n", "\r", "\n"), '<br />', $str);
-    }
-
-
     public static function argvToGET($argc, $argv)
     {
         if ($argc <= 1) {
@@ -152,35 +114,6 @@ abstract class DataHelper
         return $data;
     }
 
-    /**
-     * @param $data
-     * @param $separator
-     * @example
-     *      /status/active/id/12
-     *  =>
-     *    [
-     *     'status' => 'active',
-     *     'id'     => '12',
-     *    ]
-     * @return array
-     */
-    public static function buildQueryParams($data, $separator = '/')
-    {
-        $arrData = is_string($data) ? explode($separator, $data) : $data;
-        $arrData = array_values(array_filter($arrData));
-        $newArr = [];
-        $count = count($arrData); #统计
-
-        // $arrData 中的 奇数位--变为键，偶数位---变为前一个奇数 键的值 array('前一个奇数'=>'偶数位')
-        for ($i = 0; $i < $count; $i += 2) {
-            $newArr[$arrData[$i]] = $arrData[$i + 1] ?? '';
-        }
-
-        unset($arrData);
-
-        return $newArr;
-    }
-
     /*
      * strip_tags — 从字符串中去除 HTML 和 PHP 标记
      * 由于 strip_tags() 无法实际验证 HTML，不完整或者破损标签将导致更多的数据被删除。
@@ -189,74 +122,18 @@ abstract class DataHelper
     public static function stripTags($data, $allow_tags = null)
     {
         if (is_array($data)) {
-
             foreach ($data as $k => $v) {
                 $data[$k] = self::stripTags($v, $allow_tags);
             }
 
             return $data;
         }
+
         if (is_string($data) || is_numeric($data)) {
             return strip_tags($data, $allow_tags);
         }
 
         return false;
-    }
-
-    /*
-     * html代码转义
-     * htmlspecialchars 只转化这几个html [ & ' " < > ] 代码 --> [ &amp; &quot;  ]，
-     * 而 htmlentities 却会转化所有的html代码，连同里面的它无法识别的中文字符也会转化。
-     * 一般使用 htmlspecialchars 就足够了，要使用 htmlentities 时，要注意为第三个参数传递正确的编码。
-     * htmlentities() <--> html_entity_decode() — 将特殊的 HTML 实体转换回普通字符
-     * htmlspecialchars() <--> htmlspecialchars_decode() — 将特殊的 HTML 实体转换回普通字符
-     * ENT_COMPAT ENT_QUOTES ENT_NOQUOTES ENT_HTML401 ENT_XML1 ENT_XHTML ENT_HTML5
-     * */
-    public static function htmlEscape($data, $type = 0, $encoding = 'UTF-8')
-    {
-        if (is_array($data)) {
-
-            foreach ($data as $k => $v) {
-                $data[$k] = self::htmlEscape($data, $type, $encoding);
-            }
-
-        } else {
-
-            if (!$type) {//默认使用  htmlspecialchars()
-                $data = htmlspecialchars($data, ENT_QUOTES, $encoding);
-            } else {
-                $data = htmlentities($data, ENT_QUOTES, $encoding);
-            }
-
-            //如‘&#x5FD7;’这样的16进制的html字符，为了防止这样的字符被错误转译，使用正则进行匹配，把这样的字符又转换回来。
-            if (strpos($data, '&#')) {
-                $data = preg_replace('/&((#(\d{3,5}|x[a-fA-F0-9]{4}));)/',
-                    '&\\1', $data);
-            }
-        }
-
-        return $data;
-    }
-
-    //去掉html转义
-    public static function htmlUnescap($data, $type = 0, $encoding = 'UTF-8')
-    {
-        if (is_array($data)) {
-
-            foreach ($data as $k => $v) {
-                $data[$k] = self::htmlUnescap($data, $type, $encoding);
-            }
-
-        } else {
-            if (!$type) {//默认使用  htmlspecialchars_decode()
-                $data = htmlspecialchars_decode($data, ENT_QUOTES);
-            } else {
-                $data = html_entity_decode($data, ENT_QUOTES, $encoding);
-            }
-
-        }
-
-        return $data;
     }
 
     /**

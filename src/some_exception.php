@@ -102,6 +102,10 @@ namespace inhere\exceptions {
     {
     }
 
+    class CreateResourceFailedException extends BaseException
+    {
+    }
+
     class PromptUserException extends BaseException
     {
         /**

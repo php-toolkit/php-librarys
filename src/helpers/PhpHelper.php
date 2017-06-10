@@ -134,12 +134,17 @@ class PhpHelper extends EnvHelper
     }
 
     /**
-     * @param $pathname
-     * @param $projectId
+     * @param string $pathname
+     * @param int|string $projectId This must be a one character
      * @return int|string
+     * @throws \LogicException
      */
     public static function ftok($pathname, $projectId)
     {
+        if (strlen($projectId) > 1) {
+            throw new \LogicException("the project id must be a one character(int/str). Input: $projectId");
+        }
+
         if (function_exists('ftok')) {
             return ftok($pathname, $projectId);
         }

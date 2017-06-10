@@ -96,4 +96,12 @@ trait LiteEventTrait
     {
         return count($this->_events);
     }
+
+    /**
+     * clearEvents
+     */
+    public function clearEvents()
+    {
+        $this->_events = [];
+    }
 }

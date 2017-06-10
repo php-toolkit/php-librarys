@@ -43,6 +43,18 @@ abstract class StringHelper
     }
 
     /**
+     * @param $str
+     * @param string $encoding
+     * @return bool|int
+     */
+    public static function strlen($str, $encoding = 'UTF-8')
+    {
+        $str = html_entity_decode((string)$str, ENT_COMPAT, 'UTF-8');
+
+        return function_exists('mb_strlen') ? mb_strlen($str, $encoding) : strlen($str);
+    }
+
+    /**
      * 计算字符长度
      * @param  [type] $str
      * @return int|string [type]
@@ -73,7 +85,7 @@ abstract class StringHelper
      * @internal param bool $type 计算长度类型，0(默认)表示一个中文算一个字符，1表示一个中文算两个字符
      * @return int
      */
-    public static function abs_length($str)
+    public static function absLen($str)
     {
         if (empty($str)) {
             return 0;
@@ -99,7 +111,7 @@ abstract class StringHelper
      * @param int $end 要进行截取的长度
      * @return string
      */
-    public static function utf8_substr($str, $start = 0, $end = null)
+    public static function utf8Substr($str, $start = 0, $end = null)
     {
         if (empty($str)) {
             return false;
@@ -200,22 +212,122 @@ abstract class StringHelper
     /**
      * @return bool|string
      */
-    public static function genSalt()
+    public static function genSalt($length = 32)
     {
-        return substr(str_replace('+', '.', base64_encode(hex2bin(random_token(32)))), 0, 44);
+        return substr(str_replace('+', '.', base64_encode(hex2bin(random_token($length)))), 0, 44);
     }
 
     /**
      * @param int $length
      * @return bool|string
      */
-    public static function genUID($length = 7)
+    public static function genUuid($length = 7)
     {
         if (!is_int($length) || $length > 32 || $length < 1) {
             $length = 7;
         }
 
         return substr(hash('md5', uniqid('', true)), 0, $length);
+    }
+
+    ////////////////////////////////////////////////////////////
+    /// Convert
+    ////////////////////////////////////////////////////////////
+
+    /**
+     * Convert \n and \r\n and \r to <br />
+     *
+     * @param string $str String to transform
+     * @return string New string
+     */
+    public static function nl2br($str)
+    {
+        return str_replace(array("\r\n", "\r", "\n"), '<br />', $str);
+    }
+
+
+    /**
+     * @param $str
+     * @return bool|string
+     */
+    public static function strtolower($str)
+    {
+        if (!is_string($str)) {
+            return $str;
+        }
+
+        return function_exists('mb_strtolower') ? mb_strtolower($str, 'utf-8') : strtolower($str);
+    }
+
+    /**
+     * @param $str
+     * @return bool|string
+     */
+    public static function strtoupper($str)
+    {
+        if (!is_string($str)) {
+            return $str;
+        }
+
+        return function_exists('mb_strtoupper') ? mb_strtoupper($str, 'utf-8') : strtoupper($str);
+    }
+
+    /**
+     * @param $str
+     * @param $start
+     * @param bool|false $length
+     * @param string $encoding
+     * @return bool|string
+     */
+    public static function substr($str, $start, $length = false, $encoding = 'utf-8')
+    {
+        if (function_exists('mb_substr')) {
+            return mb_substr($str, (int)$start, ($length === false ? self::strlen($str) : (int)$length), $encoding);
+        }
+
+        return substr($str, $start, ($length === false ? self::strlen($str) : (int)$length));
+    }
+
+    /**
+     * @param $str
+     * @param $find
+     * @param int $offset
+     * @param string $encoding
+     * @return bool|int
+     */
+    public static function strpos($str, $find, $offset = 0, $encoding = 'UTF-8')
+    {
+        return function_exists('mb_strpos') ? mb_strpos($str, $find, $offset, $encoding) : strpos($str, $find, $offset);
+    }
+
+    /**
+     * @param $str
+     * @param $find
+     * @param int $offset
+     * @param string $encoding
+     * @return bool|int
+     */
+    public static function strrpos($str, $find, $offset = 0, $encoding = 'utf-8')
+    {
+        return function_exists('mb_strrpos') ? mb_strrpos($str, $find, $offset, $encoding) : strrpos($str, $find, $offset);
+    }
+
+    /**
+     * @param $str
+     * @return string
+     */
+    public static function ucfirst($str)
+    {
+        return self::strtoupper(self::substr($str, 0, 1)) . self::substr($str, 1);
+    }
+
+    /**
+     * @param $str
+     * @return string
+     */
+    public static function ucwords($str)
+    {
+        return function_exists('mb_convert_case') ? mb_convert_case($str, MB_CASE_TITLE) : ucwords(self::strtolower($str));
     }
 
     /**
@@ -235,8 +347,8 @@ abstract class StringHelper
         return $array;
     }
 
-    // var_dump(string2array('34,56,678, 678, 89, '));
-    public static function string2array($string)
+    // var_dump(str2array('34,56,678, 678, 89, '));
+    public static function str2array($string)
     {
         if (!$string) {
             return array();
@@ -265,7 +377,13 @@ abstract class StringHelper
         return utf8_encode(substr($str, 0, $max_length - self::strlen($suffix)) . $suffix);
     }
 
-    // 字符截断输出
+    /**
+     * 字符截断输出
+     * @param string $string
+     * @param int $start
+     * @param null|int $length
+     * @return string
+     */
     public static function truncate_two($string, $start, $length = null)
     {
         if (!$length) {
@@ -286,7 +404,13 @@ abstract class StringHelper
         return $string;
     }
 
-    /*Copied from CakePHP String utility file*/
+    /**
+     * Copied from CakePHP String utility file
+     * @param string $text
+     * @param int $length
+     * @param array $options
+     * @return bool|string
+     */
     public static function truncateString($text, $length = 120, array $options = array())
     {
         $default = array(
@@ -362,6 +486,8 @@ abstract class StringHelper
             $truncate = self::substr($text, 0, $length - self::strlen($ellipsis));
         }
 
+        $open_tags = null;
+
         if (!$exact) {
             $spacepos = self::strrpos($truncate, ' ');
             if ($html) {
@@ -399,110 +525,13 @@ abstract class StringHelper
 
         $truncate .= $ellipsis;
 
-        if ($html && isset($open_tags)) {
+        if ($html && $open_tags) {
             foreach ($open_tags as $tag) {
                 $truncate .= '</' . $tag . '>';
             }
         }
 
         return $truncate;
-    }
-
-
-    /**
-     * @param $str
-     * @return bool|string
-     */
-    public static function strtolower($str)
-    {
-        if (!is_string($str)) {
-            return $str;
-        }
-
-        return function_exists('mb_strtolower') ? mb_strtolower($str, 'utf-8') : strtolower($str);
-    }
-
-    /**
-     * @param $str
-     * @param string $encoding
-     * @return bool|int
-     */
-    public static function strlen($str, $encoding = 'UTF-8')
-    {
-        $str = html_entity_decode((string)$str, ENT_COMPAT, 'UTF-8');
-
-        return function_exists('mb_strlen') ? mb_strlen($str, $encoding) : strlen($str);
-    }
-
-    /**
-     * @param $str
-     * @return bool|string
-     */
-    public static function strtoupper($str)
-    {
-        if (!is_string($str)) {
-            return $str;
-        }
-
-        return function_exists('mb_strtoupper') ? mb_strtoupper($str, 'utf-8') : strtoupper($str);
-    }
-
-    /**
-     * @param $str
-     * @param $start
-     * @param bool|false $length
-     * @param string $encoding
-     * @return bool|string
-     */
-    public static function substr($str, $start, $length = false, $encoding = 'utf-8')
-    {
-        if (function_exists('mb_substr')) {
-            return mb_substr($str, (int)$start, ($length === false ? self::strlen($str) : (int)$length), $encoding);
-        }
-
-        return substr($str, $start, ($length === false ? self::strlen($str) : (int)$length));
-    }
-
-    /**
-     * @param $str
-     * @param $find
-     * @param int $offset
-     * @param string $encoding
-     * @return bool|int
-     */
-    public static function strpos($str, $find, $offset = 0, $encoding = 'UTF-8')
-    {
-        return function_exists('mb_strpos') ? mb_strpos($str, $find, $offset, $encoding) : strpos($str, $find, $offset);
-    }
-
-    /**
-     * @param $str
-     * @param $find
-     * @param int $offset
-     * @param string $encoding
-     * @return bool|int
-     */
-    public static function strrpos($str, $find, $offset = 0, $encoding = 'utf-8')
-    {
-        return function_exists('mb_strrpos') ? mb_strrpos($str, $find, $offset, $encoding) : strrpos($str, $find, $offset);
-    }
-
-    /**
-     * @param $str
-     * @return string
-     */
-    public static function ucfirst($str)
-    {
-        return self::strtoupper(self::substr($str, 0, 1)) . self::substr($str, 1);
-    }
-
-    /**
-     * @param $str
-     * @return string
-     */
-    public static function ucwords($str)
-    {
-        return function_exists('mb_convert_case') ? mb_convert_case($str, MB_CASE_TITLE) : ucwords(self::strtolower($str));
     }
 
     /**
@@ -532,7 +561,7 @@ abstract class StringHelper
      * @param string $sep
      * @return string
      */
-    public static function toUnderscoreCase($string, $sep = '_')
+    public static function toSnakeCase($string, $sep = '_')
     {
         // 'CMSCategories' => 'cms_categories'
         // 'RangePrice' => 'range_price'
@@ -638,12 +667,16 @@ abstract class StringHelper
         return $keyword;
     }
 
-    //缩进格式化内容，去空白/注释 已不会影响到 HEREDOC 标记
+    /**
+     * 缩进格式化内容，去空白/注释 已不会影响到 HEREDOC 标记
+     * @param $fileName
+     * @param int $type
+     * @return mixed
+     */
     static public function deleteStripSpace($fileName, $type = 0)
     {
         $data = trim(file_get_contents($fileName));
-        // substr($data,5) 从第五位开始截取到末尾
-        $data = substr($data, 0, 5) === '<?php' ? substr($data, 5) : $data;
+        $data = 0 === strpos($data, '<?php') ? substr($data, 5) : $data;
         $data = substr($data, -2) === '?>' ? substr($data, 0, -2) : $data;
 
         //去掉所有注释 换行空白保留

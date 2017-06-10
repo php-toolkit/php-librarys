@@ -11,8 +11,7 @@ namespace inhere\library\collections;
 use inhere\exceptions\InvalidArgumentException;
 use inhere\exceptions\NotFoundException;
 use inhere\library\files\FileSystem;
-use inhere\library\helpers\ObjectHelper;
-use inhere\library\helpers\StringHelper;
+use inhere\library\helpers\Str;
 use inhere\library\StdObject;
 
 /**
@@ -97,6 +96,8 @@ class LanguageManager extends StdObject
      * @param array $args
      * @param string $default
      * @return string
+     * @throws \inhere\exceptions\NotFoundException
+     * @throws \InvalidArgumentException
      */
     public function translate($key, array $args = [], $default = '')
     {
@@ -120,7 +121,7 @@ class LanguageManager extends StdObject
         $value = $this->findTranslationText($fileKey, $key) ?: $this->tranByFallbackLang($fileKey, $key, $default);
 
         if (!$value) {
-            $value = ucfirst(StringHelper::toUnderscoreCase(str_replace(['-', '_'], ' ', $key), ' '));
+            $value = ucfirst(Str::toSnakeCase(str_replace(['-', '_'], ' ', $key), ' '));
         }
 
         $args = $args ? (array)$args : [];
@@ -152,6 +153,7 @@ class LanguageManager extends StdObject
      * @param string $key
      * @param string $default
      * @return mixed
+     * @throws \inhere\exceptions\NotFoundException
      */
     protected function findTranslationText($fileKey, $key, $default = '')
     {
@@ -310,6 +312,7 @@ class LanguageManager extends StdObject
 
     /**
      * @return DataCollector
+     * @throws \inhere\exceptions\NotFoundException
      */
     public function getDefaultFileData()
     {
@@ -325,6 +328,7 @@ class LanguageManager extends StdObject
      * is equals to `$lang->tl('key')`.
      * @param string $name
      * @return mixed|string
+     * @throws \InvalidArgumentException
      */
     public function __get($name)
     {
@@ -337,6 +341,7 @@ class LanguageManager extends StdObject
      * @param string $name
      * @param array $args
      * @return mixed|string
+     * @throws \InvalidArgumentException
      */
     public function __call($name, $args)
     {
@@ -395,6 +400,8 @@ class LanguageManager extends StdObject
 
     /**
      * @param array $langFiles
+     * @throws \inhere\exceptions\InvalidArgumentException
+     * @throws \inhere\exceptions\NotFoundException
      */
     public function setLangFiles(array $langFiles)
     {

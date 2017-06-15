@@ -83,8 +83,6 @@ if (!function_exists('value')) {
     /**
      * @param $value
      * @return mixed
-     *
-     * value(new Class)->xxx
      */
     function value($value)
     {
@@ -95,14 +93,14 @@ if (!function_exists('value')) {
 
 if (!function_exists('with')) {
     /**
-     * Return the given object. Useful for chaining.
-     *
-     * @param  mixed $object
+     * Return the given value. Useful for chaining.
+     *   with(new Class)->xxx
+     * @param  mixed $value
      * @return mixed
      */
-    function with($object)
+    function with($value)
     {
-        return $object;
+        return $value;
     }
 }
 

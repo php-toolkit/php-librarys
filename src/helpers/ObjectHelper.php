@@ -46,30 +46,31 @@ class ObjectHelper
     }
 
     /**
-     * php对象转换成为数组
-     * @param iterable|array|object $data
-     * @param bool $recursive
+     * @param $data
      * @return array|bool
      */
-    public static function toArray($data, $recursive = false)
+    public static function toArray($data)
     {
-        // Ensure the input data is an array.
-        if ($data instanceof \Traversable) {
-            $data = iterator_to_array($data);
-        } elseif (is_object($data)) {
-            $data = get_object_vars($data);
-        } else {
-            $data = (array)$data;
-        }
+        return DataHelper::toArray($data);
+    }
 
-        if ($recursive) {
-            foreach ($data as &$value) {
-                if (is_array($value) || is_object($value)) {
-                    $value = static::toArray($value, $recursive);
-                }
-            }
-        }
+    /**
+     * 定义一个用来序列化对象的函数
+     * @param mixed $obj
+     * @return string
+     */
+    public static function encode($obj)
+    {
+        return DataHelper::encode($obj);
+    }
 
-        return $data;
+    /**
+     * 反序列化
+     * @param $txt
+     * @return mixed
+     */
+    public static function decode($txt)
+    {
+        return DataHelper::decode($txt);
     }
 }

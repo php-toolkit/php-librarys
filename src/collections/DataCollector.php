@@ -8,6 +8,8 @@
 
 namespace inhere\library\collections;
 
+use inhere\library\helpers\Arr;
+use inhere\library\helpers\DataHelper;
 use RuntimeException;
 use inhere\exceptions\DataParseException;
 
@@ -102,10 +104,10 @@ class DataCollector extends SimpleCollection
     public function set($path, $value)
     {
         if (is_array($value) || is_object($value)) {
-            $value = static::dataToArray($value, true);
+            $value = DataHelper::toArray($value, true);
         }
 
-        static::setByPath($this->data, $path, $value, $this->separator);
+        Arr::setByPath($this->data, $path, $value, $this->separator);
 
         return $this;
     }
@@ -118,9 +120,7 @@ class DataCollector extends SimpleCollection
      */
     public function get($path, $default = null)
     {
-        $result = static::getByPath($this->data, $path, $this->separator);
-
-        return $result ?? $default;
+        return Arr::getByPath($this->data, $path, $default, $this->separator);
     }
 
     public function exists($path)
@@ -159,7 +159,7 @@ class DataCollector extends SimpleCollection
      */
     public function toObject($class = \stdClass::class)
     {
-        return static::dataToObject($this->data, $class);
+        return DataHelper::toObject($this->data, $class);
     }
 
     /**
@@ -241,6 +241,11 @@ class DataCollector extends SimpleCollection
         return $this;
     }
 
+    public function readData($data, $format = self::FORMAT_PHP)
+    {
+
+    }
+
     /**
      * load data form yml file
      * @param $data
@@ -274,7 +279,7 @@ class DataCollector extends SimpleCollection
 
     /**
      * load data form php file or array
-     * @param array|string $data
+     * @param mixed $data
      * @return static
      */
     public function loadObject($data)
@@ -301,7 +306,7 @@ class DataCollector extends SimpleCollection
             $data = file_get_contents($data);
         }
 
-        $data = parse_ini_string($data);
+        $data = parse_ini_string($data, true);
 
         return $this->bindData($this->data, $data);
     }
@@ -327,7 +332,7 @@ class DataCollector extends SimpleCollection
     {
         // Ensure the input data is an array.
         if (!$raw) {
-            $data = static::dataToArray($data, true);
+            $data = DataHelper::toArray($data, true);
         }
 
         foreach ($data as $key => $value) {
@@ -349,6 +354,9 @@ class DataCollector extends SimpleCollection
         return $this;
     }
 
+    /**
+     * @return array
+     */
     public function getKeys()
     {
         return array_keys($this->data);
@@ -363,7 +371,7 @@ class DataCollector extends SimpleCollection
     }
 
     /**
-     * Unsets an offset in the iterator.
+     * Unset an offset in the iterator.
      * @param   mixed $offset The array offset.
      * @return  void
      */
@@ -374,142 +382,12 @@ class DataCollector extends SimpleCollection
 
     public function __clone()
     {
-        $this->data = unserialize(serialize($this->data), null);
+        $this->data = unserialize(serialize($this->data));
     }
 
 //////
 ///////////////////////////// helper /////////////////////////
 //////
-
-    /**
-     * Get data from array or object by path.
-     *
-     * Example: `DataCollector::getByPath($array, 'foo.bar.yoo')` equals to $array['foo']['bar']['yoo'].
-     *
-     * @param mixed $data An array or object to get value.
-     * @param mixed $path The key path.
-     * @param string $separator Separator of paths.
-     *
-     * @return  mixed Found value, null if not exists.
-     */
-    public static function getByPath(array $data, $path, $separator = '.')
-    {
-        $nodes = static::getPathNodes($path, $separator);
-
-        if (!$nodes) {
-            return null;
-        }
-
-        $dataTmp = $data;
-
-        foreach ($nodes as $arg) {
-            if (is_object($dataTmp) && isset($dataTmp->$arg)) {
-                $dataTmp = $dataTmp->$arg;
-            } elseif (
-                (is_array($dataTmp) || $dataTmp instanceof \ArrayAccess)
-                && isset($dataTmp[$arg])
-            ) {
-                $dataTmp = $dataTmp[$arg];
-            } else {
-                return null;
-            }
-        }
-
-        return $dataTmp;
-    }
-
-    /**
-     * setByPath
-     *
-     * @param mixed &$data
-     * @param string $path
-     * @param mixed $value
-     * @param string $separator
-     *
-     * @return  boolean
-     */
-    public static function setByPath(array &$data, $path, $value, $separator = '.')
-    {
-        $nodes = static::getPathNodes($path, $separator);
-
-        if (!$nodes) {
-            return false;
-        }
-
-        $dataTmp = &$data;
-
-        foreach ($nodes as $node) {
-            if (is_array($dataTmp)) {
-                if (empty($dataTmp[$node])) {
-                    $dataTmp[$node] = array();
-                }
-
-                $dataTmp = &$dataTmp[$node];
-            } else {
-                // If a node is value but path is not go to the end, we replace this value as a new store.
-                // Then next node can insert new value to this store.
-                $dataTmp = array();
-            }
-        }
-
-        // Now, path go to the end, means we get latest node, set value to this node.
-        $dataTmp = $value;
-
-        return true;
-    }
-
-    /**
-     * @param string $path
-     * @param string $separator
-     * @return  array
-     */
-    public static function getPathNodes($path, $separator = '.')
-    {
-        return array_values(array_filter(explode($separator, $path), 'strlen'));
-    }
-
-    /**
-     * @param $data
-     * @param bool|false $recursive
-     * @return array
-     */
-    public static function dataToArray($data, $recursive = false)
-    {
-        // Ensure the input data is an array.
-        if ($data instanceof \Traversable) {
-            $data = iterator_to_array($data);
-        } elseif (is_object($data)) {
-            $data = get_object_vars($data);
-        } else {
-            $data = (array)$data;
-        }
-
-        if ($recursive) {
-            foreach ($data as &$value) {
-                if (is_array($value) || is_object($value)) {
-                    $value = static::dataToArray($value, $recursive);
-                }
-            }
-        }
-
-        return $data;
-    }
-
-    /**
-     * @param array $array
-     * @param string $class
-     * @return mixed
-     */
-    public static function dataToObject($array, $class = \stdClass::class)
-    {
-        $object = new $class;
-
-        foreach ($array as $k => $v) {
-            $object->$k = is_array($v) ? static::dataToObject($v, $class) : $v;
-        }
-
-        return $object;
-    }
 
     /**
      * @param $data

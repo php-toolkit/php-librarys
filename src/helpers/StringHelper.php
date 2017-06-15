@@ -111,7 +111,7 @@ abstract class StringHelper
      * @param int $end 要进行截取的长度
      * @return string
      */
-    public static function utf8Substr($str, $start = 0, $end = null)
+    public static function utf8SubStr($str, $start = 0, $end = null)
     {
         if (empty($str)) {
             return false;
@@ -153,7 +153,7 @@ abstract class StringHelper
      * @param bool $suffix 是否加尾缀
      * @return string
      */
-    public static function zhSubstr($str, $start = 0, $length, $charset = 'utf-8', $suffix = true)
+    public static function zhSubStr($str, $start = 0, $length, $charset = 'utf-8', $suffix = true)
     {
         if (function_exists('mb_substr')) {
             if (mb_strlen($str, $charset) <= $length) {
@@ -210,6 +210,7 @@ abstract class StringHelper
     }
 
     /**
+     * @param int $length
      * @return bool|string
      */
     public static function genSalt($length = 32)
@@ -332,29 +333,52 @@ abstract class StringHelper
 
     /**
      *
-     * @param  mixed $string
+     * @param  string $str
      * @param  string $sep
      * @return array
      */
-    public static function toArray($string, $sep = ',')
+    public static function toArray($str, $sep = ',')
     {
         $array = [];
 
-        if (is_string($string)) {
-            $array = strpos($string, $sep) !== false ? array_map('trim', explode(',', $string)) : [trim($string)];
+        if (is_string($str)) {
+            $str = trim($str, "$sep ");
+
+            if (!$str) {
+                return [];
+            }
+
+            $array = strpos($str, $sep) !== false ? array_map('trim', explode(',', $str)) : [$str];
         }
 
         return $array;
     }
 
-    // var_dump(str2array('34,56,678, 678, 89, '));
-    public static function str2array($string)
+    /**
+     * var_dump(str2array('34,56,678, 678, 89, '));
+     * @param string $str
+     * @param string $sep
+     * @return array
+     */
+    public static function str2array($str, $sep = ',')
     {
-        if (!$string) {
-            return array();
+        $str = trim($str, "$sep ");
+
+        if (!$str) {
+            return [];
         }
 
-        return preg_split('/\s*,\s*/', trim($string), -1, PREG_SPLIT_NO_EMPTY);
+        return preg_split("/\s*$sep\s*/", $str, -1, PREG_SPLIT_NO_EMPTY);
+    }
+
+    /**
+     * @param string $path
+     * @param string $separator
+     * @return  array
+     */
+    public static function split2Array($path, $separator = '.')
+    {
+        return array_values(array_filter(explode($separator, $path), 'strlen'));
     }
 
     /**
@@ -379,29 +403,29 @@ abstract class StringHelper
 
     /**
      * 字符截断输出
-     * @param string $string
+     * @param string $str
      * @param int $start
      * @param null|int $length
      * @return string
      */
-    public static function truncate_two($string, $start, $length = null)
+    public static function truncate_two($str, $start, $length = null)
     {
         if (!$length) {
             $length = $start;
             $start = 0;
         }
 
-        if (strlen($string) <= $length) {
-            return $string;
+        if (strlen($str) <= $length) {
+            return $str;
         }
 
         if (function_exists('mb_substr')) {
-            $string = mb_substr(strip_tags($string), $start, $length, 'utf-8');
+            $str = mb_substr(strip_tags($str), $start, $length, 'utf-8');
         } else {
-            $string = substr($string, $start, $length) . '...';
+            $str = substr($str, $start, $length) . '...';
         }
 
-        return $string;
+        return $str;
     }
 
     /**
@@ -557,37 +581,37 @@ abstract class StringHelper
     /**
      * Transform a CamelCase string to underscore_case string
      *
-     * @param string $string
+     * @param string $str
      * @param string $sep
      * @return string
      */
-    public static function toSnakeCase($string, $sep = '_')
+    public static function toSnakeCase($str, $sep = '_')
     {
         // 'CMSCategories' => 'cms_categories'
         // 'RangePrice' => 'range_price'
-        return self::strtolower(trim(preg_replace('/([A-Z][a-z])/', $sep . '$1', $string), $sep));
+        return self::strtolower(trim(preg_replace('/([A-Z][a-z])/', $sep . '$1', $str), $sep));
     }
 
     /**
      * 驼峰式 <=> 下划线式
-     * @param  [type]  $string [description]
+     * @param  [type]  $str [description]
      * @param  bool $toCamelCase
      * true : 驼峰式 => 下划线式
      * false : 驼峰式 <= 下划线式
      * @return mixed|string
      */
-    static public function nameChange($string, $toCamelCase = true)
+    static public function nameChange($str, $toCamelCase = true)
     {
-        $string = trim($string);
+        $str = trim($str);
 
         #默认 ：下划线式 =>驼峰式
         if ((bool)$toCamelCase) {
 
-            if (strpos($string, '_') === false) {
-                return $string;
+            if (strpos($str, '_') === false) {
+                return $str;
             }
 
-            $arr_char = explode('_', strtolower($string));
+            $arr_char = explode('_', strtolower($str));
             $newString = array_shift($arr_char);
 
             foreach ($arr_char as $val) {
@@ -598,13 +622,13 @@ abstract class StringHelper
         }
 
         #驼峰式 => 下划线式
-        return strtolower(preg_replace('/((?<=[a-z])(?=[A-Z]))/', '_', $string));
+        return strtolower(preg_replace('/((?<=[a-z])(?=[A-Z]))/', '_', $str));
     }
 
     /**
      * [format description]
-     * @param $string
-     * @param array $replaceParams 用于 str_replace('search','replace',$string )
+     * @param $str
+     * @param array $replaceParams 用于 str_replace('search','replace',$str )
      * @example
      *   $replaceParams = [
      *        'xx',  //'search'
@@ -615,7 +639,7 @@ abstract class StringHelper
      *        ['yy','yy2'],  //'replace'
      *   ]
      *
-     * @param array $pregParams 用于 preg_replace('pattern','replace',$string)
+     * @param array $pregParams 用于 preg_replace('pattern','replace',$str)
      *
      * @example
      * $pregParams = [
@@ -630,23 +654,23 @@ abstract class StringHelper
      *
      * @return string [type]                [description]
      */
-    static public function format($string, array $replaceParams = [], array $pregParams = [])
+    static public function format($str, array $replaceParams = [], array $pregParams = [])
     {
-        if (!is_string($string) || !$string || (!$replaceParams && !$pregParams)) {
-            return $string;
+        if (!is_string($str) || !$str || (!$replaceParams && !$pregParams)) {
+            return $str;
         }
 
         if ($replaceParams && count($replaceParams) === 2) {
             [$search, $replace] = $replaceParams;
-            $string = str_replace($search, $replace, $string);
+            $str = str_replace($search, $replace, $str);
         }
 
         if ($pregParams && count($pregParams) === 2) {
             [$pattern, $replace] = $pregParams;
-            $string = preg_replace($pattern, $replace, $string);
+            $str = preg_replace($pattern, $replace, $str);
         }
 
-        return trim($string);
+        return trim($str);
     }
 
     /**

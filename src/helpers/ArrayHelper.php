@@ -64,23 +64,7 @@ class ArrayHelper
      */
     public static function toObject(array $array, $class = \stdClass::class)
     {
-        if (!is_array($array)) {
-            return $array;
-        }
-
-        $object = new $class();
-
-        foreach ($array as $name => $value) {
-            $name = trim($name);
-
-            if (!$name || is_numeric($name)) {
-                continue;
-            }
-
-            $object->$name = is_array($value) ? self::toObject($value) : $value;
-        }
-
-        return $object;
+        return DataHelper::toObject($array, $class);
     }
 
     /**
@@ -355,6 +339,92 @@ class ArrayHelper
         return $keyMaxWidth;
     }
 
+
+    /**
+     * Get data from array or object by path.
+     *
+     * Example: `DataCollector::getByPath($array, 'foo.bar.yoo')` equals to $array['foo']['bar']['yoo'].
+     *
+     * @param array|\ArrayAccess $data An array or object to get value.
+     * @param mixed $path The key path.
+     * @param mixed $default
+     * @param string $separator Separator of paths.
+     * @return mixed Found value, null if not exists.
+     */
+    public static function getByPath($data, $path, $default = null, $separator = '.')
+    {
+        if (isset($data[$path])) {
+            return $data[$path];
+        }
+
+        $nodes = Str::toArray($path, $separator);
+
+        if (!$nodes) {
+            return $default;
+        }
+
+        $dataTmp = $data;
+
+        foreach ($nodes as $arg) {
+            if (is_object($dataTmp) && isset($dataTmp->$arg)) {
+                $dataTmp = $dataTmp->$arg;
+            } elseif (
+                (is_array($dataTmp) || $dataTmp instanceof \ArrayAccess)
+                && isset($dataTmp[$arg])
+            ) {
+                $dataTmp = $dataTmp[$arg];
+            } else {
+                return $default;
+            }
+        }
+
+        return $dataTmp;
+    }
+
+    /**
+     * setByPath
+     *
+     * @param array|\ArrayAccess &$data
+     * @param string $path
+     * @param mixed $value
+     * @param string $separator
+     *
+     * @return  boolean
+     */
+    public static function setByPath(&$data, $path, $value, $separator = '.')
+    {
+        if (false === strpos($path, $separator)) {
+            $data[$path] = $value;
+
+            return true;
+        }
+
+        if (!$nodes = Str::toArray($path, $separator)) {
+            return false;
+        }
+
+        $dataTmp = &$data;
+
+        foreach ($nodes as $node) {
+            if (is_array($dataTmp)) {
+                if (empty($dataTmp[$node])) {
+                    $dataTmp[$node] = [];
+                }
+
+                $dataTmp = &$dataTmp[$node];
+            } else {
+                // If a node is value but path is not go to the end, we replace this value as a new store.
+                // Then next node can insert new value to this store.
+                $dataTmp = array();
+            }
+        }
+
+        // Now, path go to the end, means we get latest node, set value to this node.
+        $dataTmp = $value;
+
+        return true;
+    }
+
     ////////////////////////////////////////////////////////////
     /// from laravel
     ////////////////////////////////////////////////////////////
@@ -538,6 +608,7 @@ class ArrayHelper
             if (! isset($array[$key]) || ! is_array($array[$key])) {
                 $array[$key] = [];
             }
+
             $array = &$array[$key];
         }
 

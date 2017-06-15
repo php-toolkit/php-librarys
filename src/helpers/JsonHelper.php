@@ -120,6 +120,7 @@ class JsonHelper
      * @param $data
      * @param $output
      * @param array $options
+     * @return bool|int
      */
     public static function saveAs($data, $output, array $options = [])
     {
@@ -139,6 +140,6 @@ class JsonHelper
             $data = preg_replace('/(?!\w)\s*?(?!\w)/i', '', $data);
         }
 
-        @file_put_contents($file, $data);
+        return file_put_contents($file, $data);
     }
 }

@@ -15,46 +15,66 @@ namespace inhere\library\helpers;
  */
 class DateHelper
 {
-    /*
-$tomorrow  = mktime(0, 0, 0, date("m")  , date("d")+1, date("Y"));
-$lastmonth = mktime(0, 0, 0, date("m")-1, date("d"),   date("Y"));
-$nextyear  = mktime(0, 0, 0, date("m"),   date("d"),   date("Y")+1);
-
-echo strtotime("now"), "\n";
-echo strtotime("10 September 2000"), "\n";
-echo strtotime("+1 day"), "\n";
-echo strtotime("+1 week"), "\n";
-echo strtotime("+1 week 2 days 4 hours 2 seconds"), "\n";
-echo strtotime("next Thursday"), "\n";
-echo strtotime("last Monday"), "\n";
-
- */
     /**
-     * [isDate 判断给定的 字符串 是否是个 日期时间 ]
-     * @param  [type]  $strTime 时间戳 | 日期格式的字符串
-     * @param  string $format [description]
-     * @return boolean | string datetime
+     * 判断给定的 字符串 是否是个 时间戳
+     * @param int $timestamp 时间戳
+     * @return bool|string datetime
      */
-    public static function isDate($strTime, $format = 'Y/m/d')
+    public static function isTimestamp($timestamp)
     {
-        if (!$strTime || (!is_string($strTime) && !is_numeric($strTime))) {
+        if (!$timestamp || !is_numeric($timestamp) || 10 !== strlen($timestamp)) {
             return false;
         }
 
-        $strTime = trim($strTime);
+        return date('Ymd', $timestamp) ? true : false;
+    }
 
-        //@example timestamp 1325347200
-        if (is_int($strTime)) {
-            $date = date($format, $strTime);
+    /**
+     * 校验值是否是日期格式
+     *
+     * @param string $date 日期
+     * @return boolean
+     */
+    public static function isDate($date)
+    {
+        // strtotime转换不对，日期格式显然不对。
+        return strtotime($date) ? true : false;
+    }
 
-            return $date ?: false;
-
-            //@example date 2015/04/05
+    /**
+     * 校验值是否是日期并且是否满足设定格式
+     *
+     * @param string $date 日期
+     * @param string $format 需要检验的格式数组
+     * @return boolean
+     */
+    public static function isDateFormat($date, $format = 'Y-m-d')
+    {
+        if (!$unixTime = strtotime($date)) {
+            return false;
         }
 
-        $time = strtotime($strTime);
+        // 校验日期的格式有效性
+        if (date($format, $unixTime) === $date) {
+            return true;
+        }
 
-        return $time ? date($format, $time) : false;
+        return false;
+    }
+
+    /**
+     * @return false|int
+     */
+    public static function tomorrowBegin()
+    {
+        return mktime(0,0, 0, date('m'),date('d')+1, date('Y'));
+    }
+    /**
+     * @return false|int
+     */
+    public static function tomorrow()
+    {
+        return strtotime('+1 day');
     }
 
     //获取指定日期所在月的第一天和最后一天
@@ -134,3 +154,17 @@ echo strtotime("last Monday"), "\n";
     }
 
 }
+/*
+$tomorrow  = mktime(0, 0, 0, date("m")  , date("d")+1, date("Y"));
+$lastmonth = mktime(0, 0, 0, date("m")-1, date("d"),   date("Y"));
+$nextyear  = mktime(0, 0, 0, date("m"),   date("d"),   date("Y")+1);
+
+echo strtotime("now"), "\n";
+echo strtotime("10 September 2000"), "\n";
+echo strtotime("+1 day"), "\n";
+echo strtotime("+1 week"), "\n";
+echo strtotime("+1 week 2 days 4 hours 2 seconds"), "\n";
+echo strtotime("next Thursday"), "\n";
+echo strtotime("last Monday"), "\n";
+
+*/

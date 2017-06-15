@@ -15,10 +15,9 @@ namespace inhere\library\helpers;
  */
 abstract class DataHelper
 {
-
     /**
-     * 定义一个用来序列化对象的函数
-     * @param $obj
+     * 定义一个用来序列化数据的函数
+     * @param mixed $obj
      * @return string
      */
     public static function encode($obj)
@@ -37,6 +36,57 @@ abstract class DataHelper
     }
 
     /**
+     * php对象转换成为数组
+     * @param iterable|array|\Traversable $data
+     * @param bool $recursive
+     * @return array|bool
+     */
+    public static function toArray($data, $recursive = false)
+    {
+        // Ensure the input data is an array.
+        if ($data instanceof \Traversable) {
+            $data = iterator_to_array($data);
+        } elseif (is_object($data)) {
+            $data = get_object_vars($data);
+        } else {
+            $data = (array)$data;
+        }
+
+        if ($recursive) {
+            foreach ($data as &$value) {
+                if (is_array($value) || is_object($value)) {
+                    $value = static::toArray($value, $recursive);
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * data to array
+     * @param array|\Traversable $array
+     * @param string $class
+     * @return mixed
+     */
+    public static function toObject($array, $class = \stdClass::class)
+    {
+        $object = new $class;
+
+        foreach ($array as $name => $value) {
+            $name = trim($name);
+
+            if (!$name || is_numeric($name)) {
+                continue;
+            }
+
+            $object->$name = is_array($value) ? self::toObject($value) : $value;
+        }
+
+        return $object;
+    }
+
+    /**
      * Sanitize a string
      *
      * @param string $string String to sanitize
@@ -49,13 +99,18 @@ abstract class DataHelper
             $string = strip_tags($string);
         }
 
-        return @self::htmlentitiesUTF8($string, ENT_QUOTES);
+        return @self::htmlentitiesUTF8($string);
     }
 
+    /**
+     * @param $string
+     * @param int $type
+     * @return array|string
+     */
     public static function htmlentitiesUTF8($string, $type = ENT_QUOTES)
     {
         if (is_array($string)) {
-            return array_map(array(__CLASS__, 'htmlentitiesUTF8'), $string);
+            return array_map([__CLASS__, 'htmlentitiesUTF8'], $string);
         }
 
         return htmlentities((string)$string, $type, 'utf-8');
@@ -68,7 +123,7 @@ abstract class DataHelper
     public static function htmlentitiesDecodeUTF8($string)
     {
         if (is_array($string)) {
-            $string = array_map(array(__CLASS__, 'htmlentitiesDecodeUTF8'), $string);
+            $string = array_map([__CLASS__, 'htmlentitiesDecodeUTF8'], $string);
             return (string)array_shift($string);
         }
 
@@ -83,17 +138,19 @@ abstract class DataHelper
     public static function argvToGET($argc, $argv)
     {
         if ($argc <= 1) {
-            return null;
+            return true;
         }
 
         // get the first argument and parse it like a query string
         parse_str($argv[1], $args);
         if (!is_array($args) || !count($args)) {
-            return null;
+            return true;
         }
 
         $_GET = array_merge($args, $_GET);
         $_SERVER['QUERY_STRING'] = $argv[1];
+
+        return true;
     }
 
     /**

@@ -8,6 +8,7 @@
 
 namespace inhere\library\collections;
 
+use inhere\library\helpers\Str;
 use RuntimeException;
 
 /**
@@ -104,7 +105,7 @@ class Config extends DataCollector
     public function get($path, $default = null)
     {
         if ($this->mode === self::MODE_FOLDER) {
-            $nodes = static::getPathNodes($path, $this->separator);
+            $nodes = Str::toArray($path, $this->separator);
             $name = array_shift($nodes);// config file name
 
             // if config file not load. load it.
@@ -114,9 +115,7 @@ class Config extends DataCollector
             }
         }
 
-        $result = static::getByPath($this->data, $path, $this->separator);
-
-        return $result !== null ? $result : $default;
+        return parent::get($path, $default);
     }
 
     /**

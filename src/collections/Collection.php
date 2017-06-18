@@ -120,7 +120,7 @@ class Collection extends SimpleCollection
      * @param string $default
      * @return mixed
      */
-    public function get($path, $default = null)
+    public function get(string $path, $default = null)
     {
         return Arr::getByPath($this->data, $path, $default, $this->separator);
     }

@@ -102,7 +102,7 @@ class Config extends Collection
      * @param string $default
      * @return mixed
      */
-    public function get($path, $default = null)
+    public function get(string $path, $default = null)
     {
         if ($this->mode === self::MODE_FOLDER) {
             $nodes = Str::toArray($path, $this->separator);

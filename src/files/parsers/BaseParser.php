@@ -34,7 +34,7 @@ abstract class BaseParser
             return self::parseFile($string, $enhancement, $pathHandler, $fileDir);
         }
 
-        return self::doParse($string, $enhancement, $pathHandler, $fileDir);
+        return static::doParse($string, $enhancement, $pathHandler, $fileDir);
     }
 
     public static function parseFile($file, $enhancement = false, callable $pathHandler = null, $fileDir = '')
@@ -46,11 +46,11 @@ abstract class BaseParser
         $fileDir = $fileDir ?: dirname($file);
         $data = file_get_contents($file);
 
-        return self::doParse($data, $enhancement, $pathHandler, $fileDir);
+        return static::doParse($data, $enhancement, $pathHandler, $fileDir);
     }
 
     public static function parseString($string, $enhancement = false, callable $pathHandler = null, $fileDir = '')
     {
-        return self::doParse($string, $enhancement, $pathHandler, $fileDir);
+        return static::doParse($string, $enhancement, $pathHandler, $fileDir);
     }
 }

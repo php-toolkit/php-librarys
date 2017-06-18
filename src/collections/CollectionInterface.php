@@ -9,7 +9,7 @@ interface CollectionInterface extends \Serializable, \ArrayAccess, \Countable, \
 {
     public function set($key, $value);
 
-    public function get($key, $default = null);
+    public function get(string $key, $default = null);
 
     public function replace(array $items);
 

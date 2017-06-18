@@ -77,7 +77,7 @@ class SimpleCollection implements CollectionInterface
      * @param mixed $default The default value to return if data key does not exist
      * @return mixed The key's value, or the default value
      */
-    public function get($key, $default = null)
+    public function get(string $key, $default = null)
     {
         return $this->has($key) ? $this->data[$key] : $default;
     }

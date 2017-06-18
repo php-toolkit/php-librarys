@@ -31,35 +31,58 @@ class JsonHelper
     }
 
     /**
+     * @param string $data
+     * @param bool $toArray
+     * @return array|mixed|null|\stdClass|string
+     */
+    public static function parse($data, $toArray = true)
+    {
+        if (is_file($data)) {
+            return self::parseFile($data, $toArray);
+        }
+
+        return self::parseString($data, $toArray);
+    }
+
+    /**
      * @param $file
      * @param bool|true $toArray
      * @return mixed|null|string
      * @throws NotFoundException
      */
-    public static function loadFile($file, $toArray = true)
+    public static function parseFile($file, $toArray = true)
     {
-        if (!file_exists($file)) {
+        if (!is_file($file)) {
             throw new NotFoundException("File not found or does not exist resources: {$file}");
         }
 
-        if (!$data = file_get_contents($file)) {
-            return null;
+        $string = file_get_contents($file);
+
+        return self::parseString($string, $toArray);
+    }
+
+    /**
+     * @param string $string
+     * @param bool $toArray
+     * @return array|mixed|\stdClass
+     */
+    public static function parseString($string, $toArray = true)
+    {
+        if (!$string) {
+            return $toArray ? [] : new \stdClass();
         }
 
-        $data = preg_replace(array(
+        $string = preg_replace(array(
             // 去掉所有多行注释/* .... */
             '/\/\*.*?\*\/\s*/is',
             // 去掉所有单行注释//....
             '/\/\/.*?[\r\n]/is',
-            // 去掉空白
+            // 去掉空白, 多个空格换成一个
             '/(?!\w)\s*?(?!\w)/is'
-        ), array('', '', ' '), $data);
+        ), array('', '', ' '), trim($string));
 
-        if ($toArray) {
-            return json_decode($data, true);
-        }
-
-        return $data;
+        // json_last_error() === JSON_ERROR_NONE
+        return json_decode($string, (bool)$toArray);
     }
 
     /**
@@ -72,7 +95,7 @@ class JsonHelper
      * ]
      * @return string | bool
      */
-    public static function json($input, $output = false, array $options = [])
+    public static function format($input, $output = false, array $options = [])
     {
         if (!is_string($input)) {
             return false;

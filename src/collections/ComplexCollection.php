@@ -12,6 +12,6 @@ namespace inhere\library\collections;
  * Class ComplexCollection
  * @package inhere\library\collections
  */
-class ComplexCollection extends DataCollector
+class ComplexCollection extends Collection
 {
 }

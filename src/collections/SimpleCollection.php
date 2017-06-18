@@ -1,8 +1,10 @@
 <?php
+/**
+ * Simple data Collection
+ */
 
 namespace inhere\library\collections;
 
-use ArrayIterator;
 
 /**
  * Collection
@@ -257,10 +259,11 @@ class SimpleCollection implements CollectionInterface
 
     /**
      * @param string $serialized
+     * @param bool|array $allowedClasses
      */
-    public function unserialize($serialized)
+    public function unserialize($serialized, $allowedClasses = false)
     {
-        $this->data = unserialize($serialized, null);
+        $this->data = unserialize($serialized, ['allowed_classes' => $allowedClasses]);
     }
 
     /********************************************************************************
@@ -273,7 +276,7 @@ class SimpleCollection implements CollectionInterface
      */
     public function getIterator()
     {
-        return new ArrayIterator($this->data);
+        return new \ArrayIterator($this->data);
     }
 
     /********************************************************************************

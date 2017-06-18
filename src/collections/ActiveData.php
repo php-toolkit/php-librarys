@@ -29,6 +29,11 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
         return new static($data, $recursive);
     }
 
+    /**
+     * ActiveData constructor.
+     * @param array $data
+     * @param bool $recursive
+     */
     public function __construct(array $data = [], $recursive = false)
     {
         if ($data) {
@@ -81,7 +86,7 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
             }
         }
 
-        return $toArray ? $attrs : (new \ArrayIterator($attrs));
+        return $toArray ? $attrs : new \ArrayIterator($attrs);
         //return $toArray ? $attrs : (new \ArrayObject($attrs));
     }
 
@@ -96,12 +101,12 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
             $names = explode('.', $name);
             $node = $this;
 
-            foreach ((array)$names as $name) {
-                if ($node instanceof self && property_exists($node, $name)) {
-                    $node = $node->$name;
+            foreach ($names as $n) {
+                if ($node instanceof self && property_exists($node, $n)) {
+                    $node = $node->$n;
                 } else {
                     if ($this->isStrict()) {
-                        exit("Stored data don't exists node '$name'\n");
+                        exit("Stored data don't exists node '$n'\n");
                     }
 
                     $node = null;

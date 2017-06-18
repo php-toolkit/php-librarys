@@ -739,22 +739,23 @@ abstract class StringHelper
     {
         $str = ''; //合并后的字符串
         $data = token_get_all($content);
+        $count = count($data);
         $end = false; //没结束如$v = "php"中的等号;
 
-        for ($i = 0, $count = count($data); $i < $count; $i++) {
-            if (is_string($data[$i])) {
+        foreach ($data as $i => $v) {
+            if (is_string($v)) {
                 $end = false;
-                $str .= $data[$i];
+                $str .= $v;
             } else {
 
-                switch ($data[$i][0]) {//检测类型
+                switch ($v[0]) {//检测类型
                     case T_COMMENT:   //忽略单行多行注释
                     case T_DOC_COMMENT:
                         break;
                     case T_WHITESPACE: //去除空格
                         if (!$end) {
                             $end = true;
-                            $str .= " ";
+                            $str .= ' ';
                         }
                         break;
                     case T_START_HEREDOC://定界符开始
@@ -778,7 +779,7 @@ abstract class StringHelper
 
                     default:
                         $end = false;
-                        $str .= $data[$i][1];
+                        $str .= $v[1];
                 }
             }
         }

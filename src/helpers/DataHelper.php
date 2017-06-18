@@ -28,11 +28,12 @@ abstract class DataHelper
     /**
      * 反序列化
      * @param $txt
+     * @param bool|array $allowedClasses
      * @return mixed
      */
-    public static function decode($txt)
+    public static function decode($txt, $allowedClasses = false)
     {
-        return unserialize(gzuncompress(base64_decode($txt)));
+        return unserialize(gzuncompress(base64_decode($txt)), ['allowed_classes' => $allowedClasses]);
     }
 
     /**

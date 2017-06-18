@@ -21,7 +21,7 @@ if (!function_exists('class_basename')) {
     /**
      * Get the class "basename" of the given object / class.
      *
-     * @param  string|object $class
+     * @param  string|mixed $class
      * @return string
      */
     function class_basename($class)
@@ -62,10 +62,17 @@ if (!function_exists('retry')) {
     }
 }
 
-if (!function_exists('local_env')) {
-    function local_env($name = null, $default = null)
+if (!function_exists('env')) {
+    function env(string $name, $default = null)
     {
-        //return inhere\library\collections\Local::env($name, $default);
+        return inhere\library\utils\LocalEnv::instance()->env($name, $default);
+    }
+}
+
+if (!function_exists('local')) {
+    function local($name = null, $default = null)
+    {
+        return inhere\library\utils\LocalConfig::instance()->get($name, $default);
     }
 }
 
@@ -135,7 +142,7 @@ if (!function_exists('cookie')) {
 if (!function_exists('random_token')) {
     function random_token($length = 32)
     {
-        if (!isset($length) || (int)$length <= 8) {
+        if ((int)$length <= 8) {
             $length = 32;
         }
 

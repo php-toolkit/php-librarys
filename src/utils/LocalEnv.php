@@ -28,41 +28,16 @@ namespace inhere\library\utils;
  * $env = $lev->get('env', 'pdt');
  * ```
  */
-class LocalEnv
+class LocalEnv extends LocalConfig
 {
     /**
-     * app local env config
-     * @var array
-     */
-    // private static $instances = [];
-
-    /**
-     * app local env config
-     * @var array
-     */
-    private $data = [];
-
-    /**
-     * @var string
-     */
-    private $filePath;
-
-    /**
-     * @var string
-     */
-    private $fileName;
-
-    /**
-     * LocalEnv constructor.
      * @param string $filePath
      * @param string $fileName
+     * @return static
      */
-    public function __construct(string $filePath, string $fileName = '.env')
+    public static function load(string $filePath, string $fileName = '.env')
     {
-        $this->filePath = $filePath;
-        $this->fileName = $fileName;
-
-        $this->loadData();
+        return new static($filePath, $fileName);
     }
 
     /**********************************************************
@@ -75,8 +50,12 @@ class LocalEnv
      * @param  mixed $default
      * @return mixed
      */
-    public function get(string $name, $default = null)
+    public function env(string $name, $default = null)
     {
+        if (trim($name)) {
+            return $default;
+        }
+
         $value = getenv(strtoupper($name));
 
         return false !== $value ? $value : $default;
@@ -85,17 +64,17 @@ class LocalEnv
     /**
      * load env data
      */
-    private function loadData(): void
+    protected function loadData(): void
     {
-        $file = $this->getFile();
+        parent::loadData();
 
-        if ($file && is_file($file) && is_readable($file)) {
-            $this->data = parse_ini_file($file, true);
-
-            foreach ($this->data as $name => $value) {
-                // eg: "FOO=BAR"
-                putenv(strtoupper($name) . "=$value");
+        foreach ($this->getData() as $name => $value) {
+            if (!is_string($value)) {
+                continue;
             }
+
+            // eg: "FOO=BAR"
+            putenv(strtoupper($name) . "=$value");
         }
     }
 
@@ -114,22 +93,5 @@ class LocalEnv
         }
 
         return $_ENV + $_SERVER;
-    }
-
-    /**
-     * @return array
-     */
-    public function getData(): array
-    {
-        return $this->data;
-    }
-
-    /**
-     * getConfigFile
-     * @return string
-     */
-    public function getFile(): string
-    {
-        return $this->filePath . DIRECTORY_SEPARATOR . ($this->fileName ?: '.env');
     }
 }

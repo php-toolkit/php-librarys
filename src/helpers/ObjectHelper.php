@@ -66,11 +66,33 @@ class ObjectHelper
 
     /**
      * 反序列化
-     * @param $txt
+     * @param string $txt
+     * @param bool|array $allowedClasses
      * @return mixed
      */
-    public static function decode($txt)
+    public static function decode($txt, $allowedClasses = false)
     {
-        return DataHelper::decode($txt);
+        return DataHelper::decode($txt, $allowedClasses);
+    }
+
+    /**
+     * @param mixed $object
+     * @param bool $unique
+     * @return string
+     */
+    public static function hash($object, $unique = true)
+    {
+        if (is_object($object)) {
+            $hash = spl_object_hash($object);
+
+            if ($unique) {
+                $hash = md5($hash);
+            }
+
+            return $hash;
+        }
+
+        // a class
+        return is_string($object) ? md5($object) : '';
     }
 }

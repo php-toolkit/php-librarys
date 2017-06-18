@@ -21,6 +21,9 @@ use inhere\exceptions\UnknownCalledException;
  */
 class FixedData extends ActiveData
 {
+    /**
+     * @return bool
+     */
     public function isStrict()
     {
         return true;
@@ -36,6 +39,11 @@ class FixedData extends ActiveData
         $this->$offset = null;
     }
 
+    /**
+     * @param $name
+     * @param $value
+     * @throws UnknownCalledException
+     */
     public function __set($name, $value)
     {
         if (!property_exists($this, $name)) {
@@ -45,6 +53,11 @@ class FixedData extends ActiveData
         $this->$name = $value;
     }
 
+    /**
+     * @param $name
+     * @return ActiveData|null
+     * @throws UnknownCalledException
+     */
     public function __get($name)
     {
         if ($value = $this->get($name)) {

@@ -15,7 +15,7 @@ use RuntimeException;
  * Class Config - 配置数据
  * @package collections
  */
-class Config extends DataCollector
+class Config extends Collection
 {
     /**
      * mode
@@ -111,7 +111,7 @@ class Config extends DataCollector
             // if config file not load. load it.
             if (!isset($this->data[$name])) {
                 $file = $this->folderPath . "/{$name}.{$this->defaultFormat}";
-                $this->load($file, $this->defaultFormat);
+                $this->data[$name] = self::read($file, $this->defaultFormat);
             }
         }
 

@@ -8,10 +8,12 @@
 
 namespace inhere\library\collections;
 
+use inhere\library\files\parsers\IniParser;
+use inhere\library\files\parsers\JsonParser;
+use inhere\library\files\parsers\YmlParser;
 use inhere\library\helpers\Arr;
 use inhere\library\helpers\DataHelper;
 use RuntimeException;
-use inhere\exceptions\DataParseException;
 
 /**
  * Class DataCollector - 数据收集器 (数据存储器 - DataStorage) complex deep
@@ -38,7 +40,7 @@ use inhere\exceptions\DataParseException;
  * $config->get('foo');
  * ```
  */
-class DataCollector extends SimpleCollection
+class Collection extends SimpleCollection
 {
     /**
      * @var array
@@ -241,9 +243,40 @@ class DataCollector extends SimpleCollection
         return $this;
     }
 
-    public function readData($data, $format = self::FORMAT_PHP)
+    /**
+     * @param $data
+     * @param string $format
+     * @return array|mixed
+     */
+    public static function read($data, $format = self::FORMAT_PHP)
     {
+        switch ($format) {
+            case static::FORMAT_YML:
+                $array = self::parseYaml($data);
+                break;
 
+            case static::FORMAT_JSON:
+                $array = self::parseJson($data);
+                break;
+
+            case static::FORMAT_INI:
+                $array = self::parseIni($data);
+                break;
+
+            case static::FORMAT_PHP:
+            default:
+                $array = $data;
+                if (is_string($data) && is_file($data)) {
+                    $array = require $data;
+                }
+
+                if (!is_array($data)) {
+                    throw new \InvalidArgumentException('param type error! must is array.');
+                }
+                break;
+        }
+
+        return $array;
     }
 
     /**
@@ -254,9 +287,7 @@ class DataCollector extends SimpleCollection
      */
     public function loadYaml($data)
     {
-        $array = static::parseYaml(trim($data));
-
-        return $this->bindData($this->data, $array);
+        return $this->bindData($this->data, static::parseYaml($data));
     }
 
     /**
@@ -293,28 +324,18 @@ class DataCollector extends SimpleCollection
 
     /**
      * load data form ini file
-     * @param $data
+     * @param string $string
      * @return static
      */
-    public function loadIni($data)
+    public function loadIni($string)
     {
-        if (!is_string($data)) {
-            throw new \InvalidArgumentException('param type error! must is string.');
-        }
-
-        if (file_exists($data)) {
-            $data = file_get_contents($data);
-        }
-
-        $data = parse_ini_string($data, true);
-
-        return $this->bindData($this->data, $data);
+        return $this->bindData($this->data, self::parseIni($string));
     }
 
     /**
      * load data form json file
      * @param $data
-     * @return DataCollector
+     * @return Collection
      * @throws RuntimeException
      */
     public function loadJson($data)
@@ -382,7 +403,7 @@ class DataCollector extends SimpleCollection
 
     public function __clone()
     {
-        $this->data = unserialize(serialize($this->data));
+        $this->data = unserialize(serialize($this->data), ['allowed_classes' => self::class]);
     }
 
 //////
@@ -390,108 +411,39 @@ class DataCollector extends SimpleCollection
 //////
 
     /**
-     * @param $data
+     * @param $string
+     * @param bool $enhancement
+     * @param callable|null $pathHandler
+     * @param string $fileDir
      * @return array
-     * @throws DataParseException
      */
-    public static function parseJson($data)
+    public static function parseIni($string, $enhancement = false, callable $pathHandler = null, $fileDir = '')
     {
-        if (!is_string($data)) {
-            throw new \InvalidArgumentException('param type error! must is string.');
-        }
-
-        if (!$data) {
-            return [];
-        }
-
-        if (file_exists($data)) {
-            $data = file_get_contents($data);
-            $pattern = [
-                //去除文件中的注释
-                '!/\*[^*]*\*+([^/][^*]*\*+)*/!',
-
-                //去掉所有单行注释
-                '/\/\/.*?[\r\n]/is',
-
-                // 多个空格 换成一个
-                "/(?!\w)\s*?(?!\w)/is"
-            ];
-            $replace = ['', '', ''];
-            $data = preg_replace($pattern, $replace, $data);
-        }
-
-        $data = json_decode(trim($data), true);
-        if (json_last_error() === JSON_ERROR_NONE) {
-            return $data;
-        }
-
-        throw new DataParseException('json config data parse error :' . json_last_error_msg());
+        return IniParser::parse($string, $enhancement, $pathHandler, $fileDir);
     }
 
-    const IMPORT_KEY = 'import';
+    /**
+     * @param $data
+     * @param bool $enhancement
+     * @param callable|null $pathHandler
+     * @param string $fileDir
+     * @return array
+     */
+    public static function parseJson($data, $enhancement = false, callable $pathHandler = null, $fileDir = '')
+    {
+        return JsonParser::parse($data, $enhancement, $pathHandler, $fileDir);
+    }
 
     /**
      * parse YAML
      * @param string|bool $data Waiting for the parse data
-     * @param bool $supportImport Simple support import other config by tag 'import'. must is bool.
+     * @param bool $enhancement Simple support import other config by tag 'import'. must is bool.
      * @param callable $pathHandler When the second param is true, this param is valid.
      * @param string $fileDir When the second param is true, this param is valid.
      * @return array
      */
-    public static function parseYaml($data, $supportImport = false, callable $pathHandler = null, $fileDir = '')
+    public static function parseYaml($data, $enhancement = false, callable $pathHandler = null, $fileDir = '')
     {
-        if (!is_string($data)) {
-            throw new \InvalidArgumentException('param type error! must is string.');
-        }
-
-        if (!$data) {
-            return [];
-        }
-
-        $parserClass = '\Symfony\Component\Yaml\Parser';
-
-        if (!class_exists($parserClass)) {
-            throw new \UnexpectedValueException("yml format parser Class $parserClass don't exists! please install package 'symfony/yaml'.");
-        }
-
-        if (is_file($data)) {
-            $fileDir = $fileDir ?: dirname($data);
-            $data = file_get_contents($data);
-        }
-
-        /** @var \Symfony\Component\Yaml\Parser $parser */
-        $parser = new $parserClass;
-        $array = $parser->parse(trim($data));
-//        $array  = json_decode(json_encode($array));
-
-        // import other config by tag 'import'
-        if ($supportImport === true && !empty($array[static::IMPORT_KEY]) && is_string($array[static::IMPORT_KEY])) {
-            $importFile = trim($array[static::IMPORT_KEY]);
-
-            // if needed custom handle $importFile path. e.g: Maybe it uses custom alias path
-            if ($pathHandler && is_callable($pathHandler)) {
-                $importFile = $pathHandler($importFile);
-            }
-
-            // if $importFile is not exists AND $importFile is not a absolute path AND have $parentFile
-            if ($fileDir && !file_exists($importFile) && $importFile[0] !== '/') {
-                $importFile = $fileDir . '/' . trim($importFile, './');
-            }
-
-            // $importFile is file
-            if (is_file($importFile)) {
-
-                unset($array['import']);
-                $data = file_get_contents($importFile);
-                $imported = $parser->parse(trim($data));
-                $array = array_merge($imported, $array);
-            } else {
-                throw new \UnexpectedValueException("needed imported file $importFile don't exists!");
-            }
-        }
-
-        unset($parser);
-
-        return $array;
+        return YmlParser::parse($data, $enhancement, $pathHandler, $fileDir);
     }
 }

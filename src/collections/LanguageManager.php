@@ -191,7 +191,7 @@ class LanguageManager extends StdObject
 
     /**
      * @param string $fileKey
-     * @return DataCollector
+     * @return Collection
      */
     public function getFallbackFileData($fileKey)
     {
@@ -205,7 +205,7 @@ class LanguageManager extends StdObject
 
             if (is_file($file)) {
                 $this->loadedFiles[] = $file;
-                $this->fallbackData[$fileKey] = DataCollector::make($file, $this->fileType, $this->fallbackLang . '.' . $fileKey);
+                $this->fallbackData[$fileKey] = Collection::make($file, $this->fileType, $this->fallbackLang . '.' . $fileKey);
             }
         }
 
@@ -285,7 +285,7 @@ class LanguageManager extends StdObject
 
     /**
      * @param string $fileKey
-     * @return DataCollector
+     * @return Collection
      * @throws NotFoundException
      */
     public function getLangFileData($fileKey)
@@ -301,7 +301,7 @@ class LanguageManager extends StdObject
                 throw new NotFoundException("The language file don't exists. FILE: $file");
             }
 
-            $this->data[$fileKey] = DataCollector::make($file, $this->fileType, $this->lang . '.' . $fileKey);
+            $this->data[$fileKey] = Collection::make($file, $this->fileType, $this->lang . '.' . $fileKey);
             $this->loadedFiles[] = $file;
 
             return $this->data[$fileKey];
@@ -311,7 +311,7 @@ class LanguageManager extends StdObject
     }
 
     /**
-     * @return DataCollector
+     * @return Collection
      * @throws \inhere\exceptions\NotFoundException
      */
     public function getDefaultFileData()
@@ -456,7 +456,7 @@ class LanguageManager extends StdObject
      */
     public function setFileType($fileType)
     {
-        if (in_array($fileType, DataCollector::getFormats(), true)) {
+        if (in_array($fileType, Collection::getFormats(), true)) {
             $this->fileType = $fileType;
         }
     }

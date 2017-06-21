@@ -170,11 +170,12 @@ class FormatHelper
      */
     public static function ampReplace($text)
     {
-        $text = str_replace('&&', '*--*', $text);
-        $text = str_replace('&#', '*-*', $text);
-        $text = str_replace('&amp;', '&', $text);
-        $text = str_replace('*-*', '&#', $text);
-        $text = str_replace('*--*', '&&', $text);
+        $text = str_replace([
+            '&&',  '&#',   '&#',  '&amp;', '*-*','*--*',
+        ], [
+            '*--*', '*-*', '*-*',  '&',    '&#',  '&&',
+        ], $text);
+
         $text = preg_replace('/|&(?![\w]+;)|/', '&amp;', $text);
 
         return $text;

@@ -35,7 +35,7 @@ class JsonParser extends BaseParser
         }
 
         /** @var array $array */
-        $array = JsonHelper::parse(trim($string), true);
+        $array = JsonHelper::parse($string);
 
         /*
          * Parse special keywords
@@ -60,7 +60,7 @@ class JsonParser extends BaseParser
                 // $importFile is file
                 if (is_file($extendFile)) {
                     $data = file_get_contents($extendFile);
-                    $array = array_merge(JsonHelper::parse(trim($data), true), $array);
+                    $array = array_merge(JsonHelper::parse($data), $array);
                 } else {
                     throw new \UnexpectedValueException("needed extended file [$extendFile] don't exists!");
                 }
@@ -87,7 +87,7 @@ class JsonParser extends BaseParser
                     // $importFile is file
                     if (is_file($importFile)) {
                         $data = file_get_contents($importFile);
-                        $array[$key] = JsonHelper::parse(trim($data), true);
+                        $array[$key] = JsonHelper::parse($data);
                     } else {
                         throw new \UnexpectedValueException("needed imported file [$importFile] don't exists!");
                     }

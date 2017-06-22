@@ -532,7 +532,7 @@ class LiteLogger
     public function log($level, $message, array $context = [], array $extra = [])
     {
         // 不在记录的级别内
-        if ($this->isCanRecord($level)) {
+        if (!$this->isCanRecord($level)) {
             return null;
         }
 

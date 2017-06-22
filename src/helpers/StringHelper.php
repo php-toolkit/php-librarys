@@ -348,7 +348,7 @@ abstract class StringHelper
                 return [];
             }
 
-            $array = strpos($str, $sep) !== false ? array_map('trim', explode(',', $str)) : [$str];
+            $array = strpos($str, $sep) !== false ? array_map('trim', explode($sep, $str)) : [$str];
         }
 
         return $array;

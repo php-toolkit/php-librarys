@@ -72,14 +72,14 @@ class JsonHelper
             return $toArray ? [] : new \stdClass();
         }
 
-        $string = preg_replace(array(
+        $string = preg_replace([
             // 去掉所有多行注释/* .... */
             '/\/\*.*?\*\/\s*/is',
             // 去掉所有单行注释//....
             '/\/\/.*?[\r\n]/is',
             // 去掉空白, 多个空格换成一个
-            '/(?!\w)\s*?(?!\w)/is'
-        ), array('', '', ' '), trim($string));
+            //'/(?!\w)\s*?(?!\w)/is'
+        ], ['', '', ' '], trim($string));
 
         // json_last_error() === JSON_ERROR_NONE
         return json_decode($string, (bool)$toArray);

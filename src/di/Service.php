@@ -14,56 +14,71 @@ namespace inhere\library\di;
  * Class Service
  * @package inhere\library\di
  */
-class Service
+final class Service
 {
     /**
      * @var callable
      */
-    protected $callback;
+    private $callback;
 
-    protected $instance;
+    /**
+     * @var mixed
+     */
+    private $instance;
 
     /**
      * @var array
      */
-    protected $arguments = [];
+    private $arguments;
 
     /**
      * $locked 锁定服务，一旦注册就不允许重载 | 重置reset (锁定并不等于共享，仍可以设置是否共享)
-     * @var array
+     * @var bool
      */
-    protected $locked = false;
+    private $locked;
 
     /**
      * 共享的服务，设置后若没有重载(置)，获取的总是第一次激活的服务实例
-     * @var array
+     * @var bool
      */
-    protected $shared = false;
+    private $shared;
 
+    /**
+     * Service constructor.
+     * @param $callback
+     * @param array $arguments
+     * @param bool $shared
+     * @param bool $locked
+     */
     public function __construct($callback, array $arguments = [], $shared = false, $locked = false)
     {
-        $this->setCallback($callback);
         $this->arguments = $arguments;
-        $this->shared = $shared;
-        $this->locked = $locked;
+
+        $this->shared = (bool)$shared;
+        $this->locked = (bool)$locked;
+
+        $this->setCallback($callback);
     }
 
     /**
      * @param Container $container
-     * @param bool $getNew
+     * @param bool $forceNew
      * @return mixed|null
      */
-    public function get(Container $container, $getNew = false)
+    public function get(Container $container, $forceNew = false)
     {
         if ($this->shared) {
-            if (!$this->instance || $getNew) {
+            if (!$this->instance || $forceNew) {
                 $this->instance = call_user_func($this->callback, $container);
             }
+
+            // 激活后就锁定，不允许再覆盖设置服务
+            $this->locked = true;
 
             return $this->instance;
         }
 
-        // 总是获取新的实例，就不在存储到 $this->instance
+        // 总是获取新的实例，就不再存储
         return call_user_func($this->callback, $container);
     }
 
@@ -77,26 +92,23 @@ class Service
 
     /**
      * @param $callback
-     * @return $this
      */
     public function setCallback($callback)
     {
-        if (!is_callable($callback)) {
+        if (!method_exists($callback, '__invoke')) {
+            $this->instance = $callback;
+
             $callback = function () use ($callback) {
                 return $callback;
             };
         }
 
-        // 第二次进入时...
-        if ($this->locked) {
-            return $this;
-        }
-
         $this->callback = $callback;
-
-        return $this;
     }
 
+    /**
+     * @return array
+     */
     public function getArguments()
     {
         return $this->arguments;
@@ -105,78 +117,50 @@ class Service
     /**
      * 给服务设置参数，在获取服务实例前
      * @param array $params 设置参数
-     * 通常无key值，按默认顺序传入服务回调中
-     * 当 $bindType = REPLACE_PARAM
-     * [
-     * // pos => args
-     *  0 => arg1,
-     *  1 => arg2,
-     *  3 => arg3,
-     * ]
-     * @param int $bindType 绑定参数方式
      * @throws \InvalidArgumentException
-     * @return $this
      */
-    public function setArguments(array $params, $bindType = Container::OVERLOAD_PARAM)
+    public function setArguments(array $params)
     {
-        if (!$this->arguments) {
-            $this->arguments = (array)$params;
-        } else {
-            $oldParams = $this->arguments;
-
-            switch (trim($bindType)) {
-                case Container::REPLACE_PARAM:
-                    $nowParams = array_replace((array)$oldParams, (array)$params);
-                    break;
-                case Container::APPEND_PARAM: {
-                    $nowParams = (array)$oldParams;
-
-                    foreach ($params as $param) {
-                        $nowParams[] = $param;
-                    }
-
-                    break;
-                }
-                default:
-                    $nowParams = (array)$params;
-                    break;
-            }
-
-            $this->arguments = (array)$nowParams;
-        }
-
-        return $this;
+        $this->arguments = $params;
     }
 
     /**
-     * @param bool $value
-     * @return $this
+     * @return mixed
      */
-    public function shared($value = true)
+    public function getInstance()
     {
-        $this->shared = (bool)$value;
-
-        return $this;
+        return $this->instance;
     }
 
     /**
-     * @param bool $value
-     * @return $this
+     * @return bool
      */
-    public function lock($value = true)
-    {
-        $this->locked = (bool)$value;
-
-        return $this;
-    }
-
-    public function isLocked()
+    public function isLocked(): bool
     {
         return $this->locked;
     }
 
-    public function isShared()
+    /**
+     * @param bool $locked
+     */
+    public function setLocked($locked = true)
+    {
+        $this->locked = (bool)$locked;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isShared(): bool
     {
         return $this->shared;
+    }
+
+    /**
+     * @param bool $shared
+     */
+    public function setShared($shared = true)
+    {
+        $this->shared = (bool)$shared;
     }
 }

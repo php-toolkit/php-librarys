@@ -9,16 +9,14 @@
 namespace inhere\library\traits;
 
 /**
- * Class TraitSimpleAlias
+ * Class PathAliasTrait
  * @package inhere\library\traits
+ *
+ * @property array $aliases path alias array
  */
-trait TraitSimpleAlias
+trait PathAliasTrait
 {
-    /**
-     * path alias
-     * @var array
-     */
-    protected static $aliases = [];
+    // protected static $aliases = [];
 
     /**
      * set/get path alias
@@ -40,7 +38,7 @@ trait TraitSimpleAlias
 
             // only a alias. e.g. @project
             if (!strpos($path, $sep)) {
-                return isset(self::$aliases[$path]) ? self::$aliases[$path] : $path;
+                return self::$aliases[$path] ?? $path;
             }
 
             // have other partial. e.g: @project/temp/logs
@@ -60,6 +58,10 @@ trait TraitSimpleAlias
 
         // custom set path's alias. e.g: Slim::alias([ 'alias' => 'path' ]);
         if (is_array($path)) {
+            /**
+             * @var string $alias
+             * @var string $realPath
+             */
             foreach ($path as $alias => $realPath) {
                 // 1th char must is '@'
                 if ($alias[0] !== '@') {

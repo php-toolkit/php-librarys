@@ -8,7 +8,11 @@
 
 namespace inhere\library\di;
 
-interface InterfaceServiceProvider
+/**
+ * Interface InterfaceServiceProvider
+ * @package inhere\library\di
+ */
+interface ServiceProviderInterface
 {
     /**
      * 注册一项服务(可能含有多个服务)提供者到容器中

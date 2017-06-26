@@ -14,7 +14,7 @@ namespace inhere\library\traits;
  * Class TraitUseAlias
  * @package inhere\library\traits
  *
- * @property $aliases
+ * @property array $aliases
  */
 trait TraitUseAlias
 {
@@ -43,6 +43,11 @@ trait TraitUseAlias
         return $this;
     }
 
+    /**
+     * @param $alias
+     * @param $value
+     * @return $this
+     */
     public function addAlias($alias, $value)
     {
         $this->aliasAndValueCheck($alias, $value);
@@ -84,7 +89,7 @@ trait TraitUseAlias
         $alias = trim($alias);
 
         if (in_array($alias, $this->lockedAliases, true)) {
-            throw new \RuntimeException(sprintf('别名：%s , 已被锁定。请设置其他名称。', $alias));
+            throw new \RuntimeException(sprintf('alias name %s has been locked.', $alias));
         }
     }
 
@@ -106,18 +111,9 @@ trait TraitUseAlias
      * @param $alias
      * @return mixed
      */
-    public function isAlias($alias)
-    {
-        return isset($this->aliases[$alias]);
-    }
-
-    /**
-     * @param $alias
-     * @return mixed
-     */
     public function hasAlias($alias)
     {
-        return $this->isAlias($alias);
+        return isset($this->aliases[$alias]);
     }
 
     /**

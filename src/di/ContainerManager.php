@@ -1,7 +1,6 @@
 <?php
 /**
  * @author Inhere
- * @version v1.0
  * Use :
  * ContainerManager.php
  * Date : 2014-7-10
@@ -16,140 +15,117 @@ namespace inhere\library\di;
 abstract class ContainerManager
 {
     /**
-     * 一组容器的扼要描述，标记不同的容器(这里一组含有一个基础容器和其他的属于这组[$profile]的其它子容器)
-     * @var string $profile
+     * 一组容器的扼要描述，标记不同的容器(这里一组含有一个基础容器和其他的属于这组[$group]的其它子容器)
+     * @var string $group
      */
-    static protected $profile = 'di';
+    protected static $defaultGroup = 'di';
 
     /**
      * $containers 容器列表
      * @var array
      */
-    static protected $containers = [
+    protected static $containers = [
         'di' => [
-            'base' => null,// 'container name'=> a base Container instance
+            'root' => null,// 'container name'=> a base Container instance
             'children' => []
         ]
     ];
 
     /**
-     * 后期绑定服务参数方式 (参数组成的数组。没有key,不能用合并)
-     * 1. 用传入的覆盖 (默认)
-     * 2. 传入指定了位置的参数来替换掉原有位置的参数
-     * [
-     *    //pos=>arguments
-     *      0 => arg1, // 第一个参数
-     *      1 => arg2,
-     *      4 => arg3, //第五个参数
-     * ]
-     * 3. 在后面追加参数
+     * @param null|string $name
+     * @return Container
      */
-    const OVERLOAD_PARAM = 1;
-    const REPLACE_PARAM = 2;
-    const APPEND_PARAM = 3;
-
-    static public function getContainer($name = null)
+    public static function getContainer($name = null)
     {
-        return self::build($name);
-    }
-
-    static public function make($name = '', $profile = '')
-    {
-        return self::build($name, $profile);
+        return self::make($name);
     }
 
     /**
      * @param string $name
-     * @param string $profile
+     * @param string $group
      * @return Container
      */
-    static public function build($name = '', $profile = '')
+    public static function make($name = null, $group = null)
     {
-        $profile = $profile ?: static::$profile;
+        $group = $group ?: static::$defaultGroup;
 
         // No name, return default's base container.
         if (!$name) {
-            if (empty(self::$containers[$profile]['base'])) {
+            if (empty(self::$containers[$group]['root'])) {
                 $container = new Container;
+                $container->name = 'di.root';
 
-                $container->name = 'di.base';
-
-                self::$containers[$profile]['base'] = $container;
+                self::$containers[$group]['root'] = $container;
             }
 
-            return self::$containers[$profile]['base'];
+            return self::$containers[$group]['root'];
         }
 
         // Has name, we return children container.
-        if (empty(self::$containers[$profile][$name]) || !(self::$containers[$profile][$name] instanceof Container)) {
-            self::$containers[$profile][$name] = new Container(static::getContainer());
-            self::$containers[$profile][$name]->name = $name;
+        if (empty(self::$containers[$group][$name]) || !(self::$containers[$group][$name] instanceof Container)) {
+            self::$containers[$group][$name] = new Container([], static::make(null, $group));
+            self::$containers[$group][$name]->name = $name;
         }
 
-        return self::$containers[$profile][$name];
+        return self::$containers[$group][$name];
     }
 
     /**
      * setProfile
-     * @param string $profile
+     * @param string $group
      * @return  void
      */
-    public static function setProfile($profile = 'di')
+    public static function setDefaultGroup($group = 'di')
     {
-        $profile = strtolower(trim($profile));
+        $group = strtolower(trim($group));
 
-        if (!isset(static::$containers[$profile])) {
-            static::$containers[$profile] = array(
+        if (!isset(static::$containers[$group])) {
+            static::$containers[$group] = [
                 'root' => null,
                 'children' => []
-            );
+            ];
         }
 
-        static::$profile = $profile;
+        static::$defaultGroup = $group;
     }
 
     /**
      * Method to get property Profile
      * @return  string
      */
-    public static function getProfile()
+    public static function getDefaultGroup()
     {
-        return static::$profile;
+        return static::$defaultGroup;
     }
 
     /**
      * reset
-     * @param string $profile
-     * @return  void
+     * @param string $group
      */
-    public static function reset($profile = null)
+    public static function reset($group = null)
     {
-        if (!$profile) {
-            static::$containers = array();
-
-            return;
+        if (!$group) {
+            static::$containers = [];
+        } else {
+            static::$containers[$group] = [];
         }
-
-        static::$containers[$profile] = array();
-
-        return;
     }
 
-    static public function exists($id, $name = '')
+    public static function exists($id, $name = '')
     {
         $container = self::getContainer($name);
 
         return $container->exists($id);
     }
 
-    static public function set($id, $service, $name = '')
+    public static function set($id, $service, $name = '')
     {
         $container = self::getContainer($name);
 
         return $container->set($id, $service);
     }
 
-    static public function share($id, $service, $name = '')
+    public static function share($id, $service, $name = '')
     {
 
     }
@@ -158,33 +134,29 @@ abstract class ContainerManager
      * more @see Container::get()
      * @param $id
      * @param string $name 容器名称
-     * @param array $params
-     * @param int $bindType
      * @return mixed
      */
-    static public function get($id, $name = '', array $params = [], $bindType = self::OVERLOAD_PARAM)
+    public static function get($id, $name = '')
     {
         $container = self::getContainer($name);
 
-        return $container->get($id, (array)$params, $bindType);
+        return $container->get($id);
     }
 
     /**
      * more @see Container::getNew()
      * @param $id
      * @param string $name
-     * @param array $params
-     * @param int $bindType
      * @return mixed
      */
-    static public function getNew($id, $name = '', array $params = [], $bindType = self::OVERLOAD_PARAM)
+    public static function getNew($id, $name = '')
     {
         $container = self::getContainer($name);
 
-        return $container->make($id, (array)$params, $bindType);
+        return $container->getNew($id);
     }
 
-    static public function getShared()
+    public static function getShared()
     {
 
     }

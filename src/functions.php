@@ -69,6 +69,13 @@ if (!function_exists('env')) {
     }
 }
 
+if (!function_exists('msleep')) {
+    function msleep($ms)
+    {
+        usleep($ms * 1000);
+    }
+}
+
 if (!function_exists('local')) {
     function local($name = null, $default = null)
     {

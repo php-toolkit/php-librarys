@@ -9,6 +9,8 @@
 
 namespace inhere\library\helpers;
 
+use inhere\exceptions\DependencyResolutionException;
+
 /**
  * Class ObjectHelper
  * @package inhere\library\helpers
@@ -94,5 +96,75 @@ class ObjectHelper
 
         // a class
         return is_string($object) ? md5($object) : '';
+    }
+
+
+    /**
+     * @from https://github.com/ventoviro/windwalker
+     * Build an array of constructor parameters.
+     * @param   \ReflectionMethod $method Method for which to build the argument array.
+     * @throws DependencyResolutionException
+     * @return  array  Array of arguments to pass to the method.
+     */
+    public static function getMethodArgs(\ReflectionMethod $method)
+    {
+        $methodArgs = array();
+
+        foreach ($method->getParameters() as $param) {
+            $dependency = $param->getClass();
+            $dependencyVarName = $param->getName();
+
+            // If we have a dependency, that means it has been type-hinted.
+            if (null !== $dependency) {
+                $depClass = $dependency->getName();
+                $depObject = self::createObject($depClass);
+
+                if ($depObject instanceof $depClass) {
+                    $methodArgs[] = $depObject;
+
+                    continue;
+                }
+            }
+
+            // Finally, if there is a default parameter, use it.
+            if ($param->isOptional()) {
+                $methodArgs[] = $param->getDefaultValue();
+
+                continue;
+            }
+
+            // Couldn't resolve dependency, and no default was provided.
+            throw new DependencyResolutionException(sprintf('Could not resolve dependency: %s', $dependencyVarName));
+        }
+
+        return $methodArgs;
+    }
+
+    /**
+     * 从类名创建服务实例对象，会尽可能自动补完构造函数依赖
+     * @from windWalker https://github.com/ventoviro/windwalker
+     * @param string $class a className
+     * @throws DependencyResolutionException
+     * @return mixed
+     */
+    public static function createObject($class)
+    {
+        try {
+            $reflection = new \ReflectionClass($class);
+        } catch (\ReflectionException $e) {
+            return false;
+        }
+
+        $constructor = $reflection->getConstructor();
+
+        // If there are no parameters, just return a new object.
+        if (null === $constructor) {
+            return new $class;
+        }
+
+        $newInstanceArgs = self::getMethodArgs($constructor);
+
+        // Create a callable for the dataStorage
+        return $reflection->newInstanceArgs($newInstanceArgs);
     }
 }

@@ -8,7 +8,6 @@
 require __DIR__ . '/s-autoload.php';
 
 use inhere\library\process\pool\SimpleObjectPool;
-use inhere\library\process\pool\ResourcePool;
 
 class TestObj implements \inhere\library\process\pool\PoolObjectInterface
 {

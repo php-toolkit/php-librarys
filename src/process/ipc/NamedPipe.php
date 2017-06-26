@@ -12,7 +12,7 @@ namespace inhere\library\process\ipc;
  * Class NamedPipe
  * @package inhere\library\process\ipc
  */
-class NamedPipe
+class NamedPipe extends BaseIpc
 {
     /**
      * pipe Handle

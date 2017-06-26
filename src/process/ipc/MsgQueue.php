@@ -9,10 +9,10 @@
 namespace inhere\library\process\ipc;
 
 /**
- * class SharedMemory
+ * class MsgQueue
  * @package inhere\library\process\ipc
  */
-class SharedMemory extends BaseIpc
+class MsgQueue extends BaseIpc
 {
 
 }

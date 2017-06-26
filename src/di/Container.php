@@ -14,13 +14,17 @@ namespace inhere\library\di;
 
 use inhere\exceptions\NotFoundException;
 use inhere\exceptions\DependencyResolutionException;
+use inhere\library\helpers\Obj;
+use inhere\library\traits\NameAliasTrait;
 
 /**
  * Class Container
  * @package inhere\library\di
  */
-class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
+class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate, \Countable
 {
+    use NameAliasTrait;
+
     /**
      * 当前容器名称，初始时即固定
      * @var string
@@ -28,31 +32,20 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
     public $name;
 
     /**
-     * 动态的存储当前正在设置或获取的服务 id, 用于支持实时的链式操作(设置多个别名时)
-     * @var string
-     */
-    protected $tempId;
-
-    /**
-     * @see getNew()
-     * true 强制获取服务的新实例，不管它是否有已激活的实例
-     * @var bool
-     */
-    protected $getNewInstance = false;
-
-    protected $state;
-
-    /**
      * 当前容器的父级容器
      * @var Container
      */
-    protected $parent = null;
+    protected $parent;
 
     /**
      * 服务别名
      * @var array
+     * [
+     *  'alias name' => 'id',
+     *  'alias name2' => 'id'
+     * ]
      */
-    protected $aliases = [];
+    private $aliases = [];
 
     /**
      * $services 已注册的服务
@@ -62,33 +55,18 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
      *   ];
      * @var Service[]
      */
-    protected $services = [];
+    private $services = [];
 
     /**
-     * 服务参数设置 @see setArgument()
-     * @var array
+     * Container constructor.
+     * @param array $services
+     * @param Container|null $parent
      */
-    protected $arguments = [];
-
-    /**
-     * 后期绑定服务参数方式 (参数组成的数组。没有key,不能用合并)
-     * 1. 用传入的覆盖 (默认)
-     * 2. 传入指定了位置的参数来替换掉原有位置的参数
-     * [
-     *    //pos=>arguments
-     *      0 => arg1, // 第一个参数
-     *      1 => arg2,
-     *      4 => arg3, //第五个参数
-     * ]
-     * 3. 在后面追加参数
-     */
-    const OVERLOAD_PARAM = 1;
-    const REPLACE_PARAM = 2;
-    const APPEND_PARAM = 3;
-
-    public function __construct(Container $container = null)
+    public function __construct(array $services = [], Container $parent = null)
     {
-        $this->parent = $container;
+        $this->parent = $parent;
+
+        $this->sets($services);
     }
 
 ///////////////////////////////////////// Service Add /////////////////////////////////////////
@@ -96,33 +74,29 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
     /**
      * 在容器注册服务
      * @param  string $id 服务组件注册id
-     * @param mixed(string|array|object|callback) $definition 服务实例对象 | 服务信息
+     * @param mixed (string|array|object|callback) $definition 服务实例对象 | 服务信息
      * sting:
      *  $definition = className
      * array:
      *  $definition = [
      *     // 1. 仅类名 $definition['params']则传入对应构造方法
      *     'target' => 'className',
-     *
      *     // 2. 类的静态方法, $definition['params']则传入对应方法 className::staticMethod(params..)
-     *     // 'target' => 'className::staticMethod',
+     *     'target' => 'className::staticMethod',
      *
      *     // 3. 类的动态方法, $definition['params']则传入对应方法 (new className)->method(params...)
-     *     // 'target' => 'className->method',
+     *     'target' => 'className->method',
      *
-     *     'idAliases' => [...] 设置别名
-     *
+     *     '_options' => [...] 一些服务设置(别名)
      *     // 设置参数方式一
-     *     'params' => [
+     *     '_params' => [
      *         arg1,arg2,arg3,...
      *     ]
-     *
-     *     // 设置参数方式二， // arg1 2 3 将会被收集 到 params[], 组成 方式一 的形式
+     *     // 设置参数方式二， // arg1 arg2 arg3 将会被收集 到 _params[], 组成 方式一 的形式
      *     arg1,
      *     arg2,
      *     arg3,
      *     ...
-     *
      *  ]
      * object:
      *  $definition = new xxClass();
@@ -131,63 +105,59 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
      * @param bool $shared 是否共享
      * @param bool $locked 是否锁定服务
      * @return $this
+     * @throws DependencyResolutionException
      * @throws NotFoundException
      * @throws \InvalidArgumentException
-     * @throws \InvalidArgumentException
      */
-    public function set($id, $definition, $shared = false, $locked = false)
+    public function set($id, $definition, $shared = true, $locked = false)
     {
-        $this->tempId = $this->_checkServiceId($id);
+        $id = $this->_checkServiceId($id);
 
         // 已锁定的服务，不能更改
         if ($this->isLocked($id)) {
+            throw new \RuntimeException(sprintf('Cannot override frozen service "%s".', $id));
+        }
+
+        $params = [];
+
+        // 已经是个服务实例 object 不是闭包 closure
+        if (is_object($definition)) {
+            $this->services[$id] = new Service($definition, $params, $shared, $locked);
+
             return $this;
         }
 
-        // Log::record();
-
-        // 已经是个服务实例 object 不是闭包 closure
-        if (is_object($definition) && !is_callable($definition)) {
-            $callback = function () use ($definition) {
-                return $definition;
-            };
-
-            // 是个回调 | a string; is target
-        } elseif (is_callable($definition) || is_string($definition)) {
-
+        // a string; is target
+        if (is_string($definition) || is_callable($definition)) {
             $callback = $this->createCallback($definition);
 
             // a Array 详细设置服务信息
         } elseif (is_array($definition)) {
-            if (!isset($definition['target'])) {
-                throw new \InvalidArgumentException('配置有误，必须有注册目标(请在服务配置中设置\'target\'项。e.g. 通常是类名)！');
+            if (empty($definition['target'])) {
+                throw new \InvalidArgumentException("Configuration errors, the 'target' is must be defined!");
             }
 
             $target = $definition['target'];
 
-            // 在配置中 直接设置别名
-            if (isset($definition['idAliases'])) {
-                $idAliases = (array)$definition['idAliases'];
-                unset($definition['idAliases']);
+            // 在配置中 设置一些信息
+            if (isset($definition['_options'])) {
+                $opts = $definition['_options'];
+                unset($definition['_options']);
 
-                $this->alias($idAliases, $id);
-            }
+                $opts = array_merge([
+                    'aliases' => null,
+                    'shared' => $shared,
+                    'locked' => $locked,
+                ], $opts);
 
-            // 在配置中 直接设置 shared
-            if (isset($definition['shared'])) {
-                $shared = (bool)$definition['shared'];
-                unset($definition['shared']);
-            }
-
-            // 在配置中 直接设置 locked
-            if (isset($definition['locked'])) {
-                $locked = (bool)$definition['locked'];
-                unset($definition['locked']);
+                $shared = $opts['shared'];
+                $locked = $opts['locked'];
+                $this->alias($opts['aliases'], $id);
             }
 
             // 设置参数
-            if (isset($definition['params'])) {
-                $params = $definition['params'];
+            if (isset($definition['_params'])) {
+                $params = $definition['_params'];
             } else {
                 unset($definition['target']);
                 $params = $definition;
@@ -205,8 +175,8 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
             'locked' => (bool)$locked
         ];
 
-        $this->services[$id] = new Service($callback, isset($params) ? $params : [], $shared, $locked);
-        unset($config, $callback, $definition);
+        $this->services[$id] = new Service($callback, $params, $shared, $locked);
+        unset($config, $callback);
 
         return $this;
     }
@@ -221,87 +191,31 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
      *      'service3 id'  => ...
      * ]
      * @return $this
+     * @throws NotFoundException
      * @throws \InvalidArgumentException
-     * @throws \InvalidArgumentException
+     * @throws DependencyResolutionException
      */
     public function sets(array $services)
     {
-        $IServiceProvider = __NAMESPACE__ . '\InterfaceServiceProvider';
+        $IServiceProvider = ServiceProviderInterface::class;
 
         foreach ($services as $id => $definition) {
-            if (!$definition) {
+            if (!$id || !$definition) {
                 continue;
             }
-
-            $id = trim($id);
 
             // string. is a Service Provider class name
             if (is_string($definition) && is_subclass_of($definition, $IServiceProvider)) {
                 $this->registerServiceProvider(new $definition);
 
                 continue;
-                // array.  definition a Service Provider class
-            } elseif (is_array($definition)) {
-
-                if (!isset($definition['target'])) {
-                    throw new \InvalidArgumentException('配置有误，必须有注册目标(请在服务配置中设置\'target\'项。e.g. 通常是类名)！');
-                }
-
-                // $definition['target'] is a Service Provider class. 目标类 是服务提供者类
-                if (is_subclass_of($definition['target'], $IServiceProvider)) {
-                    $providerClass = $definition['target'];
-                    $idAliases = isset($definition['idAliases']) ? $definition['idAliases'] : [];
-                    unset($definition['target'], $definition['idAliases']);
-
-                    if (isset($definition['params'])) {
-                        $params = $definition['params'];
-                    } else {
-                        $params = isset($definition[0]) ? $definition[0] : $definition;
-                    }
-
-                    // if ($id =='db1' || $id=='db') d($definition,$params, $id, $idAliases);
-
-                    $provider = new $providerClass($params, $id, $idAliases);
-
-                    $this->registerServiceProvider($provider);
-
-                    continue;
-                }
-
             }
 
             // set service
             $this->set($id, $definition);
-
-        }// end foreach
-
-        unset($services);
+        }
 
         return $this;
-    }
-
-    /**
-     * 注册一项服务(可能含有多个服务)提供者到容器中
-     * @param  InterfaceServiceProvider $provider 在提供者内添加需要的服务到容器
-     * @return $this
-     */
-    public function registerServiceProvider(InterfaceServiceProvider $provider)
-    {
-        $provider->register($this);
-
-        return $this;
-    }
-
-    /**
-     * 注册共享的服务
-     * @param $id
-     * @param $definition
-     * @return $this
-     * @throws \InvalidArgumentException
-     */
-    public function share($id, $definition)
-    {
-        return $this->set($id, $definition, true);
     }
 
     /**
@@ -317,7 +231,7 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
     }
 
     /**
-     * (注册)锁定的服务，也可在注册后锁定,防止 getNew()强制重载
+     * (注册)锁定的服务，也可在注册后锁定,防止 getNew() 强制重载
      * @param  string $id [description]
      * @param $definition
      * @param $share
@@ -329,38 +243,29 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
     }
 
     /**
-     * 从类名创建服务实例对象，会尽可能自动补完构造函数依赖
-     * @from windWalker https://github.com/ventoviro/windwalker
-     * @param string $id a className
-     * @param  boolean $shared [description]
-     * @throws DependencyResolutionException
-     * @return mixed
+     * 注册服务提供者(可能含有多个服务)
+     * @param  ServiceProviderInterface $provider 在提供者内添加需要的服务到容器
+     * @return $this
      */
-    public function createObject($id, $shared = false)
+    public function registerServiceProvider(ServiceProviderInterface $provider)
     {
-        try {
-            $reflection = new \ReflectionClass($id);
-        } catch (\ReflectionException $e) {
-            return false;
+        $provider->register($this);
+
+        return $this;
+    }
+
+    /**
+     * @param array $providers
+     * @return $this
+     */
+    public function registerServiceProviders(array $providers)
+    {
+        /** @var ServiceProviderInterface $provider */
+        foreach ($providers as $provider) {
+            $provider->register($this);
         }
 
-        $constructor = $reflection->getConstructor();
-
-        // If there are no parameters, just return a new object.
-        if (null === $constructor) {
-            $callback = function () use ($id) {
-                return new $id;
-            };
-        } else {
-            $newInstanceArgs = $this->getMethodArgs($constructor);
-
-            // Create a callable for the dataStorage
-            $callback = function () use ($reflection, $newInstanceArgs) {
-                return $reflection->newInstanceArgs($newInstanceArgs);
-            };
-        }
-
-        return $this->set($id, $callback, $shared)->get($id);
+        return $this;
     }
 
     /**
@@ -373,52 +278,37 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
      */
     public function createCallback($target, array $arguments = [])
     {
-        // have been a callback
-        if (is_callable($target)) {
-            if ($target instanceof \Closure) { // a Closure
-                $callback = $target;
-            } else {
-                $callback = function () use ($target) {
-                    return $target();
-                };
-            }
-
-            return $callback;
+        // a Closure OR a callable Object
+        if (is_object($target) && method_exists($target, '__invoke')) {
+            return $target;
         }
 
         /**
-         * @see $this->set() $definition is array ,
+         * @see $this->set() $definition is array
          */
         $target = trim(str_replace(' ', '', $target), '.');
 
         if (($pos = strpos($target, '::')) !== false) {
-            // $class  = substr($target, 0, $pos);
-            // $method = substr($target, $pos+2);
-
-            $callback = function (Container $self) use ($target) {
-                $arguments = $self->getArgument($self->tempId);
-
-                return !$arguments ? call_user_func($target) : call_user_func_array($target, $arguments);
+            $callback = function (Container $self) use ($target, $arguments) {
+                return !$arguments ? call_user_func($target, $self) : call_user_func_array($target, $arguments);
             };
         } elseif (($pos = strpos($target, '->')) !== false) {
             $class = substr($target, 0, $pos);
             $method = substr($target, $pos + 2);
 
-            $callback = function (Container $self) use ($class, $method) {
-                $arguments = $self->getArgument($self->tempId);
+            $callback = function (Container $self) use ($class, $method, $arguments) {
                 $object = new $class;
 
-                return !$arguments ? $object->$method() : call_user_func_array([$object, $method], $arguments);
+                return !$arguments ? $object->$method($self) : call_user_func_array([$object, $method], $arguments);
             };
         } else {
-
             // 仅是个 class name
             $class = $target;
 
             try {
                 $reflection = new \ReflectionClass($class);
             } catch (\ReflectionException $e) {
-                throw new NotFoundException($e->getMessage());
+                throw new \RuntimeException($e->getMessage());
             }
 
             /**
@@ -432,241 +322,103 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
                     return new $class;
                 };
             } else {
-                $arguments = $arguments ?: $this->getMethodArgs($reflectionMethod);
+                $arguments = $arguments ?: Obj::getMethodArgs($reflectionMethod);
 
                 // Create a callable
-                $callback = function (Container $self) use ($reflection) {
-                    $arguments = $self->getArgument($self->tempId);
-                    //if ($this->tempId =='request') d($self->tempId,$self->getArguments(),$arguments);
+                $callback = function () use ($reflection, $arguments) {
                     return $reflection->newInstanceArgs($arguments);
                 };
-
-                unset($reflection, $reflectionMethod);
             }
-        }
 
-        $this->setArgument($this->tempId, $arguments ?: []);
+            unset($reflection, $reflectionMethod);
+        }
 
         return $callback;
-    }
-
-    /**
-     * @from windwalker https://github.com/ventoviro/windwalker
-     * Build an array of constructor parameters.
-     * @param   \ReflectionMethod $method Method for which to build the argument array.
-     * @throws DependencyResolutionException
-     * @return  array  Array of arguments to pass to the method.
-     */
-    protected function getMethodArgs(\ReflectionMethod $method)
-    {
-        $methodArgs = array();
-
-        foreach ($method->getParameters() as $param) {
-            $dependency = $param->getClass();
-            $dependencyVarName = $param->getName();
-
-            // If we have a dependency, that means it has been type-hinted.
-            if (null !== $dependency) {
-                $dependencyClassName = $dependency->getName();
-
-                // If the dependency class name is registered with this container or a parent, use it.
-                if ($this->exists($dependencyClassName) !== null) {
-                    $depObject = $this->get($dependencyClassName);
-                } else {
-                    $depObject = $this->createObject($dependencyClassName);
-                }
-
-                if ($depObject instanceof $dependencyClassName) {
-                    $methodArgs[] = $depObject;
-
-                    continue;
-                }
-            }
-
-            // Finally, if there is a default parameter, use it.
-            if ($param->isOptional()) {
-                $methodArgs[] = $param->getDefaultValue();
-
-                continue;
-            }
-
-            // Couldn't resolve dependency, and no default was provided.
-            throw new DependencyResolutionException(sprintf('Could not resolve dependency: %s', $dependencyVarName));
-        }
-
-        return $methodArgs;
     }
 
 /////////////////////////////////////////  Service(Instance) Get /////////////////////////////////////////
 
     /**
-     * get 获取已注册的服务组件实例，
-     * 共享服务总是获取已存储的实例，
-     * 其他的则总是返回新的实例
+     * get 获取已注册的服务组件实例
+     * - 共享服务总是获取已存储的实例
+     * - 其他的则总是返回新的实例
      * @param  string $id 要获取的服务组件id
-     * @param  array $params 如果参数为空，则会默认将 容器($this) 传入回调，可以在回调中直接接收
-     * @param int $bindType @see $this->setArgument()
-     * @throws NotFoundException
      * @return mixed
-     */
-    public function get($id, array $params = [], $bindType = self::OVERLOAD_PARAM)
-    {
-        if (empty($id) || !is_string($id)) {
-            throw new \InvalidArgumentException(sprintf(
-                'The 1 parameter must be of type string is not empty, %s given',
-                gettype($id)
-            ));
-        }
-
-        $this->tempId = $id = $this->resolveAlias($id);
-        $this->setArgument($id, $params, $bindType);
-
-        if (!($config = $this->getService($id, false))) {
-            throw new NotFoundException(sprintf('服务id: %s不存在，还没有注册！', $id));
-        }
-
-        $callback = $config['callback'];
-
-        // 是共享服务
-        if ((bool)$config['shared']) {
-
-            if (!$config['instance'] || $this->getNewInstance) {
-                $this->services[$id]['instance'] = $config['instance'] = call_user_func($callback, $this);
-            }
-
-            $this->getNewInstance = false;
-
-            return $config['instance'];
-        }
-
-        return call_user_func($callback, $this);
-    }
-
-    /**
-     * getShared 总是获取同一个实例
-     * @param $id
      * @throws NotFoundException
-     * @return mixed
      */
-    public function getShared($id)
+    public function get($id)
     {
-        $this->getNewInstance = false;
-
-        return $this->get($id);
-
+        return $this->getInstance($id);
     }
 
     /**
      * 强制获取服务的新实例，针对共享服务
      * @param $id
-     * @param array $params
-     * @param int $bindType
      * @return mixed
      */
-    public function getNew($id, array $params = [], $bindType = self::OVERLOAD_PARAM)
+    public function getNew($id)
     {
-        $this->getNewInstance = true;
-
-        return $this->get($id, (array)$params, $bindType);
+        return $this->getInstance($id, true);
     }
 
     /**
-     * 强制获取新的服务实例 like getNew()
-     * @param string $id
-     * @param array $params
-     * @param int $bindType
+     * @param $id
      * @return mixed
+     * @throws NotFoundException
      */
-    public function make($id, array $params = [], $bindType = self::OVERLOAD_PARAM)
+    public function raw($id)
     {
-        $this->getNewInstance = true;
+        $id = $this->resolveAlias($id);
+        $service = $this->getService($id, true);
 
-        return $this->get($id, $params, $bindType);
-    }
-
-
-////////////////////////////////////////// Service Arguments //////////////////////////////////////////
-
-    // self::setArgument() 别名方法
-    public function setParam($id, array $params, $bindType = self::OVERLOAD_PARAM)
-    {
-        return $this->setArgument($id, $params, $bindType);
+        return $service->getCallback();
     }
 
     /**
-     * 给服务设置参数，在获取服务实例前
-     * @param string $id 服务id
-     * @param array $params 设置参数
-     * 通常无key值，按默认顺序传入服务回调中
-     * 当 $bindType = REPLACE_PARAM
-     * [
-     * // pos => args
-     *  0 => arg1,
-     *  1 => arg2,
-     *  3 => arg3,
-     * ]
-     * @param int $bindType 绑定参数方式
-     * @throws \InvalidArgumentException
-     * @return $this
+     * get 获取已注册的服务组件实例
+     * @param $id
+     * @param bool $forceNew 强制获取服务的新实例
+     * @return mixed|null
+     * @throws NotFoundException
      */
-    public function setArgument($id, array $params, $bindType = self::OVERLOAD_PARAM)
+    public function getInstance($id, $forceNew = false)
     {
-        if (!$params) {
-            return $this;
+        if (!$id || !is_string($id)) {
+            throw new \InvalidArgumentException(sprintf(
+                'The first parameter must be a non-empty string, %s given',
+                gettype($id)
+            ));
         }
 
         $id = $this->resolveAlias($id);
+        $service = $this->getService($id, true);
 
-        if (!$this->exists($id) && ($id !== $this->tempId)) {
-            throw new \InvalidArgumentException("此容器 {$this->name} 中还没有注册服务 {$id}, 不能绑定参数 ！");
-        }
-
-        $this->services[$id]->setArguments($params, $bindType);
-
-        return $this;
+        return $service->get($this, $forceNew);
     }
-
-    public function getArgument($id, $useAlias = true)
-    {
-        $useAlias && $id = $this->resolveAlias($id);
-
-        return isset($this->arguments[$id]) ? $this->arguments[$id] : [];
-    }
-
-    public function getArguments()
-    {
-        return $this->arguments;
-    }
-
-///////////////////////////////////// Service ID Alias /////////////////////////////////////
 
     /**
-     * 给一个服务ID设置别名
-     * 若没有传入ID, 则取当前正在操作(获取/设置)的服务ID
-     * @param string $name
-     * @param string|array $alias
-     * @return mixed
+     * 获取某一个服务的信息
+     * @param $id
+     * @param bool $throwE
+     * @return Service|null
+     * @throws NotFoundException
      */
-    public function alias($name, $alias = null)
+    public function getService($id, $throwE = false)
     {
-        // get real name for $name
-        if (null === $alias) {
-            return $this->resolveAlias($name);
+        $id = $this->resolveAlias($id);
+
+        if (isset($this->services[$id])) {
+            return $this->services[$id];
         }
 
-        // set alias for $name.
-        if (!$this->has($name)) {
-            throw new \InvalidArgumentException("The service name [$name] not exists!");
+        if ($throwE) {
+            throw new NotFoundException("Service id: $id was not found, has not been registered!");
         }
 
-        foreach ((array)$alias as $aliasName) {
-            if (!isset($this->aliases[$aliasName])) {
-                $this->aliases[$aliasName] = $name;
-            }
-        }
-
-        return true;
+        return null;
     }
+
+//////////////////////////////////// Service Info ////////////////////////////////////
 
     /**
      * @param $alias
@@ -674,24 +426,19 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
      */
     public function resolveAlias($alias)
     {
-        return isset($this->aliases[$alias]) ? $this->aliases[$alias] : $alias;
-    }
+        // is a real id
+        if (isset($this->services[$alias])) {
+            return $alias;
+        }
 
-    /**
-     * @return array $aliases
-     */
-    public function getAliases()
-    {
-        return $this->aliases;
+        return $this->aliases[$alias] ?? $alias;
     }
-
-//////////////////////////////////// Service Info ////////////////////////////////////
 
     /**
      * 删除服务
      * @param $id
      */
-    public function delete($id)
+    public function del($id)
     {
         $id = $this->resolveAlias($id);
 
@@ -700,22 +447,12 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
         }
     }
 
+    /**
+     * clear
+     */
     public function clear()
     {
         $this->services = [];
-    }
-
-    /**
-     * 获取某一个服务的信息
-     * @param $id
-     * @param bool $useAlias
-     * @return mixed
-     */
-    public function getService($id, $useAlias = true)
-    {
-        $useAlias && $id = $this->resolveAlias($id);
-
-        return !empty($this->services[$id]) ? $this->services[$id] : [];
     }
 
     /**
@@ -725,15 +462,6 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
     public function getServices()
     {
         return $this->services;
-    }
-
-    /**
-     * 获取全部服务名
-     * @return array
-     */
-    public function getServiceNames()
-    {
-        return array_keys($this->services);
     }
 
     /**
@@ -748,18 +476,30 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
         return $toArray ? $ids : implode(', ', $ids);
     }
 
+    /**
+     * @param $id
+     * @return bool
+     */
     public function isShared($id)
     {
-        $config = $this->getService($id);
+        if ($service = $this->getService($id)) {
+            return $service->isShared();
+        }
 
-        return isset($config['shared']) ? (bool)$config['shared'] : false;
+        return false;
     }
 
+    /**
+     * @param $id
+     * @return bool
+     */
     public function isLocked($id)
     {
-        $config = $this->getService($id);
+        if ($service = $this->getService($id)) {
+            return $service->isLocked();
+        }
 
-        return isset($config['locked']) ? (bool)$config['locked'] : false;
+        return false;
     }
 
     /**
@@ -769,31 +509,21 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
      */
     public function has($id)
     {
-        return $this->isService($id);
+        return $this->exists($id);
     }
 
     public function exists($id)
     {
-        return $this->has($id);
-    }
+        if (isset($this->services[$id])) {
+            return $this->services[$id];
+        }
 
-    public function isService($id)
-    {
         $id = $this->resolveAlias($id);
 
-        return !empty($this->services[$id]) ? true : false;
+        return isset($this->services[$id]);
     }
 
 //////////////////////////////////////// Helper ////////////////////////////////////////
-
-    /**
-     * state description lock free protect shared
-     * @return string $state
-     */
-    public function state()
-    {
-        return $this->state;
-    }
 
     /**
      * Method to set property parent
@@ -807,36 +537,55 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
         return $this;
     }
 
-    protected function _checkServiceId($id)
+    /**
+     * @param $id
+     * @return string
+     */
+    private function _checkServiceId($id)
     {
+        if (!is_string($id) || strlen($id) > 50) {
+            throw new \InvalidArgumentException('Set up the service Id can be a string of not more than 50 characters!');
+        }
+
+        $id = trim($id);
+
         if (empty($id)) {
-            throw new \InvalidArgumentException('必须设置服务Id名称！');
+            throw new \InvalidArgumentException('You must set up the service Id name!');
         }
 
-        if (!is_string($id) || strlen($id) > 30) {
-            throw new \InvalidArgumentException('设置服务Id只能是不超过30个字符的字符串！');
-        }
-
-        //去处空白和前后的'.'
+        // 去处空白和前后的'.'
         $id = trim(str_replace(' ', '', $id), '.');
 
-        if (!preg_match("/^\w{1,20}(?:\.\w{1,20})*$/i", $id)) {
+        if (!preg_match('/^\w[\w-.]{1,56}$/i', $id)) {
             throw new \InvalidArgumentException("服务Id {$id} 是无效的字符串！");
         }
 
         return $id;
     }
 
+    /**
+     * @param $name
+     * @return bool|Service
+     */
     public function __isset($name)
     {
         return $this->exists($name);
     }
 
+    /**
+     * @param $name
+     * @param $value
+     */
     public function __set($name, $value)
     {
         $this->set($name, $value);
     }
 
+    /**
+     * @param $name
+     * @return bool
+     * @throws NotFoundException
+     */
     public function __get($name)
     {
         if ($service = $this->has($name)) {
@@ -850,6 +599,14 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
         }
 
         throw new NotFoundException('Getting a Unknown property! ' . get_class($this) . "::{$name}");
+    }
+
+    /**
+     * @return int
+     */
+    public function count()
+    {
+        return count($this->services);
     }
 
     /**
@@ -869,7 +626,7 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
      */
     public function offsetExists($offset)
     {
-        return (boolean)$this->exists($offset);
+        return $this->exists($offset);
     }
 
     /**
@@ -900,7 +657,7 @@ class Container implements InterfaceContainer, \ArrayAccess, \IteratorAggregate
      */
     public function offsetUnset($offset)
     {
-        $this->delete($offset);
+        $this->del($offset);
     }
 
 }

@@ -1,212 +1,217 @@
 <?php
 
-/**
- *
- */
+namespace inhere\exceptions;
 
-namespace inhere\exceptions {
-    abstract class BaseException extends \Exception
+abstract class BaseException extends \Exception
+{
+    /**
+     * Whether the user can see the error message
+     * @var bool
+     */
+    public $isVisible = false;
+
+    /**
+     * append custom data
+     * @var array
+     */
+    public $params = [];
+
+    /**
+     * BaseException constructor.
+     * @param string $message
+     * @param int $code
+     * @param array $params
+     * @param \Exception|null $previous
+     */
+    public function __construct($message = '', $code = 1000, \Exception $previous = null, $params = [])
     {
-        /**
-         * Whether the user can see the error message
-         * @var bool
-         */
-        public $isVisible = false;
+        parent::__construct($message, $code, $previous);
 
-        /**
-         * append custom data
-         * @var array
-         */
-        public $params = [];
-
-        /**
-         * BaseException constructor.
-         * @param string $message
-         * @param int $code
-         * @param array $params
-         * @param \Exception|null $previous
-         */
-        public function __construct($message = '', $code = 1000, $params = [], \Exception $previous = null)
-        {
-            parent::__construct($message, $code, $previous);
-
-            $this->params = $params;
-        }
+        $this->params = $params;
     }
+}
 
 //////////////////////////////////// Http exception ////////////////////////////////////
 
-    class HttpException extends BaseException
-    {
-    }
+class HttpException extends BaseException
+{
+}
 
-    class HttpRuntimeException extends HttpException
-    {
-    }
+class HttpRuntimeException extends HttpException
+{
+}
 
-    class HttpInvalidParamException extends HttpException
-    {
-    }
+class HttpInvalidParamException extends HttpException
+{
+}
 
-    class HttpHeaderException extends HttpException
-    {
-    }
+class HttpHeaderException extends HttpException
+{
+}
 
-    class HttpMalformedHeadersException extends HttpException
-    {
-    }
+class HttpMalformedHeadersException extends HttpException
+{
+}
 
-    class HttpRequestMethodException extends HttpException
-    {
-    }
+class HttpRequestMethodException extends HttpException
+{
+}
 
-    class HttpMessageTypeException extends HttpException
-    {
-    }
+class HttpMessageTypeException extends HttpException
+{
+}
 
-    class HttpEncodingException extends HttpException
-    {
-    }
+class HttpEncodingException extends HttpException
+{
+}
 
-    class HttpRequestException extends HttpException
-    {
-    }
+class HttpRequestException extends HttpException
+{
+}
 
-    class HttpRequestPoolException extends HttpException
-    {
-    }
+class HttpRequestPoolException extends HttpException
+{
+}
 
-    class HttpSocketException extends HttpException
-    {
-    }
+class HttpSocketException extends HttpException
+{
+}
 
-    class HttpResponseException extends HttpException
-    {
-    }
+class HttpResponseException extends HttpException
+{
+}
 
-    class HttpUrlException extends HttpException
-    {
-    }
+class HttpUrlException extends HttpException
+{
+}
 
-    class HttpQueryStringException extends HttpException
-    {
-    }
+class HttpQueryStringException extends HttpException
+{
+}
 
 //////////////////////////////////// Custom exception ////////////////////////////////////
 
-    class LogicException extends BaseException
+class UserPromptException extends BaseException
+{
+    /**
+     * UserPromptException constructor.
+     * @param string $message
+     * @param int $code
+     * @param array $params
+     * @param \Exception|null $previous
+     */
+    public function __construct($message = '', $code = 1000, $params = [], \Exception $previous = null)
     {
-    }
+        parent::__construct($message, $code, $params, $previous);
 
-    class RuntimeException extends BaseException
-    {
+        $this->isVisible = true;
     }
+}
 
-    class CreateResourceFailedException extends BaseException
-    {
-    }
+class LogicException extends BaseException
+{
+}
 
-    class PromptUserException extends BaseException
-    {
-        /**
-         * @var bool
-         */
-        public $isVisible = true;
-    }
+class RuntimeException extends BaseException
+{
+}
 
-    class ExtensionMissException extends RuntimeException
-    {
-    }
+class CreateResourceFailedException extends BaseException
+{
+}
 
-    class ConnectException extends RuntimeException
-    {
-    }
+class ExtensionMissException extends RuntimeException
+{
+}
 
-    class ConnectionException extends RuntimeException
-    {
-    }
+class ConnectException extends RuntimeException
+{
+}
 
-    class FileSystemException extends LogicException
-    {
-    }
+class ConnectionException extends RuntimeException
+{
+}
 
-    class IOException extends FileSystemException
-    {
-    }
+class FileSystemException extends LogicException
+{
+}
 
-    class FileNotFoundException extends FileSystemException
-    {
-    }
+class IOException extends FileSystemException
+{
+}
 
-    class FileReadException extends FileSystemException
-    {
-    }
+class FileNotFoundException extends FileSystemException
+{
+}
 
-    class FileWrittenException extends FileSystemException
-    {
-    }
+class FileReadException extends FileSystemException
+{
+}
 
-    class FileUploadException extends FileSystemException
-    {
-    }
+class FileWrittenException extends FileSystemException
+{
+}
 
-    class InvalidArgumentException extends RuntimeException
-    {
-    }
+class FileUploadException extends FileSystemException
+{
+}
 
-    class InvalidConfigException extends RuntimeException
-    {
-    }
+class InvalidArgumentException extends RuntimeException
+{
+}
 
-    class InvalidOptionException extends RuntimeException
-    {
-    }
+class InvalidConfigException extends RuntimeException
+{
+}
 
-    class DataParseException extends RuntimeException
-    {
-    }
+class InvalidOptionException extends RuntimeException
+{
+}
 
-    class DataTypeException extends RuntimeException
-    {
-    }
+class DataParseException extends RuntimeException
+{
+}
 
-    class PropertyException extends LogicException
-    {
-    }
+class DataTypeException extends RuntimeException
+{
+}
 
-    class GetPropertyException extends PropertyException
-    {
-    }
+class PropertyException extends LogicException
+{
+}
 
-    class SetPropertyException extends PropertyException
-    {
-    }
+class GetPropertyException extends PropertyException
+{
+}
 
-    class NotFoundException extends LogicException
-    {
-    }
+class SetPropertyException extends PropertyException
+{
+}
 
-    class UnknownCalledException extends NotFoundException
-    {
-    }
+class NotFoundException extends LogicException
+{
+}
 
-    class UnknownMethodException extends NotFoundException
-    {
-    }
+class UnknownCalledException extends NotFoundException
+{
+}
 
-    class RequestException extends RuntimeException
-    {
-    }
+class UnknownMethodException extends NotFoundException
+{
+}
 
-    class ResponseException extends RuntimeException
-    {
-    }
+class RequestException extends RuntimeException
+{
+}
 
-    class ContainerException extends RuntimeException
-    {
-    }
+class ResponseException extends RuntimeException
+{
+}
 
-    class DependencyResolutionException extends ContainerException
-    {
-    }
+class ContainerException extends RuntimeException
+{
+}
+
+class DependencyResolutionException extends ContainerException
+{
 }

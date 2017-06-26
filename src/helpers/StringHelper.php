@@ -1,7 +1,4 @@
 <?php
-/**
- *
- */
 
 namespace inhere\library\helpers;
 
@@ -100,6 +97,7 @@ abstract class StringHelper
         }
 
         preg_match_all('/./u', $str, $ar);
+
         return count($ar[0]);
     }
 
@@ -237,7 +235,6 @@ abstract class StringHelper
 
     /**
      * Convert \n and \r\n and \r to <br />
-     *
      * @param string $str String to transform
      * @return string New string
      */
@@ -332,7 +329,6 @@ abstract class StringHelper
     }
 
     /**
-     *
      * @param  string $str
      * @param  string $sep
      * @return array
@@ -383,7 +379,6 @@ abstract class StringHelper
 
     /**
      * Truncate strings
-     *
      * @param string $str
      * @param int $max_length Max length
      * @param string $suffix Suffix optional
@@ -398,6 +393,7 @@ abstract class StringHelper
         }
 
         $str = utf8_decode($str);
+
         return utf8_encode(substr($str, 0, $max_length - self::strlen($suffix)) . $suffix);
     }
 
@@ -437,9 +433,9 @@ abstract class StringHelper
      */
     public static function truncateString($text, $length = 120, array $options = array())
     {
-        $default = array(
+        $default = [
             'ellipsis' => '...', 'exact' => true, 'html' => true
-        );
+        ];
 
         $options = array_merge($default, $options);
         $ellipsis = $options['ellipsis'];
@@ -580,7 +576,6 @@ abstract class StringHelper
 
     /**
      * Transform a CamelCase string to underscore_case string
-     *
      * @param string $str
      * @param string $sep
      * @return string
@@ -600,13 +595,12 @@ abstract class StringHelper
      * false : 驼峰式 <= 下划线式
      * @return mixed|string
      */
-    static public function nameChange($str, $toCamelCase = true)
+    public static function nameChange($str, $toCamelCase = true)
     {
         $str = trim($str);
 
-        #默认 ：下划线式 =>驼峰式
+        // 默认 ：下划线式 =>驼峰式
         if ((bool)$toCamelCase) {
-
             if (strpos($str, '_') === false) {
                 return $str;
             }
@@ -621,7 +615,7 @@ abstract class StringHelper
             return $newString;
         }
 
-        #驼峰式 => 下划线式
+        // 驼峰式 => 下划线式
         return strtolower(preg_replace('/((?<=[a-z])(?=[A-Z]))/', '_', $str));
     }
 
@@ -638,9 +632,7 @@ abstract class StringHelper
      *        ['xx','xx2'],  //'search'
      *        ['yy','yy2'],  //'replace'
      *   ]
-     *
      * @param array $pregParams 用于 preg_replace('pattern','replace',$str)
-     *
      * @example
      * $pregParams = [
      *     'xx',  //'pattern'
@@ -650,23 +642,21 @@ abstract class StringHelper
      *     ['xx','xx2'],  //'pattern'
      *     ['yy','yy2'],  //'replace'
      * ]
-     *
-     *
      * @return string [type]                [description]
      */
-    static public function format($str, array $replaceParams = [], array $pregParams = [])
+    public static function format($str, array $replaceParams = [], array $pregParams = [])
     {
         if (!is_string($str) || !$str || (!$replaceParams && !$pregParams)) {
             return $str;
         }
 
         if ($replaceParams && count($replaceParams) === 2) {
-            [$search, $replace] = $replaceParams;
+            list($search, $replace) = $replaceParams;
             $str = str_replace($search, $replace, $str);
         }
 
         if ($pregParams && count($pregParams) === 2) {
-            [$pattern, $replace] = $pregParams;
+            list($pattern, $replace) = $pregParams;
             $str = preg_replace($pattern, $replace, $str);
         }
 
@@ -678,16 +668,17 @@ abstract class StringHelper
      * @param  string $keyword 字符串
      * @return string 格式化后的字符串
      */
-    static public function wordFormat($keyword)
+    public static function wordFormat($keyword)
     {
-        # 将全角角逗号换为空格
+        // 将全角角逗号换为空格
         $keyword = str_replace(['，', ','], ' ', $keyword);
-        # 去掉头尾空格
+        // 去掉头尾空格
         $keyword = trim($keyword);
-        # 去掉两个空格以上的
+        // 去掉两个空格以上的
         $keyword = preg_replace('/\s(?=\s)/', '', $keyword);
-        # 将非空格替换为一个空格
+        // 将非空格替换为一个空格
         $keyword = preg_replace('/[\n\r\t]/', ' ', $keyword);
+
         return $keyword;
     }
 
@@ -697,7 +688,7 @@ abstract class StringHelper
      * @param int $type
      * @return mixed
      */
-    static public function deleteStripSpace($fileName, $type = 0)
+    public static function deleteStripSpace($fileName, $type = 0)
     {
         $data = trim(file_get_contents($fileName));
         $data = 0 === strpos($data, '<?php') ? substr($data, 5) : $data;
@@ -705,85 +696,22 @@ abstract class StringHelper
 
         //去掉所有注释 换行空白保留
         if ((int)$type === 1) {
-            $preg_arr = array(
+            $preg_arr = [
                 '/\/\*.*?\*\/\s*/is'    // 去掉所有多行注释/* .... */
-            , '/\/\/.*?[\r\n]/is'    // 去掉所有单行注释//....
-            , '/\#.*?[\r\n]/is'      // 去掉所有单行注释 #....
-            );
+                , '/\/\/.*?[\r\n]/is'    // 去掉所有单行注释//....
+                , '/\#.*?[\r\n]/is'      // 去掉所有单行注释 #....
+            ];
+
             return preg_replace($preg_arr, '', $data);
         }
 
-        $preg_arr = array(
+        $preg_arr = [
             '/\/\*.*?\*\/\s*/is'    // 去掉所有多行注释 /* .... */
-        , '/\/\/.*?[\r\n]/is'    // 去掉所有单行注释 //....
-        , '/\#.*?[\r\n]/is'      // 去掉所有单行注释 #....
-        , '/(?!\w)\s*?(?!\w)/is' //去掉空白行
-        );
-        $data = preg_replace($preg_arr, '', $data);
-        //保留 HEREDOC 标记
-        return preg_replace(
-            array('/<<<EOF/is', '/EOF;/is'),
-            array('<<<EOF' . PHP_EOL, 'EOF;' . PHP_EOL),
-            $data
-        );
-    }//todo 已修正影响到 HEREDOC 标记
+            , '/\/\/.*?[\r\n]/is'    // 去掉所有单行注释 //....
+            , '/\#.*?[\r\n]/is'      // 去掉所有单行注释 #....
+            , '/(?!\w)\s*?(?!\w)/is' //去掉空白行
+        ];
 
-    /**
-     * 去空格，去除注释包括单行及多行注释 不会影响到HEREDOC
-     * $data    用于操作的数据内容
-     * @param $content
-     * @param string $headDoc
-     * @return string
-     */
-    static public function phpFormat($content, $headDoc = 'EOF')
-    {
-        $str = ''; //合并后的字符串
-        $data = token_get_all($content);
-        $count = count($data);
-        $end = false; //没结束如$v = "php"中的等号;
-
-        foreach ($data as $i => $v) {
-            if (is_string($v)) {
-                $end = false;
-                $str .= $v;
-            } else {
-
-                switch ($v[0]) {//检测类型
-                    case T_COMMENT:   //忽略单行多行注释
-                    case T_DOC_COMMENT:
-                        break;
-                    case T_WHITESPACE: //去除空格
-                        if (!$end) {
-                            $end = true;
-                            $str .= ' ';
-                        }
-                        break;
-                    case T_START_HEREDOC://定界符开始
-                        // $str.="<<<EOF".PHP_EOL;
-                        $str .= "<<<$headDoc" . PHP_EOL;
-                        break;
-                    case T_END_HEREDOC://定界符结束
-                        $str .= "$headDoc;" . PHP_EOL;
-
-                        //类似str;分号前换行情况
-                        for ($m = $i + 1; $m < $count; $m++) {
-                            if (is_string($data[$m]) && $data[$m] === ';') {
-                                $i = $m;
-                                break;
-                            }
-                            if ($data[$m] === T_CLOSE_TAG) {
-                                break;
-                            }
-                        }
-                        break;
-
-                    default:
-                        $end = false;
-                        $str .= $v[1];
-                }
-            }
-        }
-
-        return $str;
-    }//todo 来源于 hdphp
+        return preg_replace($preg_arr, '', $data);
+    }
 }

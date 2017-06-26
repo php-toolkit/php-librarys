@@ -45,7 +45,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      *  'alias name2' => 'id'
      * ]
      */
-    private $aliases = [];
+    protected $aliases = [];
 
     /**
      * $services 已注册的服务

@@ -96,7 +96,7 @@ class ProcessUtil
                 'pid' => $pid,
                 'startTime' => time(),
             ];
-        } elseif ($pid == 0) { // at child
+        } elseif ($pid === 0) { // at child
             $pid = getmypid();
 
             if ($childHandler) {
@@ -194,13 +194,13 @@ class ProcessUtil
     /**
      * send kill signal to the process
      * @param int $pid
-     * @param int $signal
+     * @param bool $force
      * @param int $timeout
      * @return bool
      */
-    public static function kill($pid, $signal = SIGTERM, $timeout = 3)
+    public static function kill($pid, $force = false, $timeout = 3)
     {
-        return self::sendSignal($pid, $signal, $timeout);
+        return self::sendSignal($pid, $force ? SIGKILL : SIGTERM, $timeout);
     }
 
     /**
@@ -214,7 +214,7 @@ class ProcessUtil
     public static function killAndWait($pid, $signal = SIGTERM, $name = 'process', $waitTime = 30)
     {
         // do stop
-        if (!self::kill($signal, SIGTERM)) {
+        if (!self::kill($signal)) {
             CliHelper::stderr("Send stop signal to the $name(PID:$pid) failed!");
 
             return false;

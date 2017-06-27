@@ -15,20 +15,25 @@ require dirname(__DIR__) . '/src/some_exception.php';
 
 spl_autoload_register(function($class)
 {
-    if (0 === strpos($class,'inhere\library\examples\\')) {
-        $path = str_replace('\\', '/', substr($class, strlen('inhere\library\examples\\')));
-        $file =__DIR__ . "/{$path}.php";
+    $inhereDir = dirname(__DIR__, 2);
+    $map = [
+        'inhere\library\examples\\' => __DIR__,
+        'inhere\library\\' => dirname(__DIR__) . '/src',
+        'inhere\queue\\' => $inhereDir . '/queue/src',
+    ];
 
-        if (is_file($file)) {
-            include $file;
-        }
+    foreach ($map as $np => $dir) {
+        if (0 === strpos($class, $np)) {
+            $path = str_replace('\\', '/', substr($class, strlen($np)));
+            $file = $dir . "/{$path}.php";
 
-    } elseif (0 === strpos($class,'inhere\library\\')) {
-        $path = str_replace('\\', '/', substr($class, strlen('inhere\library\\')));
-        $file = dirname(__DIR__) . "/src/{$path}.php";
-
-        if (is_file($file)) {
-            include $file;
+            if (is_file($file)) {
+                include_file($file);
+            }
         }
     }
 });
+
+function include_file($file) {
+    include $file;
+}

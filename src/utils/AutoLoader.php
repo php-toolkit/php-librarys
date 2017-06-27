@@ -147,6 +147,7 @@ class AutoLoader
     /**
      * @param string $prefix
      * @param string $path
+     * @throws \InvalidArgumentException
      */
     public function addPsr4($prefix, $path)
     {

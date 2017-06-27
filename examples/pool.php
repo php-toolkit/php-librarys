@@ -9,20 +9,25 @@ require __DIR__ . '/s-autoload.php';
 
 use inhere\library\process\pool\ResourcePool;
 
-
 $rpl = new ResourcePool([
- 'maxSize' => 2,
+    'initSize' => 2,
+    'maxSize' => 2,
+    'driverOptions' => [
+
+    ],
 ]);
 
-$rpl->setResourceCreator(function () {
+$rpl->setCreator(function () {
     $obj = new \stdClass();
     $obj->name = 'test';
 
     return $obj;
 })
-->setResourceReleaser(function ($obj) {
-    echo "call resourceReleaser.\n";
+    ->setReleaser(function ($obj) {
+    echo "call resource releaser.\n";
 });
+
+var_dump($rpl);
 
 $obj1 = $rpl->get();
 $obj2 = $rpl->get();

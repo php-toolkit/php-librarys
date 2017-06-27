@@ -9,6 +9,8 @@
 namespace inhere\library\process\pool;
 
 use inhere\library\StdObject;
+use inhere\queue\PhpQueue;
+use inhere\queue\QueueInterface;
 
 /**
  * Class ResourcePool - 资源池
@@ -23,7 +25,7 @@ use inhere\library\StdObject;
  *  return new \Db(...);
  * );
  *
- * $rpl->setResourceCreator(function ($db) {
+ * $rpl->setResourceReleaser(function ($db) {
  *   $db->close();
  * );
  *
@@ -40,20 +42,17 @@ use inhere\library\StdObject;
  */
 class ResourcePool extends StdObject implements PoolInterface
 {
-    // 1 预准备 2 动态创建
-    const MODE_READY = 1;
-    const MODE_DYNAMIC = 2;
-
     /**
      * (空闲)可用的资源队列
-     * @var \SplQueue
+     * @var QueueInterface
      */
     private $pool;
 
     /**
-     * @var int
+     * pool Driver class
+     * @var string
      */
-    protected $mode = self::MODE_DYNAMIC;
+    private $poolDriver = PhpQueue::class;
 
     /**
      * default 30 seconds
@@ -65,34 +64,31 @@ class ResourcePool extends StdObject implements PoolInterface
      * 初始化池大小
      * @var int
      */
-    public $initSize = 0;
-
-    /**
-     * @var int
-     */
-    public $fixSize = 10;
+    protected $initSize = 0;
 
     /**
      * 扩大的增量(当资源不够时，一次增加资源的数量)
      * @var int
      */
-    public $stepSize = 1;
+    protected $stepSize = 1;
 
     /**
-     * 最大资源大小
+     * 池最大资源数大小
      * @var int
      */
-    public $maxSize = 100;
+    protected $maxSize = 100;
 
     /**
+     * 资源创建者
      * @var callable
      */
-    private $resourceCreator;
+    private $creator;
 
     /**
+     * 资源释放者
      * @var callable
      */
-    private $resourceReleaser;
+    private $releaser;
 
     /**
      * @var bool
@@ -109,7 +105,7 @@ class ResourcePool extends StdObject implements PoolInterface
      * 已创建的资源数
      * @var int
      */
-    private $resourceNumber = 0;
+    private $createdNumber = 0;
 
     /**
      * 使用中的资源数
@@ -122,8 +118,8 @@ class ResourcePool extends StdObject implements PoolInterface
      */
     public function init()
     {
-        $this->pool = new \SplQueue();
-        $this->pool->setIteratorMode(\SplQueue::IT_MODE_DELETE);
+        $class = $this->poolDriver;
+        $this->pool = new $class();
 
         // fix mixSize
         if ($this->initSize > $this->maxSize) {
@@ -131,7 +127,9 @@ class ResourcePool extends StdObject implements PoolInterface
         }
 
         // 预准备资源
-        $this->prepare($this->initSize);
+//        if ($this->creator) {
+//            $this->prepare($this->initSize);
+//        }
     }
 
     /**
@@ -140,13 +138,13 @@ class ResourcePool extends StdObject implements PoolInterface
     public function get($blocking = false)
     {
         // 还有可用资源
-        if (!$this->pool->isEmpty()) {
+        if ($res = $this->pool->pop()) {
             $this->occupiedNumber++;
 
-            return $this->pool->pop();
+            return $res;
         }
 
-        $created = $this->resourceNumber;
+        $created = $this->createdNumber;
 
         // 资源池已满，并且无可用资源
         // $blocking = true 等待空闲连接.
@@ -224,10 +222,10 @@ class ResourcePool extends StdObject implements PoolInterface
             return 0;
         }
 
-        $cb = $this->resourceCreator;
+        $cb = $this->creator;
 
         for ($i = 0; $i < $size; $i++) {
-            $this->resourceNumber++;
+            $this->createdNumber++;
             $this->pool->push($cb());
         }
 
@@ -243,20 +241,47 @@ class ResourcePool extends StdObject implements PoolInterface
     }
 
     /**
-     * @return callable
+     * release pool
      */
-    public function getResourceCreator(): callable
+    public function clear()
     {
-        return $this->resourceCreator;
+        if ($cb = $this->releaser) {
+            while ($obj = $this->pool->pop()) {
+                $cb($obj);
+            }
+        }
+
+        $this->pool = null;
     }
 
     /**
-     * @param callable $resourceCreator
+     * release pool
+     */
+    public function __destruct()
+    {
+        $this->clear();
+    }
+
+    /**
+     * @return callable
+     */
+    public function getCreator(): callable
+    {
+        return $this->creator;
+    }
+
+    /**
+     * @param callable $creator
      * @return $this
      */
-    public function setResourceCreator(callable $resourceCreator)
+    public function setCreator(callable $creator)
     {
-        $this->resourceCreator = $resourceCreator;
+        $this->creator = $creator;
+
+        // 预准备资源
+        if ($this->initSize) {
+            $this->prepare($this->initSize);
+        }
 
         return $this;
     }
@@ -264,36 +289,20 @@ class ResourcePool extends StdObject implements PoolInterface
     /**
      * @return callable
      */
-    public function getResourceReleaser(): callable
+    public function getReleaser(): callable
     {
-        return $this->resourceReleaser;
+        return $this->releaser;
     }
 
     /**
-     * @param callable $resourceReleaser
+     * @param callable $releaser
      * @return $this
      */
-    public function setResourceReleaser(callable $resourceReleaser)
+    public function setReleaser(callable $releaser)
     {
-        $this->resourceReleaser = $resourceReleaser;
+        $this->releaser = $releaser;
 
         return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getMode(): int
-    {
-        return $this->mode;
-    }
-
-    /**
-     * @param int $mode
-     */
-    public function setMode(int $mode)
-    {
-        $this->mode = $mode;
     }
 
     /**
@@ -331,22 +340,6 @@ class ResourcePool extends StdObject implements PoolInterface
     /**
      * @return int
      */
-    public function getFixSize(): int
-    {
-        return $this->fixSize;
-    }
-
-    /**
-     * @param int $fixSize
-     */
-    public function setFixSize(int $fixSize)
-    {
-        $this->fixSize = $fixSize;
-    }
-
-    /**
-     * @return int
-     */
     public function getStepSize(): int
     {
         return $this->stepSize;
@@ -370,6 +363,7 @@ class ResourcePool extends StdObject implements PoolInterface
 
     /**
      * @param int $maxSize
+     * @throws \InvalidArgumentException
      */
     public function setMaxSize(int $maxSize)
     {
@@ -378,6 +372,38 @@ class ResourcePool extends StdObject implements PoolInterface
         }
 
         $this->maxSize = $maxSize;
+    }
+
+    /**
+     * @return QueueInterface
+     */
+    public function getPool(): QueueInterface
+    {
+        return $this->pool;
+    }
+
+    /**
+     * @param QueueInterface $pool
+     */
+    public function setPool(QueueInterface $pool)
+    {
+        $this->pool = $pool;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCreatedNumber(): int
+    {
+        return $this->createdNumber;
+    }
+
+    /**
+     * @return int
+     */
+    public function getOccupiedNumber(): int
+    {
+        return $this->occupiedNumber;
     }
 
     /**
@@ -413,16 +439,18 @@ class ResourcePool extends StdObject implements PoolInterface
     }
 
     /**
-     * release pool
+     * @return string
      */
-    public function __destruct()
+    public function getPoolDriver(): string
     {
-        if ($cb = $this->resourceReleaser) {
-            foreach ($this->pool as $obj) {
-                $cb($obj);
-            }
-        }
+        return $this->poolDriver;
+    }
 
-        $this->pool = null;
+    /**
+     * @param string $poolDriver
+     */
+    public function setPoolDriver(string $poolDriver)
+    {
+        $this->poolDriver = $poolDriver;
     }
 }

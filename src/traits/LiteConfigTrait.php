@@ -10,8 +10,6 @@
 
 namespace inhere\library\traits;
 
-use inhere\library\helpers\ArrayHelper;
-
 /**
  * Class LiteConfigTrait
  * @package inhere\library\traits
@@ -39,7 +37,7 @@ trait LiteConfigTrait
     {
         $value = array_key_exists($name, $this->config) ? $this->config[$name] : $default;
 
-        if ($value && is_callable($value) && ($value instanceof \Closure)) {
+        if ($value && ($value instanceof \Closure)) {
             $value = $value();
         }
 

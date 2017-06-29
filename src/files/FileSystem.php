@@ -12,8 +12,7 @@ namespace inhere\library\files;
 
 use inhere\exceptions\IOException;
 use inhere\exceptions\NotFoundException;
-use inhere\library\helpers\ArrayHelper;
-use inhere\library\helpers\StringHelper;
+use inhere\library\helpers\Arr;
 
 /**
  * Class FileSystem
@@ -164,7 +163,7 @@ abstract class FileSystem
      */
     public static function mkdir($dirs, $mode = 0777): void
     {
-        foreach (ArrayHelper::toIterator($dirs) as $dir) {
+        foreach (Arr::toIterator($dirs) as $dir) {
             if (is_dir($dir)) {
                 continue;
             }
@@ -195,7 +194,7 @@ abstract class FileSystem
      */
     public static function chmod($files, $mode, $umask = 0000, $recursive = false): void
     {
-        foreach (ArrayHelper::toIterator($files) as $file) {
+        foreach (Arr::toIterator($files) as $file) {
             if (true !== @chmod($file, $mode & ~$umask)) {
                 throw new IOException(sprintf('Failed to chmod file "%s".', $file), 0, null, $file);
             }
@@ -217,7 +216,7 @@ abstract class FileSystem
      */
     public static function chown($files, $user, $recursive = false): void
     {
-        foreach (ArrayHelper::toIterator($files) as $file) {
+        foreach (Arr::toIterator($files) as $file) {
             if ($recursive && is_dir($file) && !is_link($file)) {
                 self::chown(new \FilesystemIterator($file), $user, true);
             }

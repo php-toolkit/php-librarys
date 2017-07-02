@@ -190,12 +190,14 @@ class Collection extends SimpleCollection
 
     /**
      * setName
-     * @param $value
-     * @return void
+     * @param string $value
+     * @return $this
      */
     public function setName($value)
     {
         $this->name = $value;
+
+        return $this;
     }
 
     /**
@@ -236,7 +238,7 @@ class Collection extends SimpleCollection
                     break;
             }
 
-        } else if (is_array($data) || is_object($data)) {
+        } elseif (is_array($data) || is_object($data)) {
             $this->bindData($this->data, $data);
         }
 

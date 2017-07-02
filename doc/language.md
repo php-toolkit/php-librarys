@@ -1,15 +1,15 @@
-## Language
+# Language Manager
 
 > [Return](document.md)
 
 config the language translator.
 
-```
+```php
 // language config
 $config   = [
     'lang'     => $config->get('language', 'en'),
     'basePath' => '@resources/languages',
-    'defaultFile' => 'default',
+    'defaultFile' => 'app',
 
     'langFiles' => [
         // file key => file path
@@ -22,32 +22,31 @@ $config   = [
 ];
 
 $translator = new LanguageManager($config);
-
 ```
 
-use language translator:
+## usage
 
-```
-
+```php
 // If no file is specified it reads '{basePath}/{lang}/defaut.yml'
-$msg = $translator->tran('key');
-// can also 
-$msg = $translator->tl('key'); // tl() is alias method of the tran()
-
+$msg = $translator->translate('key');
+// can also use
+$msg = $translator->trans('key'); // trans() is alias method of the translate()
+// can also use
+$msg = $translator->tl('key'); // tl() is alias method of the translate()
 ```
 
-more information
+## more information
 
-1. allow multi arguments. `tran(string $key , array [$arg1 , $arg2], string $default)`
+1. allow multi arguments. `translate(string $key , array [$arg1 , $arg2], string $default)`
 
 example
 
-```
+```php
  // on language config file
 userNotFound: user [%s] don't exists!
 
  // on code
-$msg = $translator->tran('userNotFound', 'demo');
+$msg = $translator->trans('userNotFound', 'demo');
 // $msg : user [demo] don't exists!
 ```
 
@@ -55,16 +54,19 @@ $msg = $translator->tran('userNotFound', 'demo');
 
 @example
 
-```
+```yaml
 // on default config file (e.g. `en/default.yml`)
 userNotFound: user [%s] don't exists!
 
 // on app config file (e.g. `en/app.yml`)
 userNotFound: the app user [%s] don't exists!
+```
 
-// on code
+get trans text:
+
+```php
 // will fetch value at `en/default.yml`
-$msg = $translator->tran('userNotFound', 'demo');
+$msg = $translator->trans('userNotFound', 'demo');
 //output $msg: user [demo] don't exists!
 
 // will fetch value at `en/app.yml`

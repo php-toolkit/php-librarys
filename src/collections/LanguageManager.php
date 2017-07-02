@@ -13,53 +13,57 @@ use inhere\exceptions\NotFoundException;
 use inhere\library\files\FileSystem;
 use inhere\library\helpers\Str;
 use inhere\library\StdObject;
+use Traversable;
 
 /**
  * Class LanguageManager
  * @package inhere\library\base
  *
  */
-class LanguageManager extends StdObject
+class LanguageManager extends StdObject implements \ArrayAccess, \Countable, \IteratorAggregate
 {
     /**
      * current use language
      * @var string
      */
-    protected $lang = 'en';
+    private $lang = 'en';
 
     /**
      * fallback language
      * @var string
      */
-    protected $fallbackLang = 'en';
+    private $fallbackLang = 'en';
 
     /**
-     * @var array ['string' => DataCollector]
+     * @var Collection[]
+     * [ 'fileKey' => Collection ]
      */
     private $data = [];
 
     /**
-     * @var array ['string' => DataCollector]
+     * @var Collection[]
+     *
+     * [ 'fileKey' => Collection ]
      */
     private $fallbackData = [];
 
     /**
-     * The default language directory path.
+     * The base path language directory.
      * @var string
      */
-    protected $basePath;
+    private $basePath;
 
     /**
      * default file name.
      * @var string
      */
-    protected $defaultFile = 'default';
+    private $defaultFile = 'default';
 
     /**
-     * the language file type
+     * the language file type. more see Collection::FORMAT_*
      * @var string
      */
-    protected $fileType = 'yml';
+    private $fileType = 'yml';
 
     /**
      * file separator char. when want to get translation form other file.
@@ -68,7 +72,7 @@ class LanguageManager extends StdObject
      * will fetch `createPage` value at the file `{$this->path}/{$this->lang}/app.yml`
      * @var string
      */
-    protected $fileSeparator = ':';
+    private $fileSeparator = ':';
 
     /**
      * e.g.
@@ -78,13 +82,19 @@ class LanguageManager extends StdObject
      * ]
      * @var array
      */
-    protected $langFiles = [];
+    private $langFiles = [];
 
     /**
      * loaded language file list.
      * @var array
      */
-    protected $loadedFiles = [];
+    private $loadedFiles = [];
+
+    /**
+     * whether ignore not exists lang file when addLangFile()
+     * @var bool
+     */
+    private $ignoreError = false;
 
     const DEFAULT_FILE_KEY = '__default';
 
@@ -95,50 +105,51 @@ class LanguageManager extends StdObject
      * @param string|bool $key
      * @param array $args
      * @param string $default
-     * @return string
+     * @return string|array
      * @throws \inhere\exceptions\NotFoundException
      * @throws \InvalidArgumentException
      */
     public function translate($key, array $args = [], $default = '')
     {
-        $key = trim($key, $this->fileSeparator . ' ');
-
         if (!$key || !is_string($key)) {
             throw new \InvalidArgumentException('A lack of parameters or type error.');
         }
 
-        // No separator, get value form default language file.
-        if (($pos = strpos($key, $this->fileSeparator)) === false) {
-            $fileKey = static::DEFAULT_FILE_KEY;
-
-            // Will try to get the value from the other config file
-        } else {
-            $fileKey = substr($key, 0, $pos);
-            $key = substr($key, $pos + 1);
-        }
+        list($fileKey, $key) = $this->splitFileKey($key);
 
         // translate form current language. if not found, translate form fallback language.
-        $value = $this->findTranslationText($fileKey, $key) ?: $this->tranByFallbackLang($fileKey, $key, $default);
-
-        if (!$value) {
-            $value = ucfirst(Str::toSnakeCase(str_replace(['-', '_'], ' ', $key), ' '));
+        if (($value = $this->findTranslationText($fileKey, $key)) === null) {
+            $value = $this->transByFallbackLang($fileKey, $key, $default);
         }
 
-        $args = $args ? (array)$args : [];
+        // no translate text
+        if ($value === '' || $value === null) {
+            return ucfirst(Str::toSnakeCase(str_replace(['-', '_'], ' ', $key), ' '));
+        }
 
         // $args is not empty?
-        if ($hasArgs = count($args)) {
+        if ($args = $args ? (array)$args : []) {
             array_unshift($args, $value);
+
+            return sprintf(...$args);
         }
 
-        return $hasArgs ? sprintf(...$args) : $value;
+        return $value;
     }
 
-    public function tran($key, array $args = [], $default = '')
+    /**
+     * {@inheritdoc}
+     * @see self::translate()
+     */
+    public function trans($key, array $args = [], $default = '')
     {
         return $this->translate($key, $args, $default);
     }
 
+    /**
+     * {@inheritdoc}
+     * @see self::translate()
+     */
     public function tl($key, array $args = [], $default = '')
     {
         return $this->translate($key, $args, $default);
@@ -149,13 +160,45 @@ class LanguageManager extends StdObject
      *********************************************************************************/
 
     /**
+     * @param string $key
+     * @param mixed $value
+     * @return mixed
+     */
+    public function set($key, $value)
+    {
+        list($fileKey, $key) = $this->splitFileKey($key);
+
+        // no language data, init data(If have lang file, but no activation)
+        if (!$this->getLangFileData($fileKey)) {
+            $this->data[$fileKey] = Collection::make()->setName($this->lang . '.' . $fileKey);
+        }
+
+        return $this->data[$fileKey]->set($key, $value);
+    }
+
+    /**
+     * @param string $key
+     * @return mixed
+     */
+    public function has($key)
+    {
+        if (!$key || !is_string($key)) {
+            throw new \InvalidArgumentException('A lack of parameters or type error.');
+        }
+
+        list($fileKey, $key) = $this->splitFileKey($key);
+
+        return $this->findTranslationText($fileKey, $key) === null;
+    }
+
+    /**
      * @param string $fileKey
      * @param string $key
      * @param string $default
      * @return mixed
      * @throws \inhere\exceptions\NotFoundException
      */
-    protected function findTranslationText($fileKey, $key, $default = '')
+    protected function findTranslationText($fileKey, $key, $default = null)
     {
         // has language data
         if ($collector = $this->getLangFileData($fileKey)) {
@@ -175,7 +218,7 @@ class LanguageManager extends StdObject
      * @param string $default
      * @return mixed
      */
-    protected function tranByFallbackLang($fileKey, $key, $default = '')
+    protected function transByFallbackLang($fileKey, $key, $default = null)
     {
         if ($this->lang === $this->fallbackLang) {
             return $default;
@@ -212,6 +255,15 @@ class LanguageManager extends StdObject
         return $this->fallbackData[$fileKey] ?? null;
     }
 
+    /**
+     * @param string $fileKey
+     * @return bool
+     */
+    public function hasFallbackFileData($fileKey)
+    {
+        return isset($this->fallbackData[$fileKey]);
+    }
+
     /*********************************************************************************
      * helper method
      *********************************************************************************/
@@ -226,6 +278,28 @@ class LanguageManager extends StdObject
         $path = ($lang ?: $this->lang) . DIRECTORY_SEPARATOR . trim($filename);
 
         return $this->basePath . DIRECTORY_SEPARATOR . $path;
+    }
+
+
+    /**
+     * @param string|bool $key
+     * @return mixed
+     */
+    private function splitFileKey($key)
+    {
+        $key = trim($key, $this->fileSeparator . ' ');
+
+        // No separator, get value form default language file.
+        if (($pos = strpos($key, $this->fileSeparator)) === false) {
+            $fileKey = static::DEFAULT_FILE_KEY;
+
+            // Will try to get the value from the other config file
+        } else {
+            $fileKey = substr($key, 0, $pos);
+            $key = substr($key, $pos + 1);
+        }
+
+        return [$fileKey, $key];
     }
 
     /*********************************************************************************
@@ -255,18 +329,23 @@ class LanguageManager extends StdObject
     }
 
     /**
-     * @param $file
+     * @param string $file
      * @param string $fileKey
+     * @return bool
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function addLangFile($file, $fileKey = '')
+    public function addLangFile($file, $fileKey = null)
     {
         if (!FileSystem::isAbsPath($file)) {
             $file = $this->buildLangFilePath($file);
         }
 
         if (!is_file($file)) {
+            if ($this->ignoreError) {
+                return false;
+            }
+
             throw new NotFoundException("The language file don't exists. FILE: $file");
         }
 
@@ -277,10 +356,16 @@ class LanguageManager extends StdObject
         }
 
         if ($this->hasLangFile($fileKey)) {
+            if ($this->ignoreError) {
+                return false;
+            }
+
             throw new InvalidArgumentException("language file key [$fileKey] have been exists, don't allow override!!");
         }
 
-        $this->langFiles[trim($fileKey)] = $file;
+        $this->langFiles[$fileKey] = $file;
+
+        return true;
     }
 
     /**
@@ -296,7 +381,6 @@ class LanguageManager extends StdObject
 
         // at first, load language data, create data collector.
         if ($file = $this->getLangFile($fileKey)) {
-
             if (!is_file($file)) {
                 throw new NotFoundException("The language file don't exists. FILE: $file");
             }
@@ -311,12 +395,30 @@ class LanguageManager extends StdObject
     }
 
     /**
+     * @param string $fileKey
+     * @return Collection
+     */
+    public function getCollection($fileKey)
+    {
+        return $this->getLangFileData($fileKey);
+    }
+
+    /**
      * @return Collection
      * @throws \inhere\exceptions\NotFoundException
      */
     public function getDefaultFileData()
     {
         return $this->getLangFileData(static::DEFAULT_FILE_KEY);
+    }
+
+    /**
+     * @param $fileKey
+     * @return bool
+     */
+    public function hasLangFileData($fileKey)
+    {
+        return isset($this->data[$fileKey]);
     }
 
     /*********************************************************************************
@@ -416,7 +518,7 @@ class LanguageManager extends StdObject
      */
     public function getDefaultFile($full = false)
     {
-        return $full ? $this->getLangFile(static::DEFAULT_FILE_KEY) : $this->defaultFile;
+        return $full ? $this->getLangFile(self::DEFAULT_FILE_KEY) : $this->defaultFile;
     }
 
     /**
@@ -483,5 +585,113 @@ class LanguageManager extends StdObject
     public function getLoadedFiles()
     {
         return $this->loadedFiles;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isIgnoreError()
+    {
+        return $this->ignoreError;
+    }
+
+    /**
+     * @param bool $ignoreError
+     */
+    public function setIgnoreError($ignoreError)
+    {
+        $this->ignoreError = (bool)$ignoreError;
+    }
+
+    /*********************************************************************************
+     * interface implementing
+     *********************************************************************************/
+
+    /**
+     * Retrieve an external iterator
+     * @link http://php.net/manual/en/iteratoraggregate.getiterator.php
+     * @return Traversable An instance of an object implementing <b>Iterator</b> or
+     * <b>Traversable</b>
+     * @since 5.0.0
+     */
+    public function getIterator()
+    {
+        return new \ArrayIterator($this->data);
+    }
+
+    /**
+     * Whether a offset exists
+     * @link http://php.net/manual/en/arrayaccess.offsetexists.php
+     * @param mixed $offset <p>
+     * An offset to check for.
+     * </p>
+     * @return boolean true on success or false on failure.
+     * </p>
+     * <p>
+     * The return value will be casted to boolean if non-boolean was returned.
+     * @since 5.0.0
+     */
+    public function offsetExists($offset)
+    {
+        return $this->has($offset);
+    }
+
+    /**
+     * Offset to retrieve
+     * @link http://php.net/manual/en/arrayaccess.offsetget.php
+     * @param mixed $offset <p>
+     * The offset to retrieve.
+     * </p>
+     * @return mixed Can return all value types.
+     * @since 5.0.0
+     */
+    public function offsetGet($offset)
+    {
+        return $this->translate($offset);
+    }
+
+    /**
+     * Offset to set
+     * @link http://php.net/manual/en/arrayaccess.offsetset.php
+     * @param mixed $offset <p>
+     * The offset to assign the value to.
+     * </p>
+     * @param mixed $value <p>
+     * The value to set.
+     * </p>
+     * @return void
+     * @since 5.0.0
+     */
+    public function offsetSet($offset, $value)
+    {
+        $this->set($offset, $value);
+    }
+
+    /**
+     * Offset to unset
+     * @link http://php.net/manual/en/arrayaccess.offsetunset.php
+     * @param mixed $offset <p>
+     * The offset to unset.
+     * </p>
+     * @return void
+     * @since 5.0.0
+     */
+    public function offsetUnset($offset)
+    {
+        unset($this->data[$offset]);
+    }
+
+    /**
+     * Count elements of an object
+     * @link http://php.net/manual/en/countable.count.php
+     * @return int The custom count as an integer.
+     * </p>
+     * <p>
+     * The return value is cast to an integer.
+     * @since 5.1.0
+     */
+    public function count()
+    {
+        return count($this->data);
     }
 }

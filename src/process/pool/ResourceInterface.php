@@ -16,5 +16,5 @@ interface ResourceInterface
 {
     public function create();
 
-    public function release($obj);
+    public function destroy($obj);
 }

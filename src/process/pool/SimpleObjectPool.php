@@ -15,7 +15,7 @@ namespace inhere\library\process\pool;
 class SimpleObjectPool implements PoolInterface
 {
     /**
-     * @var PoolObjectInterface
+     * @var ResourceInterface
      */
     private $objectFactory;
 
@@ -26,9 +26,9 @@ class SimpleObjectPool implements PoolInterface
 
     /**
      * SimpleObjectPool constructor.
-     * @param PoolObjectInterface $objectFactory
+     * @param ResourceInterface $objectFactory
      */
-    public function __construct(PoolObjectInterface $objectFactory)
+    public function __construct(ResourceInterface $objectFactory)
     {
         $this->objectFactory = $objectFactory;
         $this->pool = new \SplQueue();
@@ -55,9 +55,9 @@ class SimpleObjectPool implements PoolInterface
     }
 
     /**
-     * @return PoolObjectInterface
+     * @return ResourceInterface
      */
-    public function getObjectFactory(): PoolObjectInterface
+    public function getObjectFactory()
     {
         return $this->objectFactory;
     }
@@ -68,7 +68,9 @@ class SimpleObjectPool implements PoolInterface
     public function __destruct()
     {
         foreach ($this->pool as $obj) {
-            $this->objectFactory->release($obj);
+            $this->objectFactory->destroy($obj);
         }
+
+        $this->pool = null;
     }
 }

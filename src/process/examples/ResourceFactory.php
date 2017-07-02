@@ -12,7 +12,15 @@ namespace inhere\library\process\pool;
  * Class ResourceFactory
  * @package inhere\library\process\pool
  */
-class ResourceFactory
+class ResourceFactory implements ResourceInterface
 {
+    public function create()
+    {
+        return new \PDO('dsn');
+    }
 
+    public function destroy($obj)
+    {
+        // ...
+    }
 }

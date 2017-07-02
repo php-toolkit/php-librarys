@@ -23,8 +23,8 @@ $rpl->setCreator(function () {
 
     return $obj;
 })
-    ->setReleaser(function ($obj) {
-    echo "call resource releaser.\n";
+    ->setDestroyer(function ($obj) {
+    echo "call resource destroyer.\n";
 });
 
 var_dump($rpl);

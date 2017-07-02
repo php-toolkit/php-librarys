@@ -9,7 +9,7 @@ require __DIR__ . '/s-autoload.php';
 
 use inhere\library\process\pool\SimpleObjectPool;
 
-class TestObj implements \inhere\library\process\pool\PoolObjectInterface
+class TestObj implements \inhere\library\process\pool\ResourceInterface
 {
     public function create()
     {
@@ -19,7 +19,7 @@ class TestObj implements \inhere\library\process\pool\PoolObjectInterface
         return $obj;
     }
 
-    public function release($obj)
+    public function destroy($obj)
     {
         echo "release() method.\n";
     }

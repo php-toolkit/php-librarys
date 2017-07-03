@@ -18,6 +18,11 @@ use inhere\library\helpers\FormatHelper;
 class ProcessLogger implements ProcessLogInterface
 {
     /**
+     * @var array
+     */
+    private $cache = [];
+
+    /**
      * @var int
      */
     protected $level = 4;
@@ -50,6 +55,14 @@ class ProcessLogger implements ProcessLogInterface
      * @var string
      */
     protected $spiltType = '';
+
+    /**
+     * 日志写入阀值
+     *  即是除了手动调用 self::flushAll() 或者 flush() 之外，当 self::$cache 存储到了阀值时，就会自动写入一次
+     *  设为 0 则是每次记录都立即写入文件
+     * @var int
+     */
+    protected $logThreshold = 1000;
 
     /**
      * Logging levels
@@ -86,6 +99,7 @@ class ProcessLogger implements ProcessLogInterface
     {
         $this->fileHandle = null;
         $this->level = (int)$this->level;
+        $this->logThreshold = (int)$this->logThreshold;
         $this->toSyslog = (bool)$this->toSyslog;
         $this->toConsole = (bool)$this->toConsole;
 
@@ -94,7 +108,7 @@ class ProcessLogger implements ProcessLogInterface
             $this->toSyslog = true;
         }
 
-        if ($this->spiltType && !in_array($this->spiltType, [self::SPLIT_DAY, self::SPLIT_HOUR])) {
+        if ($this->spiltType && !in_array($this->spiltType, [self::SPLIT_DAY, self::SPLIT_HOUR], true)) {
             $this->spiltType = self::SPLIT_DAY;
         }
 
@@ -143,17 +157,17 @@ class ProcessLogger implements ProcessLogInterface
             return true;
         }
 
-        $data = $data ? json_encode($data) : '';
+        $strData = $data ? json_encode($data) : '';
 
         if ($this->toSyslog) {
-            return $this->sysLog($msg . ' ' . $data, $level);
+            return $this->sysLog($msg . ' ' . $strData, $level);
         }
 
-        $label = isset(self::$levels[$level]) ? self::$levels[$level] : self::INFO;
+        $label = self::$levels[$level] ?? self::INFO;
         $ds = FormatHelper::microTime(microtime(true));
 
         // [$this->getPidRole():$this->pid] $msg
-        $logString = sprintf("[%s] [%s] %s %s\n", $ds, $label, trim($msg), $data);
+        $logString = sprintf("[%s] [%s] %s %s\n", $ds, $label, trim($msg), $strData);
 
         // if not in daemon, print log to \STDOUT
         if (!$this->toConsole) {
@@ -161,13 +175,34 @@ class ProcessLogger implements ProcessLogInterface
         }
 
         if ($this->fileHandle) {
-            // updateLogFile
-            $this->updateLogFile();
+            $this->cache[] = $logString;
 
-            fwrite($this->fileHandle, $logString);
+            // fwrite($this->fileHandle, $logString);
+            if (count($this->cache) > $this->logThreshold) {
+                $this->flush();
+            }
         }
 
         return true;
+    }
+
+    /**
+     * flush
+     */
+    public function flush()
+    {
+        $string = '';
+
+        foreach ($this->cache as $log) {
+            $string .= $log . "\n";
+        }
+
+        if ($string) {
+            // updateLogFile
+            $this->updateLogFile();
+
+            fwrite($this->fileHandle, $string);
+        }
     }
 
     /**
@@ -194,7 +229,7 @@ class ProcessLogger implements ProcessLogInterface
             }
 
             $this->file = $logFile;
-            $this->fileHandle = @fopen($logFile, 'a');
+            $this->fileHandle = @fopen($logFile, 'ab');
 
             if (!$this->fileHandle) {
                 $this->stderr("Could not open the log file {$logFile}");
@@ -215,7 +250,7 @@ class ProcessLogger implements ProcessLogInterface
             }
 
             $this->file = $logFile;
-            $this->fileHandle = @fopen($logFile, 'a');
+            $this->fileHandle = @fopen($logFile, 'ab');
 
             if (!$this->fileHandle) {
                 $this->stderr("Could not open the log file {$logFile}");
@@ -250,11 +285,11 @@ class ProcessLogger implements ProcessLogInterface
 
         $info = pathinfo($file);
         $dir = $info['dirname'];
-        $name = isset($info['filename']) ? $info['filename'] : 'gw_manager';
-        $ext = isset($info['extension']) ? $info['extension'] : 'log';
+        $name = $info['filename'] ?? 'gw-manager';
+        $ext = $info['extension'] ?? 'log';
 
         if ($createDir && !is_dir($dir)) {
-            @mkdir($dir, 0755, true);
+            mkdir($dir, 0755, true);
         }
 
         $str = $this->getLogFileDate();

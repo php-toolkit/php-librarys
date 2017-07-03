@@ -10,6 +10,7 @@ namespace inhere\library\utils;
 
 use inhere\exceptions\FileSystemException;
 use inhere\library\helpers\PhpHelper;
+use Psr\Log\LoggerInterface;
 
 /**
  * simple file logger handler
@@ -27,7 +28,7 @@ use inhere\library\helpers\PhpHelper;
  * LiteLogger::flushAll();
  * ```
  */
-class LiteLogger
+class LiteLogger implements LoggerInterface
 {
     // * Log runtime info
     const TRACE = 50;
@@ -203,7 +204,7 @@ class LiteLogger
             throw new \InvalidArgumentException('Logger config is must be an array and not allow empty.');
         }
 
-        $name = $name ? : (isset($config['name']) ? $config['name'] : '');
+        $name = $name ? : ($config['name'] ?? '');
 
         if (!$name) {
             throw new \InvalidArgumentException('Logger name is required.');
@@ -321,7 +322,7 @@ class LiteLogger
     }
 
     /**
-     * @param int $level
+     * @param int|string $level
      * @return mixed|string
      */
     public static function getLevelName($level)
@@ -330,7 +331,7 @@ class LiteLogger
             return $level;
         }
 
-        return isset(self::$levelMap[$level]) ? self::$levelMap[$level] : 'info';
+        return self::$levelMap[$level] ?? 'info';
     }
 
     /**
@@ -351,7 +352,7 @@ class LiteLogger
 
         $name = strtolower($name);
 
-        return isset($nameMap[$name]) ? $nameMap[$name] : 0;
+        return $nameMap[$name] ?? 0;
     }
 
     /**
@@ -385,14 +386,14 @@ class LiteLogger
             'format', 'splitType', 'splitByCopy', 'logLevel', 'levels'
         ];
 
-        foreach ($attributes as $name) {
-            if (isset($config[$name])) {
-                $setter = 'set' . ucfirst($name);
+        foreach ($attributes as $prop) {
+            if (isset($config[$prop])) {
+                $setter = 'set' . ucfirst($prop);
 
                 if (method_exists($this, $setter)) {
-                    $this->$setter($config[$name]);
+                    $this->$setter($config[$prop]);
                 } else {
-                    $this->$name = $config[$name];
+                    $this->$prop = $config[$prop];
                 }
             }
         }
@@ -419,9 +420,37 @@ class LiteLogger
         $this->flush();
     }
 
+    /**
+     * System is unusable.
+     *
+     * @param string $message
+     * @param array $context
+     *
+     * @return void
+     */
+    public function emergency($message, array $context = array())
+    {
+        $this->log(self::EMERGENCY, $message, $context);
+    }
+
     public function emerg($message, array $context = [])
     {
         $this->log(self::EMERGENCY, $message, $context);
+    }
+
+    /**
+     * Critical conditions.
+     *
+     * Example: Application component unavailable, unexpected exception.
+     *
+     * @param string $message
+     * @param array $context
+     *
+     * @return void
+     */
+    public function critical($message, array $context = array())
+    {
+        $this->log(self::CRITICAL, $message, $context);
     }
 
     public function error($message, array $context = [])
@@ -626,8 +655,8 @@ class LiteLogger
         $file = $this->getLogPath() . $this->getFilename();
         $dir = dirname($file);
 
-        if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
-            throw new FileSystemException("Create directory failed. $dir");
+        if (!is_dir($dir) && !@mkdir($dir, 0775, true)) {
+            throw new FileSystemException("Create log directory failed. $dir");
         }
 
         // check file size
@@ -799,7 +828,7 @@ class LiteLogger
             return json_encode($data);
         }
 
-        return str_replace('\\/', '/', @json_encode($data));
+        return str_replace('\\/', '/', json_encode($data));
     }
 
     /**
@@ -836,13 +865,13 @@ class LiteLogger
                     @unlink($rotateFile);
                 } else {
                     if ($this->splitByCopy) {
-                        @copy($rotateFile, $file . '.' . ($i + 1));
-                        if ($fp = @fopen($rotateFile, 'a')) {
+                        copy($rotateFile, $file . '.' . ($i + 1));
+                        if ($fp = @fopen($rotateFile, 'ab')) {
                             @ftruncate($fp, 0);
                             @fclose($fp);
                         }
                     } else {
-                        @rename($rotateFile, $file . '.' . ($i + 1));
+                        rename($rotateFile, $file . '.' . ($i + 1));
                     }
                 }
             }

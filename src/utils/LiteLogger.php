@@ -172,7 +172,6 @@ class LiteLogger implements LoggerInterface
      * 日志写入阀值
      *  即是除了手动调用 self::flushAll() 或者 flush() 之外，当 self::$_records 存储到了阀值时，就会自动写入一次
      *  设为 0 则是每次记录都立即写入文件
-     *  注意：如果启用了按级别分割文件，次阀值检查可能会出现错误。
      * @var int
      */
     public $logThreshold = 1000;

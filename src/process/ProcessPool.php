@@ -14,5 +14,20 @@ namespace inhere\library\process;
  */
 class ProcessPool
 {
+    private $pool = [];
 
+    public function multi(Process $process)
+    {
+        # code...
+    }
+
+    public function add(Process $process)
+    {
+        # code...
+    }
+
+    public function del($id)
+    {
+        # code...
+    }
 }

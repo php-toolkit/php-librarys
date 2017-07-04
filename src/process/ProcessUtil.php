@@ -85,7 +85,7 @@ class ProcessUtil
      * param bool $first
      * @return array
      */
-    public static function fork($id, callable $childHandler = null)
+    public static function fork($id = 0, callable $childHandler = null)
     {
         $info = [];
         $pid = pcntl_fork();
@@ -267,7 +267,7 @@ class ProcessUtil
      * @param int $timeout
      * @return bool
      */
-    public static function sendSignal($pid, $signal, $timeout = 3)
+    public static function sendSignal($pid, $signal, $timeout = 0)
     {
         if ($pid <= 0) {
             return false;
@@ -336,17 +336,64 @@ class ProcessUtil
      */
     public static function getPid()
     {
-        return posix_getpid();// or use getmypid()
+        return getmypid();// or use posix_getpid()
     }
 
     /**
      * Get unix user of current process.
-     *
      * @return array
      */
     public static function getCurrentUser()
     {
         return posix_getpwuid(posix_getuid());
+    }
+
+    public static function afterDo($s, callable $handler)
+    {
+        /*
+        self::signal(SIGALRM, function () {
+            static $i = 0;
+            echo "#{$i}\talarm\n";
+            $i++;
+            if ($i > 20) {
+                pcntl_alarm(-1);
+            }
+        });*/
+        self::signal(SIGALRM, $handler);
+
+        // self::alarm($s);
+        pcntl_alarm($s);
+    }
+
+    /**
+     * install signal
+     * @param  int   $sigal  e.g: SIGTERM SIGINT(Ctrl+C) SIGUSR1 SIGUSR2 SIGHUP
+     * @param  callable $handler
+     * @return bool
+     */
+    public static function installSignal($sigal, callable $handler)
+    {
+       return pcntl_signal($sigal, $handler, false);
+    }
+
+   /**
+    * dispatch signal
+    * @return bool
+    */
+   public static function dispatchSignal()
+   {
+       // receive and dispatch sig
+       return pcntl_signal_dispatch();
+   }
+
+    /**
+     * Set process title.
+     * @param string $title
+     * @return bool
+     */
+    public static function setName($title)
+    {
+        return self::setTitle($title);
     }
 
     /**

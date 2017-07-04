@@ -21,6 +21,7 @@ class ProcessLogger implements ProcessLogInterface
      * @var array
      */
     private $cache = [];
+    private $count = 0;
 
     /**
      * @var int
@@ -175,10 +176,10 @@ class ProcessLogger implements ProcessLogInterface
         }
 
         if ($this->fileHandle) {
+            $this->count++;
             $this->cache[] = $logString;
 
-            // fwrite($this->fileHandle, $logString);
-            if (count($this->cache) > $this->logThreshold) {
+            if ($this->count >= $this->logThreshold || $this->fileIsChanged()) {
                 $this->flush();
             }
         }
@@ -191,18 +192,40 @@ class ProcessLogger implements ProcessLogInterface
      */
     public function flush()
     {
+        if (!$this->cache) {
+            return true;
+        }
+
         $string = '';
 
         foreach ($this->cache as $log) {
-            $string .= $log . "\n";
+            $string .= $log;
         }
 
         if ($string) {
-            // updateLogFile
             $this->updateLogFile();
 
             fwrite($this->fileHandle, $string);
         }
+
+        $this->count = 0;
+        $this->cache = [];
+        return true;
+    }
+
+    protected function fileIsChanged()
+    {
+        if (!$this->fileHandle || !($file = $this->file)) {
+            return false;
+        }
+
+        if (!$this->spiltType) {
+            return false;
+        }
+
+        $str = $this->getLogFileDate();
+
+        return !strpos($file, '_' . $dtStr);
     }
 
     /**
@@ -210,24 +233,11 @@ class ProcessLogger implements ProcessLogInterface
      */
     protected function updateLogFile()
     {
-        if (!$this->fileHandle || !($file = $this->file)) {
-            return false;
-        }
-
-        if (!$this->spiltType) {
-            return $this->file;
-        }
-
-        $dtStr = $this->getLogFileDate();
-
         // update file. $dtStr is '_Y-m-d' or '_Y-m-d_H'
-        if (!strpos($file, '_' . $dtStr)) {
+        if ($this->fileIsChanged()) {
+            fclose($this->fileHandle);
+
             $logFile = $this->genLogFile(true);
-
-            if ($this->fileHandle) {
-                fclose($this->fileHandle);
-            }
-
             $this->file = $logFile;
             $this->fileHandle = @fopen($logFile, 'ab');
 
@@ -235,8 +245,6 @@ class ProcessLogger implements ProcessLogInterface
                 $this->stderr("Could not open the log file {$logFile}");
             }
         }
-
-        return false;
     }
 
     /**
@@ -265,6 +273,7 @@ class ProcessLogger implements ProcessLogInterface
     {
         // close logFileHandle
         if ($this->fileHandle) {
+            $this->flush();
             fclose($this->fileHandle);
 
             $this->fileHandle = null;

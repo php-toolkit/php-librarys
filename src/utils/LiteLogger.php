@@ -473,10 +473,15 @@ class LiteLogger implements LoggerInterface
     }
     public function exception(\Exception $e, array $context = [], $logRequest = true)
     {
-        $message = $e->getMessage() . PHP_EOL;
-        $message .= 'Called At ' . $e->getFile() . ', An Line: ' . $e->getLine() . PHP_EOL;
-        $message .= 'Catch the exception by: ' . get_class($e);
-        $message .= "\nCode Trace :\n" . $e->getTraceAsString();
+        $message = sprintf(
+            "Exception(%d): %s\nCalled At %s, Line: %d\nCatch the exception by: %s\nCode Trace:\n%s",
+            $e->getCode(),
+            $e->getMessage(),
+            $e->getFile(),
+            $e->getLine(),
+            get_class($e),
+            $e->getTraceAsString()
+        );
 
         // If log the request info
         if ($logRequest) {
@@ -688,11 +693,7 @@ class LiteLogger implements LoggerInterface
     protected function isCanRecord($level)
     {
         // 不在记录的级别内
-        if ($this->levels && !in_array(self::getLevelName($level), $this->levels, true)) {
-            return false;
-        }
-
-        return true;
+        return $this->levels && in_array(self::getLevelName($level), $this->levels, true);
     }
 
     /**
@@ -866,7 +867,7 @@ class LiteLogger implements LoggerInterface
                     if ($this->splitByCopy) {
                         copy($rotateFile, $file . '.' . ($i + 1));
                         if ($fp = @fopen($rotateFile, 'ab')) {
-                            @ftruncate($fp, 0);
+                            ftruncate($fp, 0);
                             @fclose($fp);
                         }
                     } else {

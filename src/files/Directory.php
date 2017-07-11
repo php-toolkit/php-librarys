@@ -83,7 +83,7 @@ class Directory extends FileSystem
         $dirName = self::pathFormat($dirName);
 
         if (!is_dir($dirName)) {
-            throw new NotFoundException('目录' . $dirName . ' 不存在！');
+            throw new NotFoundException("directory not exists! DIR: $dirName");
         }
 
         static $id = 0;
@@ -122,7 +122,7 @@ class Directory extends FileSystem
         $ext = is_array($ext) ? implode('|', $ext) : trim($ext);
 
         if (!is_dir($dir)) {
-            throw new NotFoundException('目录' . $dir . ' 不存在！');
+            throw new NotFoundException("directory not exists! DIR: $dir");
         }
 
         // glob()寻找与模式匹配的文件路径 $file is pull path
@@ -161,7 +161,7 @@ class Directory extends FileSystem
         $path = self::pathFormat($path);
 
         if (!is_dir($path)) {
-            throw new NotFoundException('目录' . $path . ' 不存在！');
+            throw new NotFoundException("directory not exists! DIR: $path");
         }
 
         $ext = is_array($ext) ? implode('|', $ext) : trim($ext);
@@ -214,7 +214,7 @@ class Directory extends FileSystem
         $dirName = self::pathFormat($dirName);
 
         if (!is_dir($dirName)) {
-            throw new NotFoundException('目录' . $dirName . ' 不存在！');
+            throw new NotFoundException("directory not exists! DIR: $dir");
         }
 
         $ext = is_array($ext) ? implode('|', $ext) : trim($ext);

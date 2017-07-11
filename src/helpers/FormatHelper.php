@@ -20,7 +20,7 @@ class FormatHelper
      * @param  int $secs
      * @return string
      */
-    public static function formatTime($secs)
+    public static function beforeTime($secs)
     {
         static $timeFormats = [
             [0, '< 1 sec'],
@@ -121,7 +121,7 @@ class FormatHelper
      * @param int $precision
      * @return string
      */
-    public static function formatBytes($size, $precision = 2)
+    public static function bytes($size, $precision = 2)
     {
         if (!$size) {
             return '0';

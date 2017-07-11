@@ -107,9 +107,9 @@ class RequestHelper
     public static function safePostVars()
     {
         if (!$_POST || !is_array($_POST)) {
-            $_POST = array();
+            $_POST = [];
         } else {
-            $_POST = array_map(array(__CLASS__, 'htmlentitiesUTF8'), $_POST);
+            $_POST = array_map(array(DataHelper::class, 'htmlentitiesUTF8'), $_POST);
         }
     }
 
@@ -149,5 +149,18 @@ class RequestHelper
         unset($arrData);
 
         return $newArr;
+    }
+
+    /**
+     * get $_SERVER value
+     * @param  string $name
+     * @param  string $default
+     * @return mixed
+     */
+    public static function server($name, $default = '')
+    {
+        $name = strtoupper($name);
+
+        return isset($_SERVER[$name]) ? trim($_SERVER[$name]) : $default;
     }
 }

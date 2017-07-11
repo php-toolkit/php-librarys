@@ -136,7 +136,6 @@ class HtmlHelper
      * Strip img-tags from string
      *
      * @param   string $string Sting to be cleaned.
-     *
      * @return  string  Cleaned string
      */
     public static function stripImages($string)
@@ -148,7 +147,6 @@ class HtmlHelper
      * Strip iframe-tags from string
      *
      * @param   string $string Sting to be cleaned.
-     *
      * @return  string  Cleaned string
      */
     public static function stripIframes($string)
@@ -160,7 +158,6 @@ class HtmlHelper
      * stripScript
      *
      * @param string $string
-     *
      * @return  mixed
      */
     public static function stripScript($string)
@@ -172,7 +169,6 @@ class HtmlHelper
      * stripStyle
      *
      * @param string $string
-     *
      * @return  mixed
      */
     public static function stripStyle($string)
@@ -181,25 +177,37 @@ class HtmlHelper
     }
 
     /**
-     * @param $html
+     * @param string $html
      * @param bool|true $onlySrc
      * @return array
      */
-    public function findImages($html, $onlySrc = true)
+    public static function findImages($html, $onlySrc = true)
     {
         // $preg = '/<img.*?src=[\"|\']?(.*?)[\"|\']?\s.*>/i';
         $preg = '/<img.+src=\"(:?.+.+\.(?:jpg|gif|bmp|bnp|png)\"?).+>/i';
 
-        preg_match_all($preg, trim($html), $imgArr);
+        preg_match_all($preg, trim($html), $images);
 
-        if (!$imgArr) {
+        if (!$images) {
             return [];
         }
 
         if ($onlySrc) {
-            return array_key_exists(1, $imgArr) ? $imgArr[1] : [];
+            return array_key_exists(1, $images) ? $images[1] : [];
         }
 
-        return $imgArr;
+        return $images;
+    }
+
+    /**
+     * @param string $html
+     * @return string
+     */
+    public static function minify($html)
+    {
+        $search = ['/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\')\/\/.*))/', '/\n/', '/\>[^\S ]+/s', '/[^\S ]+\</s', '/(\s)+/s'];
+        $replace = [' ', ' ', '>', '<', '\\1'];
+
+        return preg_replace($search, $replace, $html);
     }
 }

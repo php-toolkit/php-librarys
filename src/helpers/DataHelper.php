@@ -13,7 +13,7 @@ namespace inhere\library\helpers;
  * Class DataHelper
  * @package inhere\library\helpers
  */
-abstract class DataHelper
+class DataHelper
 {
     /**
      * 定义一个用来序列化数据的函数

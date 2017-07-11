@@ -12,7 +12,7 @@ namespace inhere\library\di;
  * Class ContainerManager
  * @package inhere\library\di
  */
-abstract class ContainerManager
+final class ContainerManager
 {
     /**
      * 一组容器的扼要描述，标记不同的容器(这里一组含有一个基础容器和其他的属于这组[$group]的其它子容器)

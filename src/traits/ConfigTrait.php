@@ -10,7 +10,7 @@
 
 namespace inhere\library\traits;
 
-use inhere\library\helpers\ArrayHelper;
+use inhere\library\helpers\Arr;
 
 /**
  * Class ConfigTrait
@@ -89,12 +89,12 @@ trait ConfigTrait
     /**
      * Method to set property config
      * @param  array $config
-     * @param  bool $merge
+     * @param  bool $deepMerge
      * @return static Return self to support chaining.
      */
-    public function setConfig(array $config, $merge = true)
+    public function setConfig(array $config, $deepMerge = true)
     {
-        $this->config = $merge ? ArrayHelper::merge($this->config, $config) : $config;
+        $this->config = $deepMerge ? Arr::merge($this->config, $config) : $config;
 
         return $this;
     }

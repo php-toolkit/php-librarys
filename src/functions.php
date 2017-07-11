@@ -83,6 +83,21 @@ if (!function_exists('local')) {
     }
 }
 
+if (!function_exists('local')) {
+    /**
+     * get $_SERVER value
+     * @param  string $name
+     * @param  string $default
+     * @return mixed
+     */
+    function server_value($name, $default = '')
+    {
+        $name = strtoupper($name);
+
+        return isset($_SERVER[$name]) ? trim($_SERVER[$name]) : $default;
+    }
+}
+
 if (!function_exists('html_minify')) {
     function html_minify($body)
     {

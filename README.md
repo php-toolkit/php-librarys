@@ -1,6 +1,6 @@
 # php-librarys
 
-some useful tool library of the php
+some useful basic tool library of the php
 
 > this is for php7 branch. If you are using php5, please see [php5](https://github.com/inhere/php-librarys/tree/php5)
 

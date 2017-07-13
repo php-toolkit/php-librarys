@@ -9,10 +9,10 @@
 namespace inhere\library\traits;
 
 /**
- * Trait LiteStaticMethodEventTrait - 简洁版的事件处理trait，一个事件只允许一个回调
+ * Trait LiteEventStaticTrait - 简洁版的事件处理trait，一个事件只允许一个回调
  * @package inhere\library\traits
  */
-trait LiteStaticMethodEventTrait
+trait LiteEventStaticTrait
 {
     /**
      * @var array
@@ -45,6 +45,10 @@ trait LiteStaticMethodEventTrait
     {
         if (!isset(self::$_events[$name]) || !($cb = self::$_events[$name])) {
             return null;
+        }
+
+        if (is_object($cb) || (is_string($cb) && function_exists($cb))) {
+            return $cb(...$args);
         }
 
         return call_user_func_array($cb, $args);

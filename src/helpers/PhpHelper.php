@@ -134,6 +134,18 @@ class PhpHelper extends EnvHelper
     }
 
     /**
+     * @param string $cmd
+     */
+    public static function execInBackground($cmd)
+    {
+        if (strpos(php_uname(), 'Windows') === 0) {
+            pclose(popen('start /B ' . $cmd, 'r'));
+        } else {
+            exec($cmd . ' > /dev/null &');
+        }
+    }
+
+    /**
      * @param string $pathname
      * @param int|string $projectId This must be a one character
      * @return int|string
@@ -187,7 +199,7 @@ class PhpHelper extends EnvHelper
      * @param array ...$args
      * @return string
      */
-    public static function dumpVar(...$args): string
+    public static function dumpVars(...$args): string
     {
         ob_start();
         var_dump(...$args);
@@ -201,7 +213,7 @@ class PhpHelper extends EnvHelper
      * @param array ...$args
      * @return string
      */
-    public static function printVar(...$args): string
+    public static function printVars(...$args): string
     {
         ob_start();
 

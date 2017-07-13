@@ -4,16 +4,16 @@
  */
 
 if (!function_exists('dump_v')) {
-    function dump_v(...$args)
+    function dump_vars(...$args)
     {
-        return \inhere\library\helpers\PhpHelper::dumpVar($args);
+        return \inhere\library\helpers\PhpHelper::dumpVars(...$args);
     }
 }
 
 if (!function_exists('print_v')) {
-    function print_v(...$args)
+    function print_vars(...$args)
     {
-        return \inhere\library\helpers\PhpHelper::printVar($args);
+        return \inhere\library\helpers\PhpHelper::printVars(...$args);
     }
 }
 

@@ -9,12 +9,12 @@
 namespace inhere\library\traits;
 
 /**
- * Class TraitNameAlias
+ * Class NameAliasStaticTrait
  * @package inhere\library\traits
  *
  * @property array $aliases path alias array
  */
-trait TraitNameAlias
+trait NameAliasStaticTrait
 {
     // protected static $aliases = [];
 

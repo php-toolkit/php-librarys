@@ -9,10 +9,10 @@
 namespace inhere\library\traits;
 
 /**
- * Class LiteStaticContainerTrait
+ * Class LiteContainerStaticTrait
  * @package inhere\library\traits
  */
-trait LiteStaticContainerTrait
+trait LiteContainerStaticTrait
 {
     /**
      * all raw register service list
@@ -57,7 +57,7 @@ trait LiteStaticContainerTrait
         }
 
         // setting
-        if (!isset(self::$services[$name]) || $replace) {
+        if ($replace || !isset(self::$services[$name])) {
             self::$services[$name] = $service;
         }
 
@@ -117,7 +117,7 @@ trait LiteStaticContainerTrait
 
         $service = self::$services[$name];
 
-        if (is_object($service) && $service instanceof \Closure) {
+        if (is_object($service) && method_exists($service, '__invoke')) {
             return $service();
         }
 

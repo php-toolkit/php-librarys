@@ -14,5 +14,28 @@ namespace inhere\library\helpers;
  */
 class SysCall
 {
+    /**
+     * @param string $program
+     * @return int|string
+     */
+    public static function getCpuUsage($program)
+    {
+        if (!$program) {
+            return -1;
+        }
 
+        $info = exec('ps aux | grep ' . $program . ' | grep -v grep | grep -v su | awk {"print $3"}');
+
+        return $info;
+    }
+
+    public static function getMemUsage($program)
+    {
+        if (!$program) {
+            return -1;
+        }
+
+        $info = exec('ps aux | grep ' . $program . ' | grep -v grep | grep -v su | awk {"print $4"}');
+        return $info;
+    }
 }

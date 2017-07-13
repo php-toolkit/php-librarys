@@ -148,6 +148,10 @@ trait FixedEventTrait
             return null;
         }
 
+        if (is_object($cb) || (is_string($cb) && function_exists($cb))) {
+            return $cb(...$args);
+        }
+
         return call_user_func_array($cb, $args);
     }
 

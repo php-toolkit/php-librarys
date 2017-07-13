@@ -73,8 +73,14 @@ trait EventTrait
 
         // call event handlers of the event.
         foreach ((array)$this->eventHandlers[$event] as $cb) {
+            if (is_object($cb) || (is_string($cb) && function_exists($cb))) {
+                $ret = $cb(...$args);
+            } else {
+                $ret = call_user_func_array($cb, $args);
+            }
+
             // return FALSE to stop go on handle.
-            if (false === call_user_func_array($cb, $args)) {
+            if (false === $ret) {
                 break;
             }
         }

@@ -62,6 +62,15 @@ class File extends FileSystem
     }
 
     /**
+     * @param string $file
+     * @return string eg: image/gif
+     */
+    public static function mimeType($file)
+    {
+        return finfo_file(finfo_open(FILEINFO_MIME_TYPE), $file);
+    }
+
+    /**
      * @param $filename
      * @param bool $check
      * @return array
@@ -364,5 +373,36 @@ class File extends FileSystem
 
         $data = '<?php ' . $data . '?>';
         file_put_contents($outFile, $data);
+    }
+
+    /**
+     * If you want to download files from a linux server with
+     * a filesize bigger than 2GB you can use the following
+     * @param string $file
+     * @param string $as
+     */
+    public static function downBigFile($file, $as)
+    {
+        header('Expires: Mon, 1 Apr 1974 05:00:00 GMT');
+        header('Pragma: no-cache');
+        header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+        header('Content-Description: File Download');
+        header('Content-Type: application/octet-stream');
+        header('Content-Length: ' . trim(`stat -c%s "$file"`));
+        header('Content-Disposition: attachment; filename="' . $as . '"');
+        header('Content-Transfer-Encoding: binary');
+        //@readfile( $file );
+
+        flush();
+        $fp = popen('tail -c ' . trim(`stat -c%s "$file"`) . ' ' . $file . ' 2>&1', 'r');
+
+        while (!feof($fp)) {
+            // send the current file part to the browser
+            print fread($fp, 1024);
+            // flush the content to the browser
+            flush();
+        }
+
+        fclose($fp);
     }
 }

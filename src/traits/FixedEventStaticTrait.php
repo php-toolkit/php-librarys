@@ -9,10 +9,10 @@
 namespace inhere\library\event;
 
 /**
- * Class TraitSimpleStaticEvent
+ * Class FixedEventStaticTrait
  * @package inhere\library\event
  */
-trait StaticMethodEventTrait
+trait FixedEventStaticTrait
 {
     /**
      * set the supported events, if you need.

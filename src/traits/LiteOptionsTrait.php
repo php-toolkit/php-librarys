@@ -10,8 +10,6 @@
 
 namespace inhere\library\traits;
 
-use inhere\library\helpers\ArrayHelper;
-
 /**
  * Class LiteOptionsTrait
  * @package inhere\library\traits
@@ -39,7 +37,7 @@ trait LiteOptionsTrait
     {
         $value = array_key_exists($name, $this->options) ? $this->options[$name] : $default;
 
-        if ($value && is_callable($value) && ($value instanceof \Closure)) {
+        if ($value && ($value instanceof \Closure)) {
             $value = $value();
         }
 

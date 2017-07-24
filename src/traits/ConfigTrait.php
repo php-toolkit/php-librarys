@@ -37,9 +37,9 @@ trait ConfigTrait
      */
     public function getValue(string $name, $default = null)
     {
-        $value = array_key_exists($name, $this->config) ? $this->config[$name] : $default;
+        $value = Arr::getByPath($this->config, $name, $default);
 
-        if ($value && is_callable($value) && ($value instanceof \Closure)) {
+        if ($value && $value instanceof \Closure) {
             $value = $value();
         }
 

@@ -95,6 +95,12 @@ class LiteLogger implements LoggerInterface
     private $_records = [];
 
     /**
+     * log profile records
+     * @var array[]
+     */
+    private $profiles = [];
+
+    /**
      * 日志实例名称 channel name
      * @var string
      */
@@ -552,6 +558,27 @@ class LiteLogger implements LoggerInterface
     public function debug($message, array $context = [])
     {
         $this->log(self::DEBUG, $message, $context);
+    }
+
+    public function profile($name, array $context = [], $category = 'application')
+    {
+        $context['startTime'] = microtime(true);
+        $context['memUsage'] = memory_get_usage();
+        $context['memPeakUsage'] = memory_get_peak_usage();
+
+        $this->profiles[$category][$name] = $context;
+    }
+
+    public function profileEnd($name, array $context = [], $category = 'application')
+    {
+        if (isset($this->profiles[$category][$name])) {
+            $oldInfo = $this->profiles[$category][$name];
+            $info['endTime'] = microtime(true);
+            $info['memUsage'] = memory_get_usage();
+            $info['memPeakUsage'] = memory_get_peak_usage();
+
+            $this->log(self::DEBUG, $message, $context);
+        }
     }
 
     /**

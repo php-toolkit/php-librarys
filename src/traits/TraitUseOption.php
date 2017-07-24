@@ -68,7 +68,7 @@ trait TraitUseOption
             $value = $default;
         }
 
-        if (is_callable($value) && ($value instanceof \Closure)) {
+        if ($value && ($value instanceof \Closure)) {
             $value = $value();
         }
 

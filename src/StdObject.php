@@ -8,7 +8,7 @@
 
 namespace inhere\library;
 
-use inhere\library\helpers\ObjectHelper;
+use inhere\library\helpers\Obj;
 use inhere\library\traits\StdObjectTrait;
 
 /**
@@ -25,7 +25,7 @@ abstract class StdObject
      */
     public function __construct(array $config = [])
     {
-        ObjectHelper::setAttrs($this, $config);
+        Obj::configure($this, $config);
 
         $this->init();
     }

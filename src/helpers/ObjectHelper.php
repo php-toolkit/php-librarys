@@ -24,6 +24,16 @@ class ObjectHelper
      */
     public static function setAttrs($object, array $options)
     {
+        self::configure($object, $options);
+    }
+
+    /**
+     * 给对象设置属性值
+     * @param $object
+     * @param array $options
+     */
+    public static function configure($object, array $options)
+    {
         foreach ($options as $property => $value) {
             $object->$property = $value;
         }
@@ -34,7 +44,7 @@ class ObjectHelper
      * @param $object
      * @param array $options
      */
-    public static function smartInit($object, array $options)
+    public static function smartConfigure($object, array $options)
     {
         foreach ($options as $property => $value) {
             $setter = 'set' . ucfirst($property);
@@ -98,7 +108,6 @@ class ObjectHelper
         return is_string($object) ? md5($object) : '';
     }
 
-
     /**
      * @from https://github.com/ventoviro/windwalker
      * Build an array of constructor parameters.
@@ -117,7 +126,7 @@ class ObjectHelper
             // If we have a dependency, that means it has been type-hinted.
             if (null !== $dependency) {
                 $depClass = $dependency->getName();
-                $depObject = self::createObject($depClass);
+                $depObject = self::create($depClass);
 
                 if ($depObject instanceof $depClass) {
                     $methodArgs[] = $depObject;
@@ -147,7 +156,7 @@ class ObjectHelper
      * @throws DependencyResolutionException
      * @return mixed
      */
-    public static function createObject($class)
+    public static function create($class)
     {
         try {
             $reflection = new \ReflectionClass($class);

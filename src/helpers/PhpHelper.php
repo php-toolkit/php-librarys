@@ -110,23 +110,29 @@ class PhpHelper extends EnvHelper
 
     /**
      * Converts an exception into a simple string.
-     * @param \Exception|\Throwable $exp the exception being converted
-     * @param string $br
+     * @param \Exception|\Throwable $e the exception being converted
+     * @param bool $clearHtml
      * @param bool $getTrace
      * @return string the string representation of the exception.
      */
-    public static function exceptionToString($exp, $br = "\n", $getTrace = false): string
+    public static function exceptionToString($e, $clearHtml = false, $getTrace = false): string
     {
         if (!$getTrace) {
-            $message = "Error: {$exp->getMessage()}";
+            $message = "Error: {$e->getMessage()}";
         } else {
-            $message = $exp instanceof \ErrorException ? 'Error' : 'Exception';
-            $message .= " '" . get_class($exp) . "' with message '{$exp->getMessage()}' \n\nIn "
-                . $exp->getFile() . ':' . $exp->getLine() . "\n\n"
-                . "Stack trace:\n" . $exp->getTraceAsString();
+            $type = $e instanceof \ErrorException ? 'Error' : 'Exception';
+            $message = sprintf(
+                "<h3>%s(%d): %s</h3>\n<pre><strong>File: %s(Line %d)</strong> \n\n%s</pre>",
+                $type,
+                $e->getCode(),
+                $e->getMessage(),
+                $e->getFile(),
+                $e->getLine(),
+                $e->getTraceAsString()
+            );
 
-            if ($br !== "\n") {
-                $message = str_replace("\n", $br, $message);
+            if ($clearHtml) {
+                $message = strip_tags($message);
             }
         }
 

@@ -105,6 +105,15 @@ class FileFinder extends StdObject
 
     /**
      * @param array $config
+     * @return static
+     */
+    public static function make(array $config = [])
+    {
+        return new static($config);
+    }
+
+    /**
+     * @param array $config
      */
     public function __construct(array $config = [])
     {

@@ -33,4 +33,11 @@ interface ProcessLogInterface
     const SPLIT_NO = '';
     const SPLIT_DAY = 'day';
     const SPLIT_HOUR = 'hour';
+
+    public function log($msg, $level = self::INFO, array $data = []);
+
+    /**
+     * flush
+     */
+    public function flush();
 }

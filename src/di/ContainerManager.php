@@ -18,13 +18,13 @@ final class ContainerManager
      * 一组容器的扼要描述，标记不同的容器(这里一组含有一个基础容器和其他的属于这组[$group]的其它子容器)
      * @var string $group
      */
-    protected static $defaultGroup = 'di';
+    private static $defaultGroup = 'di';
 
     /**
      * $containers 容器列表
      * @var array
      */
-    protected static $containers = [
+    private static $containers = [
         'di' => [
             'root' => null,// 'container name'=> a base Container instance
             'children' => []
@@ -125,11 +125,6 @@ final class ContainerManager
         return $container->set($id, $service);
     }
 
-    public static function share($id, $service, $name = '')
-    {
-
-    }
-
     /**
      * more @see Container::get()
      * @param $id
@@ -155,11 +150,5 @@ final class ContainerManager
 
         return $container->getNew($id);
     }
-
-    public static function getShared()
-    {
-
-    }
-
 
 }

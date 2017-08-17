@@ -130,10 +130,10 @@ class ProcessLogger implements ProcessLogInterface
 
     /**
      * Exception log
-     * @param \Exception $e
+     * @param \Throwable $e
      * @param string $preMsg
      */
-    public function ex(\Exception $e, $preMsg = '')
+    public function ex(\Throwable $e, $preMsg = '')
     {
         $preMsg = $preMsg ? "$preMsg " : '';
 
@@ -155,7 +155,7 @@ class ProcessLogger implements ProcessLogInterface
      */
     public function log($msg, $level = self::INFO, array $data = [])
     {
-        if ($level > $this->level) {
+        if (is_numeric($level) && $level > $this->level) {
             return true;
         }
 
@@ -165,7 +165,7 @@ class ProcessLogger implements ProcessLogInterface
             return $this->sysLog($msg . ' ' . $strData, $level);
         }
 
-        $label = self::$levels[$level] ?? self::INFO;
+        $label = self::getLevelName($level);
         $ds = FormatHelper::microTime(microtime(true));
 
         // [$this->getPidRole():$this->pid] $msg
@@ -178,7 +178,7 @@ class ProcessLogger implements ProcessLogInterface
 
         if ($this->fileHandle) {
             $this->count++;
-            $this->cache[] = $logString;
+            $this->cache[] = CliHelper::clearColor($logString);
 
             if ($this->count >= $this->logThreshold || $this->fileIsChanged()) {
                 $this->flush();
@@ -387,6 +387,19 @@ class ProcessLogger implements ProcessLogInterface
     public static function getLevels()
     {
         return self::$levels;
+    }
+
+    /**
+     * @param int|string $level
+     * @return string
+     */
+    public static function getLevelName($level)
+    {
+        if (is_numeric($level)) {
+            return self::$levels[$level] ?? 'Unknown';
+        }
+
+        return strtoupper($level);
     }
 
     /**

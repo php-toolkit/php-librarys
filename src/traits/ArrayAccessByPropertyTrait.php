@@ -15,11 +15,11 @@ namespace inhere\library\traits;
  * ```
  * class A implements \ArrayAccess
  * {
- *     use TraitArrayAccess;
+ *     use ArrayAccessByPropertyTrait;
  * }
  * ```
  */
-trait TraitArrayAccess
+trait ArrayAccessByPropertyTrait
 {
     /**
      * Checks whether an offset exists in the iterator.

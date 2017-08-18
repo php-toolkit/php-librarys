@@ -8,8 +8,8 @@
 
 namespace inhere\library;
 
-use inhere\library\helpers\Obj;
 use inhere\library\traits\StdObjectTrait;
+use inhere\library\traits\PropertyAccessByGetterSetterTrait;
 
 /**
  * Class StdBase
@@ -18,23 +18,5 @@ use inhere\library\traits\StdObjectTrait;
 abstract class StdObject
 {
     use StdObjectTrait;
-
-    /**
-     * StdObject constructor.
-     * @param array $config
-     */
-    public function __construct(array $config = [])
-    {
-        Obj::configure($this, $config);
-
-        $this->init();
-    }
-
-    /**
-     * init
-     */
-    protected function init()
-    {
-        // init something ...
-    }
+    use PropertyAccessByGetterSetterTrait;
 }

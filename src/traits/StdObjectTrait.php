@@ -12,6 +12,7 @@ use inhere\exceptions\SetPropertyException;
 use inhere\exceptions\GetPropertyException;
 use inhere\exceptions\NotFoundException;
 use inhere\exceptions\UnknownCalledException;
+use inhere\library\helpers\Obj;
 
 /**
  * Class StdObjectTrait
@@ -55,74 +56,22 @@ trait StdObjectTrait
     }
 
     /**
-     * @reference yii2 yii\base\Object::__set()
-     * @param $name
-     * @param $value
-     * @throws SetPropertyException
+     * StdObject constructor.
+     * @param array $config
      */
-    public function __set($name, $value)
+    public function __construct(array $config = [])
     {
-        $method = 'set' . ucfirst($name);
+        Obj::configure($this, $config);
 
-        if (method_exists($this, $method)) {
-            $this->$method($value);
-        } elseif (method_exists($this, 'get' . ucfirst($name))) {
-            throw new SetPropertyException('Setting a Read-only property! ' . get_class($this) . "::{$name}");
-        } else {
-            throw new SetPropertyException('Setting a Unknown property! ' . get_class($this) . "::{$name}");
-        }
+        $this->init();
     }
 
     /**
-     * @reference yii2 yii\base\Object::__set()
-     * @param $name
-     * @throws GetPropertyException
-     * @return mixed
+     * init
      */
-    public function __get($name)
+    protected function init()
     {
-        $method = 'get' . ucfirst($name);
-
-        if (method_exists($this, $method)) {
-            return $this->$method();
-        }
-
-        if (method_exists($this, 'set' . ucfirst($name))) {
-            throw new GetPropertyException('Getting a Write-only property! ' . get_class($this) . "::{$name}");
-        }
-
-        throw new GetPropertyException('Getting a Unknown property! ' . get_class($this) . "::{$name}");
-    }
-
-    /**
-     * @param $name
-     * @return bool
-     */
-    public function __isset($name)
-    {
-        $getter = 'get' . ucfirst($name);
-
-        if (method_exists($this, $getter)) {
-            return $this->$getter() !== null;
-        }
-
-        return false;
-    }
-
-    /**
-     * @param $name
-     * @throws NotFoundException
-     */
-    public function __unset($name)
-    {
-        $setter = 'set' . ucfirst($name);
-
-        if (method_exists($this, $setter)) {
-            $this->$setter(null);
-            return;
-        }
-
-        throw new NotFoundException('Unset an unknown or read-only property: ' . get_class($this) . '::' . $name);
+        // init something ...
     }
 
     /**

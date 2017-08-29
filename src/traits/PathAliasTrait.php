@@ -68,7 +68,7 @@ trait PathAliasTrait
                     continue;
                 }
 
-                self::$aliases[$alias] = $realPath;
+                self::$aliases[$alias] = self::alias($realPath);
             }
         }
 

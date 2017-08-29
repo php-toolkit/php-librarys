@@ -123,7 +123,7 @@ trait TraitUseOption
      */
     public function setOptions(array $options, $merge = true)
     {
-        $this->options = $merge ? ArrayHelper::merge($this->options, (array)$options) : $options;
+        $this->options = $merge ? ArrayHelper::merge($this->options, $options) : $options;
 
         return $this;
     }

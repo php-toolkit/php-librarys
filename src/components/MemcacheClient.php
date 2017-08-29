@@ -7,7 +7,7 @@
  * @from http://www.open-open.com/lib/view/open1372842855097.html
  */
 
-namespace inhere\library\utils;
+namespace inhere\library\components;
 
 use inhere\exceptions\NotFoundException;
 use inhere\library\traits\TraitUseOption;
@@ -71,7 +71,7 @@ class MemcacheClient // extends AbstractCacheDriver
         if (class_exists('Memcached', false)) {
             $this->driver = new \Memcached();
             $this->driverName = 'Memcached';
-        } elseif (class_exists('Memcached', false)) {
+        } elseif (class_exists('Memcache', false)) {
             $this->driver = new \Memcache();
             $this->driverName = 'Memcache';
         } else {

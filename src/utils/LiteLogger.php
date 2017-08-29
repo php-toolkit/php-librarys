@@ -29,5 +29,3 @@ use inhere\library\log\FileLogger;
  * ```
  */
 class LiteLogger extends FileLogger {}
-
-

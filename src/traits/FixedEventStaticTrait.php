@@ -8,6 +8,8 @@
 
 namespace inhere\library\event;
 
+use inhere\library\helpers\PhpHelper;
+
 /**
  * Class FixedEventStaticTrait
  * @package inhere\library\event
@@ -78,7 +80,7 @@ trait FixedEventStaticTrait
         // call event handlers of the event.
         foreach ((array)self::$eventHandlers[$event] as $cb) {
             // return FALSE to stop go on handle.
-            if (false === call_user_func_array($cb, $args)) {
+            if (false === PhpHelper::call($cb, $args)) {
                 break;
             }
         }

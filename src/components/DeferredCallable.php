@@ -8,6 +8,8 @@
 
 namespace inhere\library\components;
 
+use inhere\library\helpers\PhpHelper;
+
 /**
  * Class DeferredCallable
  * @package inhere\library\components
@@ -35,43 +37,19 @@ class DeferredCallable
         $callable = $this->callable;
 
         if (is_callable($callable)) {
-            return $this->resolve($callable, $args);
+            return PhpHelper::call($callable, $args);
         }
 
         if (is_string($callable) && class_exists($callable)) {
             $obj = new $callable;
 
             if (method_exists($obj, '__invoke')) {
-                return $this->resolve($obj, $args);
+                return $obj(...$args);
             }
 
             throw new \InvalidArgumentException('the defined callable is cannot called！');
         }
 
         throw new \InvalidArgumentException('the defined callable is error！');
-    }
-
-    /**
-     * @param callable $callable
-     * @param array $args
-     * @return null
-     */
-    public function resolve($callable, array $args)
-    {
-        $result = null;
-
-        if (is_string($callable) || is_object($callable)) {
-            $result = $callable(...$args);
-        } elseif (is_array($callable)) {
-            list($obj, $mhd) = $callable;
-
-            if (is_object($obj)) {
-                $result = $obj->$mhd(...$args);
-            } else {
-                $result = $obj::$mhd(...$args);
-            }
-        }
-
-        return $result;
     }
 }

@@ -8,6 +8,8 @@
 
 namespace inhere\library\traits;
 
+use inhere\library\helpers\PhpHelper;
+
 /**
  * Class FixedEventTrait
  * @package inhere\library\traits
@@ -148,11 +150,7 @@ trait FixedEventTrait
             return null;
         }
 
-        if (is_object($cb) || (is_string($cb) && function_exists($cb))) {
-            return $cb(...$args);
-        }
-
-        return call_user_func_array($cb, $args);
+        return PhpHelper::call($cb, $args);
     }
 
 }

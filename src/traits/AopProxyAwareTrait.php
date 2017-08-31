@@ -17,8 +17,8 @@ use inhere\library\helpers\PhpHelper;
  * @property array $proxyMap 要经过AOP代理的方法配置
  * e.g:
  * [
- *   'XyzClass::methodBefore' => handler,
- *   'XyzClass::methodAfter'  => handler,
+ *   'XyzClass::methodBefore' => [handler0, handler1],
+ *   'XyzClass::methodAfter'  => [handler2, handler3],
  * ]
  */
 trait AopProxyAwareTrait
@@ -52,17 +52,24 @@ trait AopProxyAwareTrait
     public function call($method, array $args = [])
     {
         if (!$target = $this->proxyTarget) {
-            return null;
+            throw new \LogicException('Please setting the proxy target [proxyTarget]');
         }
 
-        if ($cb = $this->findProxyCallback($target, $method)) {
-            PhpHelper::call($cb, [$target, $method, $args]);
+        // on before exec method
+        if ($cbList = $this->findProxyCallback($target, $method)) {
+            foreach ($cbList as $cb) {
+                PhpHelper::call($cb, [$target, $method, $args]);
+            }
         }
 
+        // exec method
         $ret = PhpHelper::call([$target, $method], $args);
 
+        // on after exec method
         if ($cb = $this->findProxyCallback($target, $method, 'after')) {
-            PhpHelper::call($cb, [$target, $method, $args, $ret]);
+            foreach ($cbList as $cb) {
+                PhpHelper::call($cb, [$target, $method, $args]);
+            }
         }
 
         // clear
@@ -109,7 +116,7 @@ trait AopProxyAwareTrait
      * @param $target
      * @param string $method
      * @param string $prefix
-     * @return null
+     * @return null|array
      */
     protected function findProxyCallback($target, $method, $prefix = 'before')
     {
@@ -119,6 +126,18 @@ trait AopProxyAwareTrait
         $key = $className . '::' . $method . ucfirst($prefix);
 
         return $this->proxyMap[$key] ?? null;
+    }
+
+    /**
+     * @see addProxy()
+     * @param $key
+     * @param $handler
+     * @param string $position
+     * @return $this
+     */
+    public function register($key, $handler, $position = 'before')
+    {
+        return $this->addProxy($key, $handler, $position);
     }
 
     /**
@@ -134,7 +153,7 @@ trait AopProxyAwareTrait
         }
 
         $key .= ucfirst($position);
-        $this->proxyMap[$key] = $handler;
+        $this->proxyMap[$key][] = $handler;
 
         return $this;
     }
@@ -161,6 +180,14 @@ trait AopProxyAwareTrait
         }
 
         return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getProxyPoints(): array
+    {
+        return self::$proxyPoints;
     }
 
     /**

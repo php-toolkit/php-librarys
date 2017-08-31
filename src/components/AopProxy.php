@@ -47,7 +47,7 @@ class AopProxy
      * AopProxy constructor.
      * @param array $proxyMap
      */
-    public function __construct(array $proxyMap)
+    public function __construct(array $proxyMap = [])
     {
         $this->setProxyMap($proxyMap);
     }

@@ -17,7 +17,6 @@ class RequestHelper
     /**
      * Get a value from $_POST / $_GET
      * if unavailable, take a default value
-     *
      * @param string $key Value key
      * @param mixed $default (optional)
      * @return mixed Value
@@ -42,7 +41,7 @@ class RequestHelper
      * @param mixed $default
      * @return mixed
      */
-    public static function get($name=null, $default = null)
+    public static function get($name = null, $default = null)
     {
         if (null === $name) {
             return $_GET;
@@ -56,7 +55,7 @@ class RequestHelper
      * @param mixed $default
      * @return mixed
      */
-    public static  function post($name=null, $default = null)
+    public static function post($name = null, $default = null)
     {
         $body = self::getParsedBody();
 

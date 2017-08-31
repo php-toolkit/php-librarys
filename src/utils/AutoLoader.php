@@ -12,12 +12,10 @@ namespace inhere\library\utils;
 /**
  * Class AutoLoader
  * @package inhere\library\utils
- *
  * ```php
  * AutoLoader::addFiles([
  *  // file
  * ]);
- *
  * $loader = AutoLoader::getLoader();
  * $loader->addPsr4Map([
  *  'namespace' => 'path'
@@ -25,9 +23,7 @@ namespace inhere\library\utils;
  * $loader->addClassMap([
  *  'name' => 'file'
  * ]);
- *
  * ```
- *
  */
 class AutoLoader
 {
@@ -219,7 +215,6 @@ class AutoLoader
 
     /**
      * Registers this instance as an autoloader.
-     *
      * @param bool $prepend Whether to prepend the autoloader or not
      */
     public function register($prepend = false)
@@ -237,7 +232,6 @@ class AutoLoader
 
     /**
      * Loads the given class or interface.
-     *
      * @param  string $class The name of the class
      * @return bool|null True if loaded, null otherwise
      */
@@ -254,7 +248,6 @@ class AutoLoader
 
     /**
      * Finds the path to the file where the class is defined.
-     *
      * @param string $class The name of the class
      * @return string|false The path if found, false otherwise
      */
@@ -330,7 +323,6 @@ function globalIncludeFile($fileIdentifier, $file)
 
 /**
  * Scope isolated include.
- *
  * Prevents access to $this/self from included files.
  * @param $file
  */

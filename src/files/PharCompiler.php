@@ -72,10 +72,9 @@ class PharCompiler
 
     /**
      * Add a file to the psysh Phar.
-     *
-     * @param \Phar        $phar
+     * @param \Phar $phar
      * @param \SplFileInfo $file
-     * @param bool        $strip (default: true)
+     * @param bool $strip (default: true)
      */
     private function addFile($phar, $file, $strip = true)
     {
@@ -93,9 +92,7 @@ class PharCompiler
 
     /**
      * Removes whitespace from a PHP source string while preserving line numbers.
-     *
      * @param string $source A PHP string
-     *
      * @return string The PHP string with the whitespace removed
      */
     private function stripWhitespace($source)
@@ -142,9 +139,7 @@ EOS;
 
     /**
      * Get a Phar stub for psysh.
-     *
      * This is basically the psysh bin, with the autoload require statements swapped out.
-     *
      * @return string
      */
     private function getStub()

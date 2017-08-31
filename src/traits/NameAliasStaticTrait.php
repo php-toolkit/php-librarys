@@ -11,7 +11,6 @@ namespace inhere\library\traits;
 /**
  * Class NameAliasStaticTrait
  * @package inhere\library\traits
- *
  * @property array $aliases path alias array
  */
 trait NameAliasStaticTrait

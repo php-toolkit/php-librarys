@@ -11,20 +11,15 @@ namespace inhere\library\utils;
 /**
  * Class LocalConfig local config read
  * @package inhere\library\utils
- *
  * in local config file(must is 'ini' format):
- *
  * ```
  * env=dev
  * debug=true
  * ... ...
  * ```
- *
  * in code:
- *
  * ```
  * $lev = new LocalEnv(__DIE__, '.local');
- *
  * $debug = $lev->get('debug', false);// can also use function: local_env('debug', false)
  * $env = $lev->get('env', 'pdt');
  * ```

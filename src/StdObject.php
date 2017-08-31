@@ -8,8 +8,8 @@
 
 namespace inhere\library;
 
-use inhere\library\traits\StdObjectTrait;
 use inhere\library\traits\PropertyAccessByGetterSetterTrait;
+use inhere\library\traits\StdObjectTrait;
 
 /**
  * Class StdBase

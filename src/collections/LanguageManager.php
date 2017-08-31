@@ -18,7 +18,6 @@ use Traversable;
 /**
  * Class LanguageManager
  * @package inhere\library\base
- *
  */
 class LanguageManager extends StdObject implements \ArrayAccess, \Countable, \IteratorAggregate
 {
@@ -42,7 +41,6 @@ class LanguageManager extends StdObject implements \ArrayAccess, \Countable, \It
 
     /**
      * @var Collection[]
-     *
      * [ 'fileKey' => Collection ]
      */
     private $fallbackData = [];
@@ -99,9 +97,7 @@ class LanguageManager extends StdObject implements \ArrayAccess, \Countable, \It
     const DEFAULT_FILE_KEY = '__default';
 
     /**
-     *
      * how to use language translate ? please see '/doc/language.md'
-     *
      * @param string|bool $key
      * @param array $args
      * @param string $default

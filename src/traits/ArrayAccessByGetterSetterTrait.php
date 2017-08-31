@@ -11,7 +11,6 @@ namespace inhere\library\traits;
 /**
  * Class TraitArrayAccess
  * @package inhere\library\traits
- *
  * ```
  * class A implements \ArrayAccess
  * {

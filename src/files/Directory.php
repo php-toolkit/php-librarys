@@ -37,6 +37,7 @@ class Directory extends FileSystem
 
             if ($file !== '.' && $file !== '..') {
                 closedir($handler);
+
                 return false;
             }
         }
@@ -188,7 +189,6 @@ class Directory extends FileSystem
      * @param $dir
      * @param array $options more {@see \inhere\library\files\DirectoryFiles}
      * @param bool|false $recursive
-     *
      * @return array|\ArrayObject
      * @throws \inhere\exceptions\InvalidArgumentException
      */

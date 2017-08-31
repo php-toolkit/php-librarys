@@ -36,6 +36,7 @@ class SysCall
         }
 
         $info = exec('ps aux | grep ' . $program . ' | grep -v grep | grep -v su | awk {"print $4"}');
+
         return $info;
     }
 }

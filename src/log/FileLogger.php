@@ -21,9 +21,7 @@ use Psr\Log\LoggerInterface;
  * $logger = LiteLogger::make($config);
  * $logger->info(...);
  * $logger->debug(...);
- *
  * ......
- *
  * // Notice: must call LiteLogger::flushAll() on application run end.
  * LiteLogger::flushAll();
  * ```
@@ -65,15 +63,15 @@ class FileLogger implements LoggerInterface
      * @var array $levels Logging levels
      */
     protected static $levelMap = array(
-        self::TRACE     => 'trace',
-        self::DEBUG     => 'debug',
-        self::INFO      => 'info',
-        self::NOTICE    => 'notice',
-        self::WARNING   => 'warning',
-        self::ERROR     => 'error',
+        self::TRACE => 'trace',
+        self::DEBUG => 'debug',
+        self::INFO => 'info',
+        self::NOTICE => 'notice',
+        self::WARNING => 'warning',
+        self::ERROR => 'error',
         self::EXCEPTION => 'exception',
-        self::CRITICAL  => 'critical',
-        self::ALERT     => 'alert',
+        self::CRITICAL => 'critical',
+        self::ALERT => 'alert',
         self::EMERGENCY => 'emergency',
     );
 
@@ -209,7 +207,7 @@ class FileLogger implements LoggerInterface
             throw new \InvalidArgumentException('Logger config is must be an array and not allow empty.');
         }
 
-        $name = $name ? : ($config['name'] ?? '');
+        $name = $name ?: ($config['name'] ?? '');
 
         if (!$name) {
             throw new \InvalidArgumentException('Logger name is required.');
@@ -374,7 +372,7 @@ class FileLogger implements LoggerInterface
 
     /**
      * create new logger instance
-     * @param array     $config
+     * @param array $config
      * @param null|string $name
      */
     public function __construct(array $config = [], $name = null)
@@ -427,10 +425,8 @@ class FileLogger implements LoggerInterface
 
     /**
      * System is unusable.
-     *
      * @param string $message
      * @param array $context
-     *
      * @return void
      */
     public function emergency($message, array $context = array())
@@ -445,12 +441,9 @@ class FileLogger implements LoggerInterface
 
     /**
      * Critical conditions.
-     *
      * Example: Application component unavailable, unexpected exception.
-     *
      * @param string $message
      * @param array $context
-     *
      * @return void
      */
     public function critical($message, array $context = array())
@@ -477,6 +470,7 @@ class FileLogger implements LoggerInterface
     {
         $this->exception($e, $context, $logRequest);
     }
+
     public function exception(\Exception $e, array $context = [], $logRequest = true)
     {
         $message = sprintf(
@@ -598,7 +592,7 @@ class FileLogger implements LoggerInterface
 
         $levelName = self::getLevelName($level);
         $record = array(
-            'message' => (string) $message,
+            'message' => (string)$message,
             'context' => $context,
             'level' => $level,
             'level_name' => $levelName,
@@ -631,6 +625,7 @@ class FileLogger implements LoggerInterface
     {
         return $this->flush();
     }
+
     public function flush()
     {
         if (!$this->_records) {
@@ -659,11 +654,11 @@ class FileLogger implements LoggerInterface
         $record['level_name'] = strtoupper($record['level_name']);
         $record['channel'] = strtoupper($record['channel']);
         $record['context'] = $record['context'] ? json_encode($record['context']) : '';
-        $record['extra']   = $record['extra'] ? json_encode($record['extra']) : '';
+        $record['extra'] = $record['extra'] ? json_encode($record['extra']) : '';
 
         foreach ($record as $var => $val) {
-            if (false !== strpos($output, '%'.$var.'%')) {
-                $output = str_replace('%'.$var.'%', $this->stringify($val), $output);
+            if (false !== strpos($output, '%' . $var . '%')) {
+                $output = str_replace('%' . $var . '%', $this->stringify($val), $output);
             }
         }
 
@@ -848,7 +843,7 @@ class FileLogger implements LoggerInterface
         }
 
         if (is_scalar($data)) {
-            return (string) $data;
+            return (string)$data;
         }
 
         if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
@@ -934,7 +929,8 @@ class FileLogger implements LoggerInterface
             if (is_writable($file)) {
                 // suppress errors here as unlink() might fail if two processes
                 // are cleaning up/rotating at the same time
-                set_error_handler(function ($errno, $errstr, $errfile, $errline) {});
+                set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+                });
                 unlink($file);
                 restore_error_handler();
             }

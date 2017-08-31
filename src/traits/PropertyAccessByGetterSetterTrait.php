@@ -15,7 +15,6 @@ use inhere\exceptions\SetPropertyException;
 /**
  * trait PropertyAccessByGetterSetterTrait
  * @package inhere\library\traits
- *
  * ```
  * class A
  * {
@@ -51,6 +50,7 @@ trait PropertyAccessByGetterSetterTrait
 
         if (method_exists($this, $setter)) {
             $this->$setter(null);
+
             return;
         }
 

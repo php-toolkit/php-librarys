@@ -13,20 +13,16 @@ use inhere\library\traits\AopProxyAwareTrait;
 /**
  * Class AopProxy
  * @package inhere\library\components
- *
  * $aop = new AopProxy();
  * $aop->addProxy('FileLogger::log', function() {
  *      echo 'before add log';
  * }, 'before');
- *
  * $aop->addProxy('FileLogger::log', function() {
  *      echo 'after add log';
  * }, 'after');
- *
  * $logger = new FileLogger;
  * // not use:
  * // $logger->log('message');
- *
  * // should:
  * $aop->proxy($logger, 'log', ['message']);
  * // equal
@@ -37,7 +33,6 @@ use inhere\library\traits\AopProxyAwareTrait;
  * $aop($logger)->log('message'); // by __invoke
  * // equal
  * $aop($logger, 'log', ['message']); // by __invoke
- *
  */
 class AopProxy
 {

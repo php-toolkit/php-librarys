@@ -31,7 +31,6 @@ class DateHelper
 
     /**
      * 校验值是否是日期格式
-     *
      * @param string $date 日期
      * @return boolean
      */
@@ -43,7 +42,6 @@ class DateHelper
 
     /**
      * 校验值是否是日期并且是否满足设定格式
-     *
      * @param string $date 日期
      * @param string $format 需要检验的格式数组
      * @return boolean
@@ -67,8 +65,9 @@ class DateHelper
      */
     public static function tomorrowBegin()
     {
-        return mktime(0,0, 0, date('m'),date('d')+1, date('Y'));
+        return mktime(0, 0, 0, date('m'), date('d') + 1, date('Y'));
     }
+
     /**
      * @return false|int
      */

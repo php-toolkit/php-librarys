@@ -13,14 +13,10 @@ use inhere\exceptions\PropertyException;
 /**
  * Class JsonMessage
  * @package slimExt\helpers
- *
  * $mg = JsonMessage::create(['msg' => 'success', 'code' => 23]);
  * $mg->data = [ 'key' => 'test'];
- *
  * echo json_encode($mg);
- *
  * response to client:
- *
  * {
  *  "code":23,
  *  "msg":"success",
@@ -28,7 +24,6 @@ use inhere\exceptions\PropertyException;
  *      "key":"value"
  *  }
  * }
- *
  */
 class JsonMessage extends ActiveData
 {

@@ -10,7 +10,6 @@ namespace inhere\library\helpers;
 
 /**
  * Class IntHelper
- *
  * @link http://cn2.php.net/manual/zh/function.pack.php#119402
  * @package inhere\library\helpers
  */

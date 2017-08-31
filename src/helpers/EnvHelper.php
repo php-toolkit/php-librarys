@@ -116,7 +116,7 @@ class EnvHelper
             'fpm-fcgi',
             'srv',
             'cli-server'
-        ], true );
+        ], true);
     }
 
     /**

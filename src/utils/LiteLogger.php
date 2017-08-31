@@ -15,17 +15,16 @@ use inhere\library\log\FileLogger;
  * Class LiteLogger
  * @package inhere\library\utils
  * @deprecated please use `inhere\library\log\FileLogger` instead it.
- *
  * ```
  * $config = [...];
  * $logger = LiteLogger::make($config);
  * $logger->info(...);
  * $logger->debug(...);
- *
  * ......
- *
  * // Notice: must call LiteLogger::flushAll() on application run end.
  * LiteLogger::flushAll();
  * ```
  */
-class LiteLogger extends FileLogger {}
+class LiteLogger extends FileLogger
+{
+}

@@ -12,9 +12,9 @@ namespace inhere\library\files;
 
 use inhere\exceptions\FileNotFoundException;
 use inhere\exceptions\FileReadException;
+use inhere\exceptions\FileSystemException;
 use inhere\exceptions\IOException;
 use inhere\library\helpers\StringHelper;
-use inhere\exceptions\FileSystemException;
 
 /**
  * Class File
@@ -142,7 +142,6 @@ class File extends FileSystem
 
     /**
      * Attempts to write $content to the file specified by $handler. $path is used for printing exceptions.
-     *
      * @param resource $handler The resource to write to.
      * @param string $content The content to write.
      * @param string $path The path to the file (for exception printing only).

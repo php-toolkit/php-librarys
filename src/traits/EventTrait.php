@@ -100,6 +100,7 @@ trait EventTrait
             $handler = $this->eventHandlers[$event];
 
             unset($this->events[$event], $this->eventHandlers[$event]);
+
             return $handler;
         }
 

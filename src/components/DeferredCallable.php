@@ -47,9 +47,9 @@ class DeferredCallable
                 return $obj(...$args);
             }
 
-            throw new \InvalidArgumentException('the defined callable is cannot called！');
+            throw new \InvalidArgumentException('the defined callable is cannot be called!');
         }
 
-        throw new \InvalidArgumentException('the defined callable is error！');
+        throw new \InvalidArgumentException('the defined callable is error!');
     }
 }

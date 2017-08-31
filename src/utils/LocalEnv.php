@@ -10,20 +10,15 @@ namespace inhere\library\utils;
 
 /**
  * local env read
- *
  * in local env file(must is 'ini' format):
- *
  * ```
  * env=dev
  * debug=true
  * ... ...
  * ```
- *
  * in code:
- *
  * ```
  * $lev = new LocalEnv(__DIE__, '.env');
- *
  * $debug = $lev->get('debug', false);// can also use function: local_env('debug', false)
  * $env = $lev->get('env', 'pdt');
  * ```

@@ -131,7 +131,7 @@ class FormatHelper
         $suffixes = array('b', 'k', 'M', 'G', 'T');
         $floorBase = floor($base);
 
-        return round(1024 ** ($base - $floorBase), $precision) . $suffixes[(int) $floorBase];
+        return round(1024 ** ($base - $floorBase), $precision) . $suffixes[(int)$floorBase];
     }
 
     /**
@@ -146,7 +146,7 @@ class FormatHelper
         }
 
         $value_length = strlen($value);
-        $qty = (int) substr($value, 0, $value_length - 1);
+        $qty = (int)substr($value, 0, $value_length - 1);
         $unit = StringHelper::strtolower(substr($value, $value_length - 1));
         switch ($unit) {
             case 'k':
@@ -183,7 +183,6 @@ class FormatHelper
 
     /**
      * Cleans text of all formatting and scripting code
-     *
      * @param   string &$text Text to clean
      * @return  string  Cleaned text.
      */

@@ -8,9 +8,6 @@
 
 namespace inhere\library\traits;
 
-use inhere\exceptions\SetPropertyException;
-use inhere\exceptions\GetPropertyException;
-use inhere\exceptions\NotFoundException;
 use inhere\exceptions\UnknownCalledException;
 use inhere\library\helpers\Obj;
 

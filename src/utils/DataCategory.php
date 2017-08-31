@@ -11,14 +11,12 @@ namespace inhere\library\utils;
 /**
  * Class DataCategory
  * @package inhere\library\utils
- *
  * 调用：
  *  $dc = new DataCategory;
  *  $re = $dc->getDataArray();
  *  $re = $dc->getDataArray(array('chName','levelId'));
  *  $re = $dc->getCategoryTree('0',array('chName','levelId'));
  *  $re = $dc->getCategoryTree('5',array('chName','levelId'));
- *
  */
 class DataCategory
 {
@@ -180,7 +178,7 @@ class DataCategory
 
     /**
      * arrTree 树形数组递归
-     * @param array  $tree   需要处理的原始数组
+     * @param array $tree 需要处理的原始数组
      * @param  integer $rootId 开始层父级id 默认 0，顶级
      * @param  string $setKey 需要什么作为 树形数组的 键名，默认：主键id值为键，留空为自增的数字. e.g. id | enName
      * @return array

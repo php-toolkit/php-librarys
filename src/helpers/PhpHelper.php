@@ -63,7 +63,6 @@ class PhpHelper extends EnvHelper
 
     /**
      * 根据服务器设置得到文件上传大小的最大值
-     *
      * @param int $max_size optional max file size
      * @return int max file size in bytes
      */

@@ -35,7 +35,7 @@ class YmlParser extends BaseParser
         }
 
         if (!class_exists(Parser::class)) {
-            throw new \UnexpectedValueException('yml format parser Class ' .Parser::class. " don't exists! please install package 'symfony/yaml'.");
+            throw new \UnexpectedValueException('yml format parser Class ' . Parser::class . " don't exists! please install package 'symfony/yaml'.");
         }
 
         $parser = new Parser;

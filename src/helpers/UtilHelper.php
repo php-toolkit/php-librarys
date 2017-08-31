@@ -40,7 +40,6 @@ abstract class UtilHelper
 
     /**
      * Display a var dump in firebug console
-     *
      * @param mixed $object Object to display
      * @param string $type
      */

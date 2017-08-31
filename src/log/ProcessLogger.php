@@ -211,6 +211,7 @@ class ProcessLogger implements ProcessLogInterface
 
         $this->count = 0;
         $this->cache = [];
+
         return true;
     }
 

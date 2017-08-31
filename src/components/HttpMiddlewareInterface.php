@@ -19,11 +19,9 @@ interface HttpMiddlewareInterface
 {
     /**
      * Process an incoming request and/or response.
-     *
      * ```php
      * return $next($request, $response);
      * ```
-     *
      * Middleware MUST return a response, or the result of $next (which should return a response).
      * @param RequestInterface $request
      * @param ResponseInterface $response

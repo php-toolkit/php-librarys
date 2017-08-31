@@ -154,13 +154,11 @@ trait LiteContainerTrait
 
     /**
      * allow register a app service by property
-     *
      * ```
      * $app->logger = function(){
      *     return new xx\yy\Logger;
      * };
      * ```
-     *
      * @param string $name
      * @param mixed $service
      * @return bool
@@ -172,11 +170,9 @@ trait LiteContainerTrait
 
     /**
      * allow call service by property
-     *
      * ```
      * $logger = $app->logger;
      * ```
-     *
      * @param  string $name service name
      * @return mixed
      */

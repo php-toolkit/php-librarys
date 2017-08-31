@@ -13,7 +13,6 @@ namespace inhere\library\traits;
 /**
  * Class TraitUseAlias
  * @package inhere\library\traits
- *
  * @property array $aliases
  */
 trait TraitUseAlias

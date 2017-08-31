@@ -89,7 +89,6 @@ class DataHelper
 
     /**
      * Sanitize a string
-     *
      * @param string $string String to sanitize
      * @param bool $clearTag clear html tag
      * @return string Sanitized string
@@ -125,6 +124,7 @@ class DataHelper
     {
         if (is_array($string)) {
             $string = array_map([__CLASS__, 'htmlentitiesDecodeUTF8'], $string);
+
             return (string)array_shift($string);
         }
 
@@ -196,7 +196,6 @@ class DataHelper
 
     /**
      * 对数组或字符串进行加斜杠\转义处理 去除转义
-     *
      * 去除转义返回一个去除反斜线后的字符串（\' 转换为 ' 等等）。双反斜线（\\）被转换为单个反斜线（\）。
      * @param array|string $data 数据可以是字符串或数组
      * @param int $escape 进行转义 true 转义处理 false 去除转义

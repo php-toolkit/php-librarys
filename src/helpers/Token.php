@@ -9,17 +9,13 @@
 namespace inhere\library\helpers;
 
 /**
- *
  * Usage:
- *
  * $user = $db->query(['name' => $_POST['name'] ]);
- *
  * 1.
  *  gen:
  *      $password = Token::gen('123456');
  *  verify:
  *      Token::verify($user['password'], '123456');
- *
  * 2.
  *  gen:
  *      $password = Token::hash('123456');

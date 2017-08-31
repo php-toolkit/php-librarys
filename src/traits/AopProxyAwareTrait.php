@@ -14,7 +14,6 @@ use inhere\library\helpers\PhpHelper;
  * Class AopProxyAwareTrait
  * - AOP 切面编程
  * @package inhere\library\traits
- *
  * @property array $proxyMap 要经过AOP代理的方法配置
  * e.g:
  * [
@@ -136,7 +135,7 @@ trait AopProxyAwareTrait
 
         $key .= ucfirst($position);
         $this->proxyMap[$key] = $handler;
-        
+
         return $this;
     }
 

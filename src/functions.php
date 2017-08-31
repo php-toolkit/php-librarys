@@ -20,7 +20,6 @@ if (!function_exists('print_v')) {
 if (!function_exists('class_basename')) {
     /**
      * Get the class "basename" of the given object / class.
-     *
      * @param  string|mixed $class
      * @return string
      */
@@ -35,12 +34,10 @@ if (!function_exists('class_basename')) {
 if (!function_exists('retry')) {
     /**
      * Retry an operation a given number of times.
-     *
      * @param  int $times
      * @param  callable $callback
      * @param  int $sleep
      * @return mixed
-     *
      * @throws \Exception
      */
     function retry($times, callable $callback, $sleep = 0)

@@ -134,7 +134,6 @@ class HtmlHelper
 
     /**
      * Strip img-tags from string
-     *
      * @param   string $string Sting to be cleaned.
      * @return  string  Cleaned string
      */
@@ -145,7 +144,6 @@ class HtmlHelper
 
     /**
      * Strip iframe-tags from string
-     *
      * @param   string $string Sting to be cleaned.
      * @return  string  Cleaned string
      */
@@ -156,7 +154,6 @@ class HtmlHelper
 
     /**
      * stripScript
-     *
      * @param string $string
      * @return  mixed
      */
@@ -167,7 +164,6 @@ class HtmlHelper
 
     /**
      * stripStyle
-     *
      * @param string $string
      * @return  mixed
      */

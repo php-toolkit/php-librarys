@@ -14,4 +14,5 @@ namespace inhere\library\helpers;
  * @package inhere\library\helpers
  */
 class Obj extends ObjectHelper
-{}
+{
+}

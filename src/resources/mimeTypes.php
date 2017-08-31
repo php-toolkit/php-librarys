@@ -1,10 +1,8 @@
 <?php
 /**
  * MIME types.
- *
  * This file contains most commonly used MIME types
  * according to file extension names.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
  * @copyright Copyright &copy; 2008-2011 Yii Software LLC

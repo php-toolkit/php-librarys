@@ -107,7 +107,6 @@ class CurlHelper
 
     /**
      * send POST request
-     *
      * @param string $url submit url
      * @param array|string $data post data. array: form data, string: json data
      * @param array $headers HEADER info
@@ -131,7 +130,6 @@ class CurlHelper
 
     /**
      * Executes a CURL request with optional retries and exception on failure
-     *
      * @param  resource $ch curl handler
      * @param  int $retries 重试
      * @param bool $closeAfterDone

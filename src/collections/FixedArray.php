@@ -10,10 +10,8 @@ namespace inhere\library\collections;
 
 /**
  * Class FixedArray
- *
  *  fixed size array implements, and support string key.
  *  `SplFixedArray` only allow int key.
- *
  * @package inhere\library\collections
  */
 class FixedArray implements \ArrayAccess, \IteratorAggregate

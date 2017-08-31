@@ -29,12 +29,10 @@ namespace inhere\library\utils;
  *      } else {
  *           $sort->moveDown($id,$oldSortVal);
  *      }
- *
  * 置顶置底 操作类似
  * moveTop($id,$oldSortVal,$table='')
  * 置底
  * moveBottom($id,$oldSortVal,$table='')
- *
  */
 class DbRecordSort
 {
@@ -101,11 +99,13 @@ class DbRecordSort
     {
         if (empty($this->tableName)) {
             $this->error = '必须传入或设置要操作的表名称(无需前缀)！';
+
             return false;
         }
 
         if ($this->firstRank === '' || $this->lastRank === '') {
             $this->error = '必须传入首尾记录的排序值！';
+
             return false;
         }
 
@@ -147,6 +147,7 @@ class DbRecordSort
                 // 阻止最后一条记录降序
                 if ($last_rank === $oldSortVal) {
                     $this->error = '记录已在最底部！';
+
                     return false;
                 }
                 # 获取后面一记录的信息
@@ -161,6 +162,7 @@ class DbRecordSort
                 // 阻止最后一条记录降序
                 if ($last_rank === $oldSortVal) {
                     $this->error = '记录已在最底部！';
+
                     return false;
                 }
                 $sql = "UPDATE $table SET {$field}=" . ((int)$this->lastRank - 1) . " WHERE {$PK}=" . $id;
@@ -181,13 +183,14 @@ class DbRecordSort
     public function addCondition($value)
     {
         $this->addCondition = $value . ' AND ';
+
         return true;
     }
 
     /**
      * 上移一位
-     * @param int  $id       当前记录 Id
-     * @param int  $oldSortVal     当前记录的排序值
+     * @param int $id 当前记录 Id
+     * @param int $oldSortVal 当前记录的排序值
      */
     public function moveUp($id, $oldSortVal)
     {

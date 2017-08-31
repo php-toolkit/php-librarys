@@ -15,35 +15,27 @@ use inhere\library\StdObject;
 /**
  * Class FileFinder
  * @package inhere\library\files
- *
  *  $finder = new FileFinder([
  *       'sourcePath'  => '/var/xxx/vendor/bower/jquery'),
  *   ]);
- *
  *  $result = $finder->findAll(1)->getFiles();
  *  // Further filtering the result set
  *  // $result = $finder->findAll(1)->filterResult(function($file){
  *      if (false !== strpos($file, 'jqu') ) {
  *          return true;
  *      }
- *
  *      return false;
  * });
  *  var_dump($result);
- *
  * Can also, yan can custom find-filter. like:
- *
  * // more see $finder::doFileFilter()
  * $finder->setFileFilter(function($name, $finder){
  *  // some logic ..
  * });
- *
  * // more see $finder::doDirFilter()
  * $finder->setDirFilter(function($name, $finder){
  *  // some logic ..
  * });
- *
- *
  */
 class FileFinder extends StdObject
 {
@@ -191,7 +183,6 @@ class FileFinder extends StdObject
      *      if (false !== strpos($file, 'jqu') ) {
      *          return true;
      *      }
-     *
      *      return false;
      * };
      * @return array

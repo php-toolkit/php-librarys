@@ -19,7 +19,6 @@ class ArrayHelper
 {
     /**
      * Determine whether the given value is array accessible.
-     *
      * @param  mixed $value
      * @return bool
      */
@@ -30,9 +29,7 @@ class ArrayHelper
 
     /**
      * Determines if an array is associative.
-     *
      * An array is "associative" if it doesn't have sequential numerical keys beginning with zero.
-     *
      * @param  array $array
      * @return bool
      */
@@ -332,6 +329,7 @@ class ArrayHelper
         } else {
             if (strpos($need, ',') !== false) {
                 $need = explode(',', $need);
+
                 return self::existsOne($need, $arr, $type);
             }
 
@@ -348,7 +346,6 @@ class ArrayHelper
 
     /**
      * get key Max Width
-     *
      * @param  array $data
      * [
      *     'key1'      => 'value1',
@@ -375,9 +372,7 @@ class ArrayHelper
 
     /**
      * Get data from array or object by path.
-     *
      * Example: `DataCollector::getByPath($array, 'foo.bar.yoo')` equals to $array['foo']['bar']['yoo'].
-     *
      * @param array|\ArrayAccess $data An array or object to get value.
      * @param mixed $path The key path.
      * @param mixed $default
@@ -416,12 +411,10 @@ class ArrayHelper
 
     /**
      * setByPath
-     *
      * @param array|\ArrayAccess &$data
      * @param string $path
      * @param mixed $value
      * @param string $separator
-     *
      * @return  boolean
      */
     public static function setByPath(&$data, $path, $value, $separator = '.')
@@ -464,7 +457,6 @@ class ArrayHelper
 
     /**
      * Collapse an array of arrays into a single array.
-     *
      * @param  array $array
      * @return array
      */
@@ -487,7 +479,6 @@ class ArrayHelper
 
     /**
      * Cross join the given arrays, returning all possible permutations.
-     *
      * @param  array ...$arrays
      * @return array
      */
@@ -504,7 +495,6 @@ class ArrayHelper
 
     /**
      * Divide an array into two arrays. One with keys and the other with values.
-     *
      * @param  array $array
      * @return array
      */
@@ -515,7 +505,6 @@ class ArrayHelper
 
     /**
      * Flatten a multi-dimensional associative array with dots.
-     *
      * @param  array $array
      * @param  string $prepend
      * @return array
@@ -537,7 +526,6 @@ class ArrayHelper
 
     /**
      * Get all of the given array except for a specified array of items.
-     *
      * @param  array $array
      * @param  array|string $keys
      * @return array
@@ -551,7 +539,6 @@ class ArrayHelper
 
     /**
      * Determine if the given key exists in the provided array.
-     *
      * @param  \ArrayAccess|array $array
      * @param  string|int $key
      * @return bool
@@ -567,7 +554,6 @@ class ArrayHelper
 
     /**
      * Add an element to an array using "dot" notation if it doesn't exist.
-     *
      * @param  array $array
      * @param  string $key
      * @param  mixed $value
@@ -584,7 +570,6 @@ class ArrayHelper
 
     /**
      * Get an item from an array using "dot" notation.
-     *
      * @param  \ArrayAccess|array $array
      * @param  string $key
      * @param  mixed $default
@@ -617,12 +602,10 @@ class ArrayHelper
 
     /**
      * Set an array item to a given value using "dot" notation.
-     *
      * If no key is given to the method, the entire array will be replaced.
-     *
-     * @param  array   $array
-     * @param  string  $key
-     * @param  mixed   $value
+     * @param  array $array
+     * @param  string $key
+     * @param  mixed $value
      * @return array
      */
     public static function set(&$array, $key, $value): array
@@ -638,7 +621,7 @@ class ArrayHelper
             // If the key doesn't exist at this depth, we will just create an empty array
             // to hold the next value, allowing us to create the arrays to hold final
             // values at the correct depth. Then we'll keep digging into the array.
-            if (! isset($array[$key]) || ! is_array($array[$key])) {
+            if (!isset($array[$key]) || !is_array($array[$key])) {
                 $array[$key] = [];
             }
 
@@ -652,7 +635,6 @@ class ArrayHelper
 
     /**
      * Flatten a multi-dimensional array into a single level.
-     *
      * @param  array $array
      * @param  int $depth
      * @return array
@@ -676,7 +658,6 @@ class ArrayHelper
 
     /**
      * Remove one or many array items from a given array using "dot" notation.
-     *
      * @param  array $array
      * @param  array|string $keys
      * @return void
@@ -719,7 +700,6 @@ class ArrayHelper
 
     /**
      * Check if an item or items exist in an array using "dot" notation.
-     *
      * @param  \ArrayAccess|array $array
      * @param  string|array $keys
      * @return bool
@@ -762,10 +742,9 @@ class ArrayHelper
 
     /**
      * Push an item onto the beginning of an array.
-     *
-     * @param  array  $array
-     * @param  mixed  $value
-     * @param  mixed  $key
+     * @param  array $array
+     * @param  mixed $value
+     * @param  mixed $key
      * @return array
      */
     public static function prepend($array, $value, $key = null): array
@@ -786,7 +765,7 @@ class ArrayHelper
      * @param mixed $default
      * @return mixed
      */
-    public static function remove(&$arr,$key, $default = null)
+    public static function remove(&$arr, $key, $default = null)
     {
         if (isset($arr[$key])) {
             $value = $arr[$key];
@@ -800,10 +779,9 @@ class ArrayHelper
 
     /**
      * Get a value from the array, and remove it.
-     *
-     * @param  array   $array
-     * @param  string  $key
-     * @param  mixed   $default
+     * @param  array $array
+     * @param  string $key
+     * @param  mixed $default
      * @return mixed
      */
     public static function pull(&$array, $key, $default = null)
@@ -817,7 +795,6 @@ class ArrayHelper
 
     /**
      * Get a subset of the items from the given array.
-     *
      * @param  array $array
      * @param  array|string $keys
      * @return array
@@ -829,8 +806,7 @@ class ArrayHelper
 
     /**
      * Shuffle the given array and return the result.
-     *
-     * @param  array  $array
+     * @param  array $array
      * @return array
      */
     public static function shuffle($array): array
@@ -842,9 +818,8 @@ class ArrayHelper
 
     /**
      * Filter the array using the given callback.
-     *
-     * @param  array  $array
-     * @param  callable  $callback
+     * @param  array $array
+     * @param  callable $callback
      * @return array
      */
     public static function where($array, callable $callback): array
@@ -854,8 +829,7 @@ class ArrayHelper
 
     /**
      * If the given value is not an array, wrap it in one.
-     *
-     * @param  mixed  $value
+     * @param  mixed $value
      * @return array
      */
     public static function wrap($value): array

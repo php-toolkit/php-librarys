@@ -155,10 +155,8 @@ abstract class FileSystem
 
     /**
      * Creates a directory recursively.
-     *
      * @param string|array|\Traversable $dirs The directory path
      * @param int $mode The directory mode
-     *
      * @throws IOException On any directory creation failure
      */
     public static function mkdir($dirs, $mode = 0777): void
@@ -189,7 +187,6 @@ abstract class FileSystem
      * @param int $mode The new mode (octal)
      * @param int $umask The mode mask (octal)
      * @param bool $recursive Whether change the mod recursively or not
-     *
      * @throws IOException When the change fail
      */
     public static function chmod($files, $mode, $umask = 0000, $recursive = false): void
@@ -211,7 +208,6 @@ abstract class FileSystem
      * @param string|array|\Traversable $files A filename, an array of files, or a \Traversable instance to change owner
      * @param string $user The new owner user name
      * @param bool $recursive Whether change the owner recursively or not
-     *
      * @throws IOException When the change fail
      */
     public static function chown($files, $user, $recursive = false): void
@@ -262,6 +258,7 @@ abstract class FileSystem
         }
 
         closedir($dh);
+
         return @chmod($path, $mode) ? true : false;
     }
 
@@ -274,12 +271,12 @@ abstract class FileSystem
         $base = 1024;
         $bytes = disk_free_space($dir);
         $suffix = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-        $class = min((int)log($bytes , $base) , count($suffix) - 1);
+        $class = min((int)log($bytes, $base), count($suffix) - 1);
 
         //echo $bytes . '<br />';
 
         // pow($base, $class)
-        return sprintf('%1.2f' , $bytes / ($base ** $class)) . ' ' . $suffix[$class];
+        return sprintf('%1.2f', $bytes / ($base ** $class)) . ' ' . $suffix[$class];
     }
 
     /**
@@ -291,15 +288,14 @@ abstract class FileSystem
         $base = 1024;
         $bytes = disk_total_space($dir);
         $suffix = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-        $class = min((int)log($bytes , $base) , count($suffix) - 1);
+        $class = min((int)log($bytes, $base), count($suffix) - 1);
 
         // pow($base, $class)
-        return sprintf('%1.2f' , $bytes / ($base ** $class)) . ' ' . $suffix[$class];
+        return sprintf('%1.2f', $bytes / ($base ** $class)) . ' ' . $suffix[$class];
     }
 
     /**
      * 文件或目录权限检查函数
-     *
      * @from web
      * @access public
      * @param  string $file_path 文件路径

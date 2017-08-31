@@ -9,8 +9,8 @@
 
 namespace inhere\library\files;
 
-use inhere\exceptions\FileSystemException;
 use inhere\exceptions\FileNotFoundException;
+use inhere\exceptions\FileSystemException;
 
 /**
  * Class Read
@@ -64,7 +64,6 @@ abstract class Read extends File
      * @param int $scanner_mode Can either be INI_SCANNER_NORMAL  (default) or INI_SCANNER_RAW .
      *           If INI_SCANNER_RAW  is supplied, then option values will not be parsed.
      * @example simple.ini
-     *
      * ```ini
      * ; This is a sample configuration file
      * ; Comments start with ';', as in php.ini[first_section]
@@ -78,7 +77,6 @@ abstract class Read extends File
      * phpversion[] = "5.2"
      * phpversion[] = "5.3"
      *```
-     *
      * 全大写的 BIRD -- 如果已定义了常量BIRD，则会被解析为对应的值
      * phpversion[] -- 会解析成数组
      * 如果 $processSections = true, 则会以 [first_section],[second_section].. 标记 分割放置到以对应标记名为键名的数组内
@@ -207,7 +205,7 @@ abstract class Read extends File
      */
     public static function rangeLines(string $file, int $baseLine, int $prevLines = 3, int $nextLines = 3): array
     {
-        $startLine = $baseLine - $prevLines ;
+        $startLine = $baseLine - $prevLines;
         $endLine = $baseLine + $nextLines;
 
         return self::lines($file, $startLine, $endLine);

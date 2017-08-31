@@ -28,7 +28,7 @@ class ProcessHelper
             case 0: // at new process
                 $pid = getmypid(); // can also use: posix_getpid()
 
-                if(posix_setsid() < 0) {
+                if (posix_setsid() < 0) {
                     CliHelper::stderr('posix_setsid() execute failed! exiting');
                 }
 
@@ -89,7 +89,7 @@ class ProcessHelper
 
         if ($pid > 0) {// at parent, get forked child info
             $info = [
-                'id'  => $id,
+                'id' => $id,
                 'pid' => $pid,
                 'startTime' => time(),
             ];
@@ -254,6 +254,7 @@ class ProcessHelper
     public static function killByName($name, $sigNo = 9)
     {
         $cmd = 'ps -eaf |grep "' . $name . '" | grep -v "grep"| awk "{print $2}"|xargs kill -' . $sigNo;
+
         return exec($cmd);
     }
 
@@ -364,24 +365,24 @@ class ProcessHelper
 
     /**
      * install signal
-     * @param  int   $sigal  e.g: SIGTERM SIGINT(Ctrl+C) SIGUSR1 SIGUSR2 SIGHUP
+     * @param  int $sigal e.g: SIGTERM SIGINT(Ctrl+C) SIGUSR1 SIGUSR2 SIGHUP
      * @param  callable $handler
      * @return bool
      */
     public static function installSignal($sigal, callable $handler)
     {
-       return pcntl_signal($sigal, $handler, false);
+        return pcntl_signal($sigal, $handler, false);
     }
 
-   /**
-    * dispatch signal
-    * @return bool
-    */
-   public static function dispatchSignal()
-   {
-       // receive and dispatch sig
-       return pcntl_signal_dispatch();
-   }
+    /**
+     * dispatch signal
+     * @return bool
+     */
+    public static function dispatchSignal()
+    {
+        // receive and dispatch sig
+        return pcntl_signal_dispatch();
+    }
 
     /**
      * Set process title.

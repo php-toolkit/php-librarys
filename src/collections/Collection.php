@@ -18,7 +18,6 @@ use RuntimeException;
 /**
  * Class DataCollector - 数据收集器 (数据存储器 - DataStorage) complex deep
  * @package inhere\library\collections
- *
  * 支持 链式的子节点 设置 和 值获取
  * e.g:
  * ```
@@ -31,9 +30,7 @@ use RuntimeException;
  * ];
  * $config = new DataCollector();
  * $config->get('foo.bar.yoo')` equals to $data['foo']['bar']['yoo'];
- *
  * ```
- *
  * 简单的数据对象可使用  @see SimpleCollection
  * ```
  * $config = new SimpleCollection($data)

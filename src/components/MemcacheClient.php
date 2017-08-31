@@ -14,11 +14,8 @@ use inhere\library\traits\TraitUseOption;
 
 /**
  * Class MemcacheClient
- *
  * support \Memcache and \Memcached extension
- *
  * @package inhere\library\utils
- *
  * @method connect()
  * @method string getVersion() 获取服务器池中所有服务器的版本信息
  */
@@ -390,30 +387,21 @@ class MemcacheClient // extends AbstractCacheDriver
 
     /**
      * 保存列表/分页等数据量较大的数据到缓存
-     *
      * 将会循环拆分数据来缓存, 同时会生成一个 列表key 缓存 key-list
      * 将根据 列表key 删除和获取数据
-     *
      * @param string $cacheKey
      * @param array $data
      *  将会循环拆分 $data 存储，单个item缓存key即为 $key + ":$i"
-     *
      * @param int $expire
      * @param null|string $baseKey 如果是分页数据，推荐提供 $baseKey
      *  将会把 key-list 的缓存key 存储到 以$baseKey为键的缓存列表中
      *  可以通过 $baseKey (call `self::delListKeys($baseKey)`) 删除所有分页数据的 列表key -- 相当于删除了所有与 $baseKey 相关的缓存
-     *
      * @example 使用例子
-     *
      * ```
      * // set
-     *
      * // get
-     *
      * // del
-     *
      * ```
-     *
      * @return array
      */
     public function setListData($cacheKey, array $data, $expire = 3600, $baseKey = null)
@@ -603,12 +591,10 @@ class MemcacheClient // extends AbstractCacheDriver
 
 /**
  * Memcache::connect();
- *
  * Memcache::pconnect(); 长链接
  * Memcache::close(); 关闭对象（对常链接不起作用）
  * Memcache::addServer(); 向对象添加一个服务器
  * Memcache::add() 添加一个要缓存的数据如果作为这个缓存的数据在键在服务器上还不存在的情况下
- *
  * Memcache::replace() 替换一个指定已存在key的缓存变量内容
  * Memcache::set 设置一个指定key的缓存变量内容
  * Memcache::get() 获取某个key的变量缓存值
@@ -621,7 +607,6 @@ class MemcacheClient // extends AbstractCacheDriver
  * Memcache::setCompressThreshold 设置压缩级根
  * Memcache::setServerParams   Memcache version 2.1.0后增加的函数，运行时设置服务器参数
  * Memcache::increment  给指定kye的缓存变量一个增值，如查该变量不是数字时不会被转化为数字
- *
  * Memcache::decrement
  * //给指定key的缓存变量一个递减值，与increment操作类拟，将在原有变量基础上减去这个值，该项的值将会在转化为数字后减去，新项的值不会小于0，对于压缩的变量不要使用本函数因为相应的取值方法会失败
  */

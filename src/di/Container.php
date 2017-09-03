@@ -16,6 +16,7 @@ use inhere\exceptions\DependencyResolutionException;
 use inhere\exceptions\NotFoundException;
 use inhere\library\helpers\Obj;
 use inhere\library\traits\NameAliasTrait;
+use Psr\Container\ContainerInterface;
 
 /**
  * Class Container

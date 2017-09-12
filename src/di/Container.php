@@ -59,6 +59,11 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     private $services = [];
 
     /**
+     * @var array
+     */
+    private static $objects = [];
+
+    /**
      * Container constructor.
      * @param array $services
      * @param Container|null $parent
@@ -70,7 +75,14 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
         $this->sets($services);
     }
 
-///////////////////////////////////////// Service Add /////////////////////////////////////////
+    public function __destruct()
+    {
+        $this->clear();
+    }
+
+    /*******************************************************************************
+     * Service Add
+     ******************************************************************************/
 
     /**
      * 在容器注册服务
@@ -276,7 +288,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
 
     /**
      * 创建(类实例/类的方法)回调
-     * @param $target
+     * @param mixed $target
      * @param array $arguments
      * @param array $props
      * @return callable
@@ -361,7 +373,9 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
         return $callback;
     }
 
-/////////////////////////////////////////  Service(Instance) Get /////////////////////////////////////////
+    /*******************************************************************************
+     * Service(Instance) Get
+     ******************************************************************************/
 
     /**
      * get 获取已注册的服务组件实例
@@ -398,6 +412,53 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
 
         return $service->getCallback();
     }
+
+    /**
+     * 删除服务
+     * @param $id
+     */
+    public function del($id)
+    {
+        $id = $this->resolveAlias($id);
+
+        if (isset($this->services[$id])) {
+            unset($this->services[$id]);
+        }
+    }
+
+    /*******************************************************************************
+     * Object create
+     ******************************************************************************/
+
+    /**
+     * @param string $class
+     * @return mixed
+     */
+    public function make($class)
+    {
+        $key = md5($class);
+
+        if (!isset(self::$objects[$key])) {
+            // $obj = new $class;
+            $obj = Obj::create($class);
+
+            self::$objects[$key] = $obj;
+        }
+
+        return self::$objects[$key];
+    }
+
+    /**
+     * @return int
+     */
+    public static function getObjectCount()
+    {
+        return count(self::$objects);
+    }
+
+    /*******************************************************************************
+     * Helper
+     ******************************************************************************/
 
     /**
      * get 获取已注册的服务组件实例
@@ -443,8 +504,6 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
         return null;
     }
 
-//////////////////////////////////// Service Info ////////////////////////////////////
-
     /**
      * @param $alias
      * @return mixed
@@ -460,25 +519,18 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     }
 
     /**
-     * 删除服务
-     * @param $id
-     */
-    public function del($id)
-    {
-        $id = $this->resolveAlias($id);
-
-        if (isset($this->services[$id])) {
-            unset($this->services[$id]);
-        }
-    }
-
-    /**
      * clear
      */
     public function clear()
     {
-        $this->services = [];
+        $this->parent = null;
+        $this->services = $this->aliases = [];
+        self::$objects = [];
     }
+
+    /*******************************************************************************
+     * Getter/Setter
+     ******************************************************************************/
 
     /**
      * 获取全部服务信息
@@ -487,6 +539,18 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     public function getServices()
     {
         return $this->services;
+    }
+
+    /**
+     * Method to set property parent
+     * @param   Container $parent Parent container.
+     * @return  static  Return self to support chaining.
+     */
+    public function setParent(Container $parent)
+    {
+        $this->parent = $parent;
+
+        return $this;
     }
 
     /**
@@ -536,26 +600,11 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     {
         return $this->exists($id);
     }
-
     public function exists($id)
     {
         $id = $this->resolveAlias($id);
 
         return isset($this->services[$id]);
-    }
-
-//////////////////////////////////////// Helper ////////////////////////////////////////
-
-    /**
-     * Method to set property parent
-     * @param   Container $parent Parent container.
-     * @return  static  Return self to support chaining.
-     */
-    public function setParent(Container $parent)
-    {
-        $this->parent = $parent;
-
-        return $this;
     }
 
     /**
@@ -568,17 +617,14 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
             throw new \InvalidArgumentException('Set up the service Id can be a string of not more than 50 characters!');
         }
 
-        $id = trim($id);
-
-        if (empty($id)) {
+        if (!$id = trim($id)) {
             throw new \InvalidArgumentException('You must set up the service Id name!');
         }
 
-        // 去处空白和前后的'.'
         $id = trim(str_replace(' ', '', $id), '.');
 
         if (!preg_match('/^\w[\w-.]{1,56}$/i', $id)) {
-            throw new \InvalidArgumentException("服务Id {$id} 是无效的字符串！");
+            throw new \InvalidArgumentException("The service Id[$id] is invalid string！");
         }
 
         return $id;
@@ -621,6 +667,10 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
 
         throw new NotFoundException('Getting a Unknown property! ' . get_class($this) . "::{$name}");
     }
+
+    /*******************************************************************************
+     * Interfaces implement
+     ******************************************************************************/
 
     /**
      * @return int

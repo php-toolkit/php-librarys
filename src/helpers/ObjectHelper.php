@@ -41,12 +41,18 @@ class ObjectHelper
 
     /**
      * 给对象设置属性值
+     * - 会先尝试用 setter 方法设置属性
+     * - 再尝试直接设置属性
      * @param $object
      * @param array $options
      */
     public static function smartConfigure($object, array $options)
     {
         foreach ($options as $property => $value) {
+            if (is_numeric($property)) {
+                continue;
+            }
+
             $setter = 'set' . ucfirst($property);
 
             if (method_exists($object, $setter)) {
@@ -117,15 +123,14 @@ class ObjectHelper
      */
     public static function getMethodArgs(\ReflectionMethod $method)
     {
-        $methodArgs = array();
+        $methodArgs = [];
 
         foreach ($method->getParameters() as $param) {
-            $dependency = $param->getClass();
-            $dependencyVarName = $param->getName();
+            $dependencyClass = $param->getClass();
 
             // If we have a dependency, that means it has been type-hinted.
-            if (null !== $dependency) {
-                $depClass = $dependency->getName();
+            if (null !== $dependencyClass) {
+                $depClass = $dependencyClass->getName();
                 $depObject = self::create($depClass);
 
                 if ($depObject instanceof $depClass) {
@@ -142,8 +147,14 @@ class ObjectHelper
                 continue;
             }
 
+            // $dependencyVarName = $param->getName();
+
             // Couldn't resolve dependency, and no default was provided.
-            throw new DependencyResolutionException(sprintf('Could not resolve dependency: %s', $dependencyVarName));
+            throw new DependencyResolutionException(sprintf(
+                'Could not resolve dependency: %s for the %dth parameter',
+                $param->getPosition(),
+                $param->getName()
+            ));
         }
 
         return $methodArgs;

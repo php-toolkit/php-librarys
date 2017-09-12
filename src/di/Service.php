@@ -61,6 +61,14 @@ final class Service
     }
 
     /**
+     * __destruct
+     */
+    public function __destruct()
+    {
+        $this->instance = $this->callback = $this->arguments = null;
+    }
+
+    /**
      * @param Container $container
      * @param bool $forceNew
      * @return mixed|null

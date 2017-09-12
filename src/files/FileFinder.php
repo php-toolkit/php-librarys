@@ -153,7 +153,6 @@ class FileFinder extends StdObject
 
         $files = $this->findFiles($path, $recursive, $pathPrefix);
         $this->files = $files ? new ArrayObject($files) : [];
-
         $this->_relatedFile = $path;
 
         return $this;
@@ -206,12 +205,12 @@ class FileFinder extends StdObject
      * @param $dir
      * @param bool|false $recursive
      * @param string $pathPrefix
+     * @param array $list
      * @return array
      */
-    protected function findFiles($dir, $recursive = false, $pathPrefix = '')
+    protected function findFiles($dir, $recursive = false, $pathPrefix = '', array &$list = [])
     {
         $dir .= '/';
-        $list = [];
         $pathPrefix = $pathPrefix ? $pathPrefix . '/' : '';
 
         //glob()寻找与模式匹配的文件路径
@@ -224,7 +223,7 @@ class FileFinder extends StdObject
 
                 // 是否遍历子目录 并检查子目录是否在查找列表
             } elseif ($recursive && is_dir($file) && $this->doFilterDir($name)) {
-                $list = array_merge($list, $this->findFiles($file, $recursive, $pathPrefix . $name));
+                $this->findFiles($file, $recursive, $pathPrefix . $name, $list);
             }
         }
 
@@ -240,8 +239,8 @@ class FileFinder extends StdObject
     protected function doFilterFile($name /*, $file*/)
     {
         // have bee set custom file Filter
-        if (($fileFilter = $this->fileFilter) && is_callable($fileFilter)) {
-            return call_user_func($fileFilter, $name, $this);
+        if ($fileFilter = $this->fileFilter) {
+            return $fileFilter($name, $this);
         }
 
         // use default filter handle
@@ -250,11 +249,11 @@ class FileFinder extends StdObject
 
         if ($ext || $this->include['file']) {
             // check include ...
-            return in_array($name, $this->include['file']) || preg_match("/\.($ext)$/i", $name);
+            return in_array($name, $this->include['file'], true) || preg_match("/\.($ext)$/i", $name);
         }
 
         // check exclude ...
-        return !in_array($name, $this->exclude['file']) && !preg_match("/\.($noExt)$/i", $name);
+        return !in_array($name, $this->exclude['file'], true) && !preg_match("/\.($noExt)$/i", $name);
     }
 
     /**
@@ -266,12 +265,12 @@ class FileFinder extends StdObject
     protected function doFilterDir($name /*, $dir*/)
     {
         // have bee set custom dir Filter
-        if (($fileFilter = $this->fileFilter) && is_callable($fileFilter)) {
-            return $fileFilter($name, $this);
+        if ($dirFilter = $this->dirFilter) {
+            return $dirFilter($name, $this);
         }
 
         // use default filter handle
-        return in_array($name, $this->include['dir']) || !in_array($name, $this->exclude['dir']);
+        return in_array($name, $this->include['dir'], true) || !in_array($name, $this->exclude['dir'], true);
     }
 
     ////////////////////////////// getter/setter method //////////////////////////////
@@ -309,10 +308,15 @@ class FileFinder extends StdObject
 
     /**
      * @param callable $fileFilter
+     * @return $this
      */
     public function setFileFilter(callable $fileFilter)
     {
-        $this->fileFilter = $fileFilter;
+        if (is_string($fileFilter) || method_exists($fileFilter, '__invoke')) {
+            $this->fileFilter = $fileFilter;
+        }
+
+        return $this;
     }
 
     /**
@@ -325,10 +329,15 @@ class FileFinder extends StdObject
 
     /**
      * @param callable $dirFilter
+     * @return $this
      */
     public function setDirFilter(callable $dirFilter)
     {
-        $this->dirFilter = $dirFilter;
+        if (is_string($dirFilter) || method_exists($dirFilter, '__invoke')) {
+            $this->dirFilter = $dirFilter;
+        }
+
+        return $this;
     }
 
     /**
@@ -349,7 +358,7 @@ class FileFinder extends StdObject
             return $this->include;
         }
 
-        return isset($this->include[$key]) ? $this->include[$key] : [];
+        return $this->include[$key] ?? [];
     }
 
     /**
@@ -370,7 +379,7 @@ class FileFinder extends StdObject
             return $this->exclude;
         }
 
-        return isset($this->exclude[$key]) ? $this->exclude[$key] : [];
+        return $this->exclude[$key] ?? [];
     }
 
     /**

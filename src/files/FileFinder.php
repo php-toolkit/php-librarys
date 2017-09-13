@@ -285,6 +285,7 @@ class FileFinder extends StdObject
 
     /**
      * @param string $sourcePath
+     * @return $this
      * @throws InvalidArgumentException
      */
     public function setSourcePath($sourcePath)
@@ -296,6 +297,8 @@ class FileFinder extends StdObject
 
             $this->sourcePath = $sourcePath;
         }
+
+        return $this;
     }
 
     /**

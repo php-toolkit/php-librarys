@@ -300,9 +300,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
             return $target;
         }
 
-        /**
-         * @see $this->set() $definition is array
-         */
+        /** @see $this->set() $definition is array */
         $target = trim(str_replace(' ', '', $target), '.');
 
         if (($pos = strpos($target, '::')) !== false) {
@@ -316,11 +314,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
             $callback = function (Container $self) use ($class, $method, $arguments, $props) {
                 $object = new $class;
 
-                foreach ($props as $prop => $val) {
-                    if (!is_numeric($prop)) {
-                        $object->$prop = $val;
-                    }
-                }
+                Obj::smartConfigure($object, $props);
 
                 return !$arguments ? $object->$method($self) : $object->$method(...$arguments);
             };
@@ -334,20 +328,15 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
                 throw new \RuntimeException($e->getMessage());
             }
 
-            /**
-             * @var \ReflectionMethod
-             */
+            /** @var \ReflectionMethod */
             $reflectionMethod = $reflection->getConstructor();
 
             // If there are no parameters, just return a new object.
             if (null === $reflectionMethod) {
                 $callback = function () use ($class, $props) {
                     $object = new $class;
-                    foreach ($props as $prop => $val) {
-                        if (!is_numeric($prop)) {
-                            $object->$prop = $val;
-                        }
-                    }
+
+                    Obj::smartConfigure($object, $props);
 
                     return $object;
                 };
@@ -357,11 +346,8 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
                 // Create a callable
                 $callback = function () use ($reflection, $arguments, $props) {
                     $object = $reflection->newInstanceArgs($arguments);
-                    foreach ($props as $prop => $val) {
-                        if (!is_numeric($prop)) {
-                            $object->$prop = $val;
-                        }
-                    }
+
+                    Obj::smartConfigure($object, $props);
 
                     return $object;
                 };

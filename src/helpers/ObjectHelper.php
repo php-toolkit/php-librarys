@@ -117,15 +117,22 @@ class ObjectHelper
     /**
      * @from https://github.com/ventoviro/windwalker
      * Build an array of constructor parameters.
-     * @param   \ReflectionMethod $method Method for which to build the argument array.
+     * @param \ReflectionMethod $method Method for which to build the argument array.
+     * @param array $extraArgs
+     * @return array
      * @throws DependencyResolutionException
-     * @return  array  Array of arguments to pass to the method.
      */
-    public static function getMethodArgs(\ReflectionMethod $method)
+    public static function getMethodArgs(\ReflectionMethod $method, array $extraArgs = [])
     {
         $methodArgs = [];
 
-        foreach ($method->getParameters() as $param) {
+        foreach ($method->getParameters() as $idx => $param) {
+            // if user have been provide arg
+            if (isset($extraArgs[$idx])) {
+                $methodArgs[] = $extraArgs[$idx];
+                continue;
+            }
+
             $dependencyClass = $param->getClass();
 
             // If we have a dependency, that means it has been type-hinted.
@@ -135,7 +142,6 @@ class ObjectHelper
 
                 if ($depObject instanceof $depClass) {
                     $methodArgs[] = $depObject;
-
                     continue;
                 }
             }
@@ -143,12 +149,10 @@ class ObjectHelper
             // Finally, if there is a default parameter, use it.
             if ($param->isOptional()) {
                 $methodArgs[] = $param->getDefaultValue();
-
                 continue;
             }
 
             // $dependencyVarName = $param->getName();
-
             // Couldn't resolve dependency, and no default was provided.
             throw new DependencyResolutionException(sprintf(
                 'Could not resolve dependency: %s for the %dth parameter',

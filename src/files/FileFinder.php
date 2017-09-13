@@ -51,13 +51,13 @@ class FileFinder extends StdObject
      * @var array
      */
     protected $include = [
-        'file' => ['README.md'],
-        'ext' => [
+//        'file' => ['README.md'],
+//        'ext' => [
             // 'js','css',
             // 'ttf','svg', 'eot', 'woff', 'woff2',
             // 'png', 'jpg', 'jpeg', 'gif', 'ico',
-        ],
-        'dir' => [], // ['dir'],
+//        ],
+//        'dir' => [], // ['dir'],
     ];
 
     /**
@@ -65,9 +65,9 @@ class FileFinder extends StdObject
      * @var array
      */
     protected $exclude = [
-        'file' => ['.gitignore', 'LICENSE', 'LICENSE.txt'],
-        'ext' => ['swp', 'json'],
-        'dir' => ['.git', 'src'],
+//        'file' => ['.gitignore', 'LICENSE', 'LICENSE.txt'],
+//        'ext' => ['swp', 'json'],
+//        'dir' => ['.git', 'src'],
     ];
 
     /**
@@ -109,12 +109,17 @@ class FileFinder extends StdObject
      */
     public function __construct(array $config = [])
     {
-        /**
-         * reset settings
-         */
+        // reset settings
         $this->reset();
 
         parent::__construct($config);
+
+        // formatting
+        $this->include['file'] = (array)$this->include['file'];
+        $this->include['ext'] = (array)$this->include['ext'];
+
+        $this->exclude['file'] = (array)$this->exclude['file'];
+        $this->exclude['ext'] = (array)$this->exclude['ext'];
     }
 
     public function reset()
@@ -128,6 +133,11 @@ class FileFinder extends StdObject
         ];
 
         return $this;
+    }
+
+    public function find($recursive = false, $path = '', $pathPrefix = '')
+    {
+        return $this->findAll($recursive, $path, $pathPrefix);
     }
 
     /**
@@ -210,7 +220,7 @@ class FileFinder extends StdObject
      */
     protected function findFiles($dir, $recursive = false, $pathPrefix = '', array &$list = [])
     {
-        $dir .= '/';
+        $dir = rtrim($dir, '/') . '/';
         $pathPrefix = $pathPrefix ? $pathPrefix . '/' : '';
 
         //glob()寻找与模式匹配的文件路径
@@ -238,39 +248,70 @@ class FileFinder extends StdObject
      */
     protected function doFilterFile($name /*, $file*/)
     {
-        // have bee set custom file Filter
-        if ($fileFilter = $this->fileFilter) {
-            return $fileFilter($name, $this);
+        // check include ...
+        if (in_array($name, $this->include['file'], true)) {
+            return true;
         }
 
-        // use default filter handle
+        // check exclude file ...
+        if (in_array($name, $this->exclude['file'], true)) {
+            return false;
+        }
+
         $ext = implode('|', $this->getInclude('ext'));
+
+        // check include ext ...
+        if ($ext && preg_match("/\.($ext)$/i", $name)) {
+            // have been set custom file Filter
+            if ($fileFilter = $this->fileFilter) {
+                return $fileFilter($name);
+            }
+
+            return true;
+        }
+
         $noExt = implode('|', $this->getExclude('ext'));
 
-        if ($ext || $this->include['file']) {
-            // check include ...
-            return in_array($name, $this->include['file'], true) || preg_match("/\.($ext)$/i", $name);
+        // check exclude ext ...
+        if ($noExt && preg_match("/\.($noExt)$/i", $name)) {
+            return false;
         }
 
-        // check exclude ...
-        return !in_array($name, $this->exclude['file'], true) && !preg_match("/\.($noExt)$/i", $name);
+        // have been set custom file Filter
+        if ($fileFilter = $this->fileFilter) {
+            return $fileFilter($name);
+        }
+
+        return true;
     }
 
     /**
-     * 文件夹过滤 -- 过滤掉不需要的文件夹.
-     * 也可自定义过滤回调,来实现个性化过滤
+     * 文件夹过滤 -- 过滤掉不需要的文件夹. 也可添加自定义过滤回调,来实现个性化过滤
      * @param $name
-     * @return bool|mixed
+     * @return bool
      */
     protected function doFilterDir($name /*, $dir*/)
     {
+        if (in_array($name, $this->include['dir'], true)) {
+            // have bee set custom dir Filter
+            if ($dirFilter = $this->dirFilter) {
+                return $dirFilter($name);
+            }
+
+            return true;
+        }
+
+        if (in_array($name, $this->exclude['dir'], true)) {
+            return false;
+        }
+
         // have bee set custom dir Filter
         if ($dirFilter = $this->dirFilter) {
-            return $dirFilter($name, $this);
+            return $dirFilter($name);
         }
 
         // use default filter handle
-        return in_array($name, $this->include['dir'], true) || !in_array($name, $this->exclude['dir'], true);
+        return true;
     }
 
     ////////////////////////////// getter/setter method //////////////////////////////

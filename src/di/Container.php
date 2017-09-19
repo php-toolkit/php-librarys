@@ -59,11 +59,6 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     private $services = [];
 
     /**
-     * @var array
-     */
-    private static $objects = [];
-
-    /**
      * Container constructor.
      * @param array $services
      * @param Container|null $parent
@@ -304,14 +299,14 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
         $target = trim(str_replace(' ', '', $target), '.');
 
         if (($pos = strpos($target, '::')) !== false) {
-            $callback = function (Container $self) use ($target, $arguments) {
+            $callback = function (self $self) use ($target, $arguments) {
                 return !$arguments ? $target($self) : $target(...$arguments);
             };
         } elseif (($pos = strpos($target, '->')) !== false) {
             $class = substr($target, 0, $pos);
             $method = substr($target, $pos + 2);
 
-            $callback = function (Container $self) use ($class, $method, $arguments, $props) {
+            $callback = function (self $self) use ($class, $method, $arguments, $props) {
                 $object = new $class;
 
                 Obj::smartConfigure($object, $props);
@@ -383,7 +378,17 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      */
     public function getNew($id)
     {
-        return $this->getInstance($id, true);
+        return $this->getInstance($id, true,true);
+    }
+
+    /**
+     * 若存在服务则返回 否则返回 null
+     * @param $id
+     * @return mixed|null
+     */
+    public function getIfExist($id)
+    {
+        return $this->getInstance($id, false);
     }
 
     /**
@@ -394,9 +399,12 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     public function raw($id)
     {
         $id = $this->resolveAlias($id);
-        $service = $this->getService($id, true);
 
-        return $service->getCallback();
+        if ($service = $this->getService($id, true)) {
+            return $service->getCallback();
+        }
+
+        throw new \RuntimeException("get service define error for ID: $id");
     }
 
     /**
@@ -413,47 +421,17 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     }
 
     /*******************************************************************************
-     * Object create
-     ******************************************************************************/
-
-    /**
-     * @param string $class
-     * @return mixed
-     */
-    public function make($class)
-    {
-        $key = md5($class);
-
-        if (!isset(self::$objects[$key])) {
-            // $obj = new $class;
-            $obj = Obj::create($class);
-
-            self::$objects[$key] = $obj;
-        }
-
-        return self::$objects[$key];
-    }
-
-    /**
-     * @return int
-     */
-    public static function getObjectCount()
-    {
-        return count(self::$objects);
-    }
-
-    /*******************************************************************************
      * Helper
      ******************************************************************************/
 
     /**
      * get 获取已注册的服务组件实例
      * @param $id
+     * @param bool $thrErr
      * @param bool $forceNew 强制获取服务的新实例
      * @return mixed|null
-     * @throws NotFoundException
      */
-    public function getInstance($id, $forceNew = false)
+    public function getInstance($id, $thrErr = true, $forceNew = false)
     {
         if (!$id || !is_string($id)) {
             throw new \InvalidArgumentException(sprintf(
@@ -463,19 +441,21 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
         }
 
         $id = $this->resolveAlias($id);
-        $service = $this->getService($id, true);
+        if ($service = $this->getService($id, $thrErr)) {
+            return $service->get($this, $forceNew);
+        }
 
-        return $service->get($this, $forceNew);
+        return null;
     }
 
     /**
      * 获取某一个服务的信息
      * @param $id
-     * @param bool $throwE
+     * @param bool $thrErr
      * @return Service|null
      * @throws NotFoundException
      */
-    public function getService($id, $throwE = false)
+    public function getService($id, $thrErr = false)
     {
         $id = $this->resolveAlias($id);
 
@@ -483,7 +463,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
             return $this->services[$id];
         }
 
-        if ($throwE) {
+        if ($thrErr) {
             throw new NotFoundException("Service id: $id was not found, has not been registered!");
         }
 
@@ -511,7 +491,6 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     {
         $this->parent = null;
         $this->services = $this->aliases = [];
-        self::$objects = [];
     }
 
     /*******************************************************************************

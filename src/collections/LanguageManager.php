@@ -123,8 +123,8 @@ class LanguageManager extends StdObject implements \ArrayAccess, \Countable, \It
             return ucfirst(Str::toSnakeCase(str_replace(['-', '_'], ' ', $key), ' '));
         }
 
-        // $args is not empty?
-        if ($args = $args ? (array)$args : []) {
+        // $args is not empty
+        if ($args) {
             array_unshift($args, $value);
 
             return sprintf(...$args);

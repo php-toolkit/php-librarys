@@ -11,13 +11,47 @@ namespace inhere\library\files;
 
 use inhere\exceptions\FileNotFoundException;
 use inhere\exceptions\FileSystemException;
+use inhere\library\files\parsers\IniParser;
+use inhere\library\files\parsers\JsonParser;
+use inhere\library\files\parsers\YmlParser;
 
 /**
  * Class Read
  * @package inhere\library\files
  */
-abstract class Read extends File
+trait ReadTrait
 {
+    /**
+     * @param string $src 要解析的 文件 或 字符串内容。
+     * @param string $format
+     * @return array|bool
+     */
+    public static function load($src, $format = self::FORMAT_PHP)
+    {
+        $src = trim($src);
+
+        switch ($format) {
+            case self::FORMAT_YML:
+                $array = self::loadYml($src);
+                break;
+
+            case self::FORMAT_JSON:
+                $array = self::loadJson($src);
+                break;
+
+            case self::FORMAT_INI:
+                $array = self::loadIni($src);
+                break;
+
+            case self::FORMAT_PHP:
+            default:
+                $array = self::loadPhp($src);
+                break;
+        }
+
+        return $array;
+    }
+
     /**
      * load array data form file.
      * @param string $file
@@ -25,7 +59,7 @@ abstract class Read extends File
      * @return array
      * @throws \inhere\exceptions\FileNotFoundException
      */
-    public static function map(string $file, $throwError = true): array
+    public static function loadPhp($file, $throwError = true): array
     {
         $ary = [];
 
@@ -43,58 +77,32 @@ abstract class Read extends File
     }
 
     /**
-     * @param $file
-     * @param bool|true $toArray
-     * @return mixed
+     * @param string $file
+     * @return array
      * @throws \inhere\exceptions\FileReadException
      * @throws \inhere\exceptions\FileNotFoundException
      */
-    public static function json($file, $toArray = true)
+    public static function loadJson($file)
     {
-        $content = self::getContents($file);
-        $content = preg_replace('/\/\/.*?[\r\n]/is', '', trim($content));
-
-        return (bool)$toArray ? json_decode($content, true) : $content;
+        return JsonParser::parse($file);
     }
 
     /**
      * @param string $ini 要解析的 ini 文件名 或 字符串内容。
-     * @param bool $processSections 如果将 $processSections 参数设为 TRUE ，将得到一个多维数组，
-     *       包括了配置文件中每一节的名称和设置。
-     * @param int $scanner_mode Can either be INI_SCANNER_NORMAL  (default) or INI_SCANNER_RAW .
-     *           If INI_SCANNER_RAW  is supplied, then option values will not be parsed.
-     * @example simple.ini
-     * ```ini
-     * ; This is a sample configuration file
-     * ; Comments start with ';', as in php.ini[first_section]
-     * one = 1
-     * five = 5
-     * animal = BIRD[second_section]
-     * path = "/usr/local/bin"
-     * URL = "http://www.example.com/~username"[third_section]
-     * phpversion[] = "5.0"
-     * phpversion[] = "5.1"
-     * phpversion[] = "5.2"
-     * phpversion[] = "5.3"
-     *```
-     * 全大写的 BIRD -- 如果已定义了常量BIRD，则会被解析为对应的值
-     * phpversion[] -- 会解析成数组
-     * 如果 $processSections = true, 则会以 [first_section],[second_section].. 标记 分割放置到以对应标记名为键名的数组内
      * @return array|bool
      */
-    public static function ini($ini, $processSections = false, $scanner_mode = INI_SCANNER_NORMAL)
+    public static function loadIni($ini)
     {
-        $ini = trim($ini);
+        return IniParser::parse($ini);
+    }
 
-        if (is_file($ini) && self::getSuffix($ini, true) === 'ini') {
-            return parse_ini_file($ini, (bool)$processSections, (int)$scanner_mode);
-        }
-
-        if ($ini && is_string($ini)) {
-            return parse_ini_string($ini, (bool)$processSections, (int)$scanner_mode);
-        }
-
-        return false;
+    /**
+     * @param string $yml 要解析的 yml 文件名 或 字符串内容。
+     * @return array|bool
+     */
+    public static function loadYml($yml)
+    {
+        return YmlParser::parse($yml);
     }
 
     /**
@@ -104,7 +112,7 @@ abstract class Read extends File
      * @throws \inhere\exceptions\FileReadException
      * @throws \inhere\exceptions\FileNotFoundException
      */
-    public static function allLine($file, $filter = true)
+    public static function readAllLine($file, $filter = true)
     {
         $contents = self::getContents($file);
 
@@ -126,7 +134,7 @@ abstract class Read extends File
      * @throws FileSystemException
      * @return array  返回内容
      */
-    public static function lines($fileName, $startLine = 1, $endLine = 10, $method = 'rb'): array
+    public static function readLines($fileName, $startLine = 1, $endLine = 10, $method = 'rb'): array
     {
         $content = [];
         $startLine = $startLine <= 0 ? 1 : $startLine;
@@ -182,7 +190,7 @@ abstract class Read extends File
      * @throws FileSystemException
      * @return array
      */
-    public static function symmetry($fileName, $current = 1, $lineNum = 3): array
+    public static function readSymmetry($fileName, $current = 1, $lineNum = 3): array
     {
         $startLine = $current - $lineNum;
         $endLine = $current + $lineNum;
@@ -192,7 +200,7 @@ abstract class Read extends File
             $endLine = 9;
         }
 
-        return self::lines($fileName, $startLine, $endLine);
+        return self::readLines($fileName, $startLine, $endLine);
     }
 
     /**
@@ -203,12 +211,12 @@ abstract class Read extends File
      * @return array
      * @throws FileSystemException
      */
-    public static function rangeLines(string $file, int $baseLine, int $prevLines = 3, int $nextLines = 3): array
+    public static function readRangeLines(string $file, int $baseLine, int $prevLines = 3, int $nextLines = 3)
     {
         $startLine = $baseLine - $prevLines;
         $endLine = $baseLine + $nextLines;
 
-        return self::lines($file, $startLine, $endLine);
+        return self::readLines($file, $startLine, $endLine);
     }
 
     /**
@@ -220,6 +228,6 @@ abstract class Read extends File
      */
     public static function getLines5u3d(string $file, int $baseLine = 1): array
     {
-        return self::rangeLines($file, $baseLine, 5, 3);
+        return self::readRangeLines($file, $baseLine, 5, 3);
     }
 }

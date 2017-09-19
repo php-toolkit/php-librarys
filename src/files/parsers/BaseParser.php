@@ -28,6 +28,13 @@ abstract class BaseParser
      */
     abstract protected static function doParse($string, $enhancement = false, callable $pathHandler = null, $fileDir = '');
 
+    /**
+     * @param $string
+     * @param bool $enhancement
+     * @param callable|null $pathHandler
+     * @param string $fileDir
+     * @return array
+     */
     public static function parse($string, $enhancement = false, callable $pathHandler = null, $fileDir = '')
     {
         if (is_file($string)) {
@@ -37,6 +44,13 @@ abstract class BaseParser
         return static::doParse($string, $enhancement, $pathHandler, $fileDir);
     }
 
+    /**
+     * @param $file
+     * @param bool $enhancement
+     * @param callable|null $pathHandler
+     * @param string $fileDir
+     * @return array
+     */
     public static function parseFile($file, $enhancement = false, callable $pathHandler = null, $fileDir = '')
     {
         if (!is_file($file)) {
@@ -49,6 +63,13 @@ abstract class BaseParser
         return static::doParse($data, $enhancement, $pathHandler, $fileDir);
     }
 
+    /**
+     * @param $string
+     * @param bool $enhancement
+     * @param callable|null $pathHandler
+     * @param string $fileDir
+     * @return array
+     */
     public static function parseString($string, $enhancement = false, callable $pathHandler = null, $fileDir = '')
     {
         return static::doParse($string, $enhancement, $pathHandler, $fileDir);

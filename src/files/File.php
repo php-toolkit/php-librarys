@@ -20,8 +20,16 @@ use inhere\library\helpers\StringHelper;
  * Class File
  * @package inhere\library\files
  */
-class File extends FileSystem
+abstract class File extends FileSystem
 {
+    use ReadTrait;
+
+    const FORMAT_JSON = 'json';
+    const FORMAT_PHP = 'php';
+    const FORMAT_INI = 'ini';
+    const FORMAT_YML = 'yml';
+    const FORMAT_YAML = 'yml';
+
     /**
      * 获得文件名称
      * @param string $file

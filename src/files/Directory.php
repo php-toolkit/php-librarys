@@ -278,7 +278,7 @@ class Directory extends FileSystem
      */
     public static function create($path, $mode = 0775, $recursive = true): bool
     {
-        return (is_dir($path) || @mkdir($path, $mode, $recursive)) && is_writable($path);
+        return (is_dir($path) || !(!@mkdir($path, $mode, $recursive) && !is_dir($path))) && is_writable($path);
     }
 
     /**

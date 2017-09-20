@@ -166,8 +166,9 @@ abstract class FileSystem
                 continue;
             }
 
-            if (true !== mkdir($dir, $mode, true)) {
+            if (!@mkdir($dir, $mode, true) && !is_dir($dir)) {
                 $error = error_get_last();
+
                 if (!is_dir($dir)) {
                     // The directory was not created by a concurrent process. Let's throw an exception with a developer friendly error message if we have one
                     if ($error) {

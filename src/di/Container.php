@@ -384,7 +384,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      */
     public function getNew($id)
     {
-        return $this->getInstance($id, true,true);
+        return $this->getInstance($id, true, true);
     }
 
     /**
@@ -571,6 +571,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     {
         return $this->exists($id);
     }
+
     public function exists($id)
     {
         $id = $this->resolveAlias($id);

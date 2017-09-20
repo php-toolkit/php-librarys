@@ -61,7 +61,7 @@ abstract class AbstractHandler implements HandlerInterface
     {
         $this->logs = array_merge($this->logs, static::filterLogs($logs, $this->getLevels(), $this->categories, $this->except));
         $count = count($this->logs);
-        
+
         if ($count > 0 && ($final || ($this->exportInterval > 0 && $count >= $this->exportInterval))) {
             if ($collector = $this->contextCollector) {
                 $this->logs[] = [$collector($this), LogLevel::INFO, 'application', microtime(true)];
@@ -141,7 +141,7 @@ abstract class AbstractHandler implements HandlerInterface
      * Sets the message levels that this target is interested in.
      *
      * The parameter can be either an array of interested level names or an integer representing
-     * the bitmap of the interested level values. 
+     * the bitmap of the interested level values.
      * valid names include: {@see AbstractLogger::$levelMap }
      *  'error', 'warning', 'info', ...
      * valid codes include:
@@ -161,10 +161,10 @@ abstract class AbstractHandler implements HandlerInterface
     public function setLevels($levels)
     {
         $levelMap = AbstractLogger::getLevelMap(true);
-        
+
         if (is_array($levels)) {
             $this->_levels = 0;
-            
+
             foreach ((array)$levels as $level) {
                 if (isset($levelMap[$level])) {
                     $this->_levels |= $levelMap[$level];

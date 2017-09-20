@@ -111,31 +111,40 @@ class ArrayHelper
     }
 
     /**
-     * 递归合并多维数组,后面的值将会递归覆盖原来的值
-     * @param  array|null $old
+     * 递归合并两个多维数组,后面的值将会递归覆盖原来的值
+     * @param  array|null $src
      * @param  array $new
      * @return array
      */
-    public static function merge($old, array $new): array
+    public static function merge($src, array $new)
     {
-        if (!$old || !is_array($old)) {
+        if (!$src || !is_array($src)) {
             return $new;
         }
 
+        if (!$new) {
+            return $src;
+        }
+
         foreach ($new as $key => $value) {
-            if (array_key_exists($key, $old) && is_array($value)) {
-                $old[$key] = self::merge($old[$key], $new[$key]);
-            } elseif (is_int($key)) {
-                $old[] = $value;
+            if (is_int($key)) {
+                if (isset($src[$key])) {
+                    $src[] = $value;
+                } else {
+                    $src[$key] = $value;
+                }
+            } elseif (array_key_exists($key, $src) && is_array($value)) {
+                $src[$key] = self::merge($src[$key], $new[$key]);
             } else {
-                $old[$key] = $value;
+                $src[$key] = $value;
             }
         }
 
-        return $old;
+        return $src;
     }
 
     /**
+     * 递归合并多个多维数组,
      * @from yii2
      * Merges two or more arrays into one recursively.
      * @param array $a array to be merged to
@@ -145,11 +154,13 @@ class ArrayHelper
      */
     public static function merge2($a, $b)
     {
+        /** @var array[] $args */
         $args = func_get_args();
         $res = array_shift($args);
 
         while (!empty($args)) {
             $next = array_shift($args);
+
             foreach ($next as $k => $v) {
                 if (is_int($k)) {
                     if (isset($res[$k])) {
@@ -834,9 +845,8 @@ class ArrayHelper
      */
     public static function wrap($value): array
     {
-        return !is_array($value) ? [$value] : $value;
+        return !is_array($value) ? (array)$value : $value;
     }
-
 
     ////////////////////////////////////////////////////////////
     /// other

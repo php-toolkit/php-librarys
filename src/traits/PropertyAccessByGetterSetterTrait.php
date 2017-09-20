@@ -24,7 +24,6 @@ use inhere\exceptions\SetPropertyException;
  */
 trait PropertyAccessByGetterSetterTrait
 {
-
     /**
      * @param $name
      * @return bool

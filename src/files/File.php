@@ -203,14 +203,13 @@ abstract class File extends FileSystem
      */
     public static function getContents($file, $useIncludePath = false, $streamContext = null, $curlTimeout = 5)
     {
-        if (null === $streamContext && preg_match('/^https?:\/\//', $file)) {
-            $streamContext = @stream_context_create(array('http' => array('timeout' => $curlTimeout)));
+        $isUrl = preg_match('/^https?:\/\//', $file);
+
+        if (null === $streamContext && $isUrl) {
+            $streamContext = @stream_context_create(['http' => ['timeout' => $curlTimeout]]);
         }
 
-        if (
-            in_array(ini_get('allow_url_fopen'), ['On', 'on', '1'], true) ||
-            !preg_match('/^https?:\/\//', $file)
-        ) {
+        if ($isUrl && in_array(ini_get('allow_url_fopen'), ['On', 'on', '1'], true)) {
             if (!file_exists($file)) {
                 throw new FileNotFoundException("File [{$file}] don't exists!");
             }
@@ -229,7 +228,7 @@ abstract class File extends FileSystem
             curl_setopt($curl, CURLOPT_URL, $file);
             curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5);
             curl_setopt($curl, CURLOPT_TIMEOUT, $curlTimeout);
-            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+//            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 
             if (null !== $streamContext) {
                 $opts = stream_context_get_options($streamContext);
@@ -347,12 +346,12 @@ abstract class File extends FileSystem
     }
 
     /**
-     * 合并编译多个文件
+     * 合并编译多个php文件
      * @param $fileArr
      * @param $outFile
-     * @param  boolean $deleteSpace
+     * @param boolean $deleteSpace
      */
-    public static function margePhp($fileArr, $outFile, $deleteSpace = true): void
+    public static function margePhp($fileArr, $outFile, $deleteSpace = true)
     {
         $savePath = dirname($outFile);
 
@@ -367,13 +366,13 @@ abstract class File extends FileSystem
         $data = '';
 
         foreach ($fileArr as $v) {
-            #删除注释、空白
+            // 删除注释、空白
             if ($deleteSpace) {
                 $data .= StringHelper::deleteStripSpace($v);
-            }#不删除注释、空白
-            else {
+                // 不删除注释、空白
+            } else {
                 $o_data = file_get_contents($v);
-                $o_data = substr($o_data, 0, 5) === '<?php' ? substr($o_data, 5) : $o_data;
+                $o_data = strpos($o_data, '<?php') === 0 ? substr($o_data, 5) : $o_data;
                 $data .= substr($o_data, -2) === '?>' ? substr($o_data, 0, -2) : $o_data;
             }
         }

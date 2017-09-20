@@ -8,6 +8,7 @@ config the language translator.
 // language config
 $config   = [
     'lang'     => $config->get('language', 'en'),
+    'format'  => 'yml',
     'basePath' => '@resources/languages',
     'defaultFile' => 'app',
 
@@ -33,6 +34,7 @@ $msg = $translator->translate('key');
 $msg = $translator->trans('key'); // trans() is alias method of the translate()
 // can also use
 $msg = $translator->tl('key'); // tl() is alias method of the translate()
+$msg = $translator->t('key'); // t() is alias method of the translate()
 ```
 
 ## more information
@@ -70,7 +72,7 @@ $msg = $translator->trans('userNotFound', 'demo');
 //output $msg: user [demo] don't exists!
 
 // will fetch value at `en/app.yml`
-$msg = $translator->tran('app:userNotFound', 'demo');
+$msg = $translator->tran('app.userNotFound', 'demo');
 //output $msg: the app user [demo] don't exists!
 
 ```

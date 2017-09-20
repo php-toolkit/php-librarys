@@ -77,17 +77,18 @@ final class Service
     {
         if ($this->shared) {
             if (!$this->instance || $forceNew) {
-                $this->instance = call_user_func($this->callback, $container);
+                $cb = $this->callback;
+                $this->instance = $cb($container);
             }
 
             // 激活后就锁定，不允许再覆盖设置服务
             $this->locked = true;
-
             return $this->instance;
         }
 
+        $cb = $this->callback;
         // 总是获取新的实例，就不再存储
-        return call_user_func($this->callback, $container);
+        return $cb($container);
     }
 
     /**

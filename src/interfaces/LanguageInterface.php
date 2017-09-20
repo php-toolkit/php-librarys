@@ -14,5 +14,5 @@ namespace inhere\library\interfaces;
  */
 interface LanguageInterface
 {
-
+    public function translate();
 }

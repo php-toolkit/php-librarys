@@ -40,6 +40,11 @@ class SimpleCollection implements CollectionInterface
         }
     }
 
+    public function __destruct()
+    {
+        $this->clear();
+    }
+
     /********************************************************************************
      * Collection interface
      *******************************************************************************/

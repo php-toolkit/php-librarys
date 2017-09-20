@@ -8,6 +8,7 @@
 
 namespace inhere\library\collections;
 
+use inhere\library\files\File;
 use inhere\library\files\parsers\IniParser;
 use inhere\library\files\parsers\JsonParser;
 use inhere\library\files\parsers\YmlParser;
@@ -73,7 +74,7 @@ class Collection extends SimpleCollection
      * @param string $format
      * @param string $name
      */
-    public function __construct($data = [], $format = 'php', $name = 'box1')
+    public function __construct($data = null, $format = 'php', $name = 'box1')
     {
         // Optionally load supplied data.
         $this->load($data, $format);
@@ -215,6 +216,10 @@ class Collection extends SimpleCollection
      */
     public function load($data, $format = 'php')
     {
+        if (!$data) {
+            return $this;
+        }
+
         if (is_string($data) && in_array($format, static::$formats, true)) {
             switch ($format) {
                 case static::FORMAT_YML:
@@ -243,39 +248,13 @@ class Collection extends SimpleCollection
     }
 
     /**
-     * @param $data
+     * @param $file
      * @param string $format
      * @return array|mixed
      */
-    public static function read($data, $format = self::FORMAT_PHP)
+    public static function read($file, $format = self::FORMAT_PHP)
     {
-        switch ($format) {
-            case static::FORMAT_YML:
-                $array = self::parseYaml($data);
-                break;
-
-            case static::FORMAT_JSON:
-                $array = self::parseJson($data);
-                break;
-
-            case static::FORMAT_INI:
-                $array = self::parseIni($data);
-                break;
-
-            case static::FORMAT_PHP:
-            default:
-                $array = $data;
-                if (is_string($data) && is_file($data)) {
-                    $array = require $data;
-                }
-
-                if (!is_array($data)) {
-                    throw new \InvalidArgumentException('param type error! must is array.');
-                }
-                break;
-        }
-
-        return $array;
+        return File::load($file, $format);
     }
 
     /**

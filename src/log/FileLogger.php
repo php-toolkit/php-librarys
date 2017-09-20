@@ -554,6 +554,12 @@ class FileLogger implements LoggerInterface
         $this->log(self::DEBUG, $message, $context);
     }
 
+    /**
+     * mark data analysis start
+     * @param $name
+     * @param array $context
+     * @param string $category
+     */
     public function profile($name, array $context = [], $category = 'application')
     {
         $context['startTime'] = microtime(true);

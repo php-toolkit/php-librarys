@@ -49,22 +49,22 @@ class Directory extends FileSystem
 
     /**
      * 查看一个目录中的所有文件和子目录
-     * @param $dirName
+     * @param $path
      * @throws NotFoundException
      * @return array
      */
-    public static function ls($dirName): array
+    public static function ls($path): array
     {
         $list = [];
 
         try {
             /*** class create new DirectoryIterator Object ***/
-            foreach (new DirectoryIterator($dirName) as $item) {
+            foreach (new DirectoryIterator($path) as $item) {
                 $list[] = $item;
             }
             /*** if an exception is thrown, catch it here ***/
         } catch (\Exception $e) {
-            throw new NotFoundException($dirName . ' 没有任何内容');
+            throw new NotFoundException($path . ' 没有任何内容');
         }
 
         return $list;
@@ -72,24 +72,24 @@ class Directory extends FileSystem
 
     /**
      * 只获得目录结构
-     * @param $dirName
+     * @param $path
      * @param int $pid
      * @param int $son
      * @param array $list
      * @return array
      * @throws NotFoundException
      */
-    public static function getList($dirName, $pid = 0, $son = 0, array $list = []): array
+    public static function getList($path, $pid = 0, $son = 0, array $list = []): array
     {
-        $dirName = self::pathFormat($dirName);
+        $path = self::pathFormat($path);
 
-        if (!is_dir($dirName)) {
-            throw new NotFoundException("directory not exists! DIR: $dirName");
+        if (!is_dir($path)) {
+            throw new NotFoundException("directory not exists! DIR: $path");
         }
 
         static $id = 0;
 
-        foreach (glob($dirName . '*') as $v) {
+        foreach (glob($path . '*') as $v) {
             if (is_dir($v)) {
                 $id++;
 
@@ -101,6 +101,39 @@ class Directory extends FileSystem
                 //是否遍历子目录
                 if ($son) {
                     $list = self::getList($v, $id, $son, $list);
+                }
+            }
+        }
+
+        return $list;
+    }
+
+    /**
+     * @param $path
+     * @param bool $loop
+     * @param null $parent
+     * @param array $list
+     * @return array
+     * @throws NotFoundException
+     */
+    public static function getDirs($path, $loop = false, $parent = null, array $list = [])
+    {
+        $path = self::pathFormat($path);
+
+        if (!is_dir($path)) {
+            throw new NotFoundException("directory not exists! DIR: $path");
+        }
+
+        $len = strlen($path);
+
+        foreach (glob($path . '*') as $v) {
+            if (is_dir($v)) {
+                $relatePath = substr($v, $len);
+                $list[] = $parent . $relatePath;
+
+                //是否遍历子目录
+                if ($loop) {
+                    $list = self::getDirs($v, $loop, $relatePath . '/', $list);
                 }
             }
         }
@@ -138,7 +171,6 @@ class Directory extends FileSystem
             } else {
                 $list[] = '/' . basename($file);
 
-                //是否遍历子目录
                 if ($recursive) {
                     $list = array_merge($list, self::simpleInfo($file, $ext, $recursive));
                 }
@@ -153,11 +185,12 @@ class Directory extends FileSystem
      * @param string $path string 目标目录
      * @param array|string $ext array('css','html','php') css|html|php
      * @param bool $recursive 是否包含子目录
+     * @param null|string $parent
      * @param array $list
      * @return array
      * @throws NotFoundException
      */
-    public static function getFiles($path, $ext = null, $recursive = false, &$list): array
+    public static function getFiles($path, $ext = null, $recursive = false, $parent = null, array $list = []): array
     {
         $path = self::pathFormat($path);
 
@@ -165,20 +198,18 @@ class Directory extends FileSystem
             throw new NotFoundException("directory not exists! DIR: $path");
         }
 
+        $len = strlen($path);
         $ext = is_array($ext) ? implode('|', $ext) : trim($ext);
 
-        //glob()寻找与模式匹配的文件路径
-        foreach (glob($path . '*') as $file) {
+        foreach (glob($path . '*') as $v) {
+            $relatePath = substr($v, $len);
 
             // 匹配文件 如果没有传入$ext 则全部遍历，传入了则按传入的类型来查找
-            if (is_file($file) &&
-                (!$ext || preg_match("/\.($ext)$/i", $file))
-            ) {
-                $list[] = str_replace($path, '', $file);
+            if (is_file($v) && (!$ext || preg_match("/\.($ext)$/i", $v))) {
+                $list[] = $parent . $relatePath;
 
-                //是否遍历子目录
             } elseif ($recursive) {
-                $list = self::getFiles($file, $ext, $recursive, $list);
+                $list = self::getFiles($v, $ext, $recursive, $relatePath . '/', $list);
             }
         }
 
@@ -201,7 +232,7 @@ class Directory extends FileSystem
 
     /**
      * 获得目录下的文件以及详细信息，可选择类型、是否遍历子文件夹
-     * @param $dirName string 目标目录
+     * @param $path string 目标目录
      * @param array|string $ext array('css','html','php') css|html|php
      * @param $recursive int|bool 是否包含子目录
      * @param array $list
@@ -209,12 +240,12 @@ class Directory extends FileSystem
      * @throws \InvalidArgumentException
      * @throws NotFoundException
      */
-    public static function getFilesInfo($dirName, $ext = null, $recursive = 0, &$list): array
+    public static function getFilesInfo($path, $ext = null, $recursive = 0, &$list): array
     {
-        $dirName = self::pathFormat($dirName);
+        $path = self::pathFormat($path);
 
-        if (!is_dir($dirName)) {
-            throw new NotFoundException("directory not exists! DIR: $dir");
+        if (!is_dir($path)) {
+            throw new NotFoundException("directory not exists! DIR: $path");
         }
 
         $ext = is_array($ext) ? implode('|', $ext) : trim($ext);
@@ -222,7 +253,7 @@ class Directory extends FileSystem
         static $id = 0;
 
         //glob()寻找与模式匹配的文件路径
-        foreach (glob($dirName . '*') as $file) {
+        foreach (glob($path . '*') as $file) {
             $id++;
 
             // 匹配文件 如果没有传入$ext 则全部遍历，传入了则按传入的类型来查找
@@ -289,13 +320,13 @@ class Directory extends FileSystem
 
     /**
      * 删除目录及里面的文件
-     * @param $dirName
+     * @param $path
      * @param  boolean $delSelf 默认最后删掉自己
      * @return bool
      */
-    public static function delete($dirName, $delSelf = true): bool
+    public static function delete($path, $delSelf = true): bool
     {
-        $dirPath = self::pathFormat($dirName);
+        $dirPath = self::pathFormat($path);
 
         if (is_file($dirPath)) {
             return unlink($dirPath);

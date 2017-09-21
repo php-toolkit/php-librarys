@@ -9,6 +9,7 @@
 namespace inhere\library\utils;
 
 use inhere\exceptions\FileSystemException;
+use inhere\library\files\Directory;
 use inhere\library\helpers\PhpHelper;
 use Psr\Log\LoggerInterface;
 
@@ -451,11 +452,17 @@ class LiteLogger implements LoggerInterface
         $this->log(self::CRITICAL, $message, $context);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function error($message, array $context = [])
     {
         $this->log(self::ERROR, $message, $context);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function alert($message, array $context = [])
     {
         $this->log(self::ALERT, $message, $context);
@@ -534,21 +541,33 @@ class LiteLogger implements LoggerInterface
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function warning($message, array $context = [])
     {
         $this->log(self::WARNING, $message, $context);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function notice($message, array $context = [])
     {
         $this->log(self::NOTICE, $message, $context);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function info($message, array $context = [])
     {
         $this->log(self::INFO, $message, $context);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function debug($message, array $context = [])
     {
         $this->log(self::DEBUG, $message, $context);
@@ -687,7 +706,7 @@ class LiteLogger implements LoggerInterface
         $file = $this->getLogPath() . $this->getFilename();
         $dir = dirname($file);
 
-        if (!is_dir($dir) && !@mkdir($dir, 0775, true)) {
+        if (!Directory::create($dir)) {
             throw new FileSystemException("Create log directory failed. $dir");
         }
 

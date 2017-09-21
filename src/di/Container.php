@@ -156,7 +156,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
             // a Array 详细设置服务信息
         } elseif (is_array($definition)) {
             if (empty($definition['target'])) {
-                throw new \InvalidArgumentException("Configuration errors, the 'target' is must be defined!");
+                throw new \InvalidArgumentException("Configuration errors, the 'target' is must be defined! ID: $id");
             }
 
             $target = $definition['target'];

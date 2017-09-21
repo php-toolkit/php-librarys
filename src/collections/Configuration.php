@@ -36,22 +36,6 @@ final class Configuration extends Collection
     protected $format = self::FORMAT_PHP;
 
     /**
-     * the project env file. it is always last loaded.
-     * @var string
-     */
-    private $envFile;
-
-    /**
-     * the default env data
-     * @var array
-     * e.g [
-     *  'env' => 'pdt',
-     *  'debug' => false,
-     * ]
-     */
-    private $envData = [];
-
-    /**
      * when mode is 'folder', the config folder path
      * @var string
      */
@@ -94,23 +78,20 @@ final class Configuration extends Collection
         }
 
         // load config
-        return self::make($baseFile, $format,'web')
-            ->loadArray($envFile)
+        return self::make($baseFile, $format)
+            ->load($envFile, $format)
             ->loadArray($local);
     }
 
     /**
      * __construct
      * @param mixed $data If mode is 'folder', $data is config folder path
-     * @param array|string $settings
+     * @param string $format
      * @param string $name
      */
-    public function __construct($data = null, array $settings = [], $name = 'config')
+    public function __construct($data = null, $format = self::FORMAT_PHP, $name = 'config')
     {
-        // first load env file.
-        $this->data = is_file($this->envFile) ? self::parseIni($this->envFile) : $this->envData;
-
-        Obj::smartConfigure($this, $settings);
+        $this->format = $format;
 
         if (is_string($data) && is_dir($data)) {
             $this->mode = self::MODE_FOLDER;
@@ -236,37 +217,5 @@ final class Configuration extends Collection
         }
 
         $this->folderPath = $folderPath;
-    }
-
-    /**
-     * @return string
-     */
-    public function getEnvFile(): string
-    {
-        return $this->envFile;
-    }
-
-    /**
-     * @param string $envFile
-     */
-    public function setEnvFile(string $envFile)
-    {
-        $this->envFile = $envFile;
-    }
-
-    /**
-     * @return array
-     */
-    public function getEnvData(): array
-    {
-        return $this->envData;
-    }
-
-    /**
-     * @param array $envData
-     */
-    public function setEnvData(array $envData)
-    {
-        $this->envData = $envData;
     }
 }

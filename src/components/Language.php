@@ -35,6 +35,12 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
     private $fallbackLang = 'en';
 
     /**
+     * current use language
+     * @var string[]
+     */
+    private $langs = [];
+
+    /**
      * @var Collection
      */
     private $data;
@@ -93,6 +99,7 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
     private $ignoreError = false;
 
     const DEFAULT_FILE_KEY = '__default';
+
 
     /**
      * {@inheritDoc}
@@ -410,6 +417,22 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
     public function setLang($lang)
     {
         $this->lang = trim($lang);
+    }
+
+    /**
+     * @return \string[]
+     */
+    public function getLangs(): array
+    {
+        return $this->langs;
+    }
+
+    /**
+     * @param \string[] $langs
+     */
+    public function setLangs(array $langs)
+    {
+        $this->langs = $langs;
     }
 
     /**

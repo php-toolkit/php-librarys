@@ -87,17 +87,17 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      *  $definition = className
      * array:
      *  $definition = [
-     *     // 1. 仅类名 $definition['_params']则传入对应构造方法
+     *     // 1. 仅类名 $definition['_args']则传入对应构造方法
      *     'target' => 'className',
-     *     // 2. 类的静态方法, $definition['_params']则传入对应方法 className::staticMethod(_params...)
+     *     // 2. 类的静态方法, $definition['_args']则传入对应方法 className::staticMethod(_args...)
      *     'target' => 'className::staticMethod',
-     *     // 3. 类的动态方法, $definition['_params']则传入对应方法 (new className)->method(_params...)
+     *     // 3. 类的动态方法, $definition['_args']则传入对应方法 (new className)->method(_args...)
      *     'target' => 'className->method',
      *
      *     '_options' => [...] 一些服务设置(别名,是否共享)
      *
      *     // 设置参数方式
-     *     '_params' => [
+     *     '_args' => [
      *         arg1,arg2,arg3,...
      *     ]
      *
@@ -134,7 +134,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
             throw new \RuntimeException(sprintf('Cannot override frozen service "%s".', $id));
         }
 
-        $params = $props = [];
+        $args = $props = [];
         $opts = array_merge([
             'aliases' => null,
             'shared' => true,
@@ -144,7 +144,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
 
         // 已经是个服务实例 object 不是闭包 closure
         if (is_object($definition)) {
-            $this->services[$id] = new Service($definition, $params, $opts['shared'], $opts['locked']);
+            $this->services[$id] = new Service($definition, $args, $opts['shared'], $opts['locked']);
 
             return $this;
         }
@@ -168,10 +168,10 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
                 unset($definition['_options']);
             }
 
-            // 收集方法参数
-            if (isset($definition['_params'])) {
-                $params = $definition['_params'];
-                unset($definition['_params']);
+            // 收集方法参数 
+            if (isset($definition['_args'])) {
+                $args = $definition['_args'];
+                unset($definition['_args']);
             }
 
             // 收集对象属性
@@ -182,12 +182,12 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
                 $props = $definition;
             }
 
-            $callback = $this->createCallback($target, $params, $props);
+            $callback = $this->createCallback($target, $args, $props);
         } else {
             throw new \InvalidArgumentException('Invalid parameter!');
         }
 
-        $this->services[$id] = new Service($callback, $params, $opts['shared'], $opts['locked']);
+        $this->services[$id] = new Service($callback, $args, $opts['shared'], $opts['locked']);
 
         // activity
         if ($opts['activity']) {
@@ -301,6 +301,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
             return $target;
         }
 
+        $arguments = array_values($arguments);
         /** @see $this->set() $definition is array */
         $target = trim(str_replace(' ', '', $target), '.');
 

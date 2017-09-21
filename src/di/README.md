@@ -14,17 +14,17 @@ Container public function set($id, $definition, array $opts = [])
  *  $definition = className
  * array:
  *  $definition = [
- *     // 1. 仅类名 $definition['_params']则传入对应构造方法
+ *     // 1. 仅类名 $definition['_args']则传入对应构造方法
  *     'target' => 'className',
- *     // 2. 类的静态方法, $definition['params']则传入对应方法 className::staticMethod(_params...)
+ *     // 2. 类的静态方法, $definition['args']则传入对应方法 className::staticMethod(_args...)
  *     'target' => 'className::staticMethod',
- *     // 3. 类的动态方法, $definition['params']则传入对应方法 (new className)->method(_params...)
+ *     // 3. 类的动态方法, $definition['args']则传入对应方法 (new className)->method(_args...)
  *     'target' => 'className->method',
  *
  *     '_options' => [...] 一些服务设置(别名,是否共享)
  *
  *     // 设置参数方式
- *     '_params' => [
+ *     '_args' => [
  *         arg1,arg2,arg3,...
  *     ]
  *

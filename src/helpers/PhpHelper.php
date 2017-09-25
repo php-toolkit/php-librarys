@@ -163,7 +163,7 @@ class PhpHelper extends EnvHelper
      */
     public static function execInBackground($cmd)
     {
-        if (strpos(php_uname(), 'Windows') === 0) {
+        if (strpos(PHP_OS, 'Windows') === 0) {
             pclose(popen('start /B ' . $cmd, 'r'));
         } else {
             exec($cmd . ' > /dev/null &');
@@ -241,11 +241,9 @@ class PhpHelper extends EnvHelper
     public static function printVars(...$args): string
     {
         ob_start();
-
         foreach ($args as $arg) {
             print_r($arg);
         }
-
         $string = ob_get_clean();
 
         return preg_replace("/Array\n\s+\(/", 'Array (', $string);
@@ -258,6 +256,8 @@ class PhpHelper extends EnvHelper
      */
     public static function call($cb, array $args = [])
     {
+        $args = array_values($args);
+
         if (is_object($cb) || (is_string($cb) && function_exists($cb))) {
             $ret = $cb(...$args);
         } elseif (is_array($cb)) {

@@ -136,7 +136,7 @@ class ObjectHelper
             $dependencyClass = $param->getClass();
 
             // If we have a dependency, that means it has been type-hinted.
-            if (null !== $dependencyClass) {
+            if ($dependencyClass && ($depClass = $dependencyClass->getName()) !== \Closure::class) {
                 $depClass = $dependencyClass->getName();
                 $depObject = self::create($depClass);
 

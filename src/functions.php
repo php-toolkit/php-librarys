@@ -211,7 +211,7 @@ if (!function_exists('session')) {
      */
     function session($name, $default = null)
     {
-        if (!isset($_SESSION)) {
+        if (null === $_SESSION) {
             throw new \RuntimeException('session set or get failed. Session don\'t start.');
         }
 
@@ -236,14 +236,8 @@ if (!function_exists('session')) {
 }
 
 if (!function_exists('make_object')) {
-    function make_object($class, array $args = [])
+    function make_object($class)
     {
-        static $__object_list_box = [];
-
-        if (!isset($__object_list_box[$class])) {
-            $__object_list_box[$class] = $args ? new $class($args) : new $class;
-        }
-
-        return $__object_list_box[$class];
+        return \inhere\library\helpers\Obj::create($class);
     }
 }

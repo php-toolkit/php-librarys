@@ -258,12 +258,17 @@ class PhpHelper extends EnvHelper
     {
         $args = array_values($args);
 
-        if (is_object($cb) || (is_string($cb) && function_exists($cb))) {
+        if (
+            (is_object($cb) && method_exists($cb, '__invoke')) ||
+            (is_string($cb) && function_exists($cb))
+        ) {
             $ret = $cb(...$args);
         } elseif (is_array($cb)) {
             list($obj, $mhd) = $cb;
 
             $ret = is_object($obj) ? $obj->$mhd(...$args) : $obj::$mhd(...$args);
+        } elseif (method_exists('Swoole\Coroutine', 'call_user_func_array')) {
+            $ret = \Swoole\Coroutine::call_user_func_array($cb, $args);
         } else {
             $ret = call_user_func_array($cb, $args);
         }

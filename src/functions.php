@@ -3,14 +3,14 @@
  * function collection
  */
 
-if (!function_exists('dump_v')) {
+if (!function_exists('dump_vars')) {
     function dump_vars(...$args)
     {
         return \inhere\library\helpers\PhpHelper::dumpVars(...$args);
     }
 }
 
-if (!function_exists('print_v')) {
+if (!function_exists('print_vars')) {
     function print_vars(...$args)
     {
         return \inhere\library\helpers\PhpHelper::printVars(...$args);

@@ -103,9 +103,9 @@ class Collection extends SimpleCollection
      */
     public function set($path, $value)
     {
-        if (is_array($value) || is_object($value)) {
-            $value = DataHelper::toArray($value, true);
-        }
+//        if (is_array($value) || is_object($value)) {
+//            $value = DataHelper::toArray($value, true);
+//        }
 
         Arr::setByPath($this->data, $path, $value, $this->separator);
 
@@ -331,7 +331,7 @@ class Collection extends SimpleCollection
     {
         // Ensure the input data is an array.
         if (!$raw) {
-            $data = DataHelper::toArray($data, true);
+            $data = DataHelper::toArray($data);
         }
 
         foreach ($data as $key => $value) {

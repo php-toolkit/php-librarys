@@ -132,21 +132,24 @@ class PhpHelper extends EnvHelper
      * @param \Exception|\Throwable $e the exception being converted
      * @param bool $clearHtml
      * @param bool $getTrace
+     * @param null|string $catcher
      * @return string the string representation of the exception.
      */
-    public static function exceptionToString($e, $clearHtml = false, $getTrace = false): string
+    public static function exceptionToString($e, $clearHtml = false, $getTrace = false, $catcher = null): string
     {
         if (!$getTrace) {
             $message = "Error: {$e->getMessage()}";
         } else {
             $type = $e instanceof \ErrorException ? 'Error' : 'Exception';
+            $catcher = $catcher ? "Catch By: $catcher\n" : '';
             $message = sprintf(
-                "<h3>%s(%d): %s</h3>\n<pre><strong>File: %s(Line %d)</strong> \n\n%s</pre>",
+                "<h3>%s(%d): %s</h3>\n<pre><strong>File: %s(Line %d)</strong>%s \n\n%s</pre>",
                 $type,
                 $e->getCode(),
                 $e->getMessage(),
                 $e->getFile(),
                 $e->getLine(),
+                $catcher,
                 $e->getTraceAsString()
             );
 

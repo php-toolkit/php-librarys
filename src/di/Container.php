@@ -119,7 +119,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      *  'shared' => (bool), 是否共享
      *  'locked' => (bool), 是否锁定服务
      *  'aliases' => (array), 别名
-     *  'activity' => (bool), 立即激活
+     *  'active' => (bool), 立即激活
      * ]
      * @return $this
      * @internal param bool $shared 是否共享
@@ -139,7 +139,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
             'aliases' => null,
             'shared' => true,
             'locked' => false,
-            'activity' => false,
+            'active' => false,
         ], $opts);
 
         // 已经是个服务实例 object 不是闭包 closure
@@ -189,8 +189,8 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
 
         $this->services[$id] = new Service($callback, $args, $opts['shared'], $opts['locked']);
 
-        // activity
-        if ($opts['activity']) {
+        // active service
+        if ($opts['active']) {
             $this->get($id);
         }
 

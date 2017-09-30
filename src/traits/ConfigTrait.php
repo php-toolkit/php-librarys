@@ -78,22 +78,27 @@ trait ConfigTrait
 
     /**
      * Method to get property Options
-     * @return  array
+     * @param string|null $key
+     * @return array
      */
-    public function getConfig()
+    public function getConfig(string $key = null)
     {
+        if ($key) {
+            return $this->getValue($key);
+        }
+        
         return $this->config;
     }
 
     /**
      * Method to set property config
      * @param  array $config
-     * @param  bool $deepMerge
+     * @param  bool $loopMerge
      * @return static Return self to support chaining.
      */
-    public function setConfig(array $config, $deepMerge = true)
+    public function setConfig(array $config, $loopMerge = true)
     {
-        $this->config = $deepMerge ? Arr::merge($this->config, $config) : $config;
+        $this->config = $loopMerge ? Arr::merge($this->config, $config) : $config;
 
         return $this;
     }

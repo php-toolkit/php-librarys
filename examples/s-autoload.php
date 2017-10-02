@@ -17,8 +17,8 @@ spl_autoload_register(function($class)
 {
     $inhereDir = dirname(__DIR__, 2);
     $map = [
-        'inhere\library\examples\\' => __DIR__,
-        'inhere\library\\' => dirname(__DIR__) . '/src',
+        'Inhere\Library\examples\\' => __DIR__,
+        'Inhere\Library\\' => dirname(__DIR__) . '/src',
         'inhere\queue\\' => $inhereDir . '/queue/src',
     ];
 

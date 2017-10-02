@@ -1,6 +1,6 @@
 <?php
 
-namespace inhere\exceptions;
+namespace Inhere\Exceptions;
 
 abstract class BaseException extends \Exception
 {

@@ -6,14 +6,14 @@
  * Time: 10:35
  */
 
-namespace inhere\library;
+namespace Inhere\Library;
 
-use inhere\library\traits\PropertyAccessByGetterSetterTrait;
-use inhere\library\traits\StdObjectTrait;
+use Inhere\Library\Traits\PropertyAccessByGetterSetterTrait;
+use Inhere\Library\Traits\StdObjectTrait;
 
 /**
  * Class StdBase
- * @package inhere\library
+ * @package Inhere\Library
  */
 abstract class StdObject
 {

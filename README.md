@@ -36,23 +36,23 @@ git clone https://github.com/inhere/php-librarys.git
 
 基础库：
 
-- `inhere\library\collections` 数据收集器. (数据收集/全局配置/语言包处理类)
-- `inhere\library\di` 依赖注入容器，提供服务管理 
-- `inhere\library\files` 文件系统操作(文件(夹)读取，检查，创建)；`json ini yml` 文件的扩展解析
-- `inhere\library\helpers` 辅助类库(`string array object date url curl php format json`)
-- `inhere\library\traits` 一些常用的traits(`ArrayAccess` `GetterSetterAccess` `SimpleAlias` `SimpleConfig` `SimpleEvent`)
-- `inhere\library\utils` 一些独立的工具类(`autoloader logger`)
+- `Inhere\Library\Collections` 数据收集器. (数据收集/全局配置/语言包处理类)
+- `Inhere\Library\DI` 依赖注入容器，提供服务管理 
+- `Inhere\Library\Files` 文件系统操作(文件(夹)读取，检查，创建)；`json ini yml` 文件的扩展解析
+- `Inhere\Library\Helpers` 辅助类库(`string array object date url curl php format json`)
+- `Inhere\Library\Traits` 一些常用的traits(`ArrayAccess` `GetterSetterAccess` `SimpleAlias` `SimpleConfig` `SimpleEvent`)
+- `Inhere\Library\Utils` 一些独立的工具类(`autoloader logger`)
 - `functions.php` 一些有用的函数
 
 已迁移至 `inhere/library-plus`:
 
-- `inhere\library\env` 环境信息收集, `Server`: 服务端信息. `Client`: 客户端信息 
-- `inhere\library\event` 事件调度器 
-- `inhere\library\files` 文件系统操作(文件(夹)读取，检查，创建)；文件上传/下载，图片处理(缩略图/水印)，图片验证码生成 
-- `inhere\library\asset` 资源(css,js)管理,加载,发布 
-- `inhere\library\html` html 元素创建, dom 创建
-- `inhere\library\network` network 工具库(`telnet`)
-- `inhere\library\utils` 一些独立的工具类(`memcache`)
+- `Inhere\Library\env` 环境信息收集, `Server`: 服务端信息. `Client`: 客户端信息 
+- `Inhere\Library\event` 事件调度器 
+- `Inhere\Library\Files` 文件系统操作(文件(夹)读取，检查，创建)；文件上传/下载，图片处理(缩略图/水印)，图片验证码生成 
+- `Inhere\Library\asset` 资源(css,js)管理,加载,发布 
+- `Inhere\Library\html` html 元素创建, dom 创建
+- `Inhere\Library\network` network 工具库(`telnet`)
+- `Inhere\Library\Utils` 一些独立的工具类(`memcache`)
 
 [Document](doc/document.md)
 

@@ -4,7 +4,7 @@
 
 ### FileSystem
 
-class `inhere\library\files\FileSystem`
+class `Inhere\Library\Files\FileSystem`
 
 provide method:
 
@@ -24,7 +24,7 @@ pathModeInfo
 
 ### Directory
 
-class `inhere\library\files\Directory`, it extend of `FileSystem`.
+class `Inhere\Library\Files\Directory`, it extend of `FileSystem`.
 
 provide method:
 
@@ -43,7 +43,7 @@ jieYa
 
 ### File
 
-class `inhere\library\files\File`, it extend of `FileSystem`.
+class `Inhere\Library\Files\File`, it extend of `FileSystem`.
 
 provide method:
 
@@ -68,7 +68,7 @@ margePhp
 
 ### Read
 
-class `inhere\library\files\Read`, it extend of `File`.
+class `Inhere\Library\Files\Read`, it extend of `File`.
 
 provide method:
 

@@ -6,14 +6,14 @@
 if (!function_exists('dump_vars')) {
     function dump_vars(...$args)
     {
-        return \inhere\library\helpers\PhpHelper::dumpVars(...$args);
+        return \Inhere\Library\Helpers\PhpHelper::dumpVars(...$args);
     }
 }
 
 if (!function_exists('print_vars')) {
     function print_vars(...$args)
     {
-        return \inhere\library\helpers\PhpHelper::printVars(...$args);
+        return \Inhere\Library\Helpers\PhpHelper::printVars(...$args);
     }
 }
 
@@ -62,7 +62,7 @@ if (!function_exists('retry')) {
 if (!function_exists('env')) {
     function env(string $name, $default = null)
     {
-        return inhere\library\utils\LocalEnv::instance()->env($name, $default);
+        return Inhere\Library\Utils\LocalEnv::instance()->env($name, $default);
     }
 }
 
@@ -76,7 +76,7 @@ if (!function_exists('msleep')) {
 if (!function_exists('local')) {
     function local($name = null, $default = null)
     {
-        return inhere\library\utils\LocalConfig::instance()->get($name, $default);
+        return Inhere\Library\Utils\LocalConfig::instance()->get($name, $default);
     }
 }
 
@@ -198,7 +198,7 @@ if (!function_exists('random_token')) {
 if (!function_exists('create_salt')) {
     function create_salt()
     {
-        return \inhere\library\helpers\Str::genSalt();
+        return \Inhere\Library\Helpers\Str::genSalt();
     }
 }
 
@@ -238,6 +238,6 @@ if (!function_exists('session')) {
 if (!function_exists('make_object')) {
     function make_object($class)
     {
-        return \inhere\library\helpers\Obj::create($class);
+        return \Inhere\Library\Helpers\Obj::create($class);
     }
 }

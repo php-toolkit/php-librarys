@@ -8,7 +8,7 @@
 
 require __DIR__ . '/s-autoload.php';
 
-$lg = new \inhere\library\components\Language([
+$lg = new \Inhere\Library\Components\Language([
     'basePath' => __DIR__ . '/tmp',
     'lang' => 'zh-CN',
     'ignoreError' => 1,// if is true, will ignore not exists lang file

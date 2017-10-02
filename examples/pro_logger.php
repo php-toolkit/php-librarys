@@ -6,7 +6,7 @@
  * Time: 下午10:35
  */
 
-use inhere\library\process\ProcessLogger;
+use Inhere\Library\process\ProcessLogger;
 
 require __DIR__ . '/s-autoload.php';
 

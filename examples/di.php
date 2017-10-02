@@ -6,8 +6,8 @@
  * Time: 11:57
  */
 
-use inhere\library\di\Container;
-use inhere\library\utils\LiteLogger;
+use Inhere\Library\DI\Container;
+use Inhere\Library\Utils\LiteLogger;
 
 require __DIR__ . '/s-autoload.php';
 

@@ -34,7 +34,7 @@ $port = isset($argv[2]) ? $argv[2] : 80;
 
 printf("Connect to the server {$host}:{$port}");
 
-$tt = new \inhere\library\network\Telnet($host, $port);
+$tt = new \Inhere\Library\network\Telnet($host, $port);
 
 // var_dump($tt);die;
 

@@ -6,7 +6,7 @@
  * Time: 下午12:46
  */
 
-use inhere\library\utils\LiteLogger;
+use Inhere\Library\Utils\LiteLogger;
 
 require __DIR__ . '/s-autoload.php';
 

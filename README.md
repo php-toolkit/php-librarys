@@ -66,10 +66,6 @@ git clone https://github.com/inhere/php-librarys.git
 
 php的队列使用包装(`DbQueue` `LevelDbQueue` `PhpQueue` `RedisQueue` `ShmQueue` `SSDBQueue` `SysVQueue`)
 
-### `inhere/process` [github](https://github.com/inhere/php-process) [git@osc](https://git.oschina.net/inhere/php-process)
-
-进程控制、管理库(`ipc` 进程间通信 `processLogger` 进程类日志工具 `processUtil` 进程控制管理 `sharedMemory` 共享内存使用)
-
 ### `inhere/http` [github](https://github.com/inhere/php-http) [git@osc](https://git.oschina.net/inhere/php-http)
 
 http 工具库(`request` 请求 `response` 响应 `curl` curl请求库，有简洁、完整和并发请求三个版本的类)

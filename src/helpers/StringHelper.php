@@ -220,13 +220,25 @@ abstract class StringHelper
      * @param int $length
      * @return bool|string
      */
-    public static function genUuid($length = 7)
+    public static function genUid($length = 7)
     {
         if (!is_int($length) || $length > 32 || $length < 1) {
             $length = 7;
         }
 
         return substr(hash('md5', uniqid('', true)), 0, $length);
+    }
+
+    /**
+     * gen UUID
+     * @param int $version
+     * @param null $node
+     * @param null $ns
+     * @return UUID
+     */
+    public static function genUUID($version = 1, $node = null, $ns = null)
+    {
+        return UUID::generate($version, $node, $ns);
     }
 
     ////////////////////////////////////////////////////////////

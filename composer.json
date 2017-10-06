@@ -22,7 +22,7 @@
     },
     "files" : [
       "src/functions.php",
-      "src/some_exception.php"
+      "src/exceptions.php"
     ]
   },
   "suggest": {

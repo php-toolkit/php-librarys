@@ -2,6 +2,9 @@
 
 namespace Inhere\Exceptions;
 
+/**
+ * {@inheritDoc}
+ */
 abstract class BaseException extends \Exception
 {
     /**

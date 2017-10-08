@@ -6,6 +6,7 @@
 namespace Inhere\Library\Helpers;
 
 use Inhere\Exceptions\ExtensionMissException;
+use Swoole\Coroutine;
 
 /**
  * Class PhpHelper
@@ -71,12 +72,14 @@ class PhpHelper extends EnvHelper
     public static function runtime($startTime, $startMem, array $info = [])
     {
         // 显示运行时间
-        $info['time'] = number_format(microtime(true) - $startTime, 4) . 's';
+        $info['runtime'] = number_format((microtime(true) - $startTime) * 1000, 2)  . 'ms';
 
-        $startMem = array_sum(explode(' ', $startMem));
-        $endMem = array_sum(explode(' ', memory_get_usage()));
+        if ($startMem) {
+            $startMem = array_sum(explode(' ', $startMem));
+            $endMem = array_sum(explode(' ', memory_get_usage()));
 
-        $info['memory'] = number_format(($endMem - $startMem) / 1024) . 'kb';
+            $info['memory'] = number_format(($endMem - $startMem) / 1024, 2) . 'kb';
+        }
 
         return $info;
     }
@@ -122,7 +125,7 @@ class PhpHelper extends EnvHelper
      * Returns true when the runtime used is PHP and Xdebug is loaded.
      * @return boolean
      */
-    public static function hasXdebug(): bool
+    public static function hasXDebug(): bool
     {
         return static::isPHP() && extension_loaded('xdebug');
     }
@@ -135,7 +138,7 @@ class PhpHelper extends EnvHelper
      * @param null|string $catcher
      * @return string the string representation of the exception.
      */
-    public static function exceptionToString($e, $clearHtml = false, $getTrace = false, $catcher = null): string
+    public static function exceptionToString($e, $getTrace = true, $clearHtml = false, $catcher = null): string
     {
         if (!$getTrace) {
             $message = "Error: {$e->getMessage()}";
@@ -270,8 +273,8 @@ class PhpHelper extends EnvHelper
             list($obj, $mhd) = $cb;
 
             $ret = is_object($obj) ? $obj->$mhd(...$args) : $obj::$mhd(...$args);
-        } elseif (method_exists('Swoole\Coroutine', 'call_user_func_array')) {
-            $ret = \Swoole\Coroutine::call_user_func_array($cb, $args);
+        } elseif (class_exists(Coroutine::class, false)) {
+            $ret = Coroutine::call_user_func_array($cb, $args);
         } else {
             $ret = call_user_func_array($cb, $args);
         }

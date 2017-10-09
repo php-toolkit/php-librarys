@@ -375,6 +375,11 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      */
     public function get($id)
     {
+        // a class name. get from object pool
+        if (strpos($id, '\\')) {
+            return Obj::get($id);
+        }
+
         return $this->getInstance($id);
     }
 

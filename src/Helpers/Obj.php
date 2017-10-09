@@ -8,6 +8,8 @@
 
 namespace Inhere\Library\Helpers;
 
+use Inhere\Library\Traits\ObjectPoolTrait;
+
 /**
  * Class Obj
  *  alias of the ObjectHelper
@@ -15,4 +17,5 @@ namespace Inhere\Library\Helpers;
  */
 class Obj extends ObjectHelper
 {
+    use ObjectPoolTrait;
 }

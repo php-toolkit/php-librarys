@@ -9,10 +9,10 @@
 namespace Inhere\Library\Helpers;
 
 /**
- * Class CliHelper
+ * Class Cli
  * @package Inhere\Library\Helpers
  */
-class CliHelper
+class Cli
 {
     const NORMAL = 0;
 
@@ -79,7 +79,7 @@ class CliHelper
         }
 
         if (is_string($style)) {
-            $out = isset(self::$styles[$style]) ? self::$styles[$style] : '0';
+            $out = self::$styles[$style] ?? '0';
         } elseif (is_int($style)) {
             $out = $style;
 
@@ -152,7 +152,7 @@ class CliHelper
      * @param bool $mergeOpts
      * @return array
      */
-    public static function parseOptArgs($noValues = [], $mergeOpts = false)
+    public static function parseOptArgs(array $noValues = [], $mergeOpts = false)
     {
         $params = $GLOBALS['argv'];
         reset($params);
@@ -186,7 +186,7 @@ class CliHelper
                 // check if next parameter is a descriptor or a value
                 $nxp = current($params);
 
-                if (!in_array($opt, $noValues) && $value === true && $nxp !== false && $nxp{0} !== '-') {
+                if ($value === true && $nxp !== false && $nxp{0} !== '-' && !in_array($opt, $noValues, true)) {
                     list(, $value) = each($params);
 
                     // short-opt: bool opts. like -e -abc
@@ -258,6 +258,19 @@ class CliHelper
     }
 
     /**
+     * run a command in background
+     * @param string $cmd
+     */
+    public static function execInBackground($cmd)
+    {
+        if (strpos(PHP_OS, 'Windows') === 0) {
+            pclose(popen('start /B ' . $cmd, 'r'));
+        } else {
+            exec($cmd . ' > /dev/null &');
+        }
+    }
+
+    /**
      * Method to execute a command in the terminal
      * Uses :
      * 1. system
@@ -267,7 +280,7 @@ class CliHelper
      * @param $command
      * @return array
      */
-    public static function terminal($command)
+    public static function exec($command)
     {
         $return_var = 1;
 

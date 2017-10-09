@@ -33,7 +33,7 @@ class EnvHelper
      */
     public static function isUnix(): bool
     {
-        $uNames = array('CYG', 'DAR', 'FRE', 'HP-', 'IRI', 'LIN', 'NET', 'OPE', 'SUN', 'UNI');
+        $uNames = ['CYG', 'DAR', 'FRE', 'HP-', 'IRI', 'LIN', 'NET', 'OPE', 'SUN', 'UNI'];
 
         return in_array(strtoupper(substr(PHP_OS, 0, 3)), $uNames, true);
     }
@@ -138,4 +138,30 @@ class EnvHelper
     }
 
 
+    /**
+     * setStrict
+     * @return  void
+     */
+    public static function setStrict(): void
+    {
+        error_reporting(32767);
+    }
+
+    /**
+     * setMuted
+     * @return  void
+     */
+    public static function setMuted(): void
+    {
+        error_reporting(0);
+    }
+
+    /**
+     * Returns true when the runtime used is PHP and Xdebug is loaded.
+     * @return boolean
+     */
+    public static function hasXDebug(): bool
+    {
+        return static::isPHP() && extension_loaded('xdebug');
+    }
 }

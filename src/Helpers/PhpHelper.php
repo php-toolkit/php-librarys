@@ -15,51 +15,30 @@ use Swoole\Coroutine;
 class PhpHelper extends EnvHelper
 {
     /**
-     * @param $name
-     * @param bool|false $throwException
-     * @return bool
-     * @throws ExtensionMissException
+     * @param $cb
+     * @param array $args
+     * @return mixed
      */
-    public static function extIsLoaded($name, $throwException = false): bool
+    public static function call($cb, array $args = [])
     {
-        $result = extension_loaded($name);
+        $args = array_values($args);
 
-        if (!$result && $throwException) {
-            throw new ExtensionMissException("Extension [$name] is not loaded.");
+        if (
+            (is_object($cb) && method_exists($cb, '__invoke')) ||
+            (is_string($cb) && function_exists($cb))
+        ) {
+            $ret = $cb(...$args);
+        } elseif (is_array($cb)) {
+            list($obj, $mhd) = $cb;
+
+            $ret = is_object($obj) ? $obj->$mhd(...$args) : $obj::$mhd(...$args);
+        } elseif (class_exists(Coroutine::class, false)) {
+            $ret = Coroutine::call_user_func_array($cb, $args);
+        } else {
+            $ret = call_user_func_array($cb, $args);
         }
 
-        return $result;
-    }
-
-    /**
-     * 检查多个扩展加载情况
-     * @param array $extensions
-     * @return array|bool
-     */
-    public static function checkExtList(array $extensions = array())
-    {
-        $allTotal = [];
-
-        foreach ((array)$extensions as $extension) {
-            if (!extension_loaded($extension)) {
-                # 没有加载此扩展，记录
-                $allTotal['no'][] = $extension;
-            } else {
-                $allTotal['yes'][] = $extension;
-            }
-        }
-
-        return $allTotal;
-    }
-
-    /**
-     * 返回加载的扩展
-     * @param bool $zend_extensions
-     * @return array
-     */
-    public static function getLoadedExtension($zend_extensions = false): array
-    {
-        return get_loaded_extensions($zend_extensions);
+        return $ret;
     }
 
     /**
@@ -104,121 +83,32 @@ class PhpHelper extends EnvHelper
     }
 
     /**
-     * setStrict
-     * @return  void
-     */
-    public static function setStrict(): void
-    {
-        error_reporting(32767);
-    }
-
-    /**
-     * setMuted
-     * @return  void
-     */
-    public static function setMuted(): void
-    {
-        error_reporting(0);
-    }
-
-    /**
-     * Returns true when the runtime used is PHP and Xdebug is loaded.
-     * @return boolean
-     */
-    public static function hasXDebug(): bool
-    {
-        return static::isPHP() && extension_loaded('xdebug');
-    }
-
-    /**
      * Converts an exception into a simple string.
      * @param \Exception|\Throwable $e the exception being converted
-     * @param bool $clearHtml
      * @param bool $getTrace
      * @param null|string $catcher
      * @return string the string representation of the exception.
      */
-    public static function exceptionToString($e, $getTrace = true, $clearHtml = false, $catcher = null): string
+    public static function exceptionToString($e, $getTrace = true, $catcher = null): string
     {
-        if (!$getTrace) {
-            $message = "Error: {$e->getMessage()}";
-        } else {
-            $type = $e instanceof \ErrorException ? 'Error' : 'Exception';
-            $catcher = $catcher ? "Catch By: $catcher\n" : '';
-            $message = sprintf(
-                "<h3>%s(%d): %s</h3>\n<pre><strong>File: %s(Line %d)</strong>%s \n\n%s</pre>",
-                $type,
-                $e->getCode(),
-                $e->getMessage(),
-                $e->getFile(),
-                $e->getLine(),
-                $catcher,
-                $e->getTraceAsString()
-            );
-
-            if ($clearHtml) {
-                $message = strip_tags($message);
-            }
-        }
-
-        return $message;
+        return PhpException::toString($e, $getTrace, $catcher);
     }
 
     /**
-     * @param string $cmd
+     * @param \Exception|\Throwable $e
+     * @param bool $getTrace
+     * @param null $catcher
+     * @return string
      */
-    public static function execInBackground($cmd)
+    public static function exceptionToJson($e, $getTrace = true, $catcher = null): string
     {
-        if (strpos(PHP_OS, 'Windows') === 0) {
-            pclose(popen('start /B ' . $cmd, 'r'));
-        } else {
-            exec($cmd . ' > /dev/null &');
-        }
-    }
-
-    /**
-     * @param string $pathname
-     * @param int|string $projectId This must be a one character
-     * @return int|string
-     * @throws \LogicException
-     */
-    public static function ftok($pathname, $projectId)
-    {
-        if (strlen($projectId) > 1) {
-            throw new \LogicException("the project id must be a one character(int/str). Input: $projectId");
-        }
-
-        if (function_exists('ftok')) {
-            return ftok($pathname, $projectId);
-        }
-
-        if (!$st = @stat($pathname)) {
-            return -1;
-        }
-
-        $key = sprintf('%u', ($st['ino'] & 0xffff) | (($st['dev'] & 0xff) << 16) | (($projectId & 0xff) << 24));
-
-        return $key;
-    }
-
-    /**
-     * 本次请求开始时间
-     * @param bool $float
-     * @return mixed
-     */
-    public static function requestTime($float = true)
-    {
-        if ((bool)$float) {
-            return $_SERVER['REQUEST_TIME_FLOAT'];
-        }
-
-        return $_SERVER['REQUEST_TIME'];
+        return PhpException::toJson($e, $getTrace, $catcher);
     }
 
     /**
      * @return array
      */
-    public static function userConstants(): array
+    public static function getUserConstants(): array
     {
         $const = get_defined_constants(true);
 
@@ -256,29 +146,61 @@ class PhpHelper extends EnvHelper
     }
 
     /**
-     * @param $cb
-     * @param array $args
+     * @param $var
      * @return mixed
      */
-    public static function call($cb, array $args = [])
+    public static function exportVar($var)
     {
-        $args = array_values($args);
+        return var_export($var, true);
+    }
 
-        if (
-            (is_object($cb) && method_exists($cb, '__invoke')) ||
-            (is_string($cb) && function_exists($cb))
-        ) {
-            $ret = $cb(...$args);
-        } elseif (is_array($cb)) {
-            list($obj, $mhd) = $cb;
 
-            $ret = is_object($obj) ? $obj->$mhd(...$args) : $obj::$mhd(...$args);
-        } elseif (class_exists(Coroutine::class, false)) {
-            $ret = Coroutine::call_user_func_array($cb, $args);
-        } else {
-            $ret = call_user_func_array($cb, $args);
+    /**
+     * @param $name
+     * @param bool|false $throwException
+     * @return bool
+     * @throws ExtensionMissException
+     */
+    public static function extIsLoaded($name, $throwException = false): bool
+    {
+        $result = extension_loaded($name);
+
+        if (!$result && $throwException) {
+            throw new ExtensionMissException("Extension [$name] is not loaded.");
         }
 
-        return $ret;
+        return $result;
     }
+
+    /**
+     * 检查多个扩展加载情况
+     * @param array $extensions
+     * @return array|bool
+     */
+    public static function checkExtList(array $extensions = array())
+    {
+        $allTotal = [];
+
+        foreach ($extensions as $extension) {
+            if (!extension_loaded($extension)) {
+                # 没有加载此扩展，记录
+                $allTotal['no'][] = $extension;
+            } else {
+                $allTotal['yes'][] = $extension;
+            }
+        }
+
+        return $allTotal;
+    }
+
+    /**
+     * 返回加载的扩展
+     * @param bool $zend_extensions
+     * @return array
+     */
+    public static function getLoadedExtension($zend_extensions = false): array
+    {
+        return get_loaded_extensions($zend_extensions);
+    }
+
 }

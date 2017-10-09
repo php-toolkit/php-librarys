@@ -29,7 +29,7 @@ class ProcessHelper
                 $pid = getmypid(); // can also use: posix_getpid()
 
                 if (posix_setsid() < 0) {
-                    CliHelper::stderr('posix_setsid() execute failed! exiting');
+                    Cli::stderr('posix_setsid() execute failed! exiting');
                 }
 
                 // chdir('/');
@@ -37,7 +37,7 @@ class ProcessHelper
                 break;
 
             case -1: // fork failed.
-                CliHelper::stderr('Fork new process is failed! exiting');
+                Cli::stderr('Fork new process is failed! exiting');
                 break;
 
             default: // at parent
@@ -101,7 +101,7 @@ class ProcessHelper
             }
 
         } else {
-            CliHelper::stderr("Fork child process failed! exiting.\n");
+            Cli::stderr("Fork child process failed! exiting.\n");
         }
 
         return $info;
@@ -212,20 +212,20 @@ class ProcessHelper
     {
         // do stop
         if (!self::kill($signal)) {
-            CliHelper::stderr("Send stop signal to the $name(PID:$pid) failed!");
+            Cli::stderr("Send stop signal to the $name(PID:$pid) failed!");
 
             return false;
         }
 
         // not wait, only send signal
         if ($waitTime <= 0) {
-            CliHelper::stdout("The $name process stopped");
+            Cli::stdout("The $name process stopped");
 
             return true;
         }
 
         $startTime = time();
-        CliHelper::stdout('Stopping .', false);
+        Cli::stdout('Stopping .', false);
 
         // wait exit
         while (true) {
@@ -234,11 +234,11 @@ class ProcessHelper
             }
 
             if (time() - $startTime > $waitTime) {
-                CliHelper::stderr("Stop the $name(PID:$pid) failed(timeout)!");
+                Cli::stderr("Stop the $name(PID:$pid) failed(timeout)!");
                 break;
             }
 
-            CliHelper::stdout('.', false);
+            Cli::stdout('.', false);
             sleep(1);
         }
 

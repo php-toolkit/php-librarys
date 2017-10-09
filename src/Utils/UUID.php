@@ -8,7 +8,7 @@
  * @link https://github.com/webpatser/laravel-uuid
  */
 
-namespace Inhere\Library\Helpers;
+namespace Inhere\Library\Utils;
 
 use Inhere\Exceptions\InvalidArgumentException;
 

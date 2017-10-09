@@ -6,7 +6,7 @@
  * Time: 下午11:55
  */
 
-namespace Inhere\Library\Helpers;
+namespace Inhere\Library\Utils;
 
 /**
  * Usage:
@@ -79,7 +79,7 @@ class Token
     public static function hash($password, $cost = 11)
     {
         if (false === ($bytes = openssl_random_pseudo_bytes(17, $cStrong)) || false === $cStrong) {
-            throw new \RuntimeException();
+            throw new \RuntimeException('exec gen hash error!');
         }
 
         /* To generate the salt, first generate enough random bytes. Because
@@ -152,7 +152,7 @@ class Token
      * 生成guid
      * @return string
      */
-    public static function guid()
+    public static function GUid()
     {
         mt_srand((double)microtime() * 10000);
 

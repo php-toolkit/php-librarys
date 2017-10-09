@@ -2,6 +2,8 @@
 
 namespace Inhere\Library\Helpers;
 
+use Inhere\Library\Utils\UUID;
+
 /**
  * Class StringHelper
  * @package Inhere\Library\Helpers

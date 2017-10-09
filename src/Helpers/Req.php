@@ -12,8 +12,22 @@ namespace Inhere\Library\Helpers;
  * Class RequestHelper
  * @package Inhere\Library\Helpers
  */
-class RequestHelper
+class Req
 {
+    /**
+     * 本次请求开始时间
+     * @param bool $float
+     * @return mixed
+     */
+    public static function time($float = true)
+    {
+        if ((bool)$float) {
+            return $_SERVER['REQUEST_TIME_FLOAT'];
+        }
+
+        return $_SERVER['REQUEST_TIME'];
+    }
+
     /**
      * Get a value from $_POST / $_GET
      * if unavailable, take a default value

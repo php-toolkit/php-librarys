@@ -12,7 +12,6 @@
 
 namespace Inhere\Library\DI;
 
-use Inhere\Exceptions\DependencyResolutionException;
 use Inhere\Exceptions\NotFoundException;
 use Inhere\Library\Helpers\Obj;
 use Inhere\Library\Traits\NameAliasTrait;
@@ -207,9 +206,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      *      'service3 id'  => ...
      * ]
      * @return $this
-     * @throws NotFoundException
      * @throws \InvalidArgumentException
-     * @throws DependencyResolutionException
      */
     public function sets(array $services)
     {
@@ -326,7 +323,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
 
             try {
                 $reflection = new \ReflectionClass($class);
-            } catch (\ReflectionException $e) {
+            } catch (\Exception $e) {
                 throw new \RuntimeException($e->getMessage());
             }
 
@@ -371,7 +368,6 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * - 其他的则总是返回新的实例
      * @param  string $id 要获取的服务组件id
      * @return mixed
-     * @throws NotFoundException
      */
     public function get($id)
     {

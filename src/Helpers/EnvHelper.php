@@ -14,19 +14,9 @@ namespace Inhere\Library\Helpers;
  */
 class EnvHelper
 {
-    /**
-     * Get PHP version
-     * @return string
-     */
-    public static function getVersion(): string
-    {
-        return defined('HHVM_VERSION') ? HHVM_VERSION : PHP_VERSION;
-    }
-
 ////////////////////////////////////////
 ///  system env
 ////////////////////////////////////////
-
 
     /**
      * @return bool
@@ -51,6 +41,10 @@ class EnvHelper
      */
     public static function isWin(): bool
     {
+        return self::isWindows();
+    }
+    public static function isWindows(): bool
+    {
         return stripos(PHP_OS, 'WIN') !== false;
     }
 
@@ -62,9 +56,45 @@ class EnvHelper
         return stripos(PHP_OS, 'Darwin') !== false;
     }
 
+    /**
+     * @return bool
+     */
+    public static function isRoot(): bool
+    {
+        return posix_getuid() === 0;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getHostname()
+    {
+        return php_uname('n');
+    }
+
+    /**
+     * @return string
+     */
+    public static function getNullDevice()
+    {
+        if (self::isUnix()) {
+            return '/dev/null';
+        }
+
+        return 'NUL';
+    }
 ////////////////////////////////////////
 ///  php env
 ////////////////////////////////////////
+
+    /**
+     * Get PHP version
+     * @return string
+     */
+    public static function getVersion(): string
+    {
+        return defined('HHVM_VERSION') ? HHVM_VERSION : PHP_VERSION;
+    }
 
     /**
      * isEmbed
@@ -136,7 +166,6 @@ class EnvHelper
     {
         return !static::isHHVM();
     }
-
 
     /**
      * setStrict

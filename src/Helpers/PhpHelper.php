@@ -60,6 +60,9 @@ class PhpHelper extends EnvHelper
             $info['memory'] = number_format(($endMem - $startMem) / 1024, 2) . 'kb';
         }
 
+        $peakMem = memory_get_peak_usage(true) / 1024 / 1024;
+        $info['peakMemory'] = number_format($peakMem, 2) . 'Mb';
+
         return $info;
     }
 
@@ -92,6 +95,11 @@ class PhpHelper extends EnvHelper
     public static function exceptionToString($e, $getTrace = true, $catcher = null): string
     {
         return PhpException::toString($e, $getTrace, $catcher);
+    }
+
+    public static function exceptionToHtml($e, $getTrace = true, $catcher = null): string
+    {
+        return PhpException::toHtml($e, $getTrace, $catcher);
     }
 
     /**

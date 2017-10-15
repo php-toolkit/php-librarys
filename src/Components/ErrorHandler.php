@@ -11,6 +11,7 @@
 
 namespace Inhere\Library\Components;
 
+use Inhere\Library\Helpers\Obj;
 use Inhere\Library\Helpers\PhpHelper;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
@@ -28,7 +29,7 @@ use Monolog\Handler\AbstractHandler;
  */
 class ErrorHandler
 {
-    private $logger;
+    protected $logger;
 
     private $previousExceptionHandler;
     private $uncaughtExceptionLevel;
@@ -38,16 +39,21 @@ class ErrorHandler
     private $handleOnlyReportedErrors;
 
     private $hasFatalErrorHandler;
-    private $fatalLevel;
-    private $reservedMemory;
-    private static $fatalErrors = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
+    protected $fatalLevel;
+    protected $reservedMemory;
+    public static $fatalErrors = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
+
+    private $exitOnHandled = true;
 
     /**
      * ErrorHandler constructor.
      * @param LoggerInterface $logger
+     * @param array $options
      */
-    public function __construct(LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger, array $options = [])
     {
+        Obj::smartConfigure($this, $options);
+
         $this->logger = $logger;
     }
 
@@ -79,19 +85,31 @@ class ErrorHandler
         return $this;
     }
 
+    /**
+     * @param null $level
+     * @param bool $callPrevious
+     */
     public function registerExceptionHandler($level = null, $callPrevious = true)
     {
-        $prev = set_exception_handler(array($this, 'handleException'));
+        $prev = set_exception_handler([$this, 'handleException']);
         $this->uncaughtExceptionLevel = $level;
+
         if ($callPrevious && $prev) {
             $this->previousExceptionHandler = $prev;
         }
     }
 
-    public function registerErrorHandler(array $levelMap = array(), $callPrevious = true, $errorTypes = -1, $handleOnlyReportedErrors = true)
+    /**
+     * @param array $levelMap
+     * @param bool $callPrevious
+     * @param int $errorTypes
+     * @param bool $handleOnlyReportedErrors
+     */
+    public function registerErrorHandler(array $levelMap = [], $callPrevious = true, $errorTypes = -1, $handleOnlyReportedErrors = true)
     {
-        $prev = set_error_handler(array($this, 'handleError'), $errorTypes);
+        $prev = set_error_handler([$this, 'handleError'], $errorTypes);
         $this->errorLevelMap = array_replace($this->defaultErrorLevelMap(), $levelMap);
+
         if ($callPrevious) {
             $this->previousErrorHandler = $prev ?: true;
         }
@@ -99,9 +117,13 @@ class ErrorHandler
         $this->handleOnlyReportedErrors = $handleOnlyReportedErrors;
     }
 
+    /**
+     * @param null $level
+     * @param int $reservedMemorySize
+     */
     public function registerFatalHandler($level = null, $reservedMemorySize = 20)
     {
-        register_shutdown_function(array($this, 'handleFatalError'));
+        register_shutdown_function([$this, 'handleFatalError']);
 
         $this->reservedMemory = str_repeat(' ', 1024 * $reservedMemorySize);
         $this->fatalLevel = $level;
@@ -130,7 +152,6 @@ class ErrorHandler
     }
 
     /**
-     * @private
      * @param \Throwable $e
      */
     public function handleException($e)
@@ -138,14 +159,16 @@ class ErrorHandler
         $this->logger->log(
             $this->uncaughtExceptionLevel ?? LogLevel::ERROR,
             sprintf('Uncaught Exception %s: "%s" at %s line %s', get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()),
-            array('exception' => $e)
+            ['exception' => $e]
         );
 
         if ($this->previousExceptionHandler) {
             PhpHelper::call($this->previousExceptionHandler, $e);
         }
 
-        exit(255);
+        if ($this->exitOnHandled) {
+            exit(255);
+        }
     }
 
     /**
@@ -166,7 +189,13 @@ class ErrorHandler
         // fatal error codes are ignored if a fatal error handler is present as well to avoid duplicate log entries
         if (!$this->hasFatalErrorHandler || !in_array($code, self::$fatalErrors, true)) {
             $level = $this->errorLevelMap[$code] ?? LogLevel::CRITICAL;
-            $this->logger->log($level, self::codeToString($code).': '.$message, array('code' => $code, 'message' => $message, 'file' => $file, 'line' => $line));
+            $this->logger->log($level, self::codeToString($code).': '.$message, [
+                'code' => $code,
+                'message' => $message,
+                'file' => $file,
+                'line' => $line,
+                'catcher' => __METHOD__,
+            ]);
         }
 
         if ($this->previousErrorHandler === true) {
@@ -174,13 +203,14 @@ class ErrorHandler
         }
 
         if ($this->previousErrorHandler) {
-            return call_user_func($this->previousErrorHandler, $code, $message, $file, $line, $context);
+            return PhpHelper::call($this->previousErrorHandler, [$code, $message, $file, $line, $context]);
         }
 
         return false;
     }
 
     /**
+     * handleFatalError
      * @private
      */
     public function handleFatalError()
@@ -192,7 +222,12 @@ class ErrorHandler
             $this->logger->log(
                 $this->fatalLevel ?? LogLevel::ALERT,
                 'Fatal Error ('.self::codeToString($lastError['type']).'): '.$lastError['message'],
-                array('code' => $lastError['type'], 'message' => $lastError['message'], 'file' => $lastError['file'], 'line' => $lastError['line'])
+                [
+                    'code' => $lastError['type'],
+                    'message' => $lastError['message'],
+                    'file' => $lastError['file'],
+                    'line' => $lastError['line']
+                ]
             );
 
             if ($this->logger instanceof Logger) {
@@ -205,7 +240,7 @@ class ErrorHandler
         }
     }
 
-    private static function codeToString($code)
+    public static function codeToString($code)
     {
         switch ($code) {
             case E_ERROR:
@@ -241,5 +276,21 @@ class ErrorHandler
         }
 
         return 'Unknown PHP error';
+    }
+
+    /**
+     * @return bool
+     */
+    public function isExitOnHandled(): bool
+    {
+        return $this->exitOnHandled;
+    }
+
+    /**
+     * @param bool $exitOnHandled
+     */
+    public function setExitOnHandled($exitOnHandled)
+    {
+        $this->exitOnHandled = (bool)$exitOnHandled;
     }
 }

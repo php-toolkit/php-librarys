@@ -58,6 +58,33 @@ class PhpException
     }
 
     /**
+     * Converts an exception into a simple array.
+     * @param \Exception|\Throwable $e the exception being converted
+     * @param bool $getTrace
+     * @param null|string $catcher
+     * @return array
+     */
+    public static function toArray($e, $getTrace = true, $catcher = null)
+    {
+        $data = [
+            'class' => get_class($e),
+            'message' => $e->getMessage(),
+            'code' => $e->getCode(),
+            'file' => $e->getFile().':'.$e->getLine(),
+        ];
+
+        if ($catcher) {
+            $data['catcher'] = $catcher;
+        }
+
+        if ($getTrace) {
+            $data['trace'] = $e->getTrace();
+        }
+
+        return $data;
+    }
+
+    /**
      * Converts an exception into a json string.
      * @param \Exception|\Throwable $e the exception being converted
      * @param bool $getTrace
@@ -67,21 +94,29 @@ class PhpException
     public static function toJson($e, $getTrace = true, $catcher = null)
     {
         if (!$getTrace) {
-            $message = "Error: {$e->getMessage()}";
+            $message = json_encode(['msg' => "Error: {$e->getMessage()}"]);
         } else {
             $map = [
                 'code' => $e->getCode() ?: 500,
                 'msg' => sprintf(
-                    '%s(%d): %s, File: %s(Line %d)%s',
+                    '%s(%d): %s, File: %s(Line %d)',
                     get_class($e),
                     $e->getCode(),
                     $e->getMessage(),
                     $e->getFile(),
-                    $e->getLine(),
-                    $catcher ? ", Catch By: $catcher" : ''
+                    $e->getLine()
                 ),
                 'data' => $e->getTrace()
             ];
+
+            if ($catcher) {
+                $map['catcher'] = $catcher;
+            }
+
+            if ($getTrace) {
+                $map['trace'] = $e->getTrace();
+            }
+
             $message = json_encode($map);
         }
 

@@ -50,18 +50,21 @@ class PhpHelper extends EnvHelper
      */
     public static function runtime($startTime, $startMem, array $info = [])
     {
-        // 显示运行时间
-        $info['runtime'] = number_format((microtime(true) - $startTime) * 1000, 2)  . 'ms';
+        $info['startTime'] = $startTime;
+        $info['endTime'] = microtime(true);
+
+        // 计算运行时间
+        $info['runtime'] = number_format(($info['endTime'] - $startTime) * 1000, 3)  . 'ms';
 
         if ($startMem) {
             $startMem = array_sum(explode(' ', $startMem));
             $endMem = array_sum(explode(' ', memory_get_usage()));
 
-            $info['memory'] = number_format(($endMem - $startMem) / 1024, 2) . 'kb';
+            $info['memory'] = number_format(($endMem - $startMem) / 1024, 3) . 'kb';
         }
 
         $peakMem = memory_get_peak_usage(true) / 1024 / 1024;
-        $info['peakMemory'] = number_format($peakMem, 2) . 'Mb';
+        $info['peakMemory'] = number_format($peakMem, 3) . 'Mb';
 
         return $info;
     }

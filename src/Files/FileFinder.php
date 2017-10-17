@@ -51,7 +51,7 @@ class FileFinder extends StdObject
      * @var array
      */
     protected $include = [
-//        'file' => ['README.md'],
+//        'file' => ['README.md'], // file name
 //        'ext' => [
         // 'js','css',
         // 'ttf','svg', 'eot', 'woff', 'woff2',
@@ -135,7 +135,7 @@ class FileFinder extends StdObject
         return $this;
     }
 
-    public function find($recursive = false, $path = '', $pathPrefix = '')
+    public function find($recursive = true, $path = '', $pathPrefix = '')
     {
         return $this->findAll($recursive, $path, $pathPrefix);
     }
@@ -147,7 +147,7 @@ class FileFinder extends StdObject
      * @return $this
      * @throws InvalidArgumentException
      */
-    public function findAll($recursive = false, $path = '', $pathPrefix = '')
+    public function findAll($recursive = true, $path = '', $pathPrefix = '')
     {
         $path = $path ?: $this->sourcePath;
         $pathPrefix = $pathPrefix ?: $this->pathPrefix;
@@ -314,6 +314,220 @@ class FileFinder extends StdObject
         return true;
     }
 
+    ////////////////////////////// helper method //////////////////////////////
+
+    /**
+     * @param mixed $data
+     * @param string $type
+     * @return $this
+     */
+    public function include($data, $type = 'dir')
+    {
+        switch ($type) {
+            case 'dir':
+                $this->includeDir($data);
+                break;
+            case 'file':
+                $this->includeFile($data);
+                break;
+            case 'ext':
+                $this->includeExt($data);
+                break;
+            default:
+                break;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string|array $file
+     * @return self
+     */
+    public function includeFile($file)
+    {
+        if (is_string($file)) {
+            $file = [$file];
+        }
+
+        if (is_array($file)) {
+            foreach ($file as $name) {
+                if (in_array($name, $this->include['file'], true)) {
+                    continue;
+                }
+
+                $this->include['file'][] = trim($name);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string|array $ext
+     * @return self
+     */
+    public function includeExt($ext)
+    {
+        if (is_string($ext)) {
+            $ext = [$ext];
+        }
+
+        if (is_array($ext)) {
+            foreach ($ext as $name) {
+                if (in_array($name, $this->include['ext'], true)) {
+                    continue;
+                }
+
+                $this->include['ext'][] = trim($name, '.');
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string|array $dir
+     * @return self
+     */
+    public function includeDir($dir)
+    {
+        if (is_string($dir)) {
+            $dir = [$dir];
+        }
+
+        if (is_array($dir)) {
+            foreach ($dir as $name) {
+                if (in_array($name, $this->include['dir'], true)) {
+                    continue;
+                }
+
+                $this->include['dir'][] = trim($name);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return self
+     */
+    public function ignoreVCS()
+    {
+        return $this->excludeDir(['.git', '.svn'])->excludeFile('.gitignore');
+    }
+
+    /**
+     * @param mixed $data
+     * @param string $type
+     * @return $this
+     */
+    public function exclude($data, $type = 'dir')
+    {
+        switch ($type) {
+            case 'dir':
+                $this->excludeDir($data);
+                break;
+            case 'file':
+                $this->excludeFile($data);
+                break;
+            case 'ext':
+                $this->excludeExt($data);
+                break;
+            default:
+                break;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string|array $file
+     * @return self
+     */
+    public function notName($file)
+    {
+        return $this->excludeFile($file);
+    }
+
+    /**
+     * @param string|array $file
+     * @return self
+     */
+    public function notFile($file)
+    {
+        return $this->excludeFile($file);
+    }
+
+    /**
+     * @param string|array $file
+     * @return self
+     */
+    public function excludeFile($file)
+    {
+        if (is_string($file)) {
+            $file = [$file];
+        }
+
+        if (is_array($file)) {
+            foreach ($file as $name) {
+                if (in_array($name, $this->exclude['file'], true)) {
+                    continue;
+                }
+
+                $this->exclude['file'][] = trim($name);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string|array $ext
+     * @return self
+     */
+    public function excludeExt($ext)
+    {
+        if (is_string($ext)) {
+            $ext = [$ext];
+        }
+
+        if (is_array($ext)) {
+            foreach ($ext as $name) {
+                if (in_array($name, $this->exclude['ext'], true)) {
+                    continue;
+                }
+
+                $this->exclude['ext'][] = trim($name);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string|array $dir
+     * @return self
+     */
+    public function excludeDir($dir)
+    {
+        if (is_string($dir)) {
+            $dir = [$dir];
+        }
+
+        if (is_array($dir)) {
+            foreach ($dir as $name) {
+                if (in_array($name, $this->exclude['dir'], true)) {
+                    continue;
+                }
+
+                $this->exclude['dir'][] = trim($name);
+            }
+        }
+
+        return $this;
+    }
+
     ////////////////////////////// getter/setter method //////////////////////////////
 
     /**
@@ -322,6 +536,16 @@ class FileFinder extends StdObject
     public function getSourcePath()
     {
         return $this->sourcePath;
+    }
+
+    /**
+     * @param $sourcePath
+     * @return self
+     * @throws InvalidArgumentException
+     */
+    public function inDir($sourcePath)
+    {
+        return $this->setSourcePath($sourcePath);
     }
 
     /**
@@ -336,7 +560,7 @@ class FileFinder extends StdObject
                 throw new InvalidArgumentException('The source path must be an existing dir path. Input: ' . $sourcePath);
             }
 
-            $this->sourcePath = $sourcePath;
+            $this->sourcePath = realpath($sourcePath);
         }
 
         return $this;

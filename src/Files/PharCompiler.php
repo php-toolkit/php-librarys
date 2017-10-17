@@ -19,6 +19,8 @@ class PharCompiler
     private $pharName;
     private $pharFile;
 
+    public $basePath;
+
     /**
      * Compiles psysh into a single phar file.
      * @param string $pharFile The full path to the file to create
@@ -40,25 +42,24 @@ class PharCompiler
         $phar->startBuffering();
 
         $finder = FileFinder::make()
-            ->files()
-            ->ignoreVCS(true)
-            ->name('*.php')
-            ->notName('Compiler.php')
-            ->notName('Autoloader.php')
-            ->in(__DIR__ . '/..');
+            ->ignoreVCS()
+            ->includeExt('php')
+            ->notName(['Compiler.php', 'Autoloader.php'])
+            ->inDir(__DIR__ . '/..')
+            ->findAll();
 
-        foreach ($finder as $file) {
+        foreach ($finder->getFiles() as $file) {
             $this->addFile($phar, $file);
         }
 
         $finder = FileFinder::make()
-            ->files()
-            ->ignoreVCS(true)
-            ->name('*.php')
+            ->ignoreVCS()
+            ->includeExt('php')
             ->exclude('Tests')
-            ->in(__DIR__ . '/../../build-vendor');
+            ->inDir(__DIR__ . '/../../build-vendor')
+            ->findAll();
 
-        foreach ($finder as $file) {
+        foreach ($finder->getFiles() as $file) {
             $this->addFile($phar, $file);
         }
 

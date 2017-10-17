@@ -161,7 +161,9 @@ class Cli
         $fullScript = implode(' ', $params);
         $script = array_shift($params);
 
-        while (list(, $p) = each($params)) {
+        // each() will deprecated at 7.2 so,there use current and next instead it.
+        // while (list(,$p) = each($params)) {
+        while (false !== ($p = current($params))) {
             // is options
             if ($p{0} === '-') {
                 $isLong = false;
@@ -187,7 +189,8 @@ class Cli
                 $nxp = current($params);
 
                 if ($value === true && $nxp !== false && $nxp{0} !== '-' && !in_array($opt, $noValues, true)) {
-                    list(, $value) = each($params);
+                    // list(,$value) = each($params);
+                    $value = current($params); next($params);
 
                     // short-opt: bool opts. like -e -abc
                 } elseif (!$isLong && $value === true) {

@@ -100,7 +100,6 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
 
     const DEFAULT_FILE_KEY = '__default';
 
-
     /**
      * {@inheritDoc}
      */
@@ -209,7 +208,6 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
     /**
      * @param string $key
      * @return mixed
-     * @throws \Inhere\Exceptions\NotFoundException
      */
     protected function findTranslationText($key)
     {

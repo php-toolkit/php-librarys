@@ -42,6 +42,16 @@ class PhpHelper extends EnvHelper
     }
 
     /**
+     * @param string $name
+     * @param null $default
+     * @return mixed
+     */
+    public static function serverParam($name, $default = null)
+    {
+        return Req::serverParam($name, $default);
+    }
+
+    /**
      * 获取资源消耗
      * @param int $startTime
      * @param int|float $startMem

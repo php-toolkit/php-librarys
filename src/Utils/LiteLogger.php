@@ -10,8 +10,12 @@ namespace Inhere\Library\Utils;
 
 use Inhere\Exceptions\FileSystemException;
 use Inhere\Library\Files\Directory;
+use Inhere\Library\Helpers\Arr;
+use Inhere\Library\Helpers\Obj;
 use Inhere\Library\Helpers\PhpHelper;
+use Inhere\Library\Traits\LogProfileTrait;
 use Psr\Log\LoggerInterface;
+use Psr\Log\LoggerTrait;
 
 /**
  * simple file logger handler
@@ -29,6 +33,8 @@ use Psr\Log\LoggerInterface;
  */
 class LiteLogger implements LoggerInterface
 {
+    use LoggerTrait, LogProfileTrait;
+
     // * Log runtime info
     const TRACE = 50;
 
@@ -59,6 +65,9 @@ class LiteLogger implements LoggerInterface
     // Urgent alert.
     const EMERGENCY = 600;
 
+    // default format
+    const DEFAULT_FORMAT = "[%datetime%] [%channel%.%level_name%] {message} {context} {extra}\n";
+
     /**
      * Logging levels from syslog protocol defined in RFC 5424
      * @var array $levels Logging levels
@@ -77,27 +86,13 @@ class LiteLogger implements LoggerInterface
     );
 
     /**
-     * logger instance list
-     * @var static[]
-     */
-    private static $loggers = [];
-
-    /**
-     * @var bool
-     */
-    private static $shutdownRegistered = false;
-
-    /**
      * log text records list
      * @var array[]
      */
-    private $_records = [];
+    private $records = [];
 
-    /**
-     * log profile records
-     * @var array[]
-     */
-    private $profiles = [];
+    /** @var int  */
+    private $recordSize = 0;
 
     /**
      * 日志实例名称 channel name
@@ -135,20 +130,10 @@ class LiteLogger implements LoggerInterface
      */
     protected $filenameHandler;
 
-    /**
-     * @var array
-     */
-    protected $levels = [];
-
-    /**
-     * log Level
-     * @var int
-     */
+    /** @var int log Level */
     protected $logLevel = 0;
 
-    /**
-     * @var bool
-     */
+    /** @var bool  */
     public $splitByCopy = true;
 
     /**
@@ -187,184 +172,21 @@ class LiteLogger implements LoggerInterface
      */
     public $format = "[%datetime%] [%level_name%] %message% %context%\n";
 
-    /**
-     * default format
-     */
-    const DEFAULT_FORMAT = "[%datetime%] [%channel%.%level_name%] {message} {context} {extra}\n";
+    /** @var bool  */
+    private $initialized = false;
 
 //////////////////////////////////////////////////////////////////////
 /// loggers manager
 //////////////////////////////////////////////////////////////////////
 
     /**
-     * create new instance or get exists instance
-     * @param string|array $config
-     * @param string $name
+     * create new logger instance
+     * @param array $config
      * @return static
      */
-    public static function make(array $config = [], $name = '')
+    public static function make(array $config = [])
     {
-        if (!is_array($config)) {
-            throw new \InvalidArgumentException('Logger config is must be an array and not allow empty.');
-        }
-
-        $name = $name ?: ($config['name'] ?? '');
-
-        if (!$name) {
-            throw new \InvalidArgumentException('Logger name is required.');
-        }
-
-        if (!isset(self::$loggers[$name])) {
-            self::$loggers[$name] = new static($config, $name);
-        }
-
-        // register shutdown function
-        if (!self::$shutdownRegistered) {
-            register_shutdown_function(function () {
-                // make regular flush before other shutdown functions, which allows session data collection and so on
-                self::flushAll();
-
-                // make sure log entries written by shutdown functions are also flushed
-                // ensure "flush()" is called last when there are multiple shutdown functions
-                register_shutdown_function([self::class, 'flushAll'], true);
-            });
-
-            self::$shutdownRegistered = true;
-        }
-
-        return self::$loggers[$name];
-    }
-
-    /**
-     * @param string $name
-     * @return bool
-     */
-    public static function has(string $name)
-    {
-        return isset(self::$loggers[$name]);
-    }
-
-    /**
-     * exists logger instance
-     * @return bool
-     */
-    public static function count()
-    {
-        return count(self::$loggers) > 0;
-    }
-
-    /**
-     * @param $name
-     * @param bool $make
-     * @return static|null
-     */
-    public static function get(string $name, bool $make = true)
-    {
-        if (self::has($name)) {
-            return self::$loggers[$name];
-        }
-
-        return $make ? self::make($name) : null;
-    }
-
-    /**
-     * @return array
-     */
-    public static function getLoggerNames()
-    {
-        return array_keys(self::$loggers);
-    }
-
-    /**
-     * del logger
-     * @param  string $name
-     * @param  bool|boolean $flush
-     * @return bool
-     */
-    public static function del(string $name, bool $flush = true)
-    {
-        if (isset(self::$loggers[$name])) {
-            $logger = self::$loggers[$name];
-
-            return $flush ? $logger->flush() : true;
-        }
-
-        return false;
-    }
-
-    /**
-     * fast get logger instance
-     * @param string $name
-     * @param array $args
-     * @return LiteLogger
-     */
-    public static function __callStatic(string $name, array $args)
-    {
-        $args['name'] = $name;
-
-        return self::make($args);
-    }
-
-    /**
-     * save all logger's info to files.
-     */
-    public static function flushAll()
-    {
-        foreach (self::$loggers as $logger) {
-            $logger->flush();
-        }
-    }
-
-
-    /**
-     * Gets all supported logging levels.
-     * @return array Assoc array with human-readable level names => level codes.
-     */
-    public static function getLevelMap()
-    {
-        return static::$levelMap;
-    }
-
-    /**
-     * @param int|string $level
-     * @return mixed|string
-     */
-    public static function getLevelName($level)
-    {
-        if (is_string($level) && !is_numeric($level)) {
-            return $level;
-        }
-
-        return self::$levelMap[$level] ?? 'info';
-    }
-
-    /**
-     * @param string $name
-     * @return mixed|string
-     */
-    public static function getLevelByName($name)
-    {
-        static $nameMap;
-
-        if (is_numeric($name)) {
-            return (int)$name;
-        }
-
-        if (!$nameMap) {
-            $nameMap = array_flip(self::$levelMap);
-        }
-
-        $name = strtolower($name);
-
-        return $nameMap[$name] ?? 0;
-    }
-
-    /**
-     * @return static[]
-     */
-    public static function getLoggers()
-    {
-        return self::$loggers;
+        return new static($config);
     }
 
 //////////////////////////////////////////////////////////////////////
@@ -374,32 +196,13 @@ class LiteLogger implements LoggerInterface
     /**
      * create new logger instance
      * @param array $config
-     * @param null|string $name
      */
-    public function __construct(array $config = [], $name = null)
+    public function __construct(array $config = [])
     {
-        if (!$name) {
+        Obj::smartConfigure($this, $config);
+
+        if (!$this->name) {
             throw new \InvalidArgumentException('Logger name is required.');
-        }
-
-        $this->name = $name;
-
-        // attributes
-        $attributes = [
-            'logConsole', 'logThreshold', 'debug', 'logFile', 'basePath', 'subFolder',
-            'format', 'splitType', 'splitByCopy', 'logLevel', 'levels'
-        ];
-
-        foreach ($attributes as $prop) {
-            if (isset($config[$prop])) {
-                $setter = 'set' . ucfirst($prop);
-
-                if (method_exists($this, $setter)) {
-                    $this->$setter($config[$prop]);
-                } else {
-                    $this->$prop = $config[$prop];
-                }
-            }
         }
 
         $this->init();
@@ -414,6 +217,12 @@ class LiteLogger implements LoggerInterface
         if ($this->maxSize < 1) {
             $this->maxSize = 4;
         }
+
+        if (!$this->initialized) {
+            // __destructor() doesn't get called on Fatal errors
+            register_shutdown_function([$this, 'flush']);
+            $this->initialized = true;
+        }
     }
 
     /**
@@ -424,48 +233,9 @@ class LiteLogger implements LoggerInterface
         $this->flush();
     }
 
-    /**
-     * System is unusable.
-     * @param string $message
-     * @param array $context
-     * @return void
-     */
-    public function emergency($message, array $context = array())
-    {
-        $this->log(self::EMERGENCY, $message, $context);
-    }
-
     public function emerg($message, array $context = [])
     {
         $this->log(self::EMERGENCY, $message, $context);
-    }
-
-    /**
-     * Critical conditions.
-     * Example: Application component unavailable, unexpected exception.
-     * @param string $message
-     * @param array $context
-     * @return void
-     */
-    public function critical($message, array $context = array())
-    {
-        $this->log(self::CRITICAL, $message, $context);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function error($message, array $context = [])
-    {
-        $this->log(self::ERROR, $message, $context);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function alert($message, array $context = [])
-    {
-        $this->log(self::ALERT, $message, $context);
     }
 
     /**
@@ -477,7 +247,6 @@ class LiteLogger implements LoggerInterface
     {
         $this->exception($e, $context, $logRequest);
     }
-
     public function exception(\Exception $e, array $context = [], $logRequest = true)
     {
         $message = sprintf(
@@ -493,12 +262,12 @@ class LiteLogger implements LoggerInterface
         // If log the request info
         if ($logRequest) {
             $message .= "\nRequest Info:\n  " . implode("\n  ", [
-                    'HOST ' . $this->getServer('HTTP_HOST'),
-                    'IP ' . $this->getServer('REMOTE_ADDR'),
-                    'METHOD ' . $this->getServer('REQUEST_METHOD'),
-                    'URI ' . $this->getServer('REQUEST_URI'),
-                    'REFERRER ' . $this->getServer('HTTP_REFERER'),
-                ]) . "\n";
+                'HOST ' . PhpHelper::serverParam('HTTP_HOST'),
+                'IP ' . PhpHelper::serverParam('REMOTE_ADDR'),
+                'METHOD ' . PhpHelper::serverParam('REQUEST_METHOD'),
+                'URI ' . PhpHelper::serverParam('REQUEST_URI'),
+                'REFERRER ' . PhpHelper::serverParam('HTTP_REFERER'),
+            ]) . "\n";
 
             $context['request'] = $_REQUEST;
         }
@@ -509,95 +278,32 @@ class LiteLogger implements LoggerInterface
     /**
      * @param string $message
      * @param array $context
-     * @return bool
      */
     public function trace($message = '', array $context = [])
     {
-        // 不在记录的级别内
         if ($this->isCanRecord(self::TRACE)) {
-            return null;
+            return;
         }
 
-        $file = $method = $line = 'Unknown';
+        if (!isset($context['_called_at'])) {
+            $file = $method = $line = 'Unknown';
 
-        if ($data = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10)) {
-            if (isset($data[0]['file'])) {
-                $file = $data[0]['file'];
+            if ($data = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)) {
+                if (isset($data[0])) {
+                    $file = $data[0]['file'];
+                    $line = $data[0]['line'];
+                }
+
+                if (isset($data[1])) {
+                    $t = $data[1];
+                    $method = Arr::remove($t, 'class', 'CLASS') . '::' . Arr::remove($t, 'function', 'METHOD');
+                }
             }
 
-            if (isset($data[0]['line'])) {
-                $line = $data[0]['line'];
-            }
-
-            if (isset($data[1])) {
-                $t = $data[1];
-                $method = self::arrayRemove($t, 'class', 'CLASS') . '::' . self::arrayRemove($t, 'function', 'METHOD');
-            }
+            $context['_called_at'] = "$method File $file line $line";
         }
 
-        $message .= "\n  Function: $method\n  Position $file, At Line $line\n  Trace:";
         $this->log(self::TRACE, $message, $context);
-
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function warning($message, array $context = [])
-    {
-        $this->log(self::WARNING, $message, $context);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function notice($message, array $context = [])
-    {
-        $this->log(self::NOTICE, $message, $context);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function info($message, array $context = [])
-    {
-        $this->log(self::INFO, $message, $context);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function debug($message, array $context = [])
-    {
-        $this->log(self::DEBUG, $message, $context);
-    }
-
-    /**
-     * mark data analysis start
-     * @param $name
-     * @param array $context
-     * @param string $category
-     */
-    public function profile($name, array $context = [], $category = 'application')
-    {
-        $context['startTime'] = microtime(true);
-        $context['memUsage'] = memory_get_usage();
-        $context['memPeakUsage'] = memory_get_peak_usage();
-
-        $this->profiles[$category][$name] = $context;
-    }
-
-    public function profileEnd($name, array $context = [], $category = 'application')
-    {
-        if (isset($this->profiles[$category][$name])) {
-            $oldInfo = $this->profiles[$category][$name];
-            $info['endTime'] = microtime(true);
-            $info['memUsage'] = memory_get_usage();
-            $info['memPeakUsage'] = memory_get_peak_usage();
-
-//            $this->log(self::DEBUG, $message, $context);
-        }
     }
 
     /**
@@ -606,18 +312,16 @@ class LiteLogger implements LoggerInterface
      * @param string $message
      * @param array $context
      * @param array $extra
-     * @return null|bool
      */
     public function log($level, $message, array $context = [], array $extra = [])
     {
-        // 不在记录的级别内
         if (!$this->isCanRecord($level)) {
-            return null;
+            return;
         }
 
         $levelName = self::getLevelName($level);
         $record = array(
-            'message' => (string)$message,
+            'message' => trim($message),
             'context' => $context,
             'level' => $level,
             'level_name' => $levelName,
@@ -632,41 +336,37 @@ class LiteLogger implements LoggerInterface
             fwrite(STDOUT, "[{$record['datetime']}] [$levelName] $message\n");
         }
 
-        $this->_records[] = $record;
+        $this->records[] = $record;
+        $this->recordSize++;
 
         // 检查阀值
-        if ($this->logThreshold > 0 && count($this->_records) >= $this->logThreshold) {
-            return $this->flush();
+        if ($this->recordSize > $this->logThreshold) {
+            $this->flush();
         }
-
-        return null;
     }
 
     /**
      * flush data to file.
-     * @return bool
      */
-    public function save()
-    {
-        return $this->flush();
-    }
-
     public function flush()
     {
-        if (!$this->_records) {
-            return true;
+        if ($this->recordSize === 0) {
+            return;
         }
 
         $str = '';
-        foreach ($this->_records as $record) {
+        foreach ($this->records as $record) {
             $str .= $this->recordFormat($record);
         }
 
         $this->write($str);
-        $this->_records = [];
-        unset($str);
+        $this->clear();
+    }
 
-        return true;
+    public function clear()
+    {
+        $this->recordSize = 0;
+        $this->records = [];
     }
 
     /**
@@ -720,27 +420,12 @@ class LiteLogger implements LoggerInterface
     }
 
     /**
-     * @param array|string $levels
-     */
-    public function setLevels($levels)
-    {
-        if (is_array($levels)) {
-            $this->levels = $levels;
-        } elseif (is_string($levels)) {
-            $levels = trim($levels, ', ');
-
-            $this->levels = strpos($levels, ',') ? array_map('trim', explode(',', $levels)) : [$levels];
-        }
-    }
-
-    /**
      * @param $level
      * @return bool
      */
     protected function isCanRecord($level)
     {
-        // 不在记录的级别内
-        return $this->levels && in_array(self::getLevelName($level), $this->levels, true);
+        return self::getLevelByName($level) >= $this->logLevel;
     }
 
     /**
@@ -748,7 +433,7 @@ class LiteLogger implements LoggerInterface
      */
     public function getRecords()
     {
-        return $this->_records;
+        return $this->records;
     }
 
     /**
@@ -768,11 +453,11 @@ class LiteLogger implements LoggerInterface
     }
 
     /**
-     * @return array
+     * @param string $basePath
      */
-    public function getLevels()
+    public function setBasePath(string $basePath)
     {
-        return $this->levels;
+        $this->basePath = $basePath;
     }
 
     /**
@@ -819,33 +504,46 @@ class LiteLogger implements LoggerInterface
     }
 
     /**
-     * get value and unset it
-     * @param $arr
-     * @param $key
-     * @param null $default
-     * @return null
+     * Gets all supported logging levels.
+     * @return array Assoc array with human-readable level names => level codes.
      */
-    public static function arrayRemove($arr, $key, $default = null)
+    public static function getLevelMap()
     {
-        if (isset($arr[$key])) {
-            $value = $arr[$key];
-            unset($arr[$key]);
-
-            return $value;
-        }
-
-        return $default;
+        return static::$levelMap;
     }
 
     /**
-     * get value from $_SERVER
-     * @param $name
-     * @param string $default
-     * @return string
+     * @param int|string $level
+     * @return mixed|string
      */
-    public function getServer($name, $default = '')
+    public static function getLevelName($level)
     {
-        return $_SERVER[$name] ?? $default;
+        if (is_string($level) && !is_numeric($level)) {
+            return $level;
+        }
+
+        return self::$levelMap[$level] ?? 'info';
+    }
+
+    /**
+     * @param string $name
+     * @return mixed|string
+     */
+    public static function getLevelByName($name)
+    {
+        static $nameMap;
+
+        if (is_numeric($name)) {
+            return (int)$name;
+        }
+
+        if (!$nameMap) {
+            $nameMap = array_flip(self::$levelMap);
+        }
+
+        $name = strtolower($name);
+
+        return $nameMap[$name] ?? 0;
     }
 
     /**
@@ -954,7 +652,7 @@ class LiteLogger implements LoggerInterface
             if (is_writable($file)) {
                 // suppress errors here as unlink() might fail if two processes
                 // are cleaning up/rotating at the same time
-                set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+                set_error_handler(function ($errNo, $errStr, $errSile, $errLine) {
                 });
                 unlink($file);
                 restore_error_handler();

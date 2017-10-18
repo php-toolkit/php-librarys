@@ -18,4 +18,22 @@ use Inhere\Library\Traits\ObjectPoolTrait;
 class Obj extends ObjectHelper
 {
     use ObjectPoolTrait;
+
+    /**
+     * @var array
+     */
+    private static $objects = [];
+
+    /**
+     * @param string $class
+     * @return mixed
+     */
+    public static function make($class)
+    {
+        if (!isset(self::$objects[$class])) {
+            self::$objects[$class] = new $class;
+        }
+
+        return self::$objects[$class];
+    }
 }

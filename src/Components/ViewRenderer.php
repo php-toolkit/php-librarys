@@ -38,7 +38,7 @@ class ViewRenderer
     protected $suffix = 'php';
 
     /** @var array allowed suffix list */
-    protected $suffixes = ['php','html'];
+    protected $suffixes = ['php','tpl','html'];
 
     /**
      * in layout file '...<body>{_CONTENT_}</body>...'

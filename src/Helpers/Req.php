@@ -165,6 +165,16 @@ class Req
     }
 
     /**
+     * @param $name
+     * @param string $default
+     * @return mixed
+     */
+    public static function serverParam($name, $default = '')
+    {
+        return self::server($name, $default);
+    }
+
+    /**
      * get $_SERVER value
      * @param  string $name
      * @param  string $default

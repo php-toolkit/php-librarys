@@ -61,6 +61,24 @@ class DateHelper
     }
 
     /**
+     * @return int
+     */
+    public static function todayStart()
+    {
+//        return strtotime(date('Y-m-d 00:00:00'));
+        return strtotime('today 00:00:00');
+    }
+
+    /**
+     * @return int
+     */
+    public static function todayEnd()
+    {
+//        return strtotime(date('Y-m-d 23:59:59'));
+        return strtotime('today 23:59:59');
+    }
+
+    /**
      * @return false|int
      */
     public static function tomorrowBegin()
@@ -68,6 +86,21 @@ class DateHelper
         return mktime(0, 0, 0, date('m'), date('d') + 1, date('Y'));
     }
 
+    /**
+     * @return int
+     */
+    public static function tomorrowStart()
+    {
+        return strtotime('+1 day 00:00:00');
+    }
+
+    /**
+     * @return int
+     */
+    public static function tomorrowEnd()
+    {
+        return strtotime('+1 day 23:59:59');
+    }
     /**
      * @return false|int
      */

@@ -24,6 +24,9 @@ trait LogProfileTrait
      */
     private $profiles = [];
 
+    /** @var string e.g 'application|request' */
+    private $activeKey;
+
     /**
      * mark data analysis start
      * @param $name
@@ -41,18 +44,23 @@ trait LogProfileTrait
             '_profile_end' => null,
         ];
 
+        $this->activeKey = $category . '|' . $name;
         $this->profiles[$category][$name] = $data;
     }
 
     /**
      * mark data analysis end
-     * @param string $name
      * @param string|null $title
      * @param array $context
-     * @param string $category
      */
-    public function profileEnd($name, $title = null, array $context = [], $category = 'application')
+    public function profileEnd($title = null, array $context = [])
     {
+        if (!$this->activeKey) {
+            return;
+        }
+
+        list($category, $name) = explode('|', $this->activeKey);
+
         if (isset($this->profiles[$category][$name])) {
             $data = $this->profiles[$category][$name];
 
@@ -62,6 +70,7 @@ trait LogProfileTrait
 
             $title = $category . ' - ' . ($title ?: $name);
 
+            $this->activeKey = null;
             $this->log(Logger::DEBUG, $title, $data);
         }
     }

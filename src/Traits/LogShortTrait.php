@@ -139,10 +139,12 @@ trait LogShortTrait
      */
     public static function trace($message, array $context = array())
     {
-        $tce = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+        if (!isset($context['_called_at'])) {
+            $tce = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
 
-        if ($info = $tce[1] ?? null) {
-            $context['_called_at'] = sprintf('%s::%s Line %d', $info['class'], $info['function'], $tce[0]['line']);
+            if ($info = $tce[1] ?? null) {
+                $context['_called_at'] = sprintf('%s::%s Line %d', $info['class'], $info['function'], $tce[0]['line']);
+            }
         }
 
         $context['_stats'] = PhpHelper::runtime(Req::server('request_time_float'), Req::server('request_memory'));

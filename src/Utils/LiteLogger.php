@@ -283,20 +283,16 @@ class LiteLogger implements LoggerInterface
 
         if (!isset($context['_called_at'])) {
             $file = $method = $line = 'Unknown';
+            $data = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
 
-            if ($data = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)) {
-                if (isset($data[0])) {
-                    $file = $data[0]['file'];
-                    $line = $data[0]['line'];
-                }
-
-                if (isset($data[1])) {
-                    $t = $data[1];
-                    $method = Arr::remove($t, 'class', 'CLASS') . '::' . Arr::remove($t, 'function', 'METHOD');
-                }
+            if (isset($data[1])) {
+                $file = $data[0]['file'];
+                $line = $data[0]['line'];
+                $t = $data[1];
+                $method = Arr::remove($t, 'class', 'CLASS') . '::' . Arr::remove($t, 'function', 'METHOD');
             }
 
-            $context['_called_at'] = "$method File $file line $line";
+            $context['_called_at'] = "$method, On $file line $line";
         }
 
         $this->log(self::TRACE, $message, $context);

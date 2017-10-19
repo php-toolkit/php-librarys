@@ -8,7 +8,7 @@
 
 namespace Inhere\Library\Collections;
 
-use Inhere\Library\Helpers\Obj;
+use Inhere\Library\Helpers\Req;
 use Inhere\Library\Helpers\Str;
 use RuntimeException;
 
@@ -56,13 +56,14 @@ final class Configuration extends Collection
      * @param string $locFile
      * @param string $baseFile
      * @param string $envFile
+     * @param bool $detectByHost
      * @param string $format
      * @return Configuration
      */
-    public static function makeByEnv($locFile, $baseFile, $envFile, $format = self::FORMAT_PHP)
+    public static function makeByEnv($locFile, $baseFile, $envFile, $detectByHost = false, $format = self::FORMAT_PHP)
     {
         $local = [
-            'env' => 'pdt',
+            'env' => $detectByHost ? Req::getEnvNameByHost() : 'pdt',
         ];
 
         // if local env file exists. will fetch env name from it.
@@ -70,17 +71,19 @@ final class Configuration extends Collection
             $local = array_merge($local, $localData);
         }
 
-        $env = $local['env'];
-        $envFile = str_replace('{env}', $env, $envFile);
+        if (!is_file($baseFile)) {
+            throw new \InvalidArgumentException("The base config file not exists. File: $baseFile");
+        }
 
-        if (!is_file($envFile)) {
-            throw new \InvalidArgumentException("The env config file not exists. File: $envFile");
+        $config = self::make($baseFile, $format);
+        $envFile = str_replace('{env}', $local['env'], $envFile);
+
+        if (is_file($envFile)) {
+            $config->load($envFile, $format);
         }
 
         // load config
-        return self::make($baseFile, $format)
-            ->load($envFile, $format)
-            ->loadArray($local);
+        return $config->loadArray($local);
     }
 
     /**

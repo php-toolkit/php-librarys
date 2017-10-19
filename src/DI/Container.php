@@ -472,7 +472,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
         }
 
         if ($thrErr) {
-            throw new NotFoundException("Service id: $id was not found, has not been registered!");
+            throw new NotFoundException("The service '$id' was not found, has not been registered!");
         }
 
         return null;

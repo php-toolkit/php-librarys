@@ -164,7 +164,7 @@ class LiteLogger implements LoggerInterface
      *  设为 0 则是每次记录都立即写入文件
      * @var int
      */
-    public $logThreshold = 1000;
+    public $bufferSize = 1000;
 
     /**
      * 格式
@@ -200,10 +200,6 @@ class LiteLogger implements LoggerInterface
     public function __construct(array $config = [])
     {
         Obj::smartConfigure($this, $config);
-
-        if (!$this->name) {
-            throw new \InvalidArgumentException('Logger name is required.');
-        }
 
         $this->init();
     }
@@ -319,6 +315,10 @@ class LiteLogger implements LoggerInterface
             return;
         }
 
+        if (!$this->name) {
+            throw new \InvalidArgumentException('Logger name is required.');
+        }
+
         $levelName = self::getLevelName($level);
         $record = array(
             'message' => trim($message),
@@ -340,7 +340,7 @@ class LiteLogger implements LoggerInterface
         $this->recordSize++;
 
         // 检查阀值
-        if ($this->recordSize > $this->logThreshold) {
+        if ($this->recordSize > $this->bufferSize) {
             $this->flush();
         }
     }

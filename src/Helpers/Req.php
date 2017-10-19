@@ -14,6 +14,8 @@ namespace Inhere\Library\Helpers;
  */
 class Req
 {
+    const DEFAULT_ENV_LIST = ['pdt', 'pre', 'test', 'dev'];
+
     /**
      * 本次请求开始时间
      * @param bool $float
@@ -26,6 +28,25 @@ class Req
         }
 
         return $_SERVER['REQUEST_TIME'];
+    }
+
+    /**
+     * @param null $host
+     * @param array $envList
+     * @param string $defaultEnv
+     * @return string
+     */
+    public static function getEnvNameByHost($host = null, $defaultEnv = 'pdt', array $envList = self::DEFAULT_ENV_LIST)
+    {
+        $host = $host ?: self::serverParam('HTTP_HOST', 'Unknown');
+
+        foreach ($envList as $value) {
+            if (false !== strpos($host, $value)) {
+                return $value;
+            }
+        }
+
+        return $defaultEnv;
     }
 
     /**

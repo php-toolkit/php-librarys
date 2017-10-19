@@ -14,7 +14,7 @@ use Inhere\Exceptions\FileNotFoundException;
 use Inhere\Exceptions\FileReadException;
 use Inhere\Exceptions\FileSystemException;
 use Inhere\Exceptions\IOException;
-use Inhere\Library\Helpers\StringHelper;
+use Inhere\Library\Helpers\Str;
 
 /**
  * Class File
@@ -368,7 +368,7 @@ abstract class File extends FileSystem
         foreach ($fileArr as $v) {
             // 删除注释、空白
             if ($deleteSpace) {
-                $data .= StringHelper::deleteStripSpace($v);
+                $data .= Str::deleteStripSpace($v);
                 // 不删除注释、空白
             } else {
                 $o_data = file_get_contents($v);

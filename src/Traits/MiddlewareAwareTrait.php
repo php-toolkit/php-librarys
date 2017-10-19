@@ -7,7 +7,7 @@
  * @from Slim 3 framework
  */
 
-namespace Inhere\Library\Utils;
+namespace Inhere\Library\Traits;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

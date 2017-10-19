@@ -147,7 +147,7 @@ class FormatHelper
 
         $value_length = strlen($value);
         $qty = (int)substr($value, 0, $value_length - 1);
-        $unit = StringHelper::strtolower(substr($value, $value_length - 1));
+        $unit = Str::strtolower(substr($value, $value_length - 1));
         switch ($unit) {
             case 'k':
                 $qty *= 1024;

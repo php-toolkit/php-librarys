@@ -2,6 +2,8 @@
 
 namespace Inhere\Exceptions;
 
+use Psr\Http\Message\ServerRequestInterface;
+
 /**
  * {@inheritDoc}
  */
@@ -90,6 +92,22 @@ class HttpUrlException extends HttpException
 
 class HttpQueryStringException extends HttpException
 {
+}
+
+class InvalidMethodException extends \InvalidArgumentException
+{
+    protected $request;
+
+    public function __construct(ServerRequestInterface $request, $method)
+    {
+        $this->request = $request;
+        parent::__construct(sprintf('Unsupported HTTP method "%s" provided', $method));
+    }
+
+    public function getRequest()
+    {
+        return $this->request;
+    }
 }
 
 //////////////////////////////////// Custom exception ////////////////////////////////////

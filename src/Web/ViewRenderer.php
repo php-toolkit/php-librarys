@@ -6,14 +6,14 @@
  * Time: 17:31
  */
 
-namespace Inhere\Library\Components;
+namespace Inhere\Library\Web;
 
 use Inhere\Library\Files\File;
 
 /**
  * Class ViewRenderer
  *  Render PHP view scripts into a PSR-7 Response object
- * @package Inhere\Library\Components
+ * @package Inhere\Library\Web
  */
 class ViewRenderer
 {

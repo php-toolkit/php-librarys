@@ -6,13 +6,13 @@
  * Time: 下午11:14
  */
 
-namespace Inhere\Library\Components;
+namespace Inhere\Library\Web;
 
 use Inhere\Library\Collections\SimpleCollection;
 
 /**
  * Class Session
- * @package Inhere\Library\Utils
+ * @package Inhere\Library\Web
  */
 class Session extends SimpleCollection
 {

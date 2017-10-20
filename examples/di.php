@@ -12,7 +12,7 @@ use Inhere\Library\Utils\LiteLogger;
 require __DIR__ . '/s-autoload.php';
 
 $di = new Container([
-    'logger' => LiteLogger::make([], 'test'),
+    'logger' => LiteLogger::make(['name' => 'test']),
     'logger2' => [
         'target' => LiteLogger::class . '::make',
         ['name' => 'test2']// first arg

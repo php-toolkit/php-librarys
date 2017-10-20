@@ -76,7 +76,7 @@ trait EventTrait
         // call event handlers of the event.
         foreach ((array)$this->eventHandlers[$event] as $cb) {
             // return FALSE to stop go on handle.
-            if (false === PhpHelper::call($cb, $args)) {
+            if (false === PhpHelper::call($cb, ...$args)) {
                 break;
             }
         }

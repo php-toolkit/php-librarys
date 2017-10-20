@@ -203,7 +203,7 @@ class ErrorHandler
         }
 
         if ($this->previousErrorHandler) {
-            return PhpHelper::call($this->previousErrorHandler, [$code, $message, $file, $line, $context]);
+            return PhpHelper::call($this->previousErrorHandler, $code, $message, $file, $line, $context);
         }
 
         return false;

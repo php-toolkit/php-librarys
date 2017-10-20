@@ -37,7 +37,7 @@ class DeferredCallable
         $callable = $this->callable;
 
         if (is_callable($callable)) {
-            return PhpHelper::call($callable, $args);
+            return PhpHelper::call($callable, ...$args);
         }
 
         if (is_string($callable) && class_exists($callable)) {

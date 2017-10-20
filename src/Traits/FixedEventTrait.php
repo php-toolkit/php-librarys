@@ -150,7 +150,7 @@ trait FixedEventTrait
             return null;
         }
 
-        return PhpHelper::call($cb, $args);
+        return PhpHelper::call($cb, ...$args);
     }
 
 }

@@ -80,7 +80,7 @@ trait FixedEventStaticTrait
         // call event handlers of the event.
         foreach ((array)self::$eventHandlers[$event] as $cb) {
             // return FALSE to stop go on handle.
-            if (false === PhpHelper::call($cb, $args)) {
+            if (false === PhpHelper::call($cb, ...$args)) {
                 break;
             }
         }

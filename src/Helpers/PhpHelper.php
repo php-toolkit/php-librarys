@@ -16,29 +16,32 @@ class PhpHelper extends EnvHelper
 {
     /**
      * @param $cb
-     * @param array $args
+     * @param array ...$args
      * @return mixed
      */
-    public static function call($cb, array $args = [])
+    public static function call($cb, ...$args)
     {
-        $args = array_values($args);
+        // $args = array_values($args);
 
-        if (
-            (is_object($cb) && method_exists($cb, '__invoke')) ||
-            (is_string($cb) && function_exists($cb))
-        ) {
-            $ret = $cb(...$args);
-        } elseif (is_array($cb)) {
-            list($obj, $mhd) = $cb;
+        if (is_string($cb)) {
+            // function
+            if (strpos($cb, '::') === false) {
+                return $cb(...$args);
+            }
 
-            $ret = is_object($obj) ? $obj->$mhd(...$args) : $obj::$mhd(...$args);
-        } elseif (class_exists(Coroutine::class, false)) {
-            $ret = Coroutine::call_user_func_array($cb, $args);
-        } else {
-            $ret = call_user_func_array($cb, $args);
+            // ClassName/Service::method
+            $cb = explode('::', $cb, 2);
+        } elseif (is_object($cb) && method_exists($cb, '__invoke')) {
+            return $cb(...$args);
         }
 
-        return $ret;
+        if (is_array($cb)) {
+            list($obj, $mhd) = $cb;
+
+            return is_object($obj) ? $obj->$mhd(...$args) : $obj::$mhd(...$args);
+        }
+
+        throw new \InvalidArgumentException('The parameter is not a callable');
     }
 
     /**

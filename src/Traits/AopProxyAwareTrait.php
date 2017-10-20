@@ -58,17 +58,17 @@ trait AopProxyAwareTrait
         // on before exec method
         if ($cbList = $this->findProxyCallback($target, $method)) {
             foreach ($cbList as $cb) {
-                PhpHelper::call($cb, [$target, $method, $args]);
+                PhpHelper::call($cb, $target, $method, $args);
             }
         }
 
         // exec method
-        $ret = PhpHelper::call([$target, $method], $args);
+        $ret = PhpHelper::call([$target, $method], ...$args);
 
         // on after exec method
         if ($cb = $this->findProxyCallback($target, $method, 'after')) {
             foreach ($cbList as $cb) {
-                PhpHelper::call($cb, [$target, $method, $args]);
+                PhpHelper::call($cb, $target, $method, $args);
             }
         }
 

@@ -6,7 +6,7 @@
  * Time: 下午11:14
  */
 
-namespace Inhere\Library\Components;
+namespace Inhere\Library\Web;
 
 use Inhere\Library\Collections\SimpleCollection;
 

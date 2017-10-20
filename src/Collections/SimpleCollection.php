@@ -5,7 +5,6 @@
 
 namespace Inhere\Library\Collections;
 
-
 /**
  * Collection
  * This class provides a common interface used by many other

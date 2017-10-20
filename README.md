@@ -53,14 +53,14 @@ git clone https://github.com/inhere/php-librarys.git // github
 - `Inhere\Library\Web` web相关工具类(`session cookie Environment ViewRenderer`)
 - `functions.php` 一些有用的函数
 
-已迁移至 `inhere/library-plus` (主要是一些不常用的、测试性的功能库):
+### 已迁移至 [inhere/library-plus](https://github.com/inhere/php-library-plus) (主要是一些不常用的、测试性的功能库):
 
-- `Inhere\Library\auth` 用户认证管理，权限检查实现参考
-- `Inhere\Library\env` 环境信息收集, `Server`: 服务端信息. `Client`: 客户端信息 
-- `Inhere\Library\Files` 文件系统功能扩展。 文件系统操作(文件(夹)读取，检查，创建)；文件上传/下载，图片处理(缩略图/水印)，图片验证码生成 
-- `Inhere\Library\asset` 资源(css,js)管理,加载,发布 
-- `Inhere\Library\html` html 元素创建, dom 创建
-- `Inhere\Library\network` network 工具库(`telnet`)
+- `Inhere\LibraryPlus\auth` 用户认证管理，权限检查实现参考
+- `Inhere\LibraryPlus\env` 环境信息收集, `Server`: 服务端信息. `Client`: 客户端信息 
+- `Inhere\LibraryPlus\Files` 文件系统功能扩展。 文件系统操作(文件(夹)读取，检查，创建)；文件上传/下载，图片处理(缩略图/水印)，图片验证码生成 
+- `Inhere\LibraryPlus\asset` 资源(css,js)管理,加载,发布 
+- `Inhere\LibraryPlus\html` html 元素创建, dom 创建
+- `Inhere\LibraryPlus\network` network 工具库(`telnet`)
 
 [Document](doc/document.md)
 

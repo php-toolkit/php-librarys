@@ -34,9 +34,7 @@ class SimpleCollection implements CollectionInterface
      */
     public function __construct(array $items = [])
     {
-        foreach ($items as $key => $value) {
-            $this->set($key, $value);
-        }
+        $this->replace($items);
     }
 
     public function __destruct()

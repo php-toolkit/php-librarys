@@ -12,7 +12,7 @@ namespace Inhere\Library;
  * Class Types
  * @package Inhere\Library
  */
-abstract class Types
+final class Types
 {
     // php data type
     const T_INT = 'int';
@@ -33,8 +33,8 @@ abstract class Types
     public static function all()
     {
         return [
-            static::T_ARRAY, static::T_BOOL, static::T_BOOLEAN, static::T_DOUBLE, static::T_FLOAT,
-            static::T_INT, static::T_INTEGER, static::T_OBJECT, static::T_STRING, static::T_RESOURCE
+            self::T_ARRAY, self::T_BOOL, self::T_BOOLEAN, self::T_DOUBLE, self::T_FLOAT,
+            self::T_INT, self::T_INTEGER, self::T_OBJECT, self::T_STRING, self::T_RESOURCE
         ];
     }
 
@@ -44,8 +44,8 @@ abstract class Types
     public static function scalars()
     {
         return [
-            static::T_BOOL, static::T_BOOLEAN, static::T_DOUBLE, static::T_FLOAT,
-            static::T_INT, static::T_INTEGER, static::T_STRING
+            self::T_BOOL, self::T_BOOLEAN, self::T_DOUBLE, self::T_FLOAT,
+            self::T_INT, self::T_INTEGER, self::T_STRING
         ];
     }
 }

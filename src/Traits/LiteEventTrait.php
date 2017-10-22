@@ -8,6 +8,8 @@
 
 namespace Inhere\Library\Traits;
 
+use Inhere\Library\Helpers\Php;
+
 /**
  * Trait LiteEventTrait - 简洁版的事件处理trait，一个事件只允许一个回调
  * @package Inhere\Library\Traits
@@ -47,11 +49,7 @@ trait LiteEventTrait
             return null;
         }
 
-        if (is_object($cb) || (is_string($cb) && function_exists($cb))) {
-            return $cb(...$args);
-        }
-
-        return call_user_func_array($cb, $args);
+        return Php::call($cb, ...$args);
     }
 
     /**

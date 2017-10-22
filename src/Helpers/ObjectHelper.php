@@ -18,6 +18,44 @@ use Inhere\Exceptions\DependencyResolutionException;
 class ObjectHelper
 {
     /**
+     * @param mixed $object An object instance
+     * @param array $options
+     * @return mixed
+     */
+    public static function init($object, array $options)
+    {
+        return self::smartConfigure($object, $options);
+    }
+
+    /**
+     * 给对象设置属性值
+     * - 会先尝试用 setter 方法设置属性
+     * - 再尝试直接设置属性
+     * @param mixed $object An object instance
+     * @param array $options
+     * @return mixed
+     */
+    public static function smartConfigure($object, array $options)
+    {
+        foreach ($options as $property => $value) {
+            if (is_numeric($property)) {
+                continue;
+            }
+
+            $setter = 'set' . ucfirst($property);
+
+            // has setter
+            if (method_exists($object, $setter)) {
+                $object->$setter($value);
+            } else {
+                $object->$property = $value;
+            }
+        }
+
+        return $object;
+    }
+
+    /**
      * 给对象设置属性值
      * @param $object
      * @param array $options
@@ -36,30 +74,6 @@ class ObjectHelper
     {
         foreach ($options as $property => $value) {
             $object->$property = $value;
-        }
-    }
-
-    /**
-     * 给对象设置属性值
-     * - 会先尝试用 setter 方法设置属性
-     * - 再尝试直接设置属性
-     * @param $object
-     * @param array $options
-     */
-    public static function smartConfigure($object, array $options)
-    {
-        foreach ($options as $property => $value) {
-            if (is_numeric($property)) {
-                continue;
-            }
-
-            $setter = 'set' . ucfirst($property);
-
-            if (method_exists($object, $setter)) {
-                $object->$setter($value);
-            } else {
-                $object->$property = $value;
-            }
         }
     }
 

@@ -61,6 +61,37 @@ class LiteCollection extends \ArrayObject implements CollectionInterface
     }
 
     /**
+     * @param callable $callback
+     * @return static
+     */
+    public function map(callable $callback)
+    {
+        $data = [];
+
+        foreach ($this as $key => $value) {
+            $data[$key] = $callback($value, $key);
+        }
+
+        return new static($data);
+    }
+
+    /**
+     * @param string $char
+     * @return string
+     */
+    public function implode($char = ',')
+    {
+        $string = '';
+
+        foreach ($this as $key => $value) {
+//            $string .= is_array($value) ? $this->implode($char, $value) : implode($char, $value);
+            $string .= implode($char, $value);
+        }
+
+        return $string;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function all()

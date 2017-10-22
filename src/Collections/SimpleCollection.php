@@ -124,6 +124,37 @@ class SimpleCollection implements CollectionInterface
     }
 
     /**
+     * @param callable $callback
+     * @return static
+     */
+    public function map(callable $callback)
+    {
+        $data = [];
+
+        foreach ($this->getIterator() as $key => $value) {
+            $data[$key] = $callback($value, $key);
+        }
+
+        return new static($data);
+    }
+
+    /**
+     * @param string $char
+     * @return string
+     */
+    public function implode($char = ',')
+    {
+        $string = '';
+
+        foreach ($this->getIterator() as $key => $value) {
+//            $string .= is_array($value) ? $this->implode($char, $value) : implode($char, $value);
+            $string .= implode($char, $value);
+        }
+
+        return $string;
+    }
+
+    /**
      * Get all items in collection
      * @return array The collection's source data
      */

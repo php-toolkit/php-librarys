@@ -66,6 +66,13 @@ if (!function_exists('env')) {
     }
 }
 
+if (!function_exists('collect')) {
+    function collect(array $values)
+    {
+        return new \Inhere\Library\Collections\LiteCollection($values);
+    }
+}
+
 if (!function_exists('msleep')) {
     function msleep($ms)
     {

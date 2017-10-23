@@ -15,6 +15,26 @@ namespace Inhere\Library\Collections;
 class LiteCollection extends \ArrayObject implements CollectionInterface
 {
     /**
+     * @param array|null $items
+     * @return static
+     */
+    public static function make($items = null)
+    {
+        return new static((array)$items);
+    }
+
+    /**
+     * Create new collection
+     * @param array $items Pre-populate collection with this key-value array
+     */
+    public function __construct(array $items = [])
+    {
+        parent::__construct();
+
+        $this->replace($items);
+    }
+
+    /**
      * @param string $name
      * @param null|mixed $default
      * @return mixed|null

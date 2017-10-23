@@ -120,39 +120,39 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
      * {@inheritdoc}
      * @see self::translate()
      */
-    public function t($key, array $args = [], $default = '')
+    public function t($key, array $args = [], $lang = '')
     {
-        return $this->translate($key, $args, $default);
+        return $this->translate($key, $args, $lang);
     }
 
     /**
      * {@inheritdoc}
      * @see self::translate()
      */
-    public function tl($key, array $args = [], $default = null)
+    public function tl($key, array $args = [], $lang = null)
     {
-        return $this->translate($key, $args, $default);
+        return $this->translate($key, $args, $lang);
     }
 
     /**
      * {@inheritdoc}
      * @see self::translate()
      */
-    public function trans($key, array $args = [], $default = null)
+    public function trans($key, array $args = [], $lang = null)
     {
-        return $this->translate($key, $args, $default);
+        return $this->translate($key, $args, $lang);
     }
 
     /**
      * how to use language translate ? please see '/doc/language.md'
      * @param string|bool $key
      * @param array $args
-     * @param string $default
+     * @param string $lang
      * @return string|array
      * @throws \Inhere\Exceptions\NotFoundException
      * @throws \InvalidArgumentException
      */
-    public function translate($key, array $args = [], $default = null)
+    public function translate($key, array $args = [], $lang = null)
     {
         if (!is_string($key)) {
             throw new \InvalidArgumentException('The translate key must be a string.');
@@ -162,14 +162,16 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
             throw new \InvalidArgumentException('Cannot translate the empty key');
         }
 
+        list($lang, $key) = $this->parseKey($key, $lang);
+
         // translate form current language. if not found, translate form fallback language.
         if (($value = $this->findTranslationText($key)) === null) {
-            $value = $this->transByFallbackLang($key, $default);
+            $value = $this->transByFallbackLang($key);
         }
 
         // no translate text
         if ($value === '' || $value === null) {
-            return ucfirst(Str::toSnakeCase(str_replace(['-', '_'], ' ', $key), ' '));
+            return ucfirst(Str::toSnake(str_replace(['-', '_'], ' ', $key), ' '));
         }
 
         // $args is not empty
@@ -238,13 +240,12 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
 
     /**
      * @param string $key
-     * @param string $default
      * @return mixed
      */
-    protected function transByFallbackLang($key, $default = null)
+    protected function transByFallbackLang($key)
     {
         if ($this->lang === $this->fallbackLang || !$this->fallbackLang) {
-            return $default;
+            return null;
         }
 
         // init fallbackData
@@ -278,16 +279,39 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
                 $this->loadedFiles[] = $file;
                 $this->fallbackData->set($fileKey, Collection::read($file, $this->format));
 
-                return $this->fallbackData->get($key, $default);
+                return $this->fallbackData->get($key);
             }
         }
 
-        return $default;
+        return null;
     }
 
+
     /*********************************************************************************
-     * helper method
+     * helper
      *********************************************************************************/
+
+    /**
+     * @param string $key
+     * @param string $lang
+     * @return array
+     */
+    private function parseKey($key, $lang = null)
+    {
+        if ($lang) {
+            return [$lang, $key];
+        }
+
+        if (strpos($key, $this->separator)) {
+            $info = explode($this->separator, $key, 2);
+
+            if ($this->isLang($info[0])) {
+                return $info;
+            }
+        }
+
+        return [$this->lang, $key];
+    }
 
     /**
      * @param $filename
@@ -375,6 +399,19 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
     /*********************************************************************************
      * getter/setter
      *********************************************************************************/
+
+    /**
+     * @param string $lang
+     * @return bool
+     */
+    public function hasLang($lang)
+    {
+        return $this->isLang($lang);
+    }
+    public function isLang($lang)
+    {
+        return $lang && in_array($lang, $this->langs,true);
+    }
 
     /**
      * Allow quick access default file translate by `$lang->key`,

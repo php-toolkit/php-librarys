@@ -15,4 +15,18 @@ namespace Inhere\Library\Helpers;
  */
 class Str extends StringHelper
 {
+    /**
+     * @param string $string
+     * @param string $prefix
+     * @param string $suffix
+     * @return string
+     */
+    public static function optional(string $string, string $prefix = ' ', string $suffix = ''): string
+    {
+        if (empty($string)) {
+            return '';
+        }
+
+        return $prefix . $string . $suffix;
+    }
 }

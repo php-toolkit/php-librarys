@@ -12,14 +12,14 @@ use Inhere\Exceptions\FileSystemException;
 use Inhere\Library\Files\Directory;
 use Inhere\Library\Helpers\Arr;
 use Inhere\Library\Helpers\Obj;
-use Inhere\Library\Helpers\PhpHelper;
+use Inhere\Library\Helpers\Php;
 use Inhere\Library\Traits\LogProfileTrait;
+use Inhere\Library\Traits\PathResolverTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LoggerTrait;
 
 /**
- * simple file logger handler
- * Class LiteLogger
+ * Class LiteLogger - simple file logger handler
  * @package Inhere\Library\Utils
  * ```
  * $config = [...];
@@ -27,13 +27,12 @@ use Psr\Log\LoggerTrait;
  * $logger->info(...);
  * $logger->debug(...);
  * ......
- * // Notice: must call LiteLogger::flushAll() on application run end.
- * LiteLogger::flushAll();
+ *
  * ```
  */
 class LiteLogger implements LoggerInterface
 {
-    use LoggerTrait, LogProfileTrait;
+    use LoggerTrait, LogProfileTrait, PathResolverTrait;
 
     // * Log runtime info
     const TRACE = 50;
@@ -72,7 +71,7 @@ class LiteLogger implements LoggerInterface
      * Logging levels from syslog protocol defined in RFC 5424
      * @var array $levels Logging levels
      */
-    protected static $levelMap = array(
+    protected static $levelMap = [
         self::TRACE => 'trace',
         self::DEBUG => 'debug',
         self::INFO => 'info',
@@ -83,7 +82,13 @@ class LiteLogger implements LoggerInterface
         self::CRITICAL => 'critical',
         self::ALERT => 'alert',
         self::EMERGENCY => 'emergency',
-    );
+    ];
+
+    /**
+     * 日志实例名称
+     * @var string
+     */
+    public $name;
 
     /**
      * log text records list
@@ -95,10 +100,10 @@ class LiteLogger implements LoggerInterface
     private $recordSize = 0;
 
     /**
-     * 日志实例名称 channel name
+     * 存放日志的基础路径
      * @var string
      */
-    public $name;
+    protected $basePath;
 
     /**
      * @var string
@@ -110,12 +115,6 @@ class LiteLogger implements LoggerInterface
      * @var bool
      */
     public $allowMultiLine = true;
-
-    /**
-     * 存放日志的基础路径
-     * @var string
-     */
-    protected $basePath;
 
     /**
      * log path = $bashPath + $subFolder
@@ -131,26 +130,12 @@ class LiteLogger implements LoggerInterface
     protected $filenameHandler;
 
     /** @var int log Level */
-    protected $logLevel = 0;
-
-    /** @var bool  */
-    public $splitByCopy = true;
+    protected $level = 0;
 
     /**
      * @var string 'day' 'hour', if is empty, not split
      */
     public $splitType = 'day';
-
-    /**
-     * file content max size. (M)
-     * @var int
-     */
-    public $maxSize = 4;
-
-    /**
-     * @var integer Number of log files used for rotation. Defaults to 20.
-     */
-    public $maxFiles = 20;
 
     /**
      * log print to console (when on the CLI is valid.)
@@ -160,11 +145,14 @@ class LiteLogger implements LoggerInterface
 
     /**
      * 日志写入阀值
-     *  即是除了手动调用 self::flushAll() 或者 flush() 之外，当 self::$_records 存储到了阀值时，就会自动写入一次
+     *  即是除了手动调用 flush() 之外，当 $records 存储到了阀值时，就会自动写入一次
      *  设为 0 则是每次记录都立即写入文件
      * @var int
      */
     public $bufferSize = 1000;
+
+    /** @var int The log file max size(Mb) */
+    public $fileMaxSize = 2;
 
     /**
      * 格式
@@ -199,21 +187,13 @@ class LiteLogger implements LoggerInterface
      */
     public function __construct(array $config = [])
     {
-        Obj::smartConfigure($this, $config);
+        Obj::init($this, $config);
 
         $this->init();
     }
 
     protected function init()
     {
-        if ($this->maxFiles < 1) {
-            $this->maxFiles = 10;
-        }
-
-        if ($this->maxSize < 1) {
-            $this->maxSize = 4;
-        }
-
         if (!$this->initialized) {
             // __destructor() doesn't get called on Fatal errors
             register_shutdown_function([$this, 'flush']);
@@ -257,18 +237,18 @@ class LiteLogger implements LoggerInterface
 
         // If log the request info
         if ($logRequest) {
-            $message .= "\nRequest Info:\n  " . implode("\n  ", [
-                'HOST ' . PhpHelper::serverParam('HTTP_HOST'),
-                'IP ' . PhpHelper::serverParam('REMOTE_ADDR'),
-                'METHOD ' . PhpHelper::serverParam('REQUEST_METHOD'),
-                'URI ' . PhpHelper::serverParam('REQUEST_URI'),
-                'REFERRER ' . PhpHelper::serverParam('HTTP_REFERER'),
-            ]) . "\n";
+//            $message .= "\nRequest Info:\n  " . implode("\n  ", [
+//                'HOST ' . Php::serverParam('HTTP_HOST'),
+//                'IP ' . Php::serverParam('REMOTE_ADDR'),
+//                'METHOD ' . Php::serverParam('REQUEST_METHOD'),
+//                'URI ' . Php::serverParam('REQUEST_URI'),
+//                'REFERRER ' . Php::serverParam('HTTP_REFERER'),
+//            ]) . "\n";
 
             $context['request'] = $_REQUEST;
         }
 
-        $this->log('exception', $message, $context);
+        $this->log(self::EXCEPTION, $message, $context);
     }
 
     /**
@@ -277,7 +257,7 @@ class LiteLogger implements LoggerInterface
      */
     public function trace($message = '', array $context = [])
     {
-        if ($this->isCanRecord(self::TRACE)) {
+        if (!$this->isCanRecord(self::TRACE)) {
             return;
         }
 
@@ -316,7 +296,7 @@ class LiteLogger implements LoggerInterface
         }
 
         $levelName = self::getLevelName($level);
-        $record = array(
+        $record = [
             'message' => trim($message),
             'context' => $context,
             'level' => $level,
@@ -324,10 +304,10 @@ class LiteLogger implements LoggerInterface
             'channel' => $this->name,
             'datetime' => date('Y-m-d H:i:s'),
             'extra' => $extra,
-        );
+        ];
 
         // serve is running in php build in server env.
-        if ($this->logConsole && (PhpHelper::isBuiltInServer() || PhpHelper::isCli())) {
+        if ($this->logConsole && (Php::isBuiltInServer() || Php::isCli())) {
             defined('STDOUT') or define('STDOUT', fopen('php://stdout', 'wb'));
             fwrite(STDOUT, "[{$record['datetime']}] [$levelName] $message\n");
         }
@@ -355,8 +335,8 @@ class LiteLogger implements LoggerInterface
             $str .= $this->recordFormat($record);
         }
 
-        $this->write($str);
         $this->clear();
+        $this->write($str);
     }
 
     public function clear()
@@ -407,7 +387,7 @@ class LiteLogger implements LoggerInterface
         }
 
         // check file size
-        if (is_file($file) && filesize($file) > $this->maxSize * 1000 * 1000) {
+        if (is_file($file) && filesize($file) > $this->fileMaxSize * 1000 * 1000) {
             rename($file, substr($file, 0, -3) . time() . '.log');
         }
 
@@ -421,7 +401,7 @@ class LiteLogger implements LoggerInterface
      */
     protected function isCanRecord($level)
     {
-        return self::getLevelByName($level) >= $this->logLevel;
+        return self::getLevelByName($level) >= $this->level;
     }
 
     /**
@@ -441,11 +421,12 @@ class LiteLogger implements LoggerInterface
     }
 
     /**
+     * @param bool $resolve
      * @return string
      */
-    public function getBasePath()
+    public function getBasePath($resolve = true)
     {
-        return $this->basePath;
+        return $resolve ? $this->resolverPath($this->basePath) : $this->basePath;
     }
 
     /**
@@ -467,7 +448,7 @@ class LiteLogger implements LoggerInterface
             throw new \InvalidArgumentException('The property basePath is required.');
         }
 
-        return $this->basePath . '/' . ($this->subFolder ? $this->subFolder . '/' : '');
+        return $this->getBasePath() . '/' . ($this->subFolder ? $this->subFolder . '/' : '');
     }
 
     /**
@@ -565,7 +546,7 @@ class LiteLogger implements LoggerInterface
             return (string)$data;
         }
 
-        if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        if (PHP_VERSION_ID >= 50400) {
             return json_encode($data);
         }
 
@@ -590,71 +571,18 @@ class LiteLogger implements LoggerInterface
     }
 
     /**
-     * Rotates log files.
+     * @return int
      */
-    protected function splitFiles()
+    public function getLevel(): int
     {
-        $file = $this->logFile;
-
-        for ($i = $this->maxFiles; $i >= 0; --$i) {
-            // $i == 0 is the original log file
-            $rotateFile = $file . ($i === 0 ? '' : '.' . $i);
-
-            if (is_file($rotateFile)) {
-                // suppress errors because it's possible multiple processes enter into this section
-                if ($i === $this->maxFiles) {
-                    @unlink($rotateFile);
-                } else {
-                    if ($this->splitByCopy) {
-                        copy($rotateFile, $file . '.' . ($i + 1));
-                        if ($fp = @fopen($rotateFile, 'ab')) {
-                            ftruncate($fp, 0);
-                            @fclose($fp);
-                        }
-                    } else {
-                        rename($rotateFile, $file . '.' . ($i + 1));
-                    }
-                }
-            }
-        }
+        return $this->level;
     }
 
     /**
-     * Rotates the files.
+     * @param int $level
      */
-    protected function rotateFiles()
+    public function setLevel($level)
     {
-        // update filename
-        // $filename = $this->getFilename();
-        $path = $this->getLogPath();
-
-        // skip GC of old logs if files are unlimited
-        if (0 === $this->maxFiles) {
-            return;
-        }
-
-        $logFiles = glob($path . "{$this->name}*.log");
-        if ($this->maxFiles >= count($logFiles)) {
-            // no files to remove
-            return;
-        }
-
-        // Sorting the files by name to remove the older ones
-        usort($logFiles, function ($a, $b) {
-            return strcmp($b, $a);
-        });
-
-        foreach (array_slice($logFiles, $this->maxFiles) as $file) {
-            if (is_writable($file)) {
-                // suppress errors here as unlink() might fail if two processes
-                // are cleaning up/rotating at the same time
-                set_error_handler(function ($errNo, $errStr, $errSile, $errLine) {
-                });
-                unlink($file);
-                restore_error_handler();
-            }
-        }
-
-        // $this->mustRotate = false;
+        $this->level = self::getLevelByName($level);
     }
 }

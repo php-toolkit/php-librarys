@@ -568,24 +568,34 @@ abstract class StringHelper
         return $truncate;
     }
 
+    public static function toCamel($str, $upperFirstChar = false)
+    {
+        return self::toCamelCase($str, $upperFirstChar);
+    }
+
     /**
      * Translates a string with underscores into camel case (e.g. first_name -> firstName)
      * @prototype string public static function toCamelCase(string $str[, bool $capitalise_first_char = false])
      * @param $str
-     * @param bool $upper_case_first_char
+     * @param bool $upperFirstChar
      * @return mixed
      */
-    public static function toCamelCase($str, $upper_case_first_char = false)
+    public static function toCamelCase($str, $upperFirstChar = false)
     {
         $str = self::strtolower($str);
 
-        if ($upper_case_first_char) {
+        if ($upperFirstChar) {
             $str = self::ucfirst($str);
         }
 
         return preg_replace_callback('/_+([a-z])/', function ($c) {
             return strtoupper($c[1]);
         }, $str);
+    }
+
+    public static function toSnake($str, $sep = '_')
+    {
+        return self::toSnakeCase($str, $sep);
     }
 
     /**
@@ -697,7 +707,7 @@ abstract class StringHelper
     }
 
     /**
-     * 缩进格式化内容，去空白/注释 已不会影响到 HEREDOC 标记
+     * 缩进格式化内容，去空白/注释
      * @param $fileName
      * @param int $type
      * @return mixed

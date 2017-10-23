@@ -52,7 +52,7 @@ class ErrorHandler
      */
     public function __construct(LoggerInterface $logger, array $options = [])
     {
-        Obj::smartConfigure($this, $options);
+        Obj::init($this, $options);
 
         $this->logger = $logger;
     }
@@ -218,6 +218,7 @@ class ErrorHandler
         $this->reservedMemory = null;
 
         $lastError = error_get_last();
+
         if ($lastError && in_array($lastError['type'], self::$fatalErrors, true)) {
             $this->logger->log(
                 $this->fatalLevel ?? LogLevel::ALERT,
@@ -229,6 +230,10 @@ class ErrorHandler
                     'line' => $lastError['line']
                 ]
             );
+
+            if (method_exists($this->logger, 'flush')) {
+                $this->logger->flush();
+            }
 
             if ($this->logger instanceof Logger) {
                 foreach ($this->logger->getHandlers() as $handler) {

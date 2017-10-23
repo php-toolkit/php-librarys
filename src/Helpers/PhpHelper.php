@@ -71,7 +71,7 @@ class PhpHelper extends EnvHelper
 
         if ($startMem) {
             $startMem = array_sum(explode(' ', $startMem));
-            $endMem = array_sum(explode(' ', memory_get_usage()));
+            $endMem = array_sum(explode(' ', memory_get_usage(true)));
 
             $info['memory'] = number_format(($endMem - $startMem) / 1024, 3) . 'kb';
         }

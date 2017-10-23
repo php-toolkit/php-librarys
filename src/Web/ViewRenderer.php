@@ -23,21 +23,16 @@ class ViewRenderer
      */
     protected $viewsPath;
 
-    /**
-     * 默认布局文件
-     * @var string
-     */
+    /** @var null|string 默认布局文件 */
     protected $layout;
 
-    /**
-     * @var array
-     */
+    /** @var array Attributes for the view */
     protected $attributes;
 
-    /** @var string  */
+    /** @var string Default view suffix. */
     protected $suffix = 'php';
 
-    /** @var array allowed suffix list */
+    /** @var array Allowed suffix list */
     protected $suffixes = ['php','tpl','html'];
 
     /**
@@ -119,100 +114,32 @@ class ViewRenderer
     }
 
     /**
-     * Get the attributes for the renderer
-     * @return array
+     * @param $view
+     * @param array $data
+     * @param bool $outputIt
+     * @return string|null
+     * @throws \Throwable
      */
-    public function getAttributes()
+    public function include($view, array $data = [], $outputIt = true)
     {
-        return $this->attributes;
-    }
-
-    /**
-     * Set the attributes for the renderer
-     * @param array $attributes
-     */
-    public function setAttributes(array $attributes)
-    {
-        $this->attributes = $attributes;
-    }
-
-    /**
-     * Add an attribute
-     * @param $key
-     * @param $value
-     */
-    public function addAttribute($key, $value)
-    {
-        $this->attributes[$key] = $value;
-    }
-
-    /**
-     * Retrieve an attribute
-     * @param $key
-     * @return mixed
-     */
-    public function getAttribute($key)
-    {
-        if (!isset($this->attributes[$key])) {
-            return false;
+        if ($outputIt) {
+            echo $this->fetch($view, $data);
+            return null;
         }
 
-        return $this->attributes[$key];
-    }
-
-    /**
-     * Get the view path
-     * @return string
-     */
-    public function getViewsPath()
-    {
-        return $this->viewsPath;
-    }
-
-    /**
-     * Set the view path
-     * @param string $viewsPath
-     */
-    public function setViewsPath($viewsPath)
-    {
-        if ($viewsPath) {
-            $this->viewsPath = rtrim($viewsPath, '/\\') . '/';
-        }
-    }
-
-    /**
-     * Get the layout file
-     * @return string
-     */
-    public function getLayout()
-    {
-        return $this->layout;
-    }
-
-    /**
-     * Set the layout file
-     * @param string $layout
-     */
-    public function setLayout($layout)
-    {
-        $this->layout = rtrim($layout, '/\\');
+        return $this->fetch($view, $data);
     }
 
     /**
      * Renders a view and returns the result as a string
-     * cannot contain view as a key
      * throws RuntimeException if $viewsPath . $view does not exist
-     * @param $view
+     * @param string $view
      * @param array $data
      * @return mixed
      * @throws \Throwable
      */
     public function fetch($view, array $data = [])
     {
-        if (isset($data['view'])) {
-            throw new \InvalidArgumentException('Duplicate view key found');
-        }
-
         $file = $this->getViewFile($view);
 
         if (!is_file($file)) {
@@ -259,6 +186,86 @@ class ViewRenderer
     {
         extract($data, EXTR_OVERWRITE);
         include $file;
+    }
+
+    /**
+     * Get the attributes for the renderer
+     * @return array
+     */
+    public function getAttributes()
+    {
+        return $this->attributes;
+    }
+
+    /**
+     * Set the attributes for the renderer
+     * @param array $attributes
+     */
+    public function setAttributes(array $attributes)
+    {
+        $this->attributes = $attributes;
+    }
+
+    /**
+     * Add an attribute
+     * @param $key
+     * @param $value
+     */
+    public function addAttribute($key, $value)
+    {
+        $this->attributes[$key] = $value;
+    }
+
+    /**
+     * Retrieve an attribute
+     * @param $key
+     * @return mixed
+     */
+    public function getAttribute($key)
+    {
+        if (!isset($this->attributes[$key])) {
+            return null;
+        }
+
+        return $this->attributes[$key];
+    }
+
+    /**
+     * Get the view path
+     * @return string
+     */
+    public function getViewsPath()
+    {
+        return $this->viewsPath;
+    }
+
+    /**
+     * Set the view path
+     * @param string $viewsPath
+     */
+    public function setViewsPath($viewsPath)
+    {
+        if ($viewsPath) {
+            $this->viewsPath = rtrim($viewsPath, '/\\') . '/';
+        }
+    }
+
+    /**
+     * Get the layout file
+     * @return string
+     */
+    public function getLayout()
+    {
+        return $this->layout;
+    }
+
+    /**
+     * Set the layout file
+     * @param string $layout
+     */
+    public function setLayout($layout)
+    {
+        $this->layout = rtrim($layout, '/\\');
     }
 
     /**

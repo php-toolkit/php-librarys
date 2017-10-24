@@ -29,4 +29,36 @@ class Str extends StringHelper
 
         return $prefix . $string . $suffix;
     }
+
+    /**
+     * @param string $needle
+     * @param string|array $string
+     * @return bool
+     */
+    public static function contains(string $needle, $string)
+    {
+        return self::has($needle, $string);
+    }
+
+    /**
+     * @param string $needle
+     * @param string|array  $string
+     * @return bool
+     */
+    public static function has(string $needle, $string)
+    {
+        if (is_string($string)) {
+            return stripos($string, $needle) !== false;
+        }
+
+        if (is_array($string)) {
+            foreach ($string as $item) {
+                if (stripos($item, $needle) !== false) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 }

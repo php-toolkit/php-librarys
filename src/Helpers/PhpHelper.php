@@ -65,13 +65,14 @@ class PhpHelper extends EnvHelper
     {
         $info['startTime'] = $startTime;
         $info['endTime'] = microtime(true);
+        $info['endMemory'] = memory_get_usage(true);
 
         // 计算运行时间
         $info['runtime'] = number_format(($info['endTime'] - $startTime) * 1000, 3)  . 'ms';
 
         if ($startMem) {
             $startMem = array_sum(explode(' ', $startMem));
-            $endMem = array_sum(explode(' ', memory_get_usage(true)));
+            $endMem = array_sum(explode(' ', $info['endMemory']));
 
             $info['memory'] = number_format(($endMem - $startMem) / 1024, 3) . 'kb';
         }

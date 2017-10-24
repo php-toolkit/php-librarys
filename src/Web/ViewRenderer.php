@@ -60,13 +60,19 @@ class ViewRenderer
      * throws RuntimeException if view file does not exist
      * @param string $view
      * @param array $data extract data to view, cannot contain view as a key
-     * @param string|null $layout override default layout file
+     * @param string|null|false $layout Override default layout file.
+     *  False - will disable use layout file
      * @return string
      * @throws \Throwable
      */
     public function render($view, array $data = [], $layout = null)
     {
         $output = $this->fetch($view, $data);
+
+        // False - will disable use layout file
+        if ($layout === false) {
+            return $output;
+        }
 
         return $this->renderContent($output, $data, $layout);
     }
@@ -297,7 +303,7 @@ class ViewRenderer
             return $view;
         }
 
-        return $view . $ext;
+        return $view . '.' . $ext;
     }
 
     /**

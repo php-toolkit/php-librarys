@@ -5,9 +5,6 @@
  * Date: 2015/3/14
  * Time: 19:44
  * Use : 跟 \stdClass 一样，多的功能是 -- 提供数组方式访问属性
- * 与同文件夹下的 FixedData.php 区别是
- *     数据较为活跃，可随意添加属性，
- *     获取不存在的属性也并不报错(return null)
  * File: ActiveData.php
  */
 
@@ -53,11 +50,7 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
             $name = trim($name);
 
             if (is_numeric($name)) {
-                $name = 'attr_' . $name;
-            }
-
-            if (!$name) {
-                $name = 'attr_';
+                continue;
             }
 
             $this->$name = $recursive && is_array($value) ? static::create($value, $recursive) : $value;

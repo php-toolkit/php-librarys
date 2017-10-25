@@ -25,22 +25,45 @@ use Inhere\Exceptions\PropertyException;
  *  }
  * }
  */
-class JsonMessage extends ActiveData
+class JsonMessage
 {
     /**
      * @var int
      */
-    public $code = 0;
+    public $code;
 
     /**
      * @var string
      */
-    public $msg = 'success';
+    public $msg;
 
     /**
-     * @var array
+     * @var int|float
      */
-    public $data = [];
+    public $time;
+
+    /**
+     * @var array|string
+     */
+    public $data;
+
+    public static function make($data = null, $msg = 'success', $code = 0)
+    {
+        return new static($data, $msg, $code);
+    }
+
+    /**
+     * JsonMessage constructor.
+     * @param null $data
+     * @param string $msg
+     * @param int $code
+     */
+    public function __construct($data = null, $msg = 'success', $code = 0)
+    {
+        $this->data = $data;
+        $this->msg = $msg;
+        $this->code = $code;
+    }
 
     /**
      * @return bool
@@ -81,17 +104,33 @@ class JsonMessage extends ActiveData
     }
 
     /**
-     * @param array $data
+     * @param string $key
+     * @param mixed $value
+     */
+    public function add($key, $value)
+    {
+        if (null === $this->data) {
+            $this->data = [];
+        }
+
+        $this->data[$key] = $value;
+    }
+
+    /**
+     * @param array|string $data
      * @return $this
      */
-    public function data(array $data)
+    public function data($data)
     {
         $this->data = $data;
 
         return $this;
     }
 
-    public function all($toArray = true)
+    /**
+     * @return array
+     */
+    public function all()
     {
         // add a new alert message
         return [
@@ -101,28 +140,51 @@ class JsonMessage extends ActiveData
         ];
     }
 
+    /**
+     * @return array
+     */
     public function toArray()
     {
         return $this->all();
     }
 
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return json_encode($this->all());
+    }
+
+    /**
+     * @param string $name
+     * @return bool
+     */
+    public function __isset($name)
+    {
+        return isset($this->data[$name]);
+    }
+
+    /**
+     * @param string $name
+     * @param $value
+     */
     public function __set($name, $value)
     {
         $this->data[$name] = $value;
     }
 
-    // disable unset property
-    public function offsetUnset($offset)
-    {
-        //$this->$offset = null;
-    }
-
+    /**
+     * @param string $name
+     * @return mixed
+     * @throws PropertyException
+     */
     public function __get($name)
     {
         if (isset($this->data[$name])) {
             return $this->data[$name];
         }
 
-        throw new PropertyException(sprintf('获取不存在的属性 %s ！', $name));
+        throw new PropertyException(sprintf('the property is not exists: %s', $name));
     }
 }

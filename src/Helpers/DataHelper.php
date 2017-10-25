@@ -45,10 +45,12 @@ class DataHelper
     public static function toArray($data, $recursive = false)
     {
         // Ensure the input data is an array.
-        if (is_object($data) && $data instanceof \Traversable) {
-            $data = iterator_to_array($data);
-//        } elseif (is_object($data)) {
-//            $data = get_object_vars($data);
+        if (is_object($data)) {
+            if ($data instanceof \Traversable) {
+                $data = iterator_to_array($data);
+            } elseif (method_exists($data, 'toArray')) {
+                $data = $data->toArray();
+            }
         } else {
             $data = (array)$data;
         }

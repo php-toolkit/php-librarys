@@ -36,4 +36,13 @@ class Obj extends ObjectHelper
 
         return self::$objects[$class];
     }
+
+    /**
+     * @param $object
+     * @return bool
+     */
+    public static function isArrayable($object)
+    {
+        return $object instanceof \ArrayAccess || method_exists($object, 'toArray');
+    }
 }

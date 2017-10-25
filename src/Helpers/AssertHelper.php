@@ -14,7 +14,6 @@ namespace Inhere\Library\Helpers;
  */
 class AssertHelper
 {
-
     /**
      * 检查字符串是否是正确的变量名
      * @param $string

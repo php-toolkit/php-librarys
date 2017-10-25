@@ -20,6 +20,7 @@ class PhpError
     /**
      * $lastError = error_get_last();
      * @param array $lastError
+     * @param null|string $catcher
      * @return array
      */
     public static function toArray(array $lastError, $catcher = null)

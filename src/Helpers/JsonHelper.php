@@ -23,7 +23,7 @@ class JsonHelper
      */
     public static function encode($data): string
     {
-        if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        if (PHP_VERSION_ID >= 50400) {
             return json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         }
 

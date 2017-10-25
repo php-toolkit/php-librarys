@@ -52,7 +52,7 @@ class Str extends StringHelper
         }
 
         if (is_array($string)) {
-            foreach ($string as $item) {
+            foreach ((array)$string as $item) {
                 if (stripos($item, $needle) !== false) {
                     return true;
                 }

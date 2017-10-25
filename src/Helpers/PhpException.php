@@ -48,13 +48,7 @@ class PhpException
             );
         }
 
-        if ($clearHtml) {
-            $message = strip_tags($message);
-        } else {
-            $message = "<div class=\"exception-box\">{$message}</div>";
-        }
-
-        return $message;
+        return $clearHtml ? strip_tags($message) : "<div class=\"exception-box\">{$message}</div>";
     }
 
     /**

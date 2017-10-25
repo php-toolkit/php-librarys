@@ -97,7 +97,7 @@ class ProcessHelper
             $pid = getmypid();
 
             if ($childHandler) {
-                call_user_func($childHandler, $id, $pid);
+                $childHandler($id, $pid);
             }
 
         } else {
@@ -122,7 +122,7 @@ class ProcessHelper
         while (($pid = pcntl_waitpid(-1, $status, WNOHANG)) >= 0) {
             if ($pid) {
                 // ... (callback, pid, exitCode, status)
-                call_user_func($onExit, $pid, pcntl_wexitstatus($status), $status);
+                $onExit($pid, pcntl_wexitstatus($status), $status);
             } else {
                 usleep(50000);
             }
@@ -357,7 +357,7 @@ class ProcessHelper
                 pcntl_alarm(-1);
             }
         });*/
-        self::signal(SIGALRM, $handler);
+        self::installSignal(SIGALRM, $handler);
 
         // self::alarm($s);
         pcntl_alarm($s);
@@ -365,13 +365,13 @@ class ProcessHelper
 
     /**
      * install signal
-     * @param  int $sigal e.g: SIGTERM SIGINT(Ctrl+C) SIGUSR1 SIGUSR2 SIGHUP
+     * @param  int $signal e.g: SIGTERM SIGINT(Ctrl+C) SIGUSR1 SIGUSR2 SIGHUP
      * @param  callable $handler
      * @return bool
      */
-    public static function installSignal($sigal, callable $handler)
+    public static function installSignal($signal, callable $handler)
     {
-        return pcntl_signal($sigal, $handler, false);
+        return pcntl_signal($signal, $handler, false);
     }
 
     /**

@@ -205,4 +205,27 @@ class ObjectHelper
         // Create a callable for the dataStorage
         return $reflection->newInstanceArgs($newInstanceArgs);
     }
+
+    /**
+     * @param string|array $config
+     * @return mixed
+     */
+    public static function smartCreate($config)
+    {
+        if (is_string($config)) {
+            return new $config;
+        }
+
+        if (is_array($config) && !empty($config['target'])) {
+            $class = Arr::remove($config, 'target');
+            $args = Arr::remove($config, '_args', []);
+            $props = $config;
+
+            $obj = new $class(...$args);
+
+            return self::init($obj, $props);
+        }
+
+        return null;
+    }
 }

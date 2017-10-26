@@ -333,11 +333,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
             // If there are no parameters, just return a new object.
             if (null === $reflectionMethod) {
                 $callback = function () use ($class, $props) {
-                    $object = new $class;
-
-                    Obj::smartConfigure($object, $props);
-
-                    return $object;
+                    return Obj::init(new $class, $props);
                 };
             } else {
                 $arguments = $arguments ?: Obj::getMethodArgs($reflectionMethod);
@@ -346,9 +342,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
                 $callback = function () use ($reflection, $arguments, $props) {
                     $object = $reflection->newInstanceArgs($arguments);
 
-                    Obj::smartConfigure($object, $props);
-
-                    return $object;
+                    return Obj::init($object, $props);
                 };
             }
 
@@ -426,6 +420,15 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
         if (isset($this->services[$id])) {
             unset($this->services[$id]);
         }
+    }
+
+    /**
+     * @param string|array $definition
+     * @return mixed
+     */
+    public function make($definition)
+    {
+        return Obj::smartCreate($definition);
     }
 
     /*******************************************************************************

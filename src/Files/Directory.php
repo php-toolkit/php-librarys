@@ -20,6 +20,43 @@ use Inhere\Exceptions\NotFoundException;
 class Directory extends FileSystem
 {
     /**
+     * ```php
+     * $filter = function ($current, $key, $iterator) {
+     *  // \SplFileInfo $current
+     *  // Skip hidden files and directories.
+     *  if ($current->getFilename()[0] === '.') {
+     *      return false;
+     *  }
+     *  if ($current->isDir()) {
+     *      // Only recurse into intended subdirectories.
+     *      return $current->getFilename() !== '.git';
+     *  }
+     *      // Only consume files of interest.
+     *      return strpos($current->getFilename(), '.php') !== false;
+     * };
+     *
+     * // $info is instance of \SplFileInfo
+     * foreach(Directory::getRecursiveIterator($srcDir, $filter) as $info) {
+     *    // $info->getFilename(); ...
+     * }
+     * ```
+     * @param string $srcDir
+     * @param callable $filter
+     * @return \RecursiveIteratorIterator
+     */
+    public static function getRecursiveIterator($srcDir, callable $filter)
+    {
+        if (!$srcDir || !file_exists($srcDir)) {
+            throw new \LogicException('Please provide a exists source directory.');
+        }
+
+        $directory = new \RecursiveDirectoryIterator($srcDir);
+        $filterIterator = new \RecursiveCallbackFilterIterator($directory, $filter);
+
+        return new \RecursiveIteratorIterator($filterIterator);
+    }
+
+    /**
      * 判断文件夹是否为空
      * @param $dir
      * @return bool

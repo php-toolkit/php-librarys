@@ -308,7 +308,7 @@ class FormatHelper
                         $iw = false;
                         $ih = true; // in HEREDOC
                     } elseif ($tn === T_END_HEREDOC) {
-                        $new .= 'S;';
+                        $new .= "S;\n";
                         $iw = true;
                         $ih = false; // in HEREDOC
                         for ($j = $i + 1; $j < $c; $j++) {

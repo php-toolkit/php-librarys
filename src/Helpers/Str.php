@@ -31,29 +31,29 @@ class Str extends StringHelper
     }
 
     /**
-     * @param string $needle
-     * @param string|array $string
+     * @param string $string
+     * @param string|array $needle
      * @return bool
      */
-    public static function contains(string $needle, $string)
+    public static function contains(string $string, $needle)
     {
-        return self::has($needle, $string);
+        return self::has($string, $needle);
     }
 
     /**
-     * @param string $needle
-     * @param string|array  $string
+     * @param string $string
+     * @param string|array $needle
      * @return bool
      */
-    public static function has(string $needle, $string)
+    public static function has(string $string, $needle)
     {
         if (is_string($string)) {
             return stripos($string, $needle) !== false;
         }
 
-        if (is_array($string)) {
-            foreach ((array)$string as $item) {
-                if (stripos($item, $needle) !== false) {
+        if (is_array($needle)) {
+            foreach ((array)$needle as $item) {
+                if (stripos($string, $item) !== false) {
                     return true;
                 }
             }

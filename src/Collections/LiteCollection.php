@@ -81,6 +81,25 @@ class LiteCollection extends \ArrayObject implements CollectionInterface
     }
 
     /**
+     * @param callable $filter
+     * @return static
+     */
+    public function reject(callable $filter)
+    {
+        $data = [];
+
+        foreach ($this as $key => $value) {
+            if (!$filter($value, $key)) {
+                $data[$key] = $value;
+            }
+
+            unset($this[$key]);
+        }
+
+        return new static($data);
+    }
+
+    /**
      * @param callable $callback
      * @return static
      */
@@ -90,6 +109,7 @@ class LiteCollection extends \ArrayObject implements CollectionInterface
 
         foreach ($this as $key => $value) {
             $data[$key] = $callback($value, $key);
+            unset($this[$key]);
         }
 
         return new static($data);
@@ -101,14 +121,14 @@ class LiteCollection extends \ArrayObject implements CollectionInterface
      */
     public function implode($char = ',')
     {
-        $string = '';
-
-        foreach ($this as $key => $value) {
+//        $string = '';
+//
+//        foreach ($this as $key => $value) {
 //            $string .= is_array($value) ? $this->implode($char, $value) : implode($char, $value);
-            $string .= implode($char, $value);
-        }
+//            $string .= implode($char, $value);
+//        }
 
-        return $string;
+        return implode($char, $this->all());
     }
 
     /**

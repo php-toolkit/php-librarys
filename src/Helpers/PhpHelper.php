@@ -161,11 +161,11 @@ class PhpHelper extends EnvHelper
      */
     public static function printVars(...$args): string
     {
-        ob_start();
+        $string = '';
+
         foreach ($args as $arg) {
-            print_r($arg);
+            $string .= print_r($arg, 1) . PHP_EOL;
         }
-        $string = ob_get_clean();
 
         return preg_replace("/Array\n\s+\(/", 'Array (', $string);
     }

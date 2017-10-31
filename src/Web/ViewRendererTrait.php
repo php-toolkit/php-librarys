@@ -57,11 +57,12 @@ trait ViewRendererTrait
     /**
      * @param string $string
      * @param array $data
+     * @param null|string $layout
      * @return string
      */
-    public function renderContent($string, array $data = [])
+    public function renderContent($string, array $data = [], $layout = null)
     {
-        return $this->getRenderer()->renderContent($string, $data);
+        return $this->getRenderer()->renderContent($string, $data, $layout);
     }
 
 }

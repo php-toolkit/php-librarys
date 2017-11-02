@@ -188,27 +188,61 @@ class DatabaseClient
     }
 
     /**************************************************************************
-     * basic method
+     * extra methods
      *************************************************************************/
 
     /**
-     * Run a select statement
-     * @param  string $statement
-     * @param  array $bindings
+     * @var array
+     */
+    protected static $queryNodes = [
+        'select' => '*', // string: 'id, name' array: ['id', 'name']
+        'from' => '',
+        'join' => '', // [$table, $condition, $type]
+
+        'having' => '', // [$conditions, $glue = 'AND']
+        'group' => '', // 'id, type'
+        'order' => '', // 'created ASC' OR ['created ASC', 'publish DESC']
+        'limit' => 1, // 10 OR [2, 10]
+    ];
+
+    /**
+     * @var array
+     */
+    protected static $queryOptions = [
+        /* data index column. */
+        'indexKey' => null,
+
+        /*
+        data load type, in :
+        'a className'    -- return object, instanceof the class`
+        'array'      -- return array, only  [ 'value' ]
+        'assoc'      -- return array, Contain  [ 'column' => 'value']
+         */
+        'loadType' => 'assoc',
+    ];
+
+    /**
+     * Run a select statement, fetch one
+     * @param  string $from
+     * @param  array|string $wheres
+     * @param  string|array $select
+     * @param  array $options
      * @return array
      */
-    public function find($from, $wheres, array $options = [])
+    public function find(string $from, $wheres = 1, $select = '*', array $options = [])
     {
-        # code...
+        
     }
 
     /**
-     * Run a select statement
-     * @param  string $statement
-     * @param  array $bindings
+     * Run a select statement, fetch all
+     * @param  string $from
+     * @param  array|string $wheres
+     * @param  string|array $select
+     * @param  array $options
      * @return array
      */
-    public function findAll($wheres, array $options = [])
+    public function findAll(string $from, $wheres = 1, $select = '*', array $options = [])
     {
         # code...
     }
@@ -258,6 +292,42 @@ class DatabaseClient
     public function delete($statement, array $bindings = [])
     {
         return $this->fetchAffected($statement, $bindings);
+    }
+
+    /**
+     * count
+     * ```
+     * $db->count();
+     * ```
+     * @param  string $table
+     * @param  array|string $wheres
+     * @return int
+     */
+    public function count(string $table, $wheres)
+    {
+        list($where, $bindings) = $this->handleWheres($wheres);
+        $sql = "SELECT COUNT(*) AS total FROM {$table} WHERE {$where}";
+
+        $result = $this->fetchObject($sql, $bindings);
+
+        return $result ? (int)$result->total : 0;
+    }
+
+    /**
+     * exists
+     * ```
+     * $db->exists();
+     * // SQL: select exists(select * from `table` where (`phone` = 152xxx)) as `exists`;
+     * ```
+     * @return int
+     */
+    public function exists($statement, array $bindings = [])
+    {
+        $sql = sprintf('SELECT EXISTS(%s) AS `exists`', $sql);
+
+        $result = $this->fetchObject($sql, $bindings);
+
+        return $result ? $result->exists : 0;
     }
 
     /********************************************************************************
@@ -747,6 +817,11 @@ class DatabaseClient
         }
 
         return $query;
+    }
+
+    public function handleFindOptions(array $options)
+    {
+        # code...
     }
 
     /**

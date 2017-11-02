@@ -76,10 +76,15 @@ trait LiteConfigTrait
 
     /**
      * Method to get property Options
-     * @return  array
+     * @param string|null $key
+     * @return array
      */
-    public function getConfig()
+    public function getConfig(string $key = null)
     {
+        if ($key) {
+            return $this->getValue($key);
+        }
+
         return $this->config;
     }
 

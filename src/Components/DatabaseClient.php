@@ -279,7 +279,7 @@ class DatabaseClient
         $options['limit'] = 1;
 
         $statement = $this->compileSelect($options);
-//var_dump($statement, $bindings);die;
+
         return $this->fetchOne($statement, $bindings ?: []);
     }
 
@@ -847,7 +847,7 @@ class DatabaseClient
                 }
             }
         }
-//var_dump($nodes);die;
+
         $where = implode(' ', $nodes);
         unset($nodes);
 
@@ -1099,7 +1099,7 @@ class DatabaseClient
     {
         $this->connect();
 
-        return $this->pdo->rollBack();
+        return $this->pdo->beginTransaction();
     }
 
     /**

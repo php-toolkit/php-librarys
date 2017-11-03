@@ -41,7 +41,9 @@ git clone https://github.com/inhere/php-librarys.git // github
     - `DataProxy.php` 简单的数据访问代理实现
     - `ErrorHandler.php` 错误处理
     - `Language.php` 提供语言管理,语言包处理类
+    - `DatabaseClient.php` 一个简单的 PDO database 操作封装
     - `MemcacheClient.php` 一个简单的memcache(d)封装
+    - `RedisClient.php` 一个简单的 redis 操作封装
     - `Pipeline.php` 一个简单的Pipeline实现封装
 - **`Inhere\Library\DI`** 依赖注入容器，提供全局服务管理 
 - `Inhere\Library\Files` 文件系统操作(文件(夹)读取，检查，创建)；

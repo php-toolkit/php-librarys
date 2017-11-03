@@ -230,14 +230,18 @@ class DatabaseClient
      * @var array
      */
     protected static $queryNodes = [
-        'select' => '*', // string: 'id, name' array: ['id', 'name']
-        'from' => '',
-        'join' => '', // [$table, $condition, $type]
+        // string: 'id, name'; array: ['id', 'name']
+        'select',
+        'from',
+        // string: full join clause; array: [$table, $condition, $type = 'LEFT']
+        'join',
 
-        'having' => '', // [$conditions, $glue = 'AND']
-        'group' => '', // 'id, type'
-        'order' => '', // 'created ASC' OR ['created ASC', 'publish DESC']
-        'limit' => 1, // 10 OR [2, 10]
+        'where',
+
+        'having', // [$conditions, $glue = 'AND']
+        'group', // 'id, name' || ['id', 'name']
+        'order', // 'created ASC' || ['created', 'publish', 'DESC'] ['created ASC', 'publish DESC']
+        'limit', // 10 OR [2, 10]
     ];
 
     /**
@@ -249,11 +253,11 @@ class DatabaseClient
 
         /*
         data load type, in :
-        'a className'    -- return object, instanceof the class`
-        'array'      -- return array, only  [ 'value' ]
-        'assoc'      -- return array, Contain  [ 'column' => 'value']
+        'a className' -- return object, instanceof the class`
+        'array'       -- return array, only  [ 'value' ]
+        'assoc'       -- return array, Contain  [ 'column' => 'value']
          */
-        'loadType' => 'assoc',
+        'fetchType' => 'assoc',
     ];
 
     /**
@@ -266,7 +270,17 @@ class DatabaseClient
      */
     public function find(string $from, $wheres = 1, $select = '*', array $options = [])
     {
-        return [];
+        $options['select'] = $this->qns($select);
+        $options['from'] = $this->qn($from);
+
+        list($where, $bindings) = $this->handleWheres($wheres);
+
+        $options['where'] = $where;
+        $options['limit'] = 1;
+
+        $statement = $this->compileSelect($options);
+//var_dump($statement, $bindings);die;
+        return $this->fetchOne($statement, $bindings ?: []);
     }
 
     /**
@@ -279,18 +293,20 @@ class DatabaseClient
      */
     public function findAll(string $from, $wheres = 1, $select = '*', array $options = [])
     {
-        return [];
-    }
+        $options['select'] = $this->qns($select);
+        $options['from'] = $this->qn($from);
 
-    /**
-     * Run a select statement
-     * @param  string $statement
-     * @param  array $bindings
-     * @return array
-     */
-    public function select($statement, array $bindings = [])
-    {
-        return $this->fetchAll($statement, $bindings);
+        list($where, $bindings) = $this->handleWheres($wheres);
+
+        $options['where'] = $where;
+
+        if (!isset($options['limit'])) {
+            $options['limit'] = 1000;
+        }
+
+        $statement = $this->compileSelect($options);
+
+        return $this->fetchAll($statement, $bindings ?: []);
     }
 
     /**
@@ -638,9 +654,15 @@ class DatabaseClient
      */
     public function execute($statement, array $params = [])
     {
+        // trigger before event
+        $this->fire(self::BEFORE_EXECUTE, [$statement, $params, 'execute']);
+
         $sth = $this->prepareWithBindings($statement, $params);
 
         $sth->execute();
+
+        // trigger after event
+        $this->fire(self::AFTER_EXECUTE, [$statement, 'execute']);
 
         return $sth;
     }
@@ -655,14 +677,10 @@ class DatabaseClient
         $this->connect();
 
         // if there are no values to bind ...
-        if (empty($params)) {
+        if (!$params) {
             // ... use the normal preparation
             return $this->prepare($statement);
         }
-
-        // rebuild the statement and values
-        //        $parser = clone $this->parser;
-        //        list ($statement, $bindings) = $parser->rebuild($statement, $bindings);
 
         // prepare the statement
         $sth = $this->pdo->prepare($statement);
@@ -670,10 +688,7 @@ class DatabaseClient
         $this->log($statement, $params);
 
         // for the placeholders we found, bind the corresponding data values
-        /** @var array $params */
-        foreach ($params as $key => $val) {
-            $this->bindValue($sth, $key, $val);
-        }
+        $this->bindValues($sth, $params);
 
         // done
         return $sth;
@@ -694,25 +709,23 @@ class DatabaseClient
 
         try {
             $return = $func($this);
-//            $this->flush();
             $this->pdo->commit();
 
             return $return ?: true;
         } catch (\Throwable $e) {
-//            $this->close();
             $this->pdo->rollBack();
             throw $e;
         }
     }
 
     /**
-     * @param PDOStatement $statement
+     * @param PDOStatement $sth
      * @param array|\ArrayIterator $bindings
      */
-    public function bindValues($statement, $bindings)
+    public function bindValues(PDOStatement $sth, $bindings)
     {
         foreach ($bindings as $key => $value) {
-            $statement->bindValue(
+            $sth->bindValue(
                 is_string($key) ? $key : $key + 1, $value,
                 is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR
             );
@@ -751,19 +764,6 @@ class DatabaseClient
      * helper method
      *************************************************************************/
 
-    protected function prepareWithParams($sql, array $params)
-    {
-        /** @var \PDOStatement $st */
-        if ($params) {
-            $sth = $this->pdo->prepare($sql);
-            $sth->execute($params);
-        } else {
-            $sth = $this->pdo->query($sql);
-        }
-
-        return $sth;
-    }
-
     /**
      * Check whether the connection is available
      * @return bool
@@ -787,11 +787,11 @@ class DatabaseClient
      * @example
      * ```
      * ...
-     * $result = $db->findAll([
-     *      'userId' => 23,      // ==> '`userId` = 23'
-     *      'title' => 'test',  // value will auto add quote, equal to "title = 'test'"
+     * $result = $db->findAll('user', [
+     *      'userId' => 23,      // ==> 'AND `userId` = 23'
+     *      'title' => 'test',  // value will auto add quote, equal to "AND title = 'test'"
      * 
-     *      ['publishTime', '>', '0'],  // ==> '`publishTime` > 0'
+     *      ['publishTime', '>', '0'],  // ==> 'AND `publishTime` > 0'
      *      ['createdAt', '<=', 1345665427, 'OR'],  // ==> 'OR `createdAt` <= 1345665427'
      *      ['id', 'IN' ,[4,5,56]],   // ==> '`id` IN ('4','5','56')'
      *      ['id', 'NOT IN', [4,5,56]], // ==> '`id` NOT IN ('4','5','56')'
@@ -806,57 +806,130 @@ class DatabaseClient
     public function handleWheres($wheres)
     {
         if (is_object($wheres) && $wheres instanceof \Closure) {
-            return $wheres($this);
+            $wheres = $wheres($this);
         }
 
-        $nodes = [];
+        if (!$wheres || $wheres === 1) {
+            return [1, null];
+        }
+
+        if (is_string($wheres)) {
+            return [$wheres, null];
+        }
+
+        $nodes = $bindings = [];
 
         if (is_array($wheres)) {
-            foreach ((array)$wheres as $key => $where) {
-                if (is_object($where) && $where instanceof \Closure) {
-                    $nodes[] = $where($this);
-                    continue;
+            foreach ($wheres as $key => $val) {
+                if (is_object($val) && $val instanceof \Closure) {
+                    $val = $val($this);
                 }
 
                 $key = trim($key);
 
-                // string key: $key contain a column name, $where is column value
+                // string key: $key is column name, $val is column value
                 if ($key && !is_numeric($key)) {
+                    $nodes[] = 'AND ' . $this->qn($key) . '= ?';
+                    $bindings[] = $val;
 
-                    // is a 'in|not in' statement. eg: $where link [2,3,5] ['foo', 'bar', 'baz']
-                    if (is_array($where) || is_object($where)) {
-                        $value = array_map(array($this, 'quote'), (array)$where);
-
-                        // check $key exists keyword 'in|not in|IN|NOT IN'
-                        $where = $key . ' IN (' . implode(',', $value) . ')';
-                    } else {
-                        // check exists operator '<' '>' '<=' '>=' '!='
-                        $where = $key . (1 === preg_match('/[<>=]/', $key) ? ' ' : ' = ') . $this->q($where);
+                    // array: [column, operator(e.g '=', '>=', 'IN'), value, option(Is optional, e.g 'AND', 'OR')]
+                } elseif (is_array($val)) {
+                    if (!isset($val[2])) {
+                        throw new \RuntimeException('Where condition data is incomplete, at least 3 elements');
                     }
+
+                    $bool = $val[3] ?? 'AND';
+                    $nodes[] = strtoupper($bool) . ' ' . $this->qn($val[0]) . " {$val[1]} ?";
+                    $bindings[] = $val[2];
+                } else {
+                    $val = trim((string)$val);
+                    $nodes[] = preg_match('/^and |or /i', $val) ? $val : 'AND ' . $val;
                 }
-
-                // have table name
-                // eg: 'mt.field', 'mt.field >='
-                if (strpos($where, '.') > 1) {
-                    $where = preg_replace('/^(\w+)\.(\w+)(.*)$/', '`$1`.`$2`$3', $where);
-                    // eg: 'field >='
-                } elseif (strpos($where, ' ') > 1) {
-                    $where = preg_replace('/^(\w+)(.*)$/', '`$1`$2', $where);
-                }
-
-                $query->where($where);
-            }// end foreach
-
-        } elseif ($wheres && is_string($wheres)) {
-            $query->where($wheres);
+            }
         }
+//var_dump($nodes);die;
+        $where = implode(' ', $nodes);
+        unset($nodes);
 
-        return $query;
+        return [$this->removeLeadingBoolean($where), $bindings];
     }
 
-    public function handleFindOptions(array $options)
+    /**
+     * @param array $opts
+     * @return string
+     */
+    public function compileSelect(array $opts)
     {
-        # code...
+        $nodes = [];
+
+        foreach (self::$queryNodes as $node) {
+            if (!isset($opts[$node])) {
+                continue;
+            }
+
+            $val = $opts[$node];
+            if ($isString = is_string($val)) {
+                $val = trim($val);
+            }
+
+            if ($node === 'join') {
+                //string: full join structure. e.g 'left join TABLE t2 on t1.id = t2.id'
+                if ($isString) {
+                    $nodes[] = stripos($val, 'join') !== false ? $val : 'LEFT JOIN ' . $val;
+
+                    // array: ['TABLE t2', 't1.id = t2.id', 'left']
+                } elseif (is_array($val)) {
+                    $nodes[] = ($val[2] ?? 'LEFT') . " JOIN {$val[0]} ON {$val[1]}";
+                }
+
+                continue;
+            }
+
+            if ($node === 'having') {
+                // string: 'having AND col = val'
+                if ($isString) {
+                    $nodes[] = stripos($val, 'having') !== false ? $val: 'HAVING ' . $val;
+
+                    // array: ['t1.id = t2.id', 'AND']
+                } elseif (is_array($val)) {
+                    $nodes[] = 'HAVING ' . ($val[1] ?? 'AND') . " {$val[0]}";
+                }
+
+                continue;
+            }
+
+            if ($node === 'group') {
+                $nodes[] = 'GROUP BY ' . $this->qns($val);
+                continue;
+            }
+
+            if ($node === 'order') {
+                $nodes[] = 'ORDER BY ' . ($isString ? $val : implode(' ', $val));
+                continue;
+            }
+
+            $nodes[] = strtoupper($node) . ' ' . ($isString ? $val : implode(',', (array)$val));
+        }
+
+        return implode(' ', $nodes);
+    }
+
+    /**
+     * @param array|string $names
+     * @return string
+     */
+    public function qns($names)
+    {
+        if (is_string($names)) {
+            $names = trim($names, ', ');
+            $names = strpos($names, ',') ? explode(',', $names) : [$names];
+        }
+
+        $names = array_map(function ($field) {
+            return $this->quoteName($field);
+        }, $names);
+
+        return implode(',', $names);
     }
 
     /**
@@ -873,21 +946,37 @@ class DatabaseClient
      */
     public function quoteName(string $name)
     {
+        // field || field as f
         if (strpos($name, '.') === false) {
             return $this->quoteSingleName($name);
         }
 
+        // t1.field || t1.field as f
         return implode('.', array_map([$this, 'quoteSingleName'], explode('.', $name)));
     }
 
     /**
-     * {@inheritdoc}
+     * @param string $name
+     * @return string
      */
     public function quoteSingleName(string $name)
     {
-        $name = str_replace($this->quoteNameEscapeChar, $this->quoteNameEscapeReplace, $name);
+        if ($name === '*') {
+            return $name;
+        }
 
-        return $this->quoteNamePrefix . $name . $this->quoteNameSuffix;
+        if (stripos($name, ' as ') === false) {
+            if (strpos($name, $this->quoteNamePrefix) !== false) {
+                $name = str_replace($this->quoteNameEscapeChar, $this->quoteNameEscapeReplace, $name);
+            }
+
+            return $this->quoteNamePrefix . $name . $this->quoteNameSuffix;
+        }
+
+        // field as f
+        $name = str_ireplace(' as ', '#', $name);
+
+        return implode(' AS ', array_map([$this, 'quoteSingleName'], explode('#', $name)));
     }
 
     /**
@@ -1181,6 +1270,16 @@ class DatabaseClient
     public function replaceTablePrefix($sql)
     {
         return str_replace($this->prefixPlaceholder, $this->tablePrefix, (string)$sql);
+    }
+
+    /**
+     * Remove the leading boolean from a statement.
+     * @param  string $value
+     * @return string
+     */
+    protected function removeLeadingBoolean($value)
+    {
+        return preg_replace('/^and |or /i', '', $value, 1);
     }
 
     /**

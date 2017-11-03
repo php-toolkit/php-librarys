@@ -229,13 +229,14 @@ class DatabaseClient
     /**
      * @var array
      */
-    protected static $queryNodes = [
+    const SELECT_NODES = [
         // string: 'id, name'; array: ['id', 'name']
         'select',
         'from',
         // string: full join clause; array: [$table, $condition, $type = 'LEFT']
         'join',
 
+        /** @see handleWheres() */
         'where',
 
         'having', // [$conditions, $glue = 'AND']
@@ -247,7 +248,17 @@ class DatabaseClient
     /**
      * @var array
      */
-    protected static $queryOptions = [
+    const UPDATE_NODES = ['update', 'set', 'where', 'order', 'limit'];
+
+    /**
+     * @var array
+     */
+    const DELETE_NODES = ['from', 'join', 'where', 'order', 'limit'];
+
+    /**
+     * @var array
+     */
+    const SELECT_OPTIONS = [
         /* data index column. */
         'indexKey' => null,
 
@@ -280,7 +291,11 @@ class DatabaseClient
 
         $statement = $this->compileSelect($options);
 
-        return $this->fetchOne($statement, $bindings ?: []);
+        if (isset($options['dumpSql'])) {
+            return [$statement, $bindings];
+        }
+
+        return $this->fetchOne($statement, $bindings);
     }
 
     /**
@@ -306,42 +321,95 @@ class DatabaseClient
 
         $statement = $this->compileSelect($options);
 
-        return $this->fetchAll($statement, $bindings ?: []);
+        if (isset($options['dumpSql'])) {
+            return [$statement, $bindings];
+        }
+
+        return $this->fetchAll($statement, $bindings);
     }
 
     /**
-     * Run a insert statement
+     * Run a statement for insert a row 
      * @param  string $statement
-     * @param  array $bindings
-     * @param null|string $sequence For special driver, like PgSQL
+     * @param  array $data <column => value>
+     * @param  array $options
      * @return int
      */
-    public function insert($statement, array $bindings = [], $sequence = null)
+    public function insert(string $from, array $data, array $options = [])
     {
+        list($statement, $bindings) = $this->compileInsert($from, $data);
+
+        if (isset($options['dumpSql'])) {
+            return [$statement, $bindings];
+        }
+
         $this->fetchAffected($statement, $bindings);
 
-        return $this->lastInsertId($sequence);
+        // 'sequence' For special driver, like PgSQL
+        return isset($options['sequence']) ? $this->lastInsertId($options['sequence']) : $this->lastInsertId();
+    }
+
+    /**
+     * Run a statement for insert multi row 
+     * @param  string $statement
+     * @param  array $data <column => value>
+     * @param  array $options
+     * @return int
+     */
+    public function insertBatch(string $from, array $dataSet, array $options = [])
+    {
+        list($statement, $bindings) = $this->compileInsert($from, $dataSet, $options['columns'] ?? [], true);
+
+        if (isset($options['dumpSql'])) {
+            return [$statement, $bindings];
+        }
+
+        return $this->fetchAffected($statement, $bindings);
     }
 
     /**
      * Run a update statement
-     * @param  string $statement
-     * @param  array $bindings
+     * @param  string $from
+     * @param  array|string $wheres
+     * @param  array $values
      * @return int
      */
-    public function update($statement, array $bindings = [])
+    public function update(string $from, $wheres, array $values, array $options = [])
     {
+        list($where, $bindings) = $this->handleWheres($wheres);
+
+        $options['update'] = $this->qn($from);
+        $options['where'] = $where;
+
+        $statement = $this->compileUpdate($values, $bindings, $options);
+
+        if (isset($options['dumpSql'])) {
+            return [$statement, $bindings];
+        }
+
         return $this->fetchAffected($statement, $bindings);
     }
 
     /**
      * Run a delete statement
-     * @param  string $statement
-     * @param  array $bindings
+     * @param  string $from
+     * @param  array|string $wheres
+     * @param  array $options
      * @return int
      */
-    public function delete($statement, array $bindings = [])
+    public function delete(string $from, $wheres, array $options = [])
     {
+        list($where, $bindings) = $this->handleWheres($wheres);
+
+        $options['from'] = $this->qn($from);
+        $options['where'] = $where;
+
+        $statement = $this->compileDelete($options);
+
+        if (isset($options['dumpSql'])) {
+            return [$statement, $bindings];
+        }
+
         return $this->fetchAffected($statement, $bindings);
     }
 
@@ -810,11 +878,11 @@ class DatabaseClient
         }
 
         if (!$wheres || $wheres === 1) {
-            return [1, null];
+            return [1, []];
         }
 
         if (is_string($wheres)) {
-            return [$wheres, null];
+            return [$wheres, []];
         }
 
         $nodes = $bindings = [];
@@ -858,16 +926,95 @@ class DatabaseClient
      * @param array $opts
      * @return string
      */
-    public function compileSelect(array $opts)
+    public function compileSelect(array $options)
+    {
+        return $this->compileNodes(self::SELECT_NODES, $options);
+    }
+
+    /**
+     * @param array $updates
+     * @param array $bindings
+     * @param array $options
+     * @return string
+     */
+    public function compileInsert($from, array $data, array $columns = [], $isBatch = false)
+    {
+        $names = $bindings = [];
+        $table = $this->qn($from);
+
+        if (!$isBatch) {
+            $bindings = array_values($data);
+            $nameStr = $this->qns(array_keys($data));
+            $valueStr = '(' . rtrim(str_repeat('?,', count($data)), ',') . ')';
+        } else {
+            if ($columns) {
+                $columnNum = count($columns);
+                $nameStr = $this->qns($columns);
+            } else {
+                $columnNum = count($data[0]);
+                $nameStr = $this->qns(array_keys($data[0]));
+            }
+
+            $valueStr = '';
+            $rowTpl = '(' . rtrim(str_repeat('?,', $columnNum), ',') . '), ';
+
+            foreach ($data as $row) {
+                $bindings = array_merge($bindings, array_values($row));
+                $valueStr .= $rowTpl;
+            }
+
+            $valueStr = rtrim($valueStr, ', ');
+        }
+
+        return ["INSERT INTO $table ($nameStr) VALUES $valueStr", $bindings];
+    }
+
+    /**
+     *
+     * @param array $updates
+     * @param array $bindings
+     * @param array $options
+     * @return string
+     */
+    public function compileUpdate(array $updates, array &$bindings, array $options)
+    {
+        $nodes = $vlaues = [];
+
+        foreach ($updates as $column => $value) {
+            if (is_int($column)) {
+                contiune;
+            }
+
+            $nodes[] = $this->qn($column) . '= ?';
+            $vlaues[] = $value;
+        }
+
+        $options['set'] = \implode(',', $nodes);
+        $bindings = array_merge($vlaues, $bindings);
+
+        return $this->compileNodes(self::UPDATE_NODES, $options);
+    }
+
+    public function compileDelete(array $options)
+    {
+        return 'DELETE ' . $this->compileNodes(self::DELETE_NODES, $options);;
+    }
+    
+    /**
+     * @param array $commandNodes
+     * @param array $data
+     * @return string
+     */
+    public function compileNodes(array $commandNodes, array $data)
     {
         $nodes = [];
 
-        foreach (self::$queryNodes as $node) {
-            if (!isset($opts[$node])) {
+        foreach ($commandNodes as $node) {
+            if (!isset($data[$node])) {
                 continue;
             }
 
-            $val = $opts[$node];
+            $val = $data[$node];
             if ($isString = is_string($val)) {
                 $val = trim($val);
             }

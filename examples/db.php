@@ -28,32 +28,73 @@ $db->on(DatabaseClient::DISCONNECT, function ($db) {
 });
 
 //$ret = $db->fetchAll('show tables');
-//dump_vars($ret);
+//var_dump($ret);
 //
 //$ret = $db->fetchAll('select * from user');
-//dump_vars($ret);
+//var_dump($ret);
 
 // find one
 // SQL: SELECT * FROM `user` WHERE `id`= ? LIMIT 1
-//$ret = $db->find('user', ['id' => 3], '*', [
-//    'fetchType' => 'assoc'
-//]);
-//dump_vars($ret);
+$ret = $db->find('user', ['id' => 3], '*', [
+    'fetchType' => 'assoc',
+    'dumpSql' => 1,
+]);
+var_dump($ret);
 
 // find all
 // SQL: SELECT * FROM `user` WHERE `username` like ? LIMIT 1000
 $ret = $db->findAll('user', [ ['username', 'like', '%tes%'] ], '*', [
     'fetchType' => 'assoc',
-    'limit' => 10
+    'limit' => 10,
+    'dumpSql' => 1,
 ]);
-dump_vars($ret);
+var_dump($ret);
 
 // find all
 // SQL: SELECT * FROM `user` WHERE `id` > ? ORDER BY createdAt ASC LIMIT 1000
 $ret = $db->findAll('user', [['id', '>', 3]], '*', [
     'fetchType' => 'assoc',
+    'group' => 'username',
     'order' => 'createdAt ASC',
+    'limit' => '2,,10',
+    'dumpSql' => 1,
 ]);
-dump_vars($ret);
+var_dump($ret);
 
-dump_vars($db->getQueryLog());
+$ret = $db->insert('user', [
+    'username' => 'tom',
+    'nickname' => 'tom-nick',
+], [
+    'dumpSql' => 1,
+]);
+var_dump($ret);
+
+$ret = $db->insertBatch('user',[
+    [
+        'username' => 'tom',
+        'nickname' => 'tom-nick',
+    ],
+    [
+        'username' => 'tom1',
+        'nickname' => 'tom-nick2',
+    ],
+], [
+    'dumpSql' => 1,
+]);
+var_dump($ret);
+
+$ret = $db->update('user', ['id' => 2], [
+    'username' => 'tom',
+    'nickname' => 'tom-nick',
+], [
+    'dumpSql' => 1,
+]);
+var_dump($ret);
+
+$ret = $db->delete('user', ['id' => 2], [
+    'dumpSql' => 1,
+    'limit' => 1,
+]);
+var_dump($ret);
+
+var_dump($db->getQueryLog());

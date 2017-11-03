@@ -8,6 +8,7 @@
 
 namespace Inhere\Library\Components;
 
+use Inhere\Exceptions\UnknownMethodException;
 use Inhere\Library\Helpers\DsnHelper;
 use Inhere\Library\Traits\LiteConfigTrait;
 use Inhere\Library\Traits\LiteEventTrait;
@@ -48,6 +49,18 @@ class DatabaseClient
     /** @var string */
     protected $prefixPlaceholder = '{@pfx}';
 
+    /** @var string */
+    protected $quoteNamePrefix = '"';
+
+    /** @var string */
+    protected $quoteNameSuffix = '"';
+
+    /** @var string */
+    protected $quoteNameEscapeChar = '"';
+
+    /** @var string */
+    protected $quoteNameEscapeReplace = '""';
+
     /**
      * All of the queries run against the connection.
      * @var array
@@ -80,6 +93,7 @@ class DatabaseClient
 
         'tablePrefix' => '',
 
+        'debug' => false,
         // retry times.
         'retry' => 0,
     ];
@@ -99,10 +113,36 @@ class DatabaseClient
 
     /**
      * @param array $config
+     * @return static
+     */
+    public static function make(array $config = [])
+    {
+        return new static($config);
+    }
+
+    /**
+     * @param array $config
      */
     public function __construct(array $config = [])
     {
+        if (!class_exists(\PDO::class, false)) {
+            throw new \RuntimeException("The php extension 'redis' is required.");
+        }
+
         $this->setConfig($config);
+
+        // init something...
+        $this->debug = (bool)$this->config['debug'];
+        $this->tablePrefix = $this->config['tablePrefix'];
+        $this->databaseName = $this->config['database'];
+
+        $retry = (int) $this->config['retry'];
+        $this->config['retry'] = ($retry > 0 && $retry <= 5) ? $retry : 0;
+        $this->config['options'] = static::$pdoOptions + $this->config['options'];
+
+        if (!self::isSupported($this->config['driver'])) {
+            throw new \RuntimeException("The system is not support driver: {$this->config['driver']}");
+        }
 
         $this->initQuoteNameChar($this->config['driver']);
     }
@@ -116,18 +156,14 @@ class DatabaseClient
             return $this;
         }
 
-        $this->config['options'] = array_merge($this->config['options'], static::$pdoOptions);
-
         $config = $this->config;
         $retry = (int) $config['retry'];
         $retry = ($retry > 0 && $retry <= 5) ? $retry : 0;
-        $options = is_array($config['options']) ? $config['options'] : [];
         $dsn = DsnHelper::getDsn($config);
 
         do {
             try {
-                $pdo = new PDO($dsn, $config['user'], $config['password'], $options);
-
+                $this->pdo = new PDO($dsn, $config['user'], $config['password'], $config['options']);
                 break;
             } catch (\PDOException $e) {
                 if ($retry <= 0) {
@@ -139,7 +175,6 @@ class DatabaseClient
             usleep(50000);
         } while ($retry >= 0);
 
-        $this->pdo = $pdo;
         $this->log('connect to DB server', ['config' => $config], 'connect');
         $this->fire(self::CONNECT, [$this]);
 
@@ -154,10 +189,10 @@ class DatabaseClient
 
     /**
      * disconnect
-     * @return bool
      */
     public function disconnect()
     {
+        $this->fire(self::DISCONNECT, [$this]);
         $this->pdo = null;
     }
 
@@ -224,27 +259,27 @@ class DatabaseClient
     /**
      * Run a select statement, fetch one
      * @param  string $from
-     * @param  array|string $wheres
+     * @param  array|string|int $wheres
      * @param  string|array $select
      * @param  array $options
      * @return array
      */
     public function find(string $from, $wheres = 1, $select = '*', array $options = [])
     {
-        
+        return [];
     }
 
     /**
      * Run a select statement, fetch all
      * @param  string $from
-     * @param  array|string $wheres
+     * @param  array|string|int $wheres
      * @param  string|array $select
      * @param  array $options
      * @return array
      */
     public function findAll(string $from, $wheres = 1, $select = '*', array $options = [])
     {
-        # code...
+        return [];
     }
 
     /**
@@ -319,11 +354,13 @@ class DatabaseClient
      * $db->exists();
      * // SQL: select exists(select * from `table` where (`phone` = 152xxx)) as `exists`;
      * ```
+     * @param $statement
+     * @param array $bindings
      * @return int
      */
     public function exists($statement, array $bindings = [])
     {
-        $sql = sprintf('SELECT EXISTS(%s) AS `exists`', $sql);
+        $sql = sprintf('SELECT EXISTS(%s) AS `exists`', $statement);
 
         $result = $this->fetchObject($sql, $bindings);
 
@@ -747,8 +784,6 @@ class DatabaseClient
     /**
      * handle where condition
      * @param array|string|\Closure $wheres
-     * @param RecordModel|string $model the model class name, is a string
-     * @param Query $query
      * @example
      * ```
      * ...
@@ -1067,6 +1102,16 @@ class DatabaseClient
     }
 
     /**
+     * Is this driver supported.
+     * @param string $driver
+     * @return bool
+     */
+    public static function isSupported(string $driver)
+    {
+        return in_array($driver, \PDO::getAvailableDrivers(), true);
+    }
+
+    /**
      * @param PDOStatement $sth
      * @return $this
      */
@@ -1077,6 +1122,19 @@ class DatabaseClient
         }
 
         return $this;
+    }
+
+    /**************************************************************************
+     * getter/setter methods
+     *************************************************************************/
+
+    /**
+     * Get the name of the driver.
+     * @return string
+     */
+    public function getDriverName()
+    {
+        return $this->config['driver'];
     }
 
     /**
@@ -1172,4 +1230,5 @@ class DatabaseClient
     {
         return (bool) $this->pdo;
     }
+
 }

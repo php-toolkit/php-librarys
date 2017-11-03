@@ -9,6 +9,7 @@
 namespace Inhere\Library\Components;
 
 use Inhere\Exceptions\ConnectionException;
+use Inhere\Exceptions\UnknownMethodException;
 use Inhere\Library\Traits\LiteConfigTrait;
 use Inhere\Library\Traits\LiteEventTrait;
 use Redis;
@@ -195,7 +196,7 @@ class RedisClient
         'host' => '127.0.0.1',
         'port' => '6379',
         'timeout' => 0.0,
-        'database' => '0',
+        'database' => 0,
 
         'password' => null,
 
@@ -204,15 +205,36 @@ class RedisClient
 
     /**
      * @param array $config
+     * @return static
+     */
+    public static function make(array $config = [])
+    {
+        return new static($config);
+    }
+
+    /**
+     * @param array $config
      */
     public function __construct(array $config = [])
     {
+        if (!self::isSupported()) {
+            throw new \RuntimeException("The php extension 'redis' is required.");
+        }
+
         $this->setConfig($config);
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isSupported()
+    {
+        return class_exists(\Redis::class, false);
     }
 
     public function connect()
     {
-        if (!$this->redis) {
+        if ($this->redis) {
             return $this;
         }
 
@@ -222,11 +244,11 @@ class RedisClient
             $client->connect($config['host'], (int) $config['port'], $config['timeout']);
 
             if ($config['password'] && !$client->auth($config['password'])) {
-                throw new \RuntiemException("Auth failed on connect to the redis.");
+                throw new \RuntimeException('Auth failed on connect to the redis server.');
             }
 
-            if ($config['database']) {
-                $this->redis->select((int) $config['database']);
+            if ($config['database'] >= 0) {
+                $client->select((int) $config['database']);
             }
 
             $options = $config['options'] ?? [];
@@ -239,6 +261,7 @@ class RedisClient
         } catch (\Throwable $e) {
             throw new ConnectionException("Connect error: {$e->getMessage()}");
         }
+        $this->fire(self::CONNECT, [$this]);
 
         return $this;
     }
@@ -251,10 +274,10 @@ class RedisClient
 
     /**
      * disconnect
-     * @return bool
      */
     public function disconnect()
     {
+        $this->fire(self::DISCONNECT, [$this]);
         $this->redis = null;
     }
 
@@ -262,6 +285,7 @@ class RedisClient
      * @param string $method
      * @param array $args
      * @return mixed
+     * @throws UnknownMethodException
      */
     public function __call($method, array $args)
     {
@@ -281,7 +305,7 @@ class RedisClient
             return $ret;
         }
 
-        throw new UnknownMethodException("Call the redis method [$method] don't exists!");
+        throw new UnknownMethodException("Call the redis command method [$method] don't exists!");
     }
     
     /**
@@ -423,7 +447,7 @@ class RedisClient
      */
     public function getCache($key, $default = null)
     {
-        return ($data = $this->get($key)) ? unserialize($data) : $default;
+        return ($data = $this->get($key)) ? unserialize($data, []) : $default;
     }
 
     /**
@@ -451,11 +475,14 @@ class RedisClient
     }
 
     /**
+     * @param null|string $section
+     * Allow:
+     * SERVER | CLIENTS | MEMORY | PERSISTENCE | STATS | REPLICATION | CPU | CLASTER | KEYSPACE | COMANDSTATS
      * @return array
      */
-    public function getStats()
+    public function getStats($section = null)
     {
         // used_memory
-        return $this->info();
+        return $this->info($section);
     }
 }

@@ -147,15 +147,12 @@ class ArrayHelper
      * 递归合并多个多维数组,
      * @from yii2
      * Merges two or more arrays into one recursively.
-     * @param array $a array to be merged to
-     * @param array $b array to be merged from. You can specify additional
-     *                 arrays via third argument, fourth argument etc.
+     * @param array $args
      * @return array the merged array (the original arrays are not changed.)
      */
-    public static function merge2($a, $b)
+    public static function merge2(...$args)
     {
         /** @var array[] $args */
-        $args = func_get_args();
         $res = array_shift($args);
 
         while (!empty($args)) {

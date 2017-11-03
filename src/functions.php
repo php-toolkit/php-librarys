@@ -6,14 +6,14 @@
 if (!function_exists('dump_vars')) {
     function dump_vars(...$args)
     {
-        return \Inhere\Library\Helpers\PhpHelper::dumpVars(...$args);
+        echo \Inhere\Library\Helpers\PhpHelper::dumpVars(...$args);
     }
 }
 
 if (!function_exists('print_vars')) {
     function print_vars(...$args)
     {
-        return \Inhere\Library\Helpers\PhpHelper::printVars(...$args);
+        echo \Inhere\Library\Helpers\PhpHelper::printVars(...$args);
     }
 }
 
@@ -87,7 +87,7 @@ if (!function_exists('local')) {
     }
 }
 
-if (!function_exists('local')) {
+if (!function_exists('server_value')) {
     /**
      * get $_SERVER value
      * @param  string $name

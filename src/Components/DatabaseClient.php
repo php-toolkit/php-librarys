@@ -264,11 +264,12 @@ class DatabaseClient
 
         /*
         data load type, in :
-        'a className' -- return object, instanceof the class`
-        'array'       -- return array, only  [ 'value' ]
+        'object' -- return object, instanceof the 'class'
+        'column'       -- return array, only  [ 'value' ]
         'assoc'       -- return array, Contain  [ 'column' => 'value']
          */
         'fetchType' => 'assoc',
+        'class' => null, // a className. when 'fetchType' eq 'object'
     ];
 
     /**
@@ -281,7 +282,7 @@ class DatabaseClient
      */
     public function find(string $from, $wheres = 1, $select = '*', array $options = [])
     {
-        $options['select'] = $this->qns($select);
+        $options['select'] = $this->qns($select ?: '*');
         $options['from'] = $this->qn($from);
 
         list($where, $bindings) = $this->handleWheres($wheres);
@@ -295,7 +296,17 @@ class DatabaseClient
             return [$statement, $bindings];
         }
 
-        return $this->fetchOne($statement, $bindings);
+        if ($class = $options['class'] ?? null) {
+            return $this->fetchObject($statement, $bindings, $class);
+        }
+
+        $method = 'fetchOne';
+
+        if (isset($options['fetchType']) && $options['fetchType'] === 'column') {
+            $method = 'fetchColumn';
+        }
+
+        return $this->$method($statement, $bindings);
     }
 
     /**
@@ -308,7 +319,7 @@ class DatabaseClient
      */
     public function findAll(string $from, $wheres = 1, $select = '*', array $options = [])
     {
-        $options['select'] = $this->qns($select);
+        $options['select'] = $this->qns($select ?: '*');
         $options['from'] = $this->qn($from);
 
         list($where, $bindings) = $this->handleWheres($wheres);
@@ -325,11 +336,21 @@ class DatabaseClient
             return [$statement, $bindings];
         }
 
-        return $this->fetchAll($statement, $bindings);
+        if ($class = $options['class'] ?? null) {
+            return $this->fetchObjects($statement, $bindings, $class);
+        }
+
+        $method = 'fetchAll';
+
+        if (isset($options['fetchType']) && $options['fetchType'] === 'column') {
+            $method = 'fetchColumns';
+        }
+
+        return $this->$method($statement, $bindings);
     }
 
     /**
-     * Run a statement for insert a row 
+     * Run a statement for insert a row
      * @param  string $statement
      * @param  array $data <column => value>
      * @param  array $options
@@ -337,6 +358,10 @@ class DatabaseClient
      */
     public function insert(string $from, array $data, array $options = [])
     {
+        if (!$data) {
+            throw new \RuntimeException('The data inserted into the database cannot be empty');
+        }
+
         list($statement, $bindings) = $this->compileInsert($from, $data);
 
         if (isset($options['dumpSql'])) {
@@ -350,7 +375,7 @@ class DatabaseClient
     }
 
     /**
-     * Run a statement for insert multi row 
+     * Run a statement for insert multi row
      * @param  string $statement
      * @param  array $data <column => value>
      * @param  array $options
@@ -399,6 +424,10 @@ class DatabaseClient
      */
     public function delete(string $from, $wheres, array $options = [])
     {
+        if (!$wheres) {
+            throw new \RuntimeException('Safety considerations, where conditions can not be empty');
+        }
+
         list($where, $bindings) = $this->handleWheres($wheres);
 
         $options['from'] = $this->qn($from);
@@ -470,14 +499,22 @@ class DatabaseClient
         return $affected;
     }
 
+    /********************************************************************************
+     * fetch a row methods
+     *******************************************************************************/
+
     /**
      * {@inheritdoc}
      */
-    public function fetchAll($statement, array $bindings = [])
+    public function fetchAssoc($statement, array $bindings = [])
+    {
+        return $this->fetchOne($statement, $bindings);
+    }
+    public function fetchOne($statement, array $bindings = [])
     {
         $sth = $this->execute($statement, $bindings);
 
-        $result = $sth->fetchAll(PDO::FETCH_ASSOC);
+        $result = $sth->fetch(PDO::FETCH_ASSOC);
 
         $this->freeResource($sth);
 
@@ -487,45 +524,19 @@ class DatabaseClient
     /**
      * {@inheritdoc}
      */
-    public function fetchAssoc($statement, array $bindings = [])
-    {
-        $data = [];
-        $sth = $this->execute($statement, $bindings);
-
-        while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-            $data[current($row)] = $row;
-        }
-
-        $this->freeResource($sth);
-
-        return $data;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function fetchColumn($statement, array $bindings = [])
     {
-        $sth = $this->execute($statement, $bindings);
-
-        $column = $sth->fetchAll(PDO::FETCH_COLUMN, 0);
-
-        $this->freeResource($sth);
-
-        return $column;
+        return $this->fetchValue($statement, $bindings);
     }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function fetchGroup($statement, array $bindings = [], $style = PDO::FETCH_COLUMN)
+    public function fetchValue($statement, array $bindings = [])
     {
         $sth = $this->execute($statement, $bindings);
 
-        $group = $sth->fetchAll(PDO::FETCH_GROUP | $style);
+        $result = $sth->fetchColumn();
+
         $this->freeResource($sth);
 
-        return $group;
+        return $result;
     }
 
     /**
@@ -544,6 +555,68 @@ class DatabaseClient
         $this->freeResource($sth);
 
         return $result;
+    }
+
+    /********************************************************************************
+     * fetch multi rows methods
+     *******************************************************************************/
+
+    /**
+     * {@inheritdoc}
+     */
+    public function fetchAll($statement, array $bindings = [])
+    {
+        $sth = $this->execute($statement, $bindings);
+
+        $result = $sth->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->freeResource($sth);
+
+        return $result;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function fetchAssocs($statement, array $bindings = [])
+    {
+        $data = [];
+        $sth = $this->execute($statement, $bindings);
+
+        while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
+            $data[current($row)] = $row;
+        }
+
+        $this->freeResource($sth);
+
+        return $data;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function fetchColumns($statement, array $bindings = [])
+    {
+        $sth = $this->execute($statement, $bindings);
+
+        $column = $sth->fetchAll(PDO::FETCH_COLUMN, 0);
+
+        $this->freeResource($sth);
+
+        return $column;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function fetchGroups($statement, array $bindings = [], $style = PDO::FETCH_COLUMN)
+    {
+        $sth = $this->execute($statement, $bindings);
+
+        $group = $sth->fetchAll(PDO::FETCH_GROUP | $style);
+        $this->freeResource($sth);
+
+        return $group;
     }
 
     /**
@@ -567,20 +640,6 @@ class DatabaseClient
     /**
      * {@inheritdoc}
      */
-    public function fetchOne($statement, array $bindings = [])
-    {
-        $sth = $this->execute($statement, $bindings);
-
-        $result = $sth->fetch(PDO::FETCH_ASSOC);
-
-        $this->freeResource($sth);
-
-        return $result;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function fetchPairs($statement, array $bindings = [])
     {
         $sth = $this->execute($statement, $bindings);
@@ -592,19 +651,6 @@ class DatabaseClient
         return $result;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function fetchValue($statement, array $bindings = [])
-    {
-        $sth = $this->execute($statement, $bindings);
-
-        $result = $sth->fetchColumn();
-
-        $this->freeResource($sth);
-
-        return $result;
-    }
 
     /********************************************************************************
      * Generator methods
@@ -858,7 +904,7 @@ class DatabaseClient
      * $result = $db->findAll('user', [
      *      'userId' => 23,      // ==> 'AND `userId` = 23'
      *      'title' => 'test',  // value will auto add quote, equal to "AND title = 'test'"
-     * 
+     *
      *      ['publishTime', '>', '0'],  // ==> 'AND `publishTime` > 0'
      *      ['createdAt', '<=', 1345665427, 'OR'],  // ==> 'OR `createdAt` <= 1345665427'
      *      ['id', 'IN' ,[4,5,56]],   // ==> '`id` IN ('4','5','56')'
@@ -999,7 +1045,7 @@ class DatabaseClient
     {
         return 'DELETE ' . $this->compileNodes(self::DELETE_NODES, $options);;
     }
-    
+
     /**
      * @param array $commandNodes
      * @param array $data

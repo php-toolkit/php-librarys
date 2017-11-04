@@ -481,7 +481,7 @@ class DatabaseClient
     }
 
     /********************************************************************************
-     * fetch data methods
+     * fetch affected methods
      *******************************************************************************/
 
     /**
@@ -513,7 +513,6 @@ class DatabaseClient
     public function fetchOne($statement, array $bindings = [])
     {
         $sth = $this->execute($statement, $bindings);
-
         $result = $sth->fetch(PDO::FETCH_ASSOC);
 
         $this->freeResource($sth);
@@ -531,7 +530,6 @@ class DatabaseClient
     public function fetchValue($statement, array $bindings = [])
     {
         $sth = $this->execute($statement, $bindings);
-
         $result = $sth->fetchColumn();
 
         $this->freeResource($sth);
@@ -567,7 +565,6 @@ class DatabaseClient
     public function fetchAll($statement, array $bindings = [])
     {
         $sth = $this->execute($statement, $bindings);
-
         $result = $sth->fetchAll(PDO::FETCH_ASSOC);
 
         $this->freeResource($sth);
@@ -598,7 +595,6 @@ class DatabaseClient
     public function fetchColumns($statement, array $bindings = [])
     {
         $sth = $this->execute($statement, $bindings);
-
         $column = $sth->fetchAll(PDO::FETCH_COLUMN, 0);
 
         $this->freeResource($sth);
@@ -612,8 +608,8 @@ class DatabaseClient
     public function fetchGroups($statement, array $bindings = [], $style = PDO::FETCH_COLUMN)
     {
         $sth = $this->execute($statement, $bindings);
-
         $group = $sth->fetchAll(PDO::FETCH_GROUP | $style);
+
         $this->freeResource($sth);
 
         return $group;
@@ -631,6 +627,32 @@ class DatabaseClient
         } else {
             $result = $sth->fetchAll(PDO::FETCH_CLASS, $class);
         }
+
+        $this->freeResource($sth);
+
+        return $result;
+    }
+
+    /**
+     * 每行调用一次函数
+     *
+     * @param string $statement
+     * @param array $bindings
+     * @param callable $func
+     *
+     * ```php
+     * function ($col1, $col2) {
+     *  return $col1 . $col2;
+     * }
+     * ```
+     *
+     * @return void
+     */
+    public function fetchFuns($statement, array $bindings = [], callable $func)
+    {
+        $sth = $this->execute($statement, $bindings);
+
+        $result = $sth->fetchAll(PDO::FETCH_KEY_PAIR);
 
         $this->freeResource($sth);
 

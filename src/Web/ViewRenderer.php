@@ -17,6 +17,8 @@ use Inhere\Library\Files\File;
  */
 class ViewRenderer
 {
+    use AssetsRendererTrait;
+
     /**
      * 视图存放基础路径
      * @var string
@@ -54,6 +56,10 @@ class ViewRenderer
 
         $this->setViewsPath($this->viewsPath);
     }
+
+    /********************************************************************************
+     * render methods
+     *******************************************************************************/
 
     /**
      * Render a view, if layout file is setting, will use it.
@@ -173,6 +179,10 @@ class ViewRenderer
         return $output;
     }
 
+    /********************************************************************************
+     * helper methods
+     *******************************************************************************/
+
     /**
      * @param $view
      * @return string
@@ -195,6 +205,30 @@ class ViewRenderer
     }
 
     /**
+     * @param string $default
+     * @return string
+     */
+    public function getPageTitle(string $default = null)
+    {
+        return $this->attributes['__pageTitle'] ?? $default;
+    }
+
+    /**
+     * @param string $title
+     * @return $this
+     */
+    public function setPageTitle(string $title)
+    {
+        $this->attributes['__pageTitle'] = $title;
+
+        return $this;
+    }
+
+    /********************************************************************************
+     * getter/setter methods
+     *******************************************************************************/
+
+    /**
      * Get the attributes for the renderer
      * @return array
      */
@@ -206,31 +240,53 @@ class ViewRenderer
     /**
      * Set the attributes for the renderer
      * @param array $attributes
+     * @return $this
      */
     public function setAttributes(array $attributes)
     {
         $this->attributes = $attributes;
+
+        return $this;
+    }
+
+    /**
+     * Set an attribute
+     * @param $key
+     * @param $value
+     * @return $this
+     */
+    public function setAttribute($key, $value)
+    {
+        $this->attributes[$key] = $value;
+
+        return $this;
     }
 
     /**
      * Add an attribute
      * @param $key
      * @param $value
+     * @return $this
      */
     public function addAttribute($key, $value)
     {
-        $this->attributes[$key] = $value;
+        if (!isset($this->attributes[$key])) {
+            $this->attributes[$key] = $value;
+        }
+
+        return $this;
     }
 
     /**
      * Retrieve an attribute
-     * @param $key
+     * @param string $key
+     * @param mixed $default
      * @return mixed
      */
-    public function getAttribute($key)
+    public function getAttribute($key, $default = null)
     {
         if (!isset($this->attributes[$key])) {
-            return null;
+            return $default;
         }
 
         return $this->attributes[$key];
@@ -248,12 +304,15 @@ class ViewRenderer
     /**
      * Set the view path
      * @param string $viewsPath
+     * @return $this
      */
     public function setViewsPath($viewsPath)
     {
         if ($viewsPath) {
             $this->viewsPath = rtrim($viewsPath, '/\\') . '/';
         }
+
+        return $this;
     }
 
     /**
@@ -272,6 +331,8 @@ class ViewRenderer
     public function setLayout($layout)
     {
         $this->layout = rtrim($layout, '/\\');
+
+        return $this;
     }
 
     /**

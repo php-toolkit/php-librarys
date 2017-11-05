@@ -280,7 +280,7 @@ class DatabaseClient
      * @param  array $options
      * @return array
      */
-    public function find(string $from, $wheres = 1, $select = '*', array $options = [])
+    public function findOne(string $from, $wheres = 1, $select = '*', array $options = [])
     {
         $options['select'] = $this->qns($select ?: '*');
         $options['from'] = $this->qn($from);
@@ -300,10 +300,14 @@ class DatabaseClient
             return $this->fetchObject($statement, $bindings, $class);
         }
 
-        $method = 'fetchOne';
+        $method = 'fetchAssoc';
 
-        if (isset($options['fetchType']) && $options['fetchType'] === 'column') {
-            $method = 'fetchColumn';
+        if (isset($options['fetchType'])) {
+            if ($options['fetchType'] === 'column') {
+                $method = 'fetchColumn';
+            } elseif ($options['fetchType'] === 'value') {
+                $method = 'fetchValue';
+            }
         }
 
         return $this->$method($statement, $bindings);
@@ -336,17 +340,24 @@ class DatabaseClient
             return [$statement, $bindings];
         }
 
+        $indexKey = $options['indexKey'] ?? null;
+
         if ($class = $options['class'] ?? null) {
-            return $this->fetchObjects($statement, $bindings, $class);
+            return $this->fetchObjects($statement, $bindings, $class, $indexKey);
         }
 
-        $method = 'fetchAll';
+        $method = 'fetchAssocs';
 
-        if (isset($options['fetchType']) && $options['fetchType'] === 'column') {
-            $method = 'fetchColumns';
+        if (isset($options['fetchType'])) {
+            if ($options['fetchType'] === 'column') {
+                // for get columns, indexKey is column number.
+                $method = 'fetchColumns';
+            } elseif ($options['fetchType'] === 'value') {
+                $method = 'fetchValues';
+            }
         }
 
-        return $this->$method($statement, $bindings);
+        return $this->$method($statement, $bindings, $indexKey);
     }
 
     /**
@@ -506,11 +517,11 @@ class DatabaseClient
     /**
      * {@inheritdoc}
      */
-    public function fetchAssoc($statement, array $bindings = [])
+    public function fetchAssoc(string $statement, array $bindings = [])
     {
         return $this->fetchOne($statement, $bindings);
     }
-    public function fetchOne($statement, array $bindings = [])
+    public function fetchOne(string $statement, array $bindings = [])
     {
         $sth = $this->execute($statement, $bindings);
         $result = $sth->fetch(PDO::FETCH_ASSOC);
@@ -521,16 +532,30 @@ class DatabaseClient
     }
 
     /**
-     * {@inheritdoc}
+     * 从结果集中的下一行返回单独的一列
+     *
+     * @param string $statement
+     * @param array $bindings
+     * @param int $columnNum 你想从行里取回的列的索引数字（以0开始的索引）
+     * @return void
      */
-    public function fetchColumn($statement, array $bindings = [])
-    {
-        return $this->fetchValue($statement, $bindings);
-    }
-    public function fetchValue($statement, array $bindings = [])
+    public function fetchColumn(string $statement, array $bindings = [], int $columnNum = 0)
     {
         $sth = $this->execute($statement, $bindings);
-        $result = $sth->fetchColumn();
+        $result = $sth->fetchColumn($columnNum);
+
+        $this->freeResource($sth);
+
+        return $result;
+    }
+
+    /**
+     * @return array|bool
+     */
+    public function fetchValue(string $statement, array $bindings = [])
+    {
+        $sth = $this->execute($statement, $bindings);
+        $result = $sth->fetch(PDO::FETCH_NUM);
 
         $this->freeResource($sth);
 
@@ -540,7 +565,7 @@ class DatabaseClient
     /**
      * {@inheritdoc}
      */
-    public function fetchObject($statement, array $bindings = [], $class = 'stdClass', array $args = [])
+    public function fetchObject(string $statement, array $bindings = [], $class = 'stdClass', array $args = [])
     {
         $sth = $this->execute($statement, $bindings);
 
@@ -560,28 +585,43 @@ class DatabaseClient
      *******************************************************************************/
 
     /**
-     * {@inheritdoc}
+     * @param string $statement
+     * @param array $bindings
+     * @param string|int $indexKey
+     * @param string $class a class name or fetch style name.
+     * @return array
      */
-    public function fetchAll($statement, array $bindings = [])
+    public function fetchAll(string $statement, array $bindings = [], $indexKey = null, $class = 'assoc')
     {
-        $sth = $this->execute($statement, $bindings);
-        $result = $sth->fetchAll(PDO::FETCH_ASSOC);
+        // $sth = $this->execute($statement, $bindings);
+        // $result = $sth->fetchAll(PDO::FETCH_ASSOC);
 
-        $this->freeResource($sth);
+        if (strtolower($class) === 'value') {
+            return $this->fetchValues($statement, $bindings, $indexKey);
+        }
 
-        return $result;
+        if (strtolower($class) === 'assoc') {
+            return $this->fetchAssocs($statement, $bindings, $indexKey);
+        }
+
+        return $this->fetchObjects($statement, $class, $indexKey);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function fetchAssocs($statement, array $bindings = [])
+    public function fetchAssocs(string $statement, array $bindings = [], $indexKey = null)
     {
         $data = [];
         $sth = $this->execute($statement, $bindings);
 
         while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-            $data[current($row)] = $row;
+            if ($indexKey) {
+                $data[$row[$indexKey]] = $row;
+            } else {
+                $data[] = $row;
+            }
+            // $data[current($row)] = $row;
         }
 
         $this->freeResource($sth);
@@ -592,10 +632,31 @@ class DatabaseClient
     /**
      * {@inheritdoc}
      */
-    public function fetchColumns($statement, array $bindings = [])
+    public function fetchValues(string $statement, array $bindings = [], $indexKey = null)
+    {
+        $data = [];
+        $sth = $this->execute($statement, $bindings);
+
+        while ($row = $sth->fetch(PDO::FETCH_NUM)) {
+            if ($indexKey) {
+                $data[$row[$indexKey]] = $row;
+            } else {
+                $data[] = $row;
+            }
+        }
+
+        $this->freeResource($sth);
+
+        return $data;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function fetchColumns(string $statement, array $bindings = [], int $columnNum = 0)
     {
         $sth = $this->execute($statement, $bindings);
-        $column = $sth->fetchAll(PDO::FETCH_COLUMN, 0);
+        $column = $sth->fetchAll(PDO::FETCH_COLUMN, $columnNum);
 
         $this->freeResource($sth);
 
@@ -605,36 +666,32 @@ class DatabaseClient
     /**
      * {@inheritdoc}
      */
-    public function fetchGroups($statement, array $bindings = [], $style = PDO::FETCH_COLUMN)
+    public function fetchObjects(string $statement, array $bindings = [], $class = 'stdClass', $indexKey = null, array $args = [])
     {
-        $sth = $this->execute($statement, $bindings);
-        $group = $sth->fetchAll(PDO::FETCH_GROUP | $style);
-
-        $this->freeResource($sth);
-
-        return $group;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function fetchObjects($statement, array $bindings = [], $class = 'stdClass', array $args = [])
-    {
+        $data = [];
         $sth = $this->execute($statement, $bindings);
 
-        if (!empty($args)) {
-            $result = $sth->fetchAll(PDO::FETCH_CLASS, $class, $args);
-        } else {
-            $result = $sth->fetchAll(PDO::FETCH_CLASS, $class);
+        // if (!empty($args)) {
+        //     $result = $sth->fetchAll(PDO::FETCH_CLASS, $class, $args);
+        // } else {
+        //     $result = $sth->fetchAll(PDO::FETCH_CLASS, $class);
+        // }
+
+        while ($row = $sth->fetchObject($class, $args)) {
+            if ($indexKey) {
+                $data[$row->$indexKey] = $row;
+            } else {
+                $data[] = $row;
+            }
         }
 
         $this->freeResource($sth);
 
-        return $result;
+        return $data;
     }
 
     /**
-     * 每行调用一次函数
+     * 每行调用一次函数. 将每行的列值作为参数传递给指定的函数，并返回调用函数后的结果。
      *
      * @param string $statement
      * @param array $bindings
@@ -648,11 +705,10 @@ class DatabaseClient
      *
      * @return void
      */
-    public function fetchFuns($statement, array $bindings = [], callable $func)
+    public function fetchFuns(callable $func, string $statement, array $bindings = [])
     {
         $sth = $this->execute($statement, $bindings);
-
-        $result = $sth->fetchAll(PDO::FETCH_KEY_PAIR);
+        $result = $sth->fetchAll(PDO::FETCH_FUNC, $func);
 
         $this->freeResource($sth);
 
@@ -662,7 +718,20 @@ class DatabaseClient
     /**
      * {@inheritdoc}
      */
-    public function fetchPairs($statement, array $bindings = [])
+    public function fetchGroups(string $statement, array $bindings = [], $style = PDO::FETCH_COLUMN)
+    {
+        $sth = $this->execute($statement, $bindings);
+        $group = $sth->fetchAll(PDO::FETCH_GROUP | $style);
+
+        $this->freeResource($sth);
+
+        return $group;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function fetchPairs(string $statement, array $bindings = [])
     {
         $sth = $this->execute($statement, $bindings);
 
@@ -734,12 +803,32 @@ class DatabaseClient
      * @param array $bindings
      * @return \Generator
      */
-    public function yieldColumn($statement, array $bindings = [])
+    public function yieldValue($statement, array $bindings = [])
     {
         $sth = $this->execute($statement, $bindings);
 
         while ($row = $sth->fetch(PDO::FETCH_NUM)) {
-            yield $row[0];
+            yield $row;
+        }
+
+        $this->freeResource($sth);
+    }
+
+    /**
+     * @param string $statement
+     * @param array $bindings
+     * @return \Generator
+     */
+    public function yieldColumn($statement, array $bindings = [], int $columnNum = 0)
+    {
+        $sth = $this->execute($statement, $bindings);
+
+        // while ($row = $sth->fetch(PDO::FETCH_NUM)) {
+        //     yield $row[0];
+        // }
+
+        while ($colValue = $sth->fetchColumn($columnNum)) {
+            yield $colValue;
         }
 
         $this->freeResource($sth);
@@ -794,7 +883,6 @@ class DatabaseClient
         $this->fire(self::BEFORE_EXECUTE, [$statement, $params, 'execute']);
 
         $sth = $this->prepareWithBindings($statement, $params);
-
         $sth->execute();
 
         // trigger after event
@@ -811,6 +899,7 @@ class DatabaseClient
     public function prepareWithBindings($statement, array $params = [])
     {
         $this->connect();
+        $statement = $this->replaceTablePrefix($statement);
 
         // if there are no values to bind ...
         if (!$params) {
@@ -1267,7 +1356,7 @@ class DatabaseClient
         // trigger before event
         $this->fire(self::BEFORE_EXECUTE, [$statement, 'exec']);
 
-        $affected = $this->pdo->exec($statement);
+        $affected = $this->pdo->exec($this->replaceTablePrefix($statement));
 
         // trigger after event
         $this->fire(self::AFTER_EXECUTE, [$statement, 'exec']);
@@ -1286,7 +1375,7 @@ class DatabaseClient
         // trigger before event
         $this->fire(self::BEFORE_EXECUTE, [$statement, 'query']);
 
-        $sth = $this->pdo->query($statement, ...$fetch);
+        $sth = $this->pdo->query($this->replaceTablePrefix($statement), ...$fetch);
 
         // trigger after event
         $this->fire(self::AFTER_EXECUTE, [$statement, 'query']);
@@ -1304,7 +1393,7 @@ class DatabaseClient
         $this->connect();
         $this->log($statement, $options);
 
-        return $this->pdo->prepare($statement, $options);
+        return $this->pdo->prepare($this->replaceTablePrefix($statement), $options);
     }
 
     /**

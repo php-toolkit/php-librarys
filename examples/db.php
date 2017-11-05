@@ -35,7 +35,7 @@ $db->on(DatabaseClient::DISCONNECT, function ($db) {
 
 // find one
 // SQL: SELECT * FROM `user` WHERE `id`= ? LIMIT 1
-$ret = $db->find('user', ['id' => 3], '*', [
+$ret = $db->findOne('user', ['id' => 3], '*', [
     'fetchType' => 'assoc',
     'dumpSql' => 1,
 ]);

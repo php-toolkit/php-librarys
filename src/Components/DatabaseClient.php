@@ -996,6 +996,7 @@ class DatabaseClient
     public function ping()
     {
         try {
+            $this->connect();
             $this->pdo->query('select 1')->fetchColumn();
         } catch (\PDOException $e) {
             if (strpos($e->getMessage(), 'server has gone away') !== false) {

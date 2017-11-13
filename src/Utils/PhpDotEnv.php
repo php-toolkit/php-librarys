@@ -45,7 +45,7 @@ class PhpDotEnv
     {
         $file = $fileDir . DIRECTORY_SEPARATOR . ($fileName ?: '.env');
 
-        if ($file && is_file($file) && is_readable($file)) {
+        if (is_file($file) && is_readable($file)) {
             $this->load(parse_ini_file($file));
         }
     }

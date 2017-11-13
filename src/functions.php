@@ -43,6 +43,7 @@ if (!function_exists('retry')) {
     function retry($times, callable $callback, $sleep = 0)
     {
         $times--;
+
         beginning:
         try {
             return $callback();
@@ -50,10 +51,13 @@ if (!function_exists('retry')) {
             if (!$times) {
                 throw $e;
             }
+
             $times--;
+
             if ($sleep) {
                 usleep($sleep * 1000);
             }
+
             goto beginning;
         }
     }
@@ -62,9 +66,24 @@ if (!function_exists('retry')) {
 if (!function_exists('env')) {
     function env(string $name, $default = null)
     {
-        $value = getenv(strtoupper($name));
+        $value = getenv($name);
 
-        return false !== $value ? $value : $default;
+        if ($value === false) {
+            return value($default);
+        }
+
+        switch (strtolower($value)) {
+            case 'true':
+                return true;
+            case 'false':
+                return false;
+            case 'empty':
+                return '';
+            case 'null':
+                return null;
+        }
+
+        return $value;
     }
 }
 

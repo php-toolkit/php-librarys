@@ -11,29 +11,29 @@ namespace Inhere\Library\Utils;
 /**
  * Class PhpDotEnv - local env read
  * @package Inhere\Library\Utils
- * in local config file(must is 'ini' format):
+ * in local config file `.env` (must is 'ini' format):
  * ```ini
- * env=dev
- * debug=true
+ * ENV=dev
+ * DEBUG=true
  * ... ...
  * ```
  * IN CODE:
  * ```php
- * new PhpDotEnv(__DIE__, '.env');
- * env('debug', false);
- * env('env_name', 'pdt');
+ * PhpDotEnv::load(__DIE__);
+ * env('DEBUG', false);
+ * env('ENV', 'pdt');
  * ```
  */
-class PhpDotEnv
+final class PhpDotEnv
 {
     /**
      * @param string $fileDir
      * @param string $fileName
      * @return static
      */
-    public static function init(string $fileDir, string $fileName = '.env')
+    public static function load(string $fileDir, string $fileName = '.env')
     {
-        return new static($fileDir, $fileName);
+        return new self($fileDir, $fileName);
     }
 
     /**
@@ -46,17 +46,17 @@ class PhpDotEnv
         $file = $fileDir . DIRECTORY_SEPARATOR . ($fileName ?: '.env');
 
         if (is_file($file) && is_readable($file)) {
-            $this->load(parse_ini_file($file));
+            $this->settingEnv(parse_ini_file($file));
         }
     }
 
     /**
-     * load env data
+     * setting env data
      */
-    protected function load($data)
+    protected function settingEnv($data)
     {
         foreach ($data as $name => $value) {
-            if (!is_string($value)) {
+            if (is_int($name) || !is_string($value)) {
                 continue;
             }
 

@@ -62,7 +62,9 @@ if (!function_exists('retry')) {
 if (!function_exists('env')) {
     function env(string $name, $default = null)
     {
-        return Inhere\Library\Utils\LocalEnv::instance()->env($name, $default);
+        $value = getenv(strtoupper($name));
+
+        return false !== $value ? $value : $default;
     }
 }
 

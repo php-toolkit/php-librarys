@@ -19,7 +19,7 @@ namespace Inhere\Library\Utils;
  * ```
  * in code:
  * ```
- * $lev = new LocalEnv(__DIE__, '.local');
+ * $lev = new LocalConfig(__DIE__, '.local');
  * $debug = $lev->get('debug', false);// can also use function: local_env('debug', false)
  * $env = $lev->get('env', 'pdt');
  * ```

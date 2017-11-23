@@ -75,19 +75,21 @@ trait TraitUseAlias
     /**
      * @param $alias
      * @param $value
+     * @throws \InvalidArgumentException
+     * @throws \RuntimeException
      */
     protected function aliasAndValueCheck(& $alias, & $value)
     {
-        if (!$value || !is_string($value)) {
+        if (!$value || !\is_string($value)) {
             throw new \InvalidArgumentException(sprintf(
                 'The 2th parameter must be of type string is not empty, %s given',
-                gettype($value)
+                \gettype($value)
             ));
         }
 
         $alias = trim($alias);
 
-        if (in_array($alias, $this->lockedAliases, true)) {
+        if (\in_array($alias, $this->lockedAliases, true)) {
             throw new \RuntimeException(sprintf('alias name %s has been locked.', $alias));
         }
     }
@@ -96,6 +98,7 @@ trait TraitUseAlias
      * 载入别名设置
      * @param array $aliases
      * @return $this
+     * @throws \RuntimeException
      */
     public function loadAliases(array $aliases)
     {

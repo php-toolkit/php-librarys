@@ -148,7 +148,7 @@ class AutoLoader
     public function addPsr4($prefix, $path)
     {
         // Register directories for a new namespace.
-        $length = strlen($prefix);
+        $length = \strlen($prefix);
 
         if ('\\' !== $prefix[$length - 1]) {
             throw new \InvalidArgumentException('A non-empty PSR-4 prefix must end with a namespace separator.');
@@ -281,7 +281,7 @@ class AutoLoader
         // PSR-4
         foreach ($this->psr4Map as $prefix => $dir) {
             if (0 === strpos($class, $prefix)) {
-                $length = strlen($prefix);
+                $length = \strlen($prefix);
 
                 if (file_exists($file = $dir . DIRECTORY_SEPARATOR . substr($logicalPathPsr4, $length))) {
                     return $file;

@@ -38,7 +38,7 @@ class PhpException
         } else {
             $message = sprintf(
                 "<h3>%s(%d): %s</h3>\n<pre><strong>File: %s(Line %d)</strong>%s \n\n%s</pre>",
-                get_class($e),
+                \get_class($e),
                 $e->getCode(),
                 $e->getMessage(),
                 $e->getFile(),
@@ -61,7 +61,7 @@ class PhpException
     public static function toArray($e, $getTrace = true, $catcher = null)
     {
         $data = [
-            'class' => get_class($e),
+            'class' => \get_class($e),
             'message' => $e->getMessage(),
             'code' => $e->getCode(),
             'file' => $e->getFile().':'.$e->getLine(),
@@ -94,7 +94,7 @@ class PhpException
                 'code' => $e->getCode() ?: 500,
                 'msg' => sprintf(
                     '%s(%d): %s, File: %s(Line %d)',
-                    get_class($e),
+                    \get_class($e),
                     $e->getCode(),
                     $e->getMessage(),
                     $e->getFile(),

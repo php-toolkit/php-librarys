@@ -23,6 +23,8 @@ class JsonParser extends BaseParser
      * @param callable $pathHandler When the second param is true, this param is valid.
      * @param string $fileDir When the second param is true, this param is valid.
      * @return array
+     * @throws \InvalidArgumentException
+     * @throws \UnexpectedValueException
      */
     protected static function doParse($string, $enhancement = false, callable $pathHandler = null, $fileDir = '')
     {
@@ -30,7 +32,7 @@ class JsonParser extends BaseParser
             return [];
         }
 
-        if (!is_string($string)) {
+        if (!\is_string($string)) {
             throw new \InvalidArgumentException('parameter type error! must is string.');
         }
 
@@ -48,7 +50,7 @@ class JsonParser extends BaseParser
         if ($enhancement === true) {
             if (isset($array[self::EXTEND_KEY]) && ($extendFile = $array[self::EXTEND_KEY])) {
                 // if needed custom handle $importFile path. e.g: Maybe it uses custom alias path
-                if ($pathHandler && is_callable($pathHandler)) {
+                if ($pathHandler && \is_callable($pathHandler)) {
                     $extendFile = $pathHandler($extendFile);
                 }
 
@@ -67,7 +69,7 @@ class JsonParser extends BaseParser
             }
 
             foreach ($array as $key => $item) {
-                if (!is_string($item)) {
+                if (!\is_string($item)) {
                     continue;
                 }
 
@@ -75,7 +77,7 @@ class JsonParser extends BaseParser
                     $importFile = trim(substr($item, 6));
 
                     // if needed custom handle $importFile path. e.g: Maybe it uses custom alias path
-                    if ($pathHandler && is_callable($pathHandler)) {
+                    if ($pathHandler && \is_callable($pathHandler)) {
                         $importFile = $pathHandler($importFile);
                     }
 

@@ -25,6 +25,8 @@ trait ReadTrait
      * @param string $src 要解析的 文件 或 字符串内容。
      * @param string $format
      * @return array|bool
+     * @throws \Inhere\Exceptions\FileReadException
+     * @throws \Inhere\Exceptions\FileNotFoundException
      */
     public static function load($src, $format = self::FORMAT_PHP)
     {
@@ -66,7 +68,7 @@ trait ReadTrait
         if (is_file($file)) {
             $ary = require $file;
 
-            if (!is_array($ary)) {
+            if (!\is_array($ary)) {
                 $ary = [];
             }
         } elseif ($throwError) {
@@ -120,7 +122,7 @@ trait ReadTrait
             return [];
         }
 
-        $array = implode(PHP_EOL, $contents);
+        $array = explode(PHP_EOL, $contents);
 
         return (bool)$filter ? array_filter($array) : $array;
     }
@@ -228,6 +230,6 @@ trait ReadTrait
      */
     public static function getLines5u3d(string $file, int $baseLine = 1): array
     {
-        return self::readRangeLines($file, $baseLine, 5, 3);
+        return self::readRangeLines($file, $baseLine, 5);
     }
 }

@@ -61,6 +61,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * Container constructor.
      * @param array $services
      * @param Container|null $parent
+     * @throws \InvalidArgumentException
      */
     public function __construct(array $services = [], Container $parent = null)
     {
@@ -123,6 +124,8 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @return $this
      * @internal param bool $shared 是否共享
      * @internal param bool $locked 是否锁定服务
+     * @throws \RuntimeException
+     * @throws \InvalidArgumentException
      */
     public function set($id, $definition, array $opts = [])
     {
@@ -142,18 +145,18 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
         ], $opts);
 
         // 已经是个服务实例 object 不是闭包 closure
-        if (is_object($definition)) {
+        if (\is_object($definition)) {
             $this->services[$id] = new Service($definition, $args, $opts['shared'], $opts['locked']);
 
             return $this;
         }
 
         // a string; is target
-        if (is_string($definition) || is_callable($definition)) {
+        if (\is_string($definition) || \is_callable($definition)) {
             $callback = $this->createCallback($definition);
 
             // a Array 详细设置服务信息
-        } elseif (is_array($definition)) {
+        } elseif (\is_array($definition)) {
             if (empty($definition['target'])) {
                 throw new \InvalidArgumentException("Configuration errors, the 'target' is must be defined! ID: $id");
             }
@@ -218,7 +221,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
             }
 
             // string. is a Service Provider class name
-            if (is_string($definition) && is_subclass_of($definition, $IServiceProvider)) {
+            if (\is_string($definition) && is_subclass_of($definition, $IServiceProvider)) {
                 $this->registerServiceProvider(new $definition);
 
                 continue;
@@ -290,11 +293,13 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @param array $arguments
      * @param array $props
      * @return callable
+     * @throws \RuntimeException
+     * @throws \Inhere\Exceptions\DependencyResolutionException
      */
     public function createCallback($target, array $arguments = [], array $props = [])
     {
         // a Closure OR a callable Object
-        if (is_object($target) && method_exists($target, '__invoke')) {
+        if (\is_object($target) && method_exists($target, '__invoke')) {
             return $target;
         }
 
@@ -396,6 +401,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     /**
      * @param $id
      * @return mixed
+     * @throws \RuntimeException
      * @throws NotFoundException
      */
     public function raw($id)
@@ -441,13 +447,15 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @param bool $thrErr
      * @param bool $forceNew 强制获取服务的新实例
      * @return mixed|null
+     * @throws \InvalidArgumentException
+     * @throws \Inhere\Exceptions\NotFoundException
      */
     public function getInstance($id, $thrErr = true, $forceNew = false)
     {
-        if (!$id || !is_string($id)) {
+        if (!$id || !\is_string($id)) {
             throw new \InvalidArgumentException(sprintf(
                 'The first parameter must be a non-empty string, %s given',
-                gettype($id)
+                \gettype($id)
             ));
         }
 
@@ -544,6 +552,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     /**
      * @param $id
      * @return bool
+     * @throws \Inhere\Exceptions\NotFoundException
      */
     public function isShared($id)
     {
@@ -557,6 +566,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     /**
      * @param $id
      * @return bool
+     * @throws \Inhere\Exceptions\NotFoundException
      */
     public function isLocked($id)
     {
@@ -587,10 +597,11 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     /**
      * @param $id
      * @return string
+     * @throws \InvalidArgumentException
      */
     private function _checkServiceId($id)
     {
-        if (!is_string($id) || strlen($id) > 50) {
+        if (!\is_string($id) || \strlen($id) > 50) {
             throw new \InvalidArgumentException('Set up the service Id can be a string of not more than 50 characters!');
         }
 
@@ -642,7 +653,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
             return $this->$method();
         }
 
-        throw new NotFoundException('Getting a Unknown property! ' . get_class($this) . "::{$name}");
+        throw new NotFoundException('Getting a Unknown property! ' . \get_class($this) . "::{$name}");
     }
 
     /*******************************************************************************
@@ -654,7 +665,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      */
     public function count()
     {
-        return count($this->services);
+        return \count($this->services);
     }
 
     /**

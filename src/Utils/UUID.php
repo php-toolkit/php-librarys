@@ -131,7 +131,7 @@ class UUID
      */
     protected function __construct($uuid)
     {
-        if (!empty($uuid) && strlen($uuid) !== 16) {
+        if (!empty($uuid) && \strlen($uuid) !== 16) {
             throw new InvalidArgumentException('Input must be a 128-bit integer.');
         }
 
@@ -206,10 +206,10 @@ class UUID
         $uuid .= static::randomBytes(2);
 
         // set variant
-        $uuid[8] = chr(ord($uuid[8]) & static::CLEAR_VAR | static::VAR_RFC);
+        $uuid[8] = \chr(\ord($uuid[8]) & static::CLEAR_VAR | static::VAR_RFC);
 
         // set version
-        $uuid[6] = chr(ord($uuid[6]) & static::CLEAR_VER | static::VERSION_1);
+        $uuid[6] = \chr(\ord($uuid[6]) & static::CLEAR_VER | static::VERSION_1);
 
         // Set the final 'node' parameter, a MAC address
         if (null !== $node) {
@@ -220,7 +220,7 @@ class UUID
         //  generate a random MAC address and set the multicast bit
         if (null === $node) {
             $node = static::randomBytes(6);
-            $node[0] = pack('C', ord($node[0]) | 1);
+            $node[0] = pack('C', \ord($node[0]) | 1);
         }
 
         $uuid .= $node;
@@ -252,7 +252,7 @@ class UUID
         if ($str instanceof self) {
             return $str->bytes;
         }
-        if (strlen($str) === $len) {
+        if (\strlen($str) === $len) {
             return $str;
         }
 
@@ -261,7 +261,7 @@ class UUID
         // strip non-hex characters
         $str = preg_replace('/[^a-f0-9]/is', '', $str);
 
-        if (strlen($str) !== ($len * 2)) {
+        if (\strlen($str) !== ($len * 2)) {
             return null;
         }
 
@@ -307,10 +307,10 @@ class UUID
         }
 
         // set variant
-        $uuid[8] = chr(ord($uuid[8]) & static::CLEAR_VAR | static::VAR_RFC);
+        $uuid[8] = \chr(\ord($uuid[8]) & static::CLEAR_VAR | static::VAR_RFC);
 
         // set version
-        $uuid[6] = chr(ord($uuid[6]) & static::CLEAR_VER | $version);
+        $uuid[6] = \chr(\ord($uuid[6]) & static::CLEAR_VER | $version);
 
         return $uuid;
     }
@@ -326,9 +326,9 @@ class UUID
     {
         $uuid = static::randomBytes(16);
         // set variant
-        $uuid[8] = chr(ord($uuid[8]) & static::CLEAR_VAR | static::VAR_RFC);
+        $uuid[8] = \chr(\ord($uuid[8]) & static::CLEAR_VAR | static::VAR_RFC);
         // set version
-        $uuid[6] = chr(ord($uuid[6]) & static::CLEAR_VER | static::VERSION_4);
+        $uuid[6] = \chr(\ord($uuid[6]) & static::CLEAR_VER | static::VERSION_4);
 
         return $uuid;
     }
@@ -338,6 +338,7 @@ class UUID
      *
      * @param string $uuid
      * @return Uuid
+     * @throws \Inhere\Exceptions\InvalidArgumentException
      */
     public static function import($uuid)
     {
@@ -382,7 +383,7 @@ class UUID
                 return bin2hex($this->bytes);
                 break;
             case 'node':
-                if (ord($this->bytes[6]) >> 4 === 1) {
+                if (\ord($this->bytes[6]) >> 4 === 1) {
                     return bin2hex(substr($this->bytes, 10));
                 }
 
@@ -392,7 +393,7 @@ class UUID
                 return $this->__toString();
                 break;
             case 'time':
-                if (ord($this->bytes[6]) >> 4 === 1) {
+                if (\ord($this->bytes[6]) >> 4 === 1) {
                     // Restore contiguous big-endian byte order
                     $time = bin2hex($this->bytes[6] . $this->bytes[7] . $this->bytes[4] . $this->bytes[5] .
                         $this->bytes[0] . $this->bytes[1] . $this->bytes[2] . $this->bytes[3]);
@@ -408,7 +409,7 @@ class UUID
                 return 'urn:uuid:' . $this->__toString();
                 break;
             case 'variant':
-                $byte = ord($this->bytes[8]);
+                $byte = \ord($this->bytes[8]);
                 if ($byte >= static::VAR_RES) {
                     return 3;
                 }
@@ -424,7 +425,7 @@ class UUID
                 return 0;
                 break;
             case 'version':
-                return ord($this->bytes[6]) >> 4;
+                return \ord($this->bytes[6]) >> 4;
                 break;
             default:
                 return null;

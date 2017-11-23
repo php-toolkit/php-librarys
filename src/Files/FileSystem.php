@@ -26,7 +26,7 @@ abstract class FileSystem
      */
     public static function isAbsPath($path): bool
     {
-        if (!$path || !is_string($path)) {
+        if (!$path || !\is_string($path)) {
             return false;
         }
 
@@ -49,7 +49,7 @@ abstract class FileSystem
     public static function isAbsolutePath($file): bool
     {
         return strspn($file, '/\\', 0, 1)
-            || (strlen($file) > 3 && ctype_alpha($file[0])
+            || (\strlen($file) > 3 && ctype_alpha($file[0])
                 && $file[1] === ':'
                 && strspn($file, '/\\', 2, 1)
             )
@@ -106,7 +106,7 @@ abstract class FileSystem
         }
 
         if ($ext) {
-            if (is_array($ext)) {
+            if (\is_array($ext)) {
                 $ext = implode('|', $ext);
             }
 
@@ -146,7 +146,7 @@ abstract class FileSystem
      */
     public static function isReadable($filename): bool
     {
-        if ('\\' === DIRECTORY_SEPARATOR && strlen($filename) > 258) {
+        if ('\\' === DIRECTORY_SEPARATOR && \strlen($filename) > 258) {
             throw new IOException('Could not check if file is readable because path length exceeds 258 characters.', 0, null, $filename);
         }
 
@@ -217,7 +217,7 @@ abstract class FileSystem
             if ($recursive && is_dir($file) && !is_link($file)) {
                 self::chown(new \FilesystemIterator($file), $user, true);
             }
-            if (is_link($file) && function_exists('lchown')) {
+            if (is_link($file) && \function_exists('lchown')) {
                 if (true !== lchown($file, $user)) {
                     throw new IOException(sprintf('Failed to chown file "%s".', $file), 0, null, $file);
                 }
@@ -272,7 +272,7 @@ abstract class FileSystem
         $base = 1024;
         $bytes = disk_free_space($dir);
         $suffix = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-        $class = min((int)log($bytes, $base), count($suffix) - 1);
+        $class = min((int)log($bytes, $base), \count($suffix) - 1);
 
         //echo $bytes . '<br />';
 
@@ -289,7 +289,7 @@ abstract class FileSystem
         $base = 1024;
         $bytes = disk_total_space($dir);
         $suffix = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-        $class = min((int)log($bytes, $base), count($suffix) - 1);
+        $class = min((int)log($bytes, $base), \count($suffix) - 1);
 
         // pow($base, $class)
         return sprintf('%1.2f', $bytes / ($base ** $class)) . ' ' . $suffix[$class];

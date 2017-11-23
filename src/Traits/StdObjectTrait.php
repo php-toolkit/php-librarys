@@ -36,7 +36,7 @@ trait StdObjectTrait
         $fullName = $fullName ?: self::fullName();
         $fullName = str_replace('\\', '/', $fullName);
 
-        return strpos($fullName, '/') ? dirname($fullName) : null;
+        return strpos($fullName, '/') ? \dirname($fullName) : null;
     }
 
     /**
@@ -83,7 +83,7 @@ trait StdObjectTrait
         //     return call_user_func_array( array($this, $method), (array) $args);
         // }
 
-        throw new UnknownCalledException('Called a Unknown method! ' . get_class($this) . "->{$method}()");
+        throw new UnknownCalledException('Called a Unknown method! ' . \get_class($this) . "->{$method}()");
     }
 
     /**
@@ -95,7 +95,7 @@ trait StdObjectTrait
     public static function __callStatic($method, $args)
     {
         if (method_exists(self::class, $method)) {
-            return call_user_func_array([self::class, $method], (array)$args);
+            return \call_user_func_array([self::class, $method], (array)$args);
         }
 
         throw new UnknownCalledException('Called a Unknown static method! [ ' . self::class . "::{$method}()]");

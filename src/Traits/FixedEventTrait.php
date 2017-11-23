@@ -36,7 +36,7 @@ trait FixedEventTrait
      */
     public function isSupportedEvent(string $event): bool
     {
-        return in_array($event, $this->getSupportedEvents(), true);
+        return \in_array($event, $this->getSupportedEvents(), true);
     }
 
     /**
@@ -94,6 +94,7 @@ trait FixedEventTrait
      * @param string $event event name
      * @param callable $cb event callback
      * @param bool $replace replace exists's event cb
+     * @throws \InvalidArgumentException
      */
     public function on(string $event, callable $cb, bool $replace = false)
     {
@@ -105,7 +106,7 @@ trait FixedEventTrait
 
         // init property
         if ($this->eventHandlers === null) {
-            $this->eventHandlers = new \SplFixedArray(count($this->getSupportedEvents()));
+            $this->eventHandlers = new \SplFixedArray(\count($this->getSupportedEvents()));
         }
 
         if (!$replace && isset($this->eventHandlers[$key])) {
@@ -139,6 +140,7 @@ trait FixedEventTrait
      * @param string $event
      * @param array $args
      * @return mixed
+     * @throws \InvalidArgumentException
      */
     protected function fire(string $event, array $args = [])
     {

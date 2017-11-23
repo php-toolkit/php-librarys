@@ -45,7 +45,7 @@ class DataHelper
     public static function toArray($data, $recursive = false)
     {
         // Ensure the input data is an array.
-        if (is_object($data)) {
+        if (\is_object($data)) {
             if ($data instanceof \Traversable) {
                 $data = iterator_to_array($data);
             } elseif (method_exists($data, 'toArray')) {
@@ -57,7 +57,7 @@ class DataHelper
 
         if ($recursive) {
             foreach ($data as &$value) {
-                if (is_array($value) || is_object($value)) {
+                if (\is_array($value) || \is_object($value)) {
                     $value = static::toArray($value, $recursive);
                 }
             }
@@ -83,7 +83,7 @@ class DataHelper
                 continue;
             }
 
-            $object->$name = is_array($value) ? self::toObject($value) : $value;
+            $object->$name = \is_array($value) ? self::toObject($value) : $value;
         }
 
         return $object;
@@ -111,7 +111,7 @@ class DataHelper
      */
     public static function htmlentitiesUTF8($string, $type = ENT_QUOTES)
     {
-        if (is_array($string)) {
+        if (\is_array($string)) {
             return array_map([__CLASS__, 'htmlentitiesUTF8'], $string);
         }
 
@@ -124,7 +124,7 @@ class DataHelper
      */
     public static function htmlentitiesDecodeUTF8($string)
     {
-        if (is_array($string)) {
+        if (\is_array($string)) {
             $string = array_map([__CLASS__, 'htmlentitiesDecodeUTF8'], $string);
 
             return (string)array_shift($string);
@@ -146,7 +146,7 @@ class DataHelper
 
         // get the first argument and parse it like a query string
         parse_str($argv[1], $args);
-        if (!is_array($args) || !count($args)) {
+        if (!\is_array($args) || !\count($args)) {
             return true;
         }
 
@@ -181,7 +181,7 @@ class DataHelper
      **/
     public static function stripTags($data, $allow_tags = null)
     {
-        if (is_array($data)) {
+        if (\is_array($data)) {
             foreach ($data as $k => $v) {
                 $data[$k] = self::stripTags($v, $allow_tags);
             }
@@ -189,7 +189,7 @@ class DataHelper
             return $data;
         }
 
-        if (is_string($data) || is_numeric($data)) {
+        if (\is_string($data) || is_numeric($data)) {
             return strip_tags($data, $allow_tags);
         }
 
@@ -206,7 +206,7 @@ class DataHelper
      */
     public static function slashes($data, $escape = 1, $level = 0)
     {
-        if (is_array($data)) {
+        if (\is_array($data)) {
             foreach ((array)$data as $key => $value) {
                 $data[$key] = self::slashes($value, $escape, $level);
             }
@@ -245,14 +245,14 @@ class DataHelper
 
     /**
      * 对数据进行字符集转换处理，数据可以是字符串或数组及对象
-     * @param array $data
+     * @param array|string $data
      * @param $in_charset
      * @param $out_charset
      * @return array|string
      */
     public static function changeEncode($data, $in_charset = 'GBK', $out_charset = 'UTF-8')
     {
-        if (is_array($data)) {
+        if (\is_array($data)) {
 
             foreach ($data as $key => $value) {
                 $data[$key] = self::changeEncode($value, $in_charset, $out_charset);
@@ -261,7 +261,7 @@ class DataHelper
             return $data;
         }
 
-        if (function_exists('mb_convert_encoding')) {
+        if (\function_exists('mb_convert_encoding')) {
             return mb_convert_encoding($data, $out_charset, $in_charset);
         }
 

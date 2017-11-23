@@ -38,6 +38,7 @@ class DsnHelper
      * getDsn
      * @param string $driver
      * @param array $options
+     * @throws \LogicException
      * @throws  \RuntimeException
      * @return  string
      */
@@ -57,7 +58,7 @@ class DsnHelper
             throw new \LogicException('The driver name is required.');
         }
 
-        if (!is_callable([static::class, $driver])) {
+        if (!\is_callable([static::class, $driver])) {
             throw new \RuntimeException('The ' . $driver . ' driver is not supported.');
         }
 

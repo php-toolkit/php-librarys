@@ -43,6 +43,7 @@ class Directory extends FileSystem
      * @param string $srcDir
      * @param callable $filter
      * @return \RecursiveIteratorIterator
+     * @throws \LogicException
      */
     public static function getRecursiveIterator($srcDir, callable $filter)
     {
@@ -161,7 +162,7 @@ class Directory extends FileSystem
             throw new NotFoundException("directory not exists! DIR: $path");
         }
 
-        $len = strlen($path);
+        $len = \strlen($path);
 
         foreach (glob($path . '*') as $v) {
             if (is_dir($v)) {
@@ -190,7 +191,7 @@ class Directory extends FileSystem
     {
         $list = [];
         $dir = self::pathFormat($dir);
-        $ext = is_array($ext) ? implode('|', $ext) : trim($ext);
+        $ext = \is_array($ext) ? implode('|', $ext) : trim($ext);
 
         if (!is_dir($dir)) {
             throw new NotFoundException("directory not exists! DIR: $dir");
@@ -235,8 +236,8 @@ class Directory extends FileSystem
             throw new NotFoundException("directory not exists! DIR: $path");
         }
 
-        $len = strlen($path);
-        $ext = is_array($ext) ? implode('|', $ext) : trim($ext);
+        $len = \strlen($path);
+        $ext = \is_array($ext) ? implode('|', $ext) : trim($ext);
 
         foreach (glob($path . '*') as $v) {
             $relatePath = substr($v, $len);
@@ -285,7 +286,7 @@ class Directory extends FileSystem
             throw new NotFoundException("directory not exists! DIR: $path");
         }
 
-        $ext = is_array($ext) ? implode('|', $ext) : trim($ext);
+        $ext = \is_array($ext) ? implode('|', $ext) : trim($ext);
 
         static $id = 0;
 
@@ -391,7 +392,7 @@ class Directory extends FileSystem
         $oldPath_arr = explode('/', rtrim($oldPath, '/'));
 
         $reOne = array_diff($newPath_arr, $oldPath_arr);
-        $numOne = count((array)$reOne);//
+        $numOne = \count((array)$reOne);//
 
         /**
          * 跟框架在同一个父目录[phpTest]下
@@ -413,7 +414,7 @@ class Directory extends FileSystem
          * newPath 'F:/www/otherDir/ddd/eee/xxx/yyy/[zzz]'--应用目录 zzz
          * oldPath 'F:/www/phpTest/[yzonefk]'---框架目录[yzonefk]
          */
-        if (dirname($newPath) !== dirname($oldPath)) {
+        if (\dirname($newPath) !== \dirname($oldPath)) {
             $reTwo = array_diff($oldPath_arr, $newPath_arr);
             $reTwo = array_shift($reTwo);
             // $numTwo = count($reTwo);// 从框架目录向上回滚，找到相同的父节点，得到相隔几层

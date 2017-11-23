@@ -22,7 +22,7 @@ class DateHelper
      */
     public static function isTimestamp($timestamp)
     {
-        if (!$timestamp || !is_numeric($timestamp) || 10 !== strlen($timestamp)) {
+        if (!$timestamp || !is_numeric($timestamp) || 10 !== \strlen($timestamp)) {
             return false;
         }
 
@@ -159,7 +159,7 @@ class DateHelper
      */
     public static function before($time, $unit = null)
     {
-        if (!is_int($time)) {
+        if (!\is_int($time)) {
             return false;
         }
 

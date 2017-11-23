@@ -122,6 +122,7 @@ class DatabaseClient
 
     /**
      * @param array $config
+     * @throws \RuntimeException
      */
     public function __construct(array $config = [])
     {
@@ -149,6 +150,8 @@ class DatabaseClient
 
     /**
      * @return static
+     * @throws \RuntimeException
+     * @throws \PDOException
      */
     public function connect()
     {
@@ -209,13 +212,15 @@ class DatabaseClient
      * @param array $arguments
      * @return mixed
      * @throws UnknownMethodException
+     * @throws \PDOException
+     * @throws \RuntimeException
      */
     public function __call($name, array $arguments)
     {
         $this->connect();
 
         if (!method_exists($this->pdo, $name)) {
-            $class = get_class($this);
+            $class = \get_class($this);
             throw new UnknownMethodException("Class '{$class}' does not have a method '{$name}'");
         }
 
@@ -279,6 +284,7 @@ class DatabaseClient
      * @param  string|array $select
      * @param  array $options
      * @return array
+     * @throws \RuntimeException
      */
     public function findOne(string $from, $wheres = 1, $select = '*', array $options = [])
     {
@@ -320,6 +326,7 @@ class DatabaseClient
      * @param  string|array $select
      * @param  array $options
      * @return array
+     * @throws \RuntimeException
      */
     public function findAll(string $from, $wheres = 1, $select = '*', array $options = [])
     {
@@ -362,10 +369,11 @@ class DatabaseClient
 
     /**
      * Run a statement for insert a row
-     * @param  string $statement
+     * @param  string $from
      * @param  array $data <column => value>
      * @param  array $options
-     * @return int
+     * @return int|array
+     * @throws \RuntimeException
      */
     public function insert(string $from, array $data, array $options = [])
     {
@@ -387,10 +395,10 @@ class DatabaseClient
 
     /**
      * Run a statement for insert multi row
-     * @param  string $statement
-     * @param  array $data <column => value>
+     * @param string $from
+     * @param array $dataSet
      * @param  array $options
-     * @return int
+     * @return int|array
      */
     public function insertBatch(string $from, array $dataSet, array $options = [])
     {
@@ -408,7 +416,9 @@ class DatabaseClient
      * @param  string $from
      * @param  array|string $wheres
      * @param  array $values
-     * @return int
+     * @param array $options
+     * @return int|array
+     * @throws \RuntimeException
      */
     public function update(string $from, $wheres, array $values, array $options = [])
     {
@@ -431,7 +441,8 @@ class DatabaseClient
      * @param  string $from
      * @param  array|string $wheres
      * @param  array $options
-     * @return int
+     * @return int|array
+     * @throws \RuntimeException
      */
     public function delete(string $from, $wheres, array $options = [])
     {
@@ -461,6 +472,7 @@ class DatabaseClient
      * @param  string $table
      * @param  array|string $wheres
      * @return int
+     * @throws \RuntimeException
      */
     public function count(string $table, $wheres)
     {
@@ -537,7 +549,7 @@ class DatabaseClient
      * @param string $statement
      * @param array $bindings
      * @param int $columnNum 你想从行里取回的列的索引数字（以0开始的索引）
-     * @return void
+     * @return mixed
      */
     public function fetchColumn(string $statement, array $bindings = [], int $columnNum = 0)
     {
@@ -550,6 +562,8 @@ class DatabaseClient
     }
 
     /**
+     * @param string $statement
+     * @param array $bindings
      * @return array|bool
      */
     public function fetchValue(string $statement, array $bindings = [])
@@ -703,7 +717,7 @@ class DatabaseClient
      * }
      * ```
      *
-     * @return void
+     * @return array
      */
     public function fetchFuns(callable $func, string $statement, array $bindings = [])
     {
@@ -895,6 +909,8 @@ class DatabaseClient
      * @param string $statement
      * @param array $params
      * @return PDOStatement
+     * @throws \PDOException
+     * @throws \RuntimeException
      */
     public function prepareWithBindings($statement, array $params = [])
     {
@@ -922,11 +938,14 @@ class DatabaseClient
     /**
      * 事务
      * {@inheritDoc}
+     * @throws \InvalidArgumentException
+     * @throws \PDOException
+     * @throws \RuntimeException
      */
     public function transactional(callable $func)
     {
-        if (!is_callable($func)) {
-            throw new \InvalidArgumentException('Expected argument of type "callable", got "' . gettype($func) . '"');
+        if (!\is_callable($func)) {
+            throw new \InvalidArgumentException('Expected argument of type "callable", got "' . \gettype($func) . '"');
         }
 
         $this->connect();
@@ -951,8 +970,8 @@ class DatabaseClient
     {
         foreach ($bindings as $key => $value) {
             $sth->bindValue(
-                is_string($key) ? $key : $key + 1, $value,
-                is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR
+                \is_string($key) ? $key : $key + 1, $value,
+                \is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR
             );
         }
     }
@@ -962,14 +981,15 @@ class DatabaseClient
      * @param $key
      * @param $val
      * @return bool
+     * @throws \RuntimeException
      */
     protected function bindValue(PDOStatement $sth, $key, $val)
     {
-        if (is_int($val)) {
+        if (\is_int($val)) {
             return $sth->bindValue($key, $val, PDO::PARAM_INT);
         }
 
-        if (is_bool($val)) {
+        if (\is_bool($val)) {
             return $sth->bindValue($key, $val, PDO::PARAM_BOOL);
         }
 
@@ -978,7 +998,7 @@ class DatabaseClient
         }
 
         if (!is_scalar($val)) {
-            $type = gettype($val);
+            $type = \gettype($val);
             throw new \RuntimeException("Cannot bind value of type '{$type}' to placeholder '{$key}'");
         }
 
@@ -992,6 +1012,8 @@ class DatabaseClient
     /**
      * Check whether the connection is available
      * @return bool
+     * @throws \PDOException
+     * @throws \RuntimeException
      */
     public function ping()
     {
@@ -1028,10 +1050,11 @@ class DatabaseClient
      * ]);
      * ```
      * @return array
+     * @throws \RuntimeException
      */
     public function handleWheres($wheres)
     {
-        if (is_object($wheres) && $wheres instanceof \Closure) {
+        if (\is_object($wheres) && $wheres instanceof \Closure) {
             $wheres = $wheres($this);
         }
 
@@ -1039,15 +1062,15 @@ class DatabaseClient
             return [1, []];
         }
 
-        if (is_string($wheres)) {
+        if (\is_string($wheres)) {
             return [$wheres, []];
         }
 
         $nodes = $bindings = [];
 
-        if (is_array($wheres)) {
+        if (\is_array($wheres)) {
             foreach ($wheres as $key => $val) {
-                if (is_object($val) && $val instanceof \Closure) {
+                if (\is_object($val) && $val instanceof \Closure) {
                     $val = $val($this);
                 }
 
@@ -1059,7 +1082,7 @@ class DatabaseClient
                     $bindings[] = $val;
 
                     // array: [column, operator(e.g '=', '>=', 'IN'), value, option(Is optional, e.g 'AND', 'OR')]
-                } elseif (is_array($val)) {
+                } elseif (\is_array($val)) {
                     if (!isset($val[2])) {
                         throw new \RuntimeException('Where condition data is incomplete, at least 3 elements');
                     }
@@ -1081,7 +1104,7 @@ class DatabaseClient
     }
 
     /**
-     * @param array $opts
+     * @param array $options
      * @return string
      */
     public function compileSelect(array $options)
@@ -1090,26 +1113,27 @@ class DatabaseClient
     }
 
     /**
-     * @param array $updates
-     * @param array $bindings
-     * @param array $options
-     * @return string
+     * @param $from
+     * @param array $data
+     * @param array $columns
+     * @param bool $isBatch
+     * @return array
      */
-    public function compileInsert($from, array $data, array $columns = [], $isBatch = false)
+    public function compileInsert(string $from, array $data, array $columns = [], $isBatch = false)
     {
-        $names = $bindings = [];
+        $bindings = [];
         $table = $this->qn($from);
 
         if (!$isBatch) {
             $bindings = array_values($data);
             $nameStr = $this->qns(array_keys($data));
-            $valueStr = '(' . rtrim(str_repeat('?,', count($data)), ',') . ')';
+            $valueStr = '(' . rtrim(str_repeat('?,', \count($data)), ',') . ')';
         } else {
             if ($columns) {
-                $columnNum = count($columns);
+                $columnNum = \count($columns);
                 $nameStr = $this->qns($columns);
             } else {
-                $columnNum = count($data[0]);
+                $columnNum = \count($data[0]);
                 $nameStr = $this->qns(array_keys($data[0]));
             }
 
@@ -1136,26 +1160,26 @@ class DatabaseClient
      */
     public function compileUpdate(array $updates, array &$bindings, array $options)
     {
-        $nodes = $vlaues = [];
+        $nodes = $values = [];
 
         foreach ($updates as $column => $value) {
-            if (is_int($column)) {
-                contiune;
+            if (\is_int($column)) {
+                continue;
             }
 
             $nodes[] = $this->qn($column) . '= ?';
-            $vlaues[] = $value;
+            $values[] = $value;
         }
 
         $options['set'] = \implode(',', $nodes);
-        $bindings = array_merge($vlaues, $bindings);
+        $bindings = array_merge($values, $bindings);
 
         return $this->compileNodes(self::UPDATE_NODES, $options);
     }
 
     public function compileDelete(array $options)
     {
-        return 'DELETE ' . $this->compileNodes(self::DELETE_NODES, $options);;
+        return 'DELETE ' . $this->compileNodes(self::DELETE_NODES, $options);
     }
 
     /**
@@ -1173,7 +1197,7 @@ class DatabaseClient
             }
 
             $val = $data[$node];
-            if ($isString = is_string($val)) {
+            if ($isString = \is_string($val)) {
                 $val = trim($val);
             }
 
@@ -1183,7 +1207,7 @@ class DatabaseClient
                     $nodes[] = stripos($val, 'join') !== false ? $val : 'LEFT JOIN ' . $val;
 
                     // array: ['TABLE t2', 't1.id = t2.id', 'left']
-                } elseif (is_array($val)) {
+                } elseif (\is_array($val)) {
                     $nodes[] = ($val[2] ?? 'LEFT') . " JOIN {$val[0]} ON {$val[1]}";
                 }
 
@@ -1196,7 +1220,7 @@ class DatabaseClient
                     $nodes[] = stripos($val, 'having') !== false ? $val: 'HAVING ' . $val;
 
                     // array: ['t1.id = t2.id', 'AND']
-                } elseif (is_array($val)) {
+                } elseif (\is_array($val)) {
                     $nodes[] = 'HAVING ' . ($val[1] ?? 'AND') . " {$val[0]}";
                 }
 
@@ -1225,7 +1249,7 @@ class DatabaseClient
      */
     public function qns($names)
     {
-        if (is_string($names)) {
+        if (\is_string($names)) {
             $names = trim($names, ', ');
             $names = strpos($names, ',') ? explode(',', $names) : [$names];
         }
@@ -1329,7 +1353,7 @@ class DatabaseClient
         $this->connect();
 
         // non-array quoting
-        if (!is_array($value)) {
+        if (!\is_array($value)) {
             return $this->pdo->quote($value, $type);
         }
 
@@ -1349,6 +1373,8 @@ class DatabaseClient
     /**
      * @param string $statement
      * @return int
+     * @throws \PDOException
+     * @throws \RuntimeException
      */
     public function exec($statement)
     {
@@ -1368,6 +1394,8 @@ class DatabaseClient
     /**
      * {@inheritDoc}
      * @return PDOStatement
+     * @throws \PDOException
+     * @throws \RuntimeException
      */
     public function query($statement, ...$fetch)
     {
@@ -1388,6 +1416,8 @@ class DatabaseClient
      * @param string $statement
      * @param array $options
      * @return PDOStatement
+     * @throws \PDOException
+     * @throws \RuntimeException
      */
     public function prepare($statement, array $options = [])
     {
@@ -1399,6 +1429,8 @@ class DatabaseClient
 
     /**
      * {@inheritDoc}
+     * @throws \PDOException
+     * @throws \RuntimeException
      */
     public function beginTransaction()
     {
@@ -1409,6 +1441,8 @@ class DatabaseClient
 
     /**
      * {@inheritDoc}
+     * @throws \RuntimeException
+     * @throws \PDOException
      */
     public function inTransaction()
     {
@@ -1419,6 +1453,8 @@ class DatabaseClient
 
     /**
      * {@inheritDoc}
+     * @throws \PDOException
+     * @throws \RuntimeException
      */
     public function commit()
     {
@@ -1429,6 +1465,8 @@ class DatabaseClient
 
     /**
      * {@inheritDoc}
+     * @throws \PDOException
+     * @throws \RuntimeException
      */
     public function rollBack()
     {
@@ -1439,6 +1477,8 @@ class DatabaseClient
 
     /**
      * {@inheritDoc}
+     * @throws \PDOException
+     * @throws \RuntimeException
      */
     public function errorCode()
     {
@@ -1449,6 +1489,8 @@ class DatabaseClient
 
     /**
      * {@inheritDoc}
+     * @throws \PDOException
+     * @throws \RuntimeException
      */
     public function errorInfo()
     {
@@ -1459,6 +1501,8 @@ class DatabaseClient
 
     /**
      * {@inheritDoc}
+     * @throws \PDOException
+     * @throws \RuntimeException
      */
     public function lastInsertId($name = null)
     {
@@ -1469,6 +1513,8 @@ class DatabaseClient
 
     /**
      * {@inheritDoc}
+     * @throws \PDOException
+     * @throws \RuntimeException
      */
     public function getAttribute($attribute)
     {
@@ -1479,6 +1525,8 @@ class DatabaseClient
 
     /**
      * {@inheritDoc}
+     * @throws \PDOException
+     * @throws \RuntimeException
      */
     public function setAttribute($attribute, $value)
     {
@@ -1502,7 +1550,7 @@ class DatabaseClient
      */
     public static function isSupported(string $driver)
     {
-        return in_array($driver, \PDO::getAvailableDrivers(), true);
+        return \in_array($driver, \PDO::getAvailableDrivers(), true);
     }
 
     /**

@@ -50,6 +50,7 @@ class LocalConfig
 
     /**
      * @return static
+     * @throws \LogicException
      */
     public static function instance()
     {

@@ -50,7 +50,7 @@ abstract class StringHelper
     {
         $str = html_entity_decode((string)$str, ENT_COMPAT, 'UTF-8');
 
-        return function_exists('mb_strlen') ? mb_strlen($str, $encoding) : strlen($str);
+        return \function_exists('mb_strlen') ? mb_strlen($str, $encoding) : \strlen($str);
     }
 
     /**
@@ -68,13 +68,13 @@ abstract class StringHelper
             return '1';
         }
 
-        if (function_exists('mb_strlen')) {
+        if (\function_exists('mb_strlen')) {
             return mb_strlen($str, 'utf-8');
         }
 
         preg_match_all('/./u', $str, $arr);
 
-        return count($arr[0]);
+        return \count($arr[0]);
     }
 
     /**
@@ -90,17 +90,17 @@ abstract class StringHelper
             return 0;
         }
 
-        if (function_exists('mb_strwidth')) {
+        if (\function_exists('mb_strwidth')) {
             return mb_strwidth($str, 'utf-8');
         }
 
-        if (function_exists('mb_strlen')) {
+        if (\function_exists('mb_strlen')) {
             return mb_strlen($str, 'utf-8');
         }
 
         preg_match_all('/./u', $str, $ar);
 
-        return count($ar[0]);
+        return \count($ar[0]);
     }
 
     /**
@@ -117,8 +117,8 @@ abstract class StringHelper
             return false;
         }
 
-        if (function_exists('mb_substr')) {
-            if (func_num_args() >= 3) {
+        if (\function_exists('mb_substr')) {
+            if (\func_num_args() >= 3) {
                 $end = func_get_arg(2);
 
                 return mb_substr($str, $start, $end, 'utf-8');
@@ -133,13 +133,13 @@ abstract class StringHelper
         $null = '';
         preg_match_all('/./u', $str, $ar);
 
-        if (func_num_args() >= 3) {
+        if (\func_num_args() >= 3) {
             $end = func_get_arg(2);
 
-            return implode($null, array_slice($ar[0], $start, $end));
+            return implode($null, \array_slice($ar[0], $start, $end));
         }
 
-        return implode($null, array_slice($ar[0], $start));
+        return implode($null, \array_slice($ar[0], $start));
     }
 
 
@@ -155,7 +155,7 @@ abstract class StringHelper
      */
     public static function zhSubStr($str, $start = 0, $length, $charset = 'utf-8', $suffix = true)
     {
-        if (function_exists('mb_substr')) {
+        if (\function_exists('mb_substr')) {
             if (mb_strlen($str, $charset) <= $length) {
                 return $str;
             }
@@ -168,11 +168,11 @@ abstract class StringHelper
             $re['big5'] = "/[\x01-\x7f]|[\x81-\xfe]([\x40-\x7e]|\xa1-\xfe])/";
 
             preg_match_all($re[$charset], $str, $match);
-            if (count($match[0]) <= $length) {
+            if (\count($match[0]) <= $length) {
                 return $str;
             }
 
-            $slice = implode('', array_slice($match[0], $start, $length));
+            $slice = implode('', \array_slice($match[0], $start, $length));
         }
 
         return (bool)$suffix ? $slice . '…' : $slice;
@@ -199,7 +199,7 @@ abstract class StringHelper
         ], $param);
 
         $chars = $param['chars'];
-        $max = strlen($chars) - 1;   //strlen($chars) 计算字符串的长度
+        $max = \strlen($chars) - 1;   //strlen($chars) 计算字符串的长度
         $str = '';
 
         for ($i = 0; $i < $length; $i++) {
@@ -224,7 +224,7 @@ abstract class StringHelper
      */
     public static function genUid($length = 7)
     {
-        if (!is_int($length) || $length > 32 || $length < 1) {
+        if (!\is_int($length) || $length > 32 || $length < 1) {
             $length = 7;
         }
 
@@ -237,6 +237,7 @@ abstract class StringHelper
      * @param null $node
      * @param null $ns
      * @return UUID
+     * @throws \Inhere\Exceptions\InvalidArgumentException
      */
     public static function genUUID($version = 1, $node = null, $ns = null)
     {
@@ -264,11 +265,11 @@ abstract class StringHelper
      */
     public static function strtolower($str)
     {
-        if (!is_string($str)) {
+        if (!\is_string($str)) {
             return $str;
         }
 
-        return function_exists('mb_strtolower') ? mb_strtolower($str, 'utf-8') : strtolower($str);
+        return \function_exists('mb_strtolower') ? mb_strtolower($str, 'utf-8') : strtolower($str);
     }
 
     /**
@@ -277,11 +278,11 @@ abstract class StringHelper
      */
     public static function strtoupper($str)
     {
-        if (!is_string($str)) {
+        if (!\is_string($str)) {
             return $str;
         }
 
-        return function_exists('mb_strtoupper') ? mb_strtoupper($str, 'utf-8') : strtoupper($str);
+        return \function_exists('mb_strtoupper') ? mb_strtoupper($str, 'utf-8') : strtoupper($str);
     }
 
     /**
@@ -293,7 +294,7 @@ abstract class StringHelper
      */
     public static function substr($str, $start, $length = false, $encoding = 'utf-8')
     {
-        if (function_exists('mb_substr')) {
+        if (\function_exists('mb_substr')) {
             return mb_substr($str, (int)$start, ($length === false ? self::strlen($str) : (int)$length), $encoding);
         }
 
@@ -309,7 +310,7 @@ abstract class StringHelper
      */
     public static function strpos($str, $find, $offset = 0, $encoding = 'UTF-8')
     {
-        return function_exists('mb_strpos') ? mb_strpos($str, $find, $offset, $encoding) : strpos($str, $find, $offset);
+        return \function_exists('mb_strpos') ? mb_strpos($str, $find, $offset, $encoding) : strpos($str, $find, $offset);
     }
 
     /**
@@ -321,7 +322,7 @@ abstract class StringHelper
      */
     public static function strrpos($str, $find, $offset = 0, $encoding = 'utf-8')
     {
-        return function_exists('mb_strrpos') ? mb_strrpos($str, $find, $offset, $encoding) : strrpos($str, $find, $offset);
+        return \function_exists('mb_strrpos') ? mb_strrpos($str, $find, $offset, $encoding) : strrpos($str, $find, $offset);
     }
 
     /**
@@ -339,7 +340,7 @@ abstract class StringHelper
      */
     public static function ucwords($str)
     {
-        return function_exists('mb_convert_case') ? mb_convert_case($str, MB_CASE_TITLE) : ucwords(self::strtolower($str));
+        return \function_exists('mb_convert_case') ? mb_convert_case($str, MB_CASE_TITLE) : ucwords(self::strtolower($str));
     }
 
     /**
@@ -351,7 +352,7 @@ abstract class StringHelper
     {
         $array = [];
 
-        if (is_string($str)) {
+        if (\is_string($str)) {
             $str = trim($str, "$sep ");
 
             if (!$str) {
@@ -388,7 +389,7 @@ abstract class StringHelper
      */
     public static function split2Array($path, $separator = '.')
     {
-        return array_values(array_filter(explode($separator, $path), 'strlen'));
+        return array_values(array_filter(explode($separator, $path), '\strlen'));
     }
 
     /**
@@ -425,11 +426,11 @@ abstract class StringHelper
             $start = 0;
         }
 
-        if (strlen($str) <= $length) {
+        if (\strlen($str) <= $length) {
             return $str;
         }
 
-        if (function_exists('mb_substr')) {
+        if (\function_exists('mb_substr')) {
             $str = mb_substr(strip_tags($str), $start, $length, 'utf-8');
         } else {
             $str = substr($str, $start, $length) . '...';
@@ -542,7 +543,7 @@ abstract class StringHelper
                 if (!empty($dropped_tags)) {
                     if (!empty($open_tags)) {
                         foreach ($dropped_tags as $closing_tag) {
-                            if (!in_array($closing_tag[1], $open_tags, true)) {
+                            if (!\in_array($closing_tag[1], $open_tags, true)) {
                                 array_unshift($open_tags, $closing_tag[1]);
                             }
                         }
@@ -670,16 +671,16 @@ abstract class StringHelper
      */
     public static function format($str, array $replaceParams = [], array $pregParams = [])
     {
-        if (!is_string($str) || !$str || (!$replaceParams && !$pregParams)) {
+        if (!\is_string($str) || !$str || (!$replaceParams && !$pregParams)) {
             return $str;
         }
 
-        if ($replaceParams && count($replaceParams) === 2) {
+        if ($replaceParams && \count($replaceParams) === 2) {
             list($search, $replace) = $replaceParams;
             $str = str_replace($search, $replace, $str);
         }
 
-        if ($pregParams && count($pregParams) === 2) {
+        if ($pregParams && \count($pregParams) === 2) {
             list($pattern, $replace) = $pregParams;
             $str = preg_replace($pattern, $replace, $str);
         }

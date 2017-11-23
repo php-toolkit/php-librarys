@@ -222,7 +222,7 @@ class MemcacheClient // extends AbstractCacheDriver
         }
 
         if ($this->isMemcached()) {
-            return is_array($key) ? $this->driver->getMulti($key) : $this->driver->get($key);
+            return \is_array($key) ? $this->driver->getMulti($key) : $this->driver->get($key);
         }
 
         return $this->driver->get($key);
@@ -250,6 +250,7 @@ class MemcacheClient // extends AbstractCacheDriver
      * @param  $key string|array key
      *   $expire int 服务端等待删除该元素的时间, 被设置后，那么存储的值会在设置的秒数以后过期
      * @return true OR false
+     * @throws \InvalidArgumentException
      */
     public function delete($key)
     {
@@ -257,7 +258,7 @@ class MemcacheClient // extends AbstractCacheDriver
             throw new \InvalidArgumentException('The key value cannot be empty');
         }
 
-        if (is_array($key)) {
+        if (\is_array($key)) {
             foreach ((array)$key as $k) {
                 $this->driver->delete($k);
             }
@@ -442,7 +443,7 @@ class MemcacheClient // extends AbstractCacheDriver
             $this->driver->set($listKeysKey, [$listKey]);
 
             // add
-        } elseif (!in_array($listKey, $listKeys, true)) {
+        } elseif (!\in_array($listKey, $listKeys, true)) {
             $listKeys[] = $listKey;
             $this->driver->set($listKeysKey, $listKeys);
         }
@@ -537,11 +538,12 @@ class MemcacheClient // extends AbstractCacheDriver
      * @param $method
      * @param $args
      * @return mixed
+     * @throws \LogicException
      */
     public function __call($method, $args)
     {
         if (method_exists($this->driver, $method)) {
-            return call_user_func_array([$this->driver, $method], $args);
+            return \call_user_func_array([$this->driver, $method], $args);
         }
 
         throw new \LogicException("Call a not exists method: $method");

@@ -75,6 +75,7 @@ class Token
      * @param $password
      * @param int $cost
      * @return string
+     * @throws \RuntimeException
      */
     public static function hash($password, $cost = 11)
     {

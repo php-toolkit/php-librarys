@@ -34,6 +34,7 @@ class JsonHelper
      * @param string $data
      * @param bool $toArray
      * @return array|mixed|null|\stdClass|string
+     * @throws \Inhere\Exceptions\NotFoundException
      */
     public static function parse($data, $toArray = true)
     {
@@ -97,7 +98,7 @@ class JsonHelper
      */
     public static function format($input, $output = false, array $options = [])
     {
-        if (!is_string($input)) {
+        if (!\is_string($input)) {
             return false;
         }
 
@@ -128,7 +129,7 @@ class JsonHelper
         $options = array_merge($default, $options);
 
         if (file_exists($input) && (empty($options['file']) || !is_file($options['file']))) {
-            $dir = dirname($input);
+            $dir = \dirname($input);
             $name = basename($input, '.json');
             $file = $dir . '/' . $name . '.' . $options['type'] . '.json';
             $options['file'] = $file;
@@ -149,7 +150,7 @@ class JsonHelper
     {
         $default = ['type' => 'min', 'file' => ''];
         $options = array_merge($default, $options);
-        $dir = dirname($output);
+        $dir = \dirname($output);
 
         if (!file_exists($dir)) {
             trigger_error('设置的json文件输出' . $dir . '目录不存在！');

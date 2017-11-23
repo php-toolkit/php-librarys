@@ -143,7 +143,7 @@ trait FixedEventStaticTrait
         }
 
         if ($ets = self::$supportedEvents) {
-            return in_array($event, $ets, true);
+            return \in_array($event, $ets, true);
         }
 
         return true;
@@ -178,6 +178,6 @@ trait FixedEventStaticTrait
      */
     public static function countEvents()
     {
-        return count(self::$events);
+        return \count(self::$events);
     }
 }

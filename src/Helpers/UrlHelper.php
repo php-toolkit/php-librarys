@@ -66,7 +66,7 @@ class UrlHelper
     {
         $url = trim($url);
 
-        if (function_exists('curl_init')) {
+        if (\function_exists('curl_init')) {
             // use curl
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_NOBODY, true);
@@ -78,7 +78,7 @@ class UrlHelper
 
                 return $statusCode === 200;
             }
-        } elseif (function_exists('get_headers')) {
+        } elseif (\function_exists('get_headers')) {
             $headers = get_headers($url, 1);
 
             return strpos($headers[0], 200) > 0;
@@ -141,7 +141,7 @@ class UrlHelper
     {
         $url = trim($url);
 
-        if (empty($url) || !is_string($url)) {
+        if (empty($url) || !\is_string($url)) {
             return $url;
         }
 
@@ -167,7 +167,7 @@ class UrlHelper
     {
         $url = trim($url);
 
-        if (!$url || !is_string($url)) {
+        if (!$url || !\is_string($url)) {
             return $url;
         }
 

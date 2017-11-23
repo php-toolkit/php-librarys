@@ -134,6 +134,7 @@ class CurlHelper
      * @param  int $retries 重试
      * @param bool $closeAfterDone
      * @return string
+     * @throws \RuntimeException
      */
     public static function execute($ch, $retries = 3, $closeAfterDone = true)
     {
@@ -142,7 +143,7 @@ class CurlHelper
             if (($ret = curl_exec($ch)) === false) {
                 $curlErrNo = curl_errno($ch);
 
-                if (false === in_array($curlErrNo, self::$canRetryErrorCodes, true) || !$retries) {
+                if (false === \in_array($curlErrNo, self::$canRetryErrorCodes, true) || !$retries) {
                     $curlError = curl_error($ch);
 
                     if ($closeAfterDone) {

@@ -6,7 +6,6 @@
 namespace Inhere\Library\Helpers;
 
 use Inhere\Exceptions\ExtensionMissException;
-use Swoole\Coroutine;
 
 /**
  * Class PhpHelper
@@ -18,12 +17,13 @@ class PhpHelper extends EnvHelper
      * @param $cb
      * @param array ...$args
      * @return mixed
+     * @throws \InvalidArgumentException
      */
     public static function call($cb, ...$args)
     {
         // $args = array_values($args);
 
-        if (is_string($cb)) {
+        if (\is_string($cb)) {
             // function
             if (strpos($cb, '::') === false) {
                 return $cb(...$args);
@@ -31,14 +31,14 @@ class PhpHelper extends EnvHelper
 
             // ClassName/Service::method
             $cb = explode('::', $cb, 2);
-        } elseif (is_object($cb) && method_exists($cb, '__invoke')) {
+        } elseif (\is_object($cb) && method_exists($cb, '__invoke')) {
             return $cb(...$args);
         }
 
-        if (is_array($cb)) {
+        if (\is_array($cb)) {
             list($obj, $mhd) = $cb;
 
-            return is_object($obj) ? $obj->$mhd(...$args) : $obj::$mhd(...$args);
+            return \is_object($obj) ? $obj->$mhd(...$args) : $obj::$mhd(...$args);
         }
 
         throw new \InvalidArgumentException('The parameter is not a callable');
@@ -188,7 +188,7 @@ class PhpHelper extends EnvHelper
      */
     public static function extIsLoaded($name, $throwException = false): bool
     {
-        $result = extension_loaded($name);
+        $result = \extension_loaded($name);
 
         if (!$result && $throwException) {
             throw new ExtensionMissException("Extension [$name] is not loaded.");
@@ -207,7 +207,7 @@ class PhpHelper extends EnvHelper
         $allTotal = [];
 
         foreach ($extensions as $extension) {
-            if (!extension_loaded($extension)) {
+            if (!\extension_loaded($extension)) {
                 # 没有加载此扩展，记录
                 $allTotal['no'][] = $extension;
             } else {

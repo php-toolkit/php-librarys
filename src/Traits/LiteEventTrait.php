@@ -96,7 +96,7 @@ trait LiteEventTrait
      */
     public function getEventCount()
     {
-        return count($this->_events);
+        return \count($this->_events);
     }
 
     /**

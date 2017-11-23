@@ -53,7 +53,7 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
                 continue;
             }
 
-            $this->$name = $recursive && is_array($value) ? static::create($value, $recursive) : $value;
+            $this->$name = $recursive && \is_array($value) ? static::create($value, $recursive) : $value;
         }
 
         return $this;
@@ -67,6 +67,7 @@ class ActiveData implements \ArrayAccess, \IteratorAggregate
     /**
      * @param bool $toArray
      * @return array|\ArrayIterator
+     * @throws \ReflectionException
      */
     public function all($toArray = false)
     {

@@ -73,6 +73,7 @@ class Collection extends SimpleCollection
      * @param mixed $data
      * @param string $format
      * @param string $name
+     * @throws \RangeException
      */
     public function __construct($data = null, $format = 'php', $name = 'box1')
     {
@@ -212,6 +213,7 @@ class Collection extends SimpleCollection
      * @param string|array $data
      * @param string $format = 'php'
      * @return static
+     * @throws \RuntimeException
      * @throws \RangeException
      */
     public function load($data, $format = 'php')
@@ -220,7 +222,7 @@ class Collection extends SimpleCollection
             return $this;
         }
 
-        if (is_string($data) && in_array($format, static::$formats, true)) {
+        if (\is_string($data) && \in_array($format, static::$formats, true)) {
             switch ($format) {
                 case static::FORMAT_YML:
                     $this->loadYaml($data);
@@ -240,7 +242,7 @@ class Collection extends SimpleCollection
                     break;
             }
 
-        } elseif (is_array($data) || is_object($data)) {
+        } elseif (\is_array($data) || \is_object($data)) {
             $this->bindData($this->data, $data);
         }
 
@@ -272,14 +274,15 @@ class Collection extends SimpleCollection
      * load data form php file or array
      * @param array|string $data
      * @return static
+     * @throws \InvalidArgumentException
      */
     public function loadArray($data)
     {
-        if (is_string($data) && is_file($data)) {
+        if (\is_string($data) && is_file($data)) {
             $data = require $data;
         }
 
-        if (!is_array($data)) {
+        if (!\is_array($data)) {
             throw new \InvalidArgumentException('param type error! must is array.');
         }
 
@@ -290,10 +293,11 @@ class Collection extends SimpleCollection
      * load data form php file or array
      * @param mixed $data
      * @return static
+     * @throws \InvalidArgumentException
      */
     public function loadObject($data)
     {
-        if (!is_object($data)) {
+        if (!\is_object($data)) {
             throw new \InvalidArgumentException('param type error! must is object.');
         }
 
@@ -339,7 +343,7 @@ class Collection extends SimpleCollection
                 continue;
             }
 
-            if (is_array($value)) {
+            if (\is_array($value)) {
                 if (!isset($parent[$key])) {
                     $parent[$key] = array();
                 }

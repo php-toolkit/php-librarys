@@ -114,7 +114,7 @@ class ObjectHelper
      */
     public static function hash($object, $unique = true)
     {
-        if (is_object($object)) {
+        if (\is_object($object)) {
             $hash = spl_object_hash($object);
 
             if ($unique) {
@@ -125,7 +125,7 @@ class ObjectHelper
         }
 
         // a class
-        return is_string($object) ? md5($object) : '';
+        return \is_string($object) ? md5($object) : '';
     }
 
     /**
@@ -212,11 +212,11 @@ class ObjectHelper
      */
     public static function smartCreate($config)
     {
-        if (is_string($config)) {
+        if (\is_string($config)) {
             return new $config;
         }
 
-        if (is_array($config) && !empty($config['target'])) {
+        if (\is_array($config) && !empty($config['target'])) {
             $class = Arr::remove($config, 'target');
             $args = Arr::remove($config, '_args', []);
             $props = $config;

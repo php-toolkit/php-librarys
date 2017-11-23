@@ -17,7 +17,7 @@ abstract class UtilHelper
     {
         $types = array('log', 'debug', 'info', 'warn', 'error', 'assert');
 
-        if (!in_array($type, $types, true)) {
+        if (!\in_array($type, $types, true)) {
             $type = 'log';
         }
 
@@ -34,11 +34,11 @@ abstract class UtilHelper
      */
     public static function ftok($pathname, $projectId)
     {
-        if (strlen($projectId) > 1) {
+        if (\strlen($projectId) > 1) {
             throw new \LogicException("the project id must be a one character(int/str). Input: $projectId");
         }
 
-        if (function_exists('ftok')) {
+        if (\function_exists('ftok')) {
             return ftok($pathname, $projectId);
         }
 

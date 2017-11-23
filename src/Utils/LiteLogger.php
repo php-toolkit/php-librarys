@@ -231,7 +231,7 @@ class LiteLogger implements LoggerInterface
             $e->getMessage(),
             $e->getFile(),
             $e->getLine(),
-            get_class($e),
+            \get_class($e),
             $e->getTraceAsString()
         );
 
@@ -284,6 +284,7 @@ class LiteLogger implements LoggerInterface
      * @param string $message
      * @param array $context
      * @param array $extra
+     * @throws \InvalidArgumentException
      */
     public function log($level, $message, array $context = [], array $extra = [])
     {
@@ -308,7 +309,7 @@ class LiteLogger implements LoggerInterface
 
         // serve is running in php build in server env.
         if ($this->logConsole && (Php::isBuiltInServer() || Php::isCli())) {
-            defined('STDOUT') or define('STDOUT', fopen('php://stdout', 'wb'));
+            \defined('STDOUT') or \define('STDOUT', fopen('php://stdout', 'wb'));
             fwrite(STDOUT, "[{$record['datetime']}] [$levelName] $message\n");
         }
 
@@ -323,6 +324,7 @@ class LiteLogger implements LoggerInterface
 
     /**
      * flush data to file.
+     * @throws \Inhere\Exceptions\FileSystemException
      */
     public function flush()
     {
@@ -375,12 +377,13 @@ class LiteLogger implements LoggerInterface
      * write log info to file
      * @param string $str
      * @return bool
+     * @throws \InvalidArgumentException
      * @throws FileSystemException
      */
     protected function write($str)
     {
         $file = $this->getLogPath() . $this->getFilename();
-        $dir = dirname($file);
+        $dir = \dirname($file);
 
         if (!Directory::create($dir)) {
             throw new FileSystemException("Create log directory failed. $dir");
@@ -495,7 +498,7 @@ class LiteLogger implements LoggerInterface
      */
     public static function getLevelName($level)
     {
-        if (is_string($level) && !is_numeric($level)) {
+        if (\is_string($level) && !is_numeric($level)) {
             return $level;
         }
 
@@ -538,7 +541,7 @@ class LiteLogger implements LoggerInterface
      */
     protected function convertToString($data)
     {
-        if (null === $data || is_bool($data)) {
+        if (null === $data || \is_bool($data)) {
             return var_export($data, true);
         }
 

@@ -249,12 +249,12 @@ class FileFinder extends StdObject
     protected function doFilterFile($name /*, $file*/)
     {
         // check include ...
-        if (in_array($name, $this->include['file'], true)) {
+        if (\in_array($name, $this->include['file'], true)) {
             return true;
         }
 
         // check exclude file ...
-        if (in_array($name, $this->exclude['file'], true)) {
+        if (\in_array($name, $this->exclude['file'], true)) {
             return false;
         }
 
@@ -292,7 +292,7 @@ class FileFinder extends StdObject
      */
     protected function doFilterDir($name /*, $dir*/)
     {
-        if (in_array($name, $this->include['dir'], true)) {
+        if (\in_array($name, $this->include['dir'], true)) {
             // have bee set custom dir Filter
             if ($dirFilter = $this->dirFilter) {
                 return $dirFilter($name);
@@ -301,7 +301,7 @@ class FileFinder extends StdObject
             return true;
         }
 
-        if (in_array($name, $this->exclude['dir'], true)) {
+        if (\in_array($name, $this->exclude['dir'], true)) {
             return false;
         }
 
@@ -346,13 +346,13 @@ class FileFinder extends StdObject
      */
     public function includeFile($file)
     {
-        if (is_string($file)) {
+        if (\is_string($file)) {
             $file = [$file];
         }
 
-        if (is_array($file)) {
+        if (\is_array($file)) {
             foreach ($file as $name) {
-                if (in_array($name, $this->include['file'], true)) {
+                if (\in_array($name, $this->include['file'], true)) {
                     continue;
                 }
 
@@ -369,13 +369,13 @@ class FileFinder extends StdObject
      */
     public function includeExt($ext)
     {
-        if (is_string($ext)) {
+        if (\is_string($ext)) {
             $ext = [$ext];
         }
 
-        if (is_array($ext)) {
+        if (\is_array($ext)) {
             foreach ($ext as $name) {
-                if (in_array($name, $this->include['ext'], true)) {
+                if (\in_array($name, $this->include['ext'], true)) {
                     continue;
                 }
 
@@ -392,13 +392,13 @@ class FileFinder extends StdObject
      */
     public function includeDir($dir)
     {
-        if (is_string($dir)) {
+        if (\is_string($dir)) {
             $dir = [$dir];
         }
 
-        if (is_array($dir)) {
+        if (\is_array($dir)) {
             foreach ($dir as $name) {
-                if (in_array($name, $this->include['dir'], true)) {
+                if (\in_array($name, $this->include['dir'], true)) {
                     continue;
                 }
 
@@ -465,13 +465,13 @@ class FileFinder extends StdObject
      */
     public function excludeFile($file)
     {
-        if (is_string($file)) {
+        if (\is_string($file)) {
             $file = [$file];
         }
 
-        if (is_array($file)) {
+        if (\is_array($file)) {
             foreach ($file as $name) {
-                if (in_array($name, $this->exclude['file'], true)) {
+                if (\in_array($name, $this->exclude['file'], true)) {
                     continue;
                 }
 
@@ -488,13 +488,13 @@ class FileFinder extends StdObject
      */
     public function excludeExt($ext)
     {
-        if (is_string($ext)) {
+        if (\is_string($ext)) {
             $ext = [$ext];
         }
 
-        if (is_array($ext)) {
+        if (\is_array($ext)) {
             foreach ($ext as $name) {
-                if (in_array($name, $this->exclude['ext'], true)) {
+                if (\in_array($name, $this->exclude['ext'], true)) {
                     continue;
                 }
 
@@ -511,13 +511,13 @@ class FileFinder extends StdObject
      */
     public function excludeDir($dir)
     {
-        if (is_string($dir)) {
+        if (\is_string($dir)) {
             $dir = [$dir];
         }
 
-        if (is_array($dir)) {
+        if (\is_array($dir)) {
             foreach ($dir as $name) {
-                if (in_array($name, $this->exclude['dir'], true)) {
+                if (\in_array($name, $this->exclude['dir'], true)) {
                     continue;
                 }
 
@@ -580,7 +580,7 @@ class FileFinder extends StdObject
      */
     public function setFileFilter(callable $fileFilter)
     {
-        if (is_string($fileFilter) || method_exists($fileFilter, '__invoke')) {
+        if (\is_string($fileFilter) || method_exists($fileFilter, '__invoke')) {
             $this->fileFilter = $fileFilter;
         }
 
@@ -601,7 +601,7 @@ class FileFinder extends StdObject
      */
     public function setDirFilter(callable $dirFilter)
     {
-        if (is_string($dirFilter) || method_exists($dirFilter, '__invoke')) {
+        if (\is_string($dirFilter) || method_exists($dirFilter, '__invoke')) {
             $this->dirFilter = $dirFilter;
         }
 
@@ -622,7 +622,7 @@ class FileFinder extends StdObject
      */
     public function getInclude($key = '')
     {
-        if (!$key || !is_string($key)) {
+        if (!$key || !\is_string($key)) {
             return $this->include;
         }
 
@@ -643,7 +643,7 @@ class FileFinder extends StdObject
      */
     public function getExclude($key = '')
     {
-        if (!$key || !is_string($key)) {
+        if (!$key || !\is_string($key)) {
             return $this->exclude;
         }
 

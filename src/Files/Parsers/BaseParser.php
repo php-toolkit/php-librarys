@@ -50,6 +50,7 @@ abstract class BaseParser
      * @param callable|null $pathHandler
      * @param string $fileDir
      * @return array
+     * @throws \InvalidArgumentException
      */
     public static function parseFile($file, $enhancement = false, callable $pathHandler = null, $fileDir = '')
     {
@@ -57,7 +58,7 @@ abstract class BaseParser
             throw new \InvalidArgumentException("Target file [$file] not exists");
         }
 
-        $fileDir = $fileDir ?: dirname($file);
+        $fileDir = $fileDir ?: \dirname($file);
         $data = file_get_contents($file);
 
         return static::doParse($data, $enhancement, $pathHandler, $fileDir);

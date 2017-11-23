@@ -49,13 +49,13 @@ class HtmlHelper
         $d = [];
 
         foreach ($data as $key => $value) {
-            if (is_string($key)) {
+            if (\is_string($key)) {
                 $key = htmlspecialchars($key, ENT_QUOTES, $charset);
             }
 
-            if (is_string($value)) {
+            if (\is_string($value)) {
                 $value = htmlspecialchars($value, ENT_QUOTES, $charset);
-            } elseif (is_array($value)) {
+            } elseif (\is_array($value)) {
                 $value = static::encodeArray($value);
             }
 
@@ -81,7 +81,7 @@ class HtmlHelper
      */
     public static function escape($data, $type = 0, $encoding = 'UTF-8')
     {
-        if (is_array($data)) {
+        if (\is_array($data)) {
 
             foreach ($data as $k => $v) {
                 $data[$k] = self::escape($data, $type, $encoding);
@@ -114,7 +114,7 @@ class HtmlHelper
      */
     public static function unescap($data, $type = 0, $encoding = 'UTF-8')
     {
-        if (is_array($data)) {
+        if (\is_array($data)) {
 
             foreach ($data as $k => $v) {
                 $data[$k] = self::unescap($data, $type, $encoding);

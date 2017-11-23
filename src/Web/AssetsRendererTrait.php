@@ -9,8 +9,6 @@
 
 namespace Inhere\Library\Web;
 
-use Inhere\Library\Collections\SimpleCollection;
-
 /**
  * Class AssetsRendererTrait
  * @package Inhere\Library\Web
@@ -50,8 +48,8 @@ trait AssetsRendererTrait
     public function addCssFile($cssFile, string $position = 'top', string $key = null)
     {
         if (\is_array($cssFile)) {
-            foreach ($cssFile as $key => $code) {
-                $this->addCssFile($code, $position, \is_int($key) ? null : $key);
+            foreach ($cssFile as $k => $code) {
+                $this->addCssFile($code, $position, \is_int($k) ? null : $k);
             }
 
             return $this;
@@ -99,8 +97,8 @@ trait AssetsRendererTrait
     public function addJsFile($jsFile, string $position = 'bottom', string $key = null)
     {
         if (\is_array($jsFile)) {
-            foreach ($jsFile as $key => $code) {
-                $this->addJsFile($code, $position, \is_int($key) ? null : $key);
+            foreach ($jsFile as $k => $code) {
+                $this->addJsFile($code, $position, \is_int($k) ? null : $k);
             }
 
             return $this;
@@ -148,8 +146,8 @@ trait AssetsRendererTrait
     public function addCss($cssCode, string $position = 'top', string $key = null)
     {
         if (\is_array($cssCode)) {
-            foreach ($cssCode as $key => $code) {
-                $this->addCss($code, $position, \is_int($key) ? null : $key);
+            foreach ($cssCode as $k => $code) {
+                $this->addCss($code, $position, \is_int($k) ? null : $k);
             }
 
             return $this;
@@ -197,8 +195,8 @@ trait AssetsRendererTrait
     public function addJs($jsCode, string $position = 'bottom', string $key = null)
     {
         if (\is_array($jsCode)) {
-            foreach ($jsCode as $key => $code) {
-                $this->addJs($code, $position, \is_int($key) ? null : $key);
+            foreach ($jsCode as $k => $code) {
+                $this->addJs($code, $position, \is_int($k) ? null : $k);
             }
 
             return $this;
@@ -217,6 +215,10 @@ trait AssetsRendererTrait
      * dump assets
      *******************************************************************************/
 
+    /**
+     * @param bool $echo
+     * @return null|string
+     */
     public function dumpTopAssets($echo = true)
     {
         return $this->dumpAssets('top', $echo);
@@ -238,14 +240,14 @@ trait AssetsRendererTrait
     {
         $assetHtml = '';
 
-        // css files
+        /** @var array $files css files */
         if ($files = $this->getAttribute('__cssFiles:' . $position)) {
             foreach ($files as $file) {
                 $assetHtml .= '<link href="'. $file .'" rel="stylesheet">' . PHP_EOL;
             }
         }
 
-        // css codes
+        /** @var array $codes css codes */
         if ($codes = $this->getAttribute('__cssCodes:' . $position)) {
             $assetHtml .= '<style type="text/css">' . PHP_EOL;
             foreach ($codes as $code) {
@@ -254,20 +256,24 @@ trait AssetsRendererTrait
             $assetHtml .= '</style>' . PHP_EOL;
         }
 
-        // js files
+        /** @var array $files js files */
         if ($files = $this->getAttribute('__jsFiles:' . $position)) {
             foreach ($files as $file) {
                 $assetHtml .= '<script src="'. $file .'"></script>' . PHP_EOL;
             }
         }
 
-        // js codes
+        /** @var array $codes js codes */
         if ($codes = $this->getAttribute('__jsCodes:' . $position)) {
-            $assetHtml .= '<script type="text/javascript">' . PHP_EOL;
+            $jsCode = '';
+
             foreach ($codes as $code) {
-                $assetHtml .= $code . PHP_EOL;
+                $jsCode .= $code . PHP_EOL;
             }
-            $assetHtml .= '</script>' . PHP_EOL;
+
+            if ($jsCode) {
+                $assetHtml .= "<script type=\"text/javascript\">\n{$jsCode}</script>\n";
+            }
         }
 
         if (!$echo) {

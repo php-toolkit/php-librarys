@@ -158,7 +158,7 @@ class ErrorHandler
     {
         $this->logger->log(
             $this->uncaughtExceptionLevel ?? LogLevel::ERROR,
-            sprintf('Uncaught Exception %s: "%s" at %s line %s', get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()),
+            sprintf('Uncaught Exception %s: "%s" at %s line %s', \get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()),
             ['exception' => $e]
         );
 
@@ -187,7 +187,7 @@ class ErrorHandler
         }
 
         // fatal error codes are ignored if a fatal error handler is present as well to avoid duplicate log entries
-        if (!$this->hasFatalErrorHandler || !in_array($code, self::$fatalErrors, true)) {
+        if (!$this->hasFatalErrorHandler || !\in_array($code, self::$fatalErrors, true)) {
             $level = $this->errorLevelMap[$code] ?? LogLevel::CRITICAL;
             $this->logger->log($level, self::codeToString($code).': '.$message, [
                 'code' => $code,
@@ -219,7 +219,7 @@ class ErrorHandler
 
         $lastError = error_get_last();
 
-        if ($lastError && in_array($lastError['type'], self::$fatalErrors, true)) {
+        if ($lastError && \in_array($lastError['type'], self::$fatalErrors, true)) {
             $this->logger->log(
                 $this->fatalLevel ?? LogLevel::ALERT,
                 'Fatal Error ('.self::codeToString($lastError['type']).'): '.$lastError['message'],

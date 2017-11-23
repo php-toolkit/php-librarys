@@ -11,13 +11,16 @@ namespace Inhere\Library\Utils;
 /**
  * Class PhpDotEnv - local env read
  * @package Inhere\Library\Utils
+ *
  * in local config file `.env` (must is 'ini' format):
  * ```ini
  * ENV=dev
  * DEBUG=true
  * ... ...
  * ```
+ *
  * IN CODE:
+ *
  * ```php
  * PhpDotEnv::load(__DIE__);
  * env('DEBUG', false);
@@ -52,17 +55,18 @@ final class PhpDotEnv
 
     /**
      * setting env data
+     * @param array $data
      */
-    protected function settingEnv($data)
+    private function settingEnv(array $data)
     {
         foreach ($data as $name => $value) {
-            if (is_int($name) || !is_string($value)) {
+            if (\is_int($name) || !\is_string($value)) {
                 continue;
             }
 
             // is a constant var
-            if (isset($value[2]) && defined($value)) {
-                $value = constant($value);
+            if ($value && \defined($value)) {
+                $value = \constant($value);
             }
 
             // eg: "FOO=BAR"

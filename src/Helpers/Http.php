@@ -22,6 +22,7 @@ class Http
      * Send the response the client
      * @param ResponseInterface $response
      * @param array $options
+     * @throws \RuntimeException
      */
     public static function respond(ResponseInterface $response, array $options = [])
     {
@@ -68,7 +69,7 @@ class Http
                 while ($amountToRead > 0 && !$body->eof()) {
                     $data = $body->read(min($chunkSize, $amountToRead));
                     echo $data;
-                    $amountToRead -= strlen($data);
+                    $amountToRead -= \strlen($data);
 
                     if (connection_status() !== CONNECTION_NORMAL) {
                         break;
@@ -98,7 +99,7 @@ class Http
             return $response->isEmpty();
         }
 
-        return in_array($response->getStatusCode(), [204, 205, 304], true);
+        return \in_array($response->getStatusCode(), [204, 205, 304], true);
     }
 
 }

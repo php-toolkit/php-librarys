@@ -59,6 +59,8 @@ final class Configuration extends Collection
      * @param bool $detectByHost
      * @param string $format
      * @return Configuration
+     * @throws \InvalidArgumentException
+     * @throws \RangeException
      */
     public static function makeByEnv($locFile, $baseFile, $envFile, $detectByHost = false, $format = self::FORMAT_PHP)
     {
@@ -91,12 +93,13 @@ final class Configuration extends Collection
      * @param mixed $data If mode is 'folder', $data is config folder path
      * @param string $format
      * @param string $name
+     * @throws \RuntimeException
      */
     public function __construct($data = null, $format = self::FORMAT_PHP, $name = 'config')
     {
         $this->format = $format;
 
-        if (is_string($data) && is_dir($data)) {
+        if (\is_string($data) && is_dir($data)) {
             $this->mode = self::MODE_FOLDER;
             $this->folderPath = $data;
             $data = null;
@@ -105,7 +108,7 @@ final class Configuration extends Collection
         if ($this->mode === self::MODE_FOLDER && !is_dir($this->folderPath)) {
             throw new RuntimeException("Config mode is 'folder'. the property 'folderPath' must is a folder path!");
         }
-        
+
         parent::__construct($data, $this->format, $name);
     }
 
@@ -114,6 +117,7 @@ final class Configuration extends Collection
      * @param string $path
      * @param mixed $value
      * @return mixed
+     * @throws \RuntimeException
      */
     public function set($path, $value)
     {
@@ -130,6 +134,7 @@ final class Configuration extends Collection
      * @param string $path
      * @param string $default
      * @return mixed
+     * @throws \RuntimeException
      */
     public function get(string $path, $default = null)
     {
@@ -140,11 +145,11 @@ final class Configuration extends Collection
             // if config file not load. load it.
             if (!isset($this->data[$name])) {
                 $file = $this->folderPath . "/{$name}.{$this->format}";
-                
+
                 if (!is_file($file)) {
                     throw new \RuntimeException("The want get config file not exist, Name: $name, File: $file");
                 }
-                
+
                 $this->data[$name] = self::read($file, $this->format);
             }
         }
@@ -212,6 +217,7 @@ final class Configuration extends Collection
 
     /**
      * @param string $folderPath
+     * @throws \InvalidArgumentException
      */
     public function setFolderPath(string $folderPath)
     {

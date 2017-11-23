@@ -50,6 +50,7 @@ trait LiteContainerTrait
      * @param mixed $service service
      * @param bool $replace replace exists service
      * @return bool
+     * @throws \LogicException
      */
     public function set($name, $service, $replace = false)
     {
@@ -72,6 +73,7 @@ trait LiteContainerTrait
      * @param string $name
      * @param bool $call if service is 'Closure', call it.
      * @return mixed
+     * @throws \RuntimeException
      */
     public function get($name, $call = true)
     {
@@ -81,7 +83,7 @@ trait LiteContainerTrait
 
         $service = self::$services[$name];
 
-        if (is_object($service) && $service instanceof \Closure && $call) {
+        if (\is_object($service) && $service instanceof \Closure && $call) {
             if (!isset(self::$instances[$name])) {
                 self::$instances[$name] = $service($this);
             }
@@ -95,6 +97,7 @@ trait LiteContainerTrait
     /**
      * @param string $name
      * @return mixed
+     * @throws \RuntimeException
      */
     public function raw($name)
     {
@@ -110,6 +113,7 @@ trait LiteContainerTrait
      * it always return a new instance.
      * @param string $name
      * @return mixed
+     * @throws \RuntimeException
      */
     public function factory($name)
     {
@@ -119,7 +123,7 @@ trait LiteContainerTrait
 
         $service = self::$services[$name];
 
-        if (is_object($service) && method_exists($service, '__invoke')) {
+        if (\is_object($service) && method_exists($service, '__invoke')) {
             return $service($this);
         }
 

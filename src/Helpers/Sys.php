@@ -32,6 +32,7 @@ class Sys extends EnvHelper
      * @param null|string $logfile
      * @param null|string $user
      * @return mixed
+     * @throws \RuntimeException
      */
     public static function exec($command, $logfile = null, $user = null)
     {
@@ -70,25 +71,25 @@ class Sys extends EnvHelper
         $return_var = 1;
 
         //system
-        if (function_exists('system')) {
+        if (\function_exists('system')) {
             ob_start();
             system($command, $return_var);
             $output = ob_get_contents();
             ob_end_clean();
 
             // passthru
-        } elseif (function_exists('passthru')) {
+        } elseif (\function_exists('passthru')) {
             ob_start();
             passthru($command, $return_var);
             $output = ob_get_contents();
             ob_end_clean();
             //exec
-        } else if (function_exists('exec')) {
+        } else if (\function_exists('exec')) {
             exec($command, $output, $return_var);
             $output = implode("\n", $output);
 
             //shell_exec
-        } else if (function_exists('shell_exec')) {
+        } else if (\function_exists('shell_exec')) {
             $output = shell_exec($command);
         } else {
             $output = 'Command execution not possible on this system';
@@ -104,7 +105,7 @@ class Sys extends EnvHelper
     public static function getTempDir()
     {
         // @codeCoverageIgnoreStart
-        if (function_exists('sys_get_temp_dir')) {
+        if (\function_exists('sys_get_temp_dir')) {
             $tmp = sys_get_temp_dir();
         } elseif (!empty($_SERVER['TMP'])) {
             $tmp = $_SERVER['TMP'];

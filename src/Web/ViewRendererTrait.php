@@ -38,6 +38,7 @@ trait ViewRendererTrait
      * @param array $data
      * @param null|string $layout
      * @return string
+     * @throws \Throwable
      */
     public function render(string $view, array $data = [], $layout = null)
     {
@@ -48,6 +49,7 @@ trait ViewRendererTrait
      * @param string $view
      * @param array $data
      * @return string
+     * @throws \Throwable
      */
     public function renderPartial($view, array $data = [])
     {
@@ -59,6 +61,7 @@ trait ViewRendererTrait
      * @param array $data
      * @param null|string $layout
      * @return string
+     * @throws \Throwable
      */
     public function renderContent($string, array $data = [], $layout = null)
     {

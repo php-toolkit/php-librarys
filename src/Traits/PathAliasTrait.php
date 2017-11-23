@@ -26,7 +26,7 @@ trait PathAliasTrait
     public static function alias($path, $value = null)
     {
         // get path by alias
-        if (is_string($path) && !$value) {
+        if (\is_string($path) && !$value) {
             // don't use alias
             if ($path[0] !== '@') {
                 return $path;
@@ -51,12 +51,12 @@ trait PathAliasTrait
             return $realPath;
         }
 
-        if ($path && $value && is_string($path) && is_string($value)) {
+        if ($path && $value && \is_string($path) && \is_string($value)) {
             $path = [$path => $value];
         }
 
         // custom set path's alias. e.g: Slim::alias([ 'alias' => 'path' ]);
-        if (is_array($path)) {
+        if (\is_array($path)) {
             /**
              * @var string $alias
              * @var string $realPath

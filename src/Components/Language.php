@@ -102,6 +102,7 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
 
     /**
      * {@inheritDoc}
+     * @throws \RangeException
      */
     protected function init()
     {
@@ -119,6 +120,8 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
     /**
      * {@inheritdoc}
      * @see self::translate()
+     * @throws \InvalidArgumentException
+     * @throws \Inhere\Exceptions\NotFoundException
      */
     public function t($key, array $args = [], $lang = '')
     {
@@ -128,6 +131,8 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
     /**
      * {@inheritdoc}
      * @see self::translate()
+     * @throws \InvalidArgumentException
+     * @throws \Inhere\Exceptions\NotFoundException
      */
     public function tl($key, array $args = [], $lang = null)
     {
@@ -137,6 +142,8 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
     /**
      * {@inheritdoc}
      * @see self::translate()
+     * @throws \InvalidArgumentException
+     * @throws \Inhere\Exceptions\NotFoundException
      */
     public function trans($key, array $args = [], $lang = null)
     {
@@ -154,7 +161,7 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
      */
     public function translate($key, array $args = [], $lang = null)
     {
-        if (!is_string($key)) {
+        if (!\is_string($key)) {
             throw new \InvalidArgumentException('The translate key must be a string.');
         }
 
@@ -241,6 +248,7 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
     /**
      * @param string $key
      * @return mixed
+     * @throws \RangeException
      */
     protected function transByFallbackLang($key)
     {
@@ -410,7 +418,7 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
     }
     public function isLang($lang)
     {
-        return $lang && in_array($lang, $this->langs,true);
+        return $lang && \in_array($lang, $this->langs,true);
     }
 
     /**
@@ -418,6 +426,7 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
      * is equals to `$lang->tl('key')`.
      * @param string $name
      * @return mixed|string
+     * @throws \Inhere\Exceptions\NotFoundException
      * @throws \InvalidArgumentException
      */
     public function __get($name)
@@ -431,6 +440,7 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
      * @param string $name
      * @param array $args
      * @return mixed|string
+     * @throws \Inhere\Exceptions\NotFoundException
      * @throws \InvalidArgumentException
      */
     public function __call($name, $args)
@@ -480,6 +490,7 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
 
     /**
      * @param string|array $path
+     * @throws \InvalidArgumentException
      */
     public function setBasePath($path)
     {
@@ -564,7 +575,7 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
      */
     public function setFormat($format)
     {
-        if (in_array($format, Collection::getFormats(), true)) {
+        if (\in_array($format, Collection::getFormats(), true)) {
             $this->format = $format;
         }
     }
@@ -650,6 +661,8 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
      * </p>
      * @return mixed Can return all value types.
      * @since 5.0.0
+     * @throws \InvalidArgumentException
+     * @throws \Inhere\Exceptions\NotFoundException
      */
     public function offsetGet($offset)
     {
@@ -698,6 +711,6 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
      */
     public function count()
     {
-        return count($this->data);
+        return \count($this->data);
     }
 }

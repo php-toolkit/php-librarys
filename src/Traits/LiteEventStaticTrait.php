@@ -95,6 +95,6 @@ trait LiteEventStaticTrait
      */
     public static function getEventCount()
     {
-        return count(self::$_events);
+        return \count(self::$_events);
     }
 }

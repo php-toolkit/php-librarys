@@ -48,7 +48,7 @@ class DataCategory
         $className = $this->modelClass;
 
         if (class_exists($className)) {
-            return call_user_func(array($className, 'model'));
+            return \call_user_func(array($className, 'model'));
         }
 
         throw new \RuntimeException($className . ' Table model does not exist!');
@@ -61,7 +61,7 @@ class DataCategory
             $class_name = $this->modelClass;
 
             if (class_exists($class_name)) {
-                $this->data = call_user_func(array($class_name, 'findAll'));
+                $this->data = \call_user_func(array($class_name, 'findAll'));
             } else {
                 trigger_error($class_name . ' 表模型不存在！', E_USER_ERROR);
             }
@@ -110,6 +110,7 @@ class DataCategory
      * @param  array $need @see getDataArray()
      * @param string $setKey
      * @return array
+     * @throws \RuntimeException
      */
     public function getCategoryArr($rootId = '0', array $need = [], $setKey = 'id')
     {

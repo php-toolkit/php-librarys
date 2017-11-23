@@ -157,7 +157,7 @@ abstract class File extends FileSystem
      */
     public static function writeToFile($handler, $content, $path = ''): void
     {
-        if (($result = @fwrite($handler, $content)) === false || ($result < strlen($content))) {
+        if (($result = @fwrite($handler, $content)) === false || ($result < \strlen($content))) {
             throw new IOException('The file "' . $path . '" could not be written to. Check your disk space and file permissions.');
         }
     }
@@ -177,7 +177,7 @@ abstract class File extends FileSystem
     {
         foreach ($fileData as $file => $content) {
             //检查目录是否存在，不存在就先创建（多级）目录
-            Directory::create(dirname($file), $mode);
+            Directory::create(\dirname($file), $mode);
 
             //$fileName = basename($file); //文件名
 
@@ -209,7 +209,7 @@ abstract class File extends FileSystem
             $streamContext = @stream_context_create(['http' => ['timeout' => $curlTimeout]]);
         }
 
-        if ($isUrl && in_array(ini_get('allow_url_fopen'), ['On', 'on', '1'], true)) {
+        if ($isUrl && \in_array(ini_get('allow_url_fopen'), ['On', 'on', '1'], true)) {
             if (!file_exists($file)) {
                 throw new FileNotFoundException("File [{$file}] don't exists!");
             }
@@ -222,7 +222,7 @@ abstract class File extends FileSystem
         }
 
         // fetch remote content by url
-        if (function_exists('curl_init')) {
+        if (\function_exists('curl_init')) {
             $curl = curl_init();
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
             curl_setopt($curl, CURLOPT_URL, $file);
@@ -260,7 +260,7 @@ abstract class File extends FileSystem
      */
     public static function move($file, $target): void
     {
-        Directory::mkdir(dirname($target));
+        Directory::mkdir(\dirname($target));
 
         if (static::copy($file, $target)) {
             unlink($file);
@@ -311,7 +311,7 @@ abstract class File extends FileSystem
         self::check($inFile);
 
         $data = '';
-        if (is_array($inFile)) {
+        if (\is_array($inFile)) {
             foreach ($inFile as $value) {
                 if (is_file($value)) {
                     $data .= trim(file_get_contents($value));
@@ -353,13 +353,13 @@ abstract class File extends FileSystem
      */
     public static function margePhp($fileArr, $outFile, $deleteSpace = true)
     {
-        $savePath = dirname($outFile);
+        $savePath = \dirname($outFile);
 
         if (!is_dir($savePath)) {
             Directory::create($savePath);
         }
 
-        if (!is_array($fileArr)) {
+        if (!\is_array($fileArr)) {
             $fileArr = array($fileArr);
         }
 

@@ -279,7 +279,7 @@ class SimpleCollection implements CollectionInterface
      */
     public function count()
     {
-        return count($this->data);
+        return \count($this->data);
     }
 
     /********************************************************************************

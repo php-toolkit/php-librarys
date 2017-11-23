@@ -47,11 +47,11 @@ class Str extends StringHelper
      */
     public static function has(string $string, $needle)
     {
-        if (is_string($string)) {
+        if (\is_string($string)) {
             return stripos($string, $needle) !== false;
         }
 
-        if (is_array($needle)) {
+        if (\is_array($needle)) {
             foreach ((array)$needle as $item) {
                 if (stripos($string, $item) !== false) {
                     return true;

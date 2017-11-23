@@ -281,7 +281,7 @@ class ViewRenderer
      * Retrieve an attribute
      * @param string $key
      * @param mixed $default
-     * @return mixed
+     * @return array|mixed
      */
     public function getAttribute($key, $default = null)
     {
@@ -327,6 +327,7 @@ class ViewRenderer
     /**
      * Set the layout file
      * @param string $layout
+     * @return $this
      */
     public function setLayout($layout)
     {
@@ -360,7 +361,7 @@ class ViewRenderer
         $sfx = File::getSuffix($view, true);
         $ext = $this->suffix;
 
-        if ($sfx === $ext || in_array($sfx, $this->suffixes, true)) {
+        if ($sfx === $ext || \in_array($sfx, $this->suffixes, true)) {
             return $view;
         }
 

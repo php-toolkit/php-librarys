@@ -19,6 +19,7 @@ class Session extends SimpleCollection
     /**
      * Session constructor.
      * @param array $data
+     * @throws \LogicException
      */
     public function __construct(array $data = [])
     {

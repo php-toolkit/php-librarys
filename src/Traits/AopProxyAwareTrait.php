@@ -48,6 +48,7 @@ trait AopProxyAwareTrait
      * @param string $method
      * @param array $args
      * @return mixed
+     * @throws \LogicException
      */
     public function call($method, array $args = [])
     {
@@ -91,10 +92,11 @@ trait AopProxyAwareTrait
     /**
      * @param array ...$args
      * @return $this|mixed
+     * @throws \InvalidArgumentException
      */
     public function __invoke(...$args)
     {
-        $num = count($args);
+        $num = \count($args);
 
         // only a object
         if ($num === 1) {
@@ -120,7 +122,7 @@ trait AopProxyAwareTrait
      */
     protected function findProxyCallback($target, $method, $prefix = 'before')
     {
-        $className = is_string($target) ? $target : get_class($target);
+        $className = \is_string($target) ? $target : \get_class($target);
 
         // e.g XyzClass::methodAfter
         $key = $className . '::' . $method . ucfirst($prefix);
@@ -148,7 +150,7 @@ trait AopProxyAwareTrait
      */
     public function addProxy($key, $handler, $position = 'before')
     {
-        if (!in_array($position, self::$proxyPoints, true)) {
+        if (!\in_array($position, self::$proxyPoints, true)) {
             return $this;
         }
 
@@ -167,7 +169,7 @@ trait AopProxyAwareTrait
         foreach ($map as $key => $handler) {
             $position = 'before';
 
-            if (is_array($handler)) {
+            if (\is_array($handler)) {
                 if (!isset($handler['handler'])) {
                     continue;
                 }

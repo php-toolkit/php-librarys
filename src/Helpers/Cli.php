@@ -123,13 +123,13 @@ class Cli
             return self::clearColor($text);
         }
 
-        if (is_string($style)) {
+        if (\is_string($style)) {
             $color = self::STYLES[$style] ?? '0';
-        } elseif (is_int($style)) {
+        } elseif (\is_int($style)) {
             $color = $style;
 
             // array: [self::FG_GREEN, self::BG_WHITE, self::UNDERSCORE]
-        } elseif (is_array($style)) {
+        } elseif (\is_array($style)) {
             $color = implode(';', $style);
         } elseif (strpos($text, '<') !== false) {
             return self::renderColor($text);
@@ -205,7 +205,7 @@ class Cli
      */
     public static function write($message, $nl = true, $quit = false)
     {
-        if (is_array($message)) {
+        if (\is_array($message)) {
             $message = implode($nl ? PHP_EOL : '', $message);
         }
 
@@ -223,7 +223,7 @@ class Cli
         fwrite(\STDOUT, $message . ($nl ? PHP_EOL : ''));
         fflush(\STDOUT);
 
-        if (($isTrue = true === $quit) || is_int($quit)) {
+        if (($isTrue = true === $quit) || \is_int($quit)) {
             $code = $isTrue ? 0 : $quit;
             exit($code);
         }
@@ -240,7 +240,7 @@ class Cli
         fwrite(\STDERR, self::color('[ERROR] ', 'red') . $message . ($nl ? PHP_EOL : ''));
         fflush(\STDOUT);
 
-        if (($isTrue = true === $quit) || is_int($quit)) {
+        if (($isTrue = true === $quit) || \is_int($quit)) {
             $code = $isTrue ? 0 : $quit;
             exit($code);
         }
@@ -302,14 +302,14 @@ class Cli
                     }
 
                     // short-opt: value specified inline (-<opt>=<value>)
-                } elseif (strlen($opt) > 2 && $opt{1} === '=') {
+                } elseif (\strlen($opt) > 2 && $opt{1} === '=') {
                     list($opt, $value) = explode('=', $opt, 2);
                 }
 
                 // check if next parameter is a descriptor or a value
                 $nxp = current($params);
 
-                if ($value === true && $nxp !== false && $nxp{0} !== '-' && !in_array($opt, $noValues, true)) {
+                if ($value === true && $nxp !== false && $nxp{0} !== '-' && !\in_array($opt, $noValues, true)) {
                     // list(,$value) = each($params);
                     $value = current($params); next($params);
 

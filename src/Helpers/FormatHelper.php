@@ -37,9 +37,9 @@ class FormatHelper
         foreach ($timeFormats as $index => $format) {
             if ($secs >= $format[0]) {
                 if ((isset($timeFormats[$index + 1]) && $secs < $timeFormats[$index + 1][0])
-                    || $index === count($timeFormats) - 1
+                    || $index === \count($timeFormats) - 1
                 ) {
-                    if (2 === count($format)) {
+                    if (2 === \count($format)) {
                         return $format[1];
                     }
 
@@ -145,7 +145,7 @@ class FormatHelper
             return $value;
         }
 
-        $value_length = strlen($value);
+        $value_length = \strlen($value);
         $qty = (int)substr($value, 0, $value_length - 1);
         $unit = Str::strtolower(substr($value, $value_length - 1));
         switch ($unit) {
@@ -253,14 +253,14 @@ class FormatHelper
         $tokens = token_get_all($src);
 
         $new = '';
-        $c = count($tokens);
+        $c = \count($tokens);
         $iw = false; // ignore whitespace
         $ih = false; // in HEREDOC
         $ls = ''; // last sign
         $ot = null; // open tag
         for ($i = 0; $i < $c; $i++) {
             $token = $tokens[$i];
-            if (is_array($token)) {
+            if (\is_array($token)) {
                 list($tn, $ts) = $token; // tokens: number, string, line
                 $tname = token_name($tn);
                 if ($tn === T_INLINE_HTML) {
@@ -288,7 +288,7 @@ class FormatHelper
                         $new .= $ts;
                         $ot = null;
                         $iw = false;
-                    } elseif (in_array($tn, $IW, true)) {
+                    } elseif (\in_array($tn, $IW, true)) {
                         $new .= $ts;
                         $iw = true;
                     } elseif ($tn === T_CONSTANT_ENCAPSED_STRING || $tn === T_ENCAPSED_AND_WHITESPACE) {
@@ -299,7 +299,7 @@ class FormatHelper
                         $iw = true;
                     } elseif ($tn === T_WHITESPACE) {
                         $nt = @$tokens[$i + 1];
-                        if (!$iw && (!is_string($nt) || $nt === '$') && !in_array($nt[0], $IW)) {
+                        if (!$iw && (!\is_string($nt) || $nt === '$') && !\in_array($nt[0], $IW)) {
                             $new .= " ";
                         }
                         $iw = false;
@@ -312,7 +312,7 @@ class FormatHelper
                         $iw = true;
                         $ih = false; // in HEREDOC
                         for ($j = $i + 1; $j < $c; $j++) {
-                            if (is_string($tokens[$j]) && $tokens[$j] === ';') {
+                            if (\is_string($tokens[$j]) && $tokens[$j] === ';') {
                                 $i = $j;
                                 break;
                             }

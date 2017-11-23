@@ -77,7 +77,7 @@ class DbRecordSort
      */
     public function setValue($name, $value = '')
     {
-        if (is_array($name)) {
+        if (\is_array($name)) {
             foreach ($name as $key => $val) {
                 if (isset($this->$key)) {
                     $this->$key = $val;
@@ -94,6 +94,7 @@ class DbRecordSort
      * @param int $oldSortVal 当前记录的排序值
      * @param int $sortType 排序请求
      * @return bool
+     * @throws \InvalidArgumentException
      */
     public function execute($id, $oldSortVal, $sortType = self::MOVE_UP)
     {

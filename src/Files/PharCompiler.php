@@ -25,6 +25,9 @@ class PharCompiler
      * Compiles psysh into a single phar file.
      * @param string $pharFile The full path to the file to create
      * @param string $version
+     * @throws \UnexpectedValueException
+     * @throws \BadMethodCallException
+     * @throws \Inhere\Exceptions\InvalidArgumentException
      */
     public function compile($pharFile = 'your.phar', $version = '0.0.1')
     {
@@ -79,7 +82,7 @@ class PharCompiler
      */
     private function addFile($phar, $file, $strip = true)
     {
-        $path = str_replace(dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR, '', $file->getRealPath());
+        $path = str_replace(\dirname(\dirname(__DIR__)) . DIRECTORY_SEPARATOR, '', $file->getRealPath());
 
         $content = file_get_contents($file);
         if ($strip) {
@@ -98,15 +101,15 @@ class PharCompiler
      */
     private function stripWhitespace($source)
     {
-        if (!function_exists('token_get_all')) {
+        if (!\function_exists('token_get_all')) {
             return $source;
         }
 
         $output = '';
         foreach (token_get_all($source) as $token) {
-            if (is_string($token)) {
+            if (\is_string($token)) {
                 $output .= $token;
-            } elseif (in_array($token[0], array(T_COMMENT, T_DOC_COMMENT), true)) {
+            } elseif (\in_array($token[0], array(T_COMMENT, T_DOC_COMMENT), true)) {
                 $output .= str_repeat("\n", substr_count($token[1], "\n"));
             } elseif (T_WHITESPACE === $token[0]) {
                 // reduce wide spaces

@@ -64,7 +64,7 @@ class Pipeline implements PipelineInterface
         $stage = $this->stages->current();
         $this->stages->next();
 
-        if (is_callable($stage)) {
+        if (\is_callable($stage)) {
             return $stage($payload, function($payload) {
                 return $this->invokeStage($payload);
             });

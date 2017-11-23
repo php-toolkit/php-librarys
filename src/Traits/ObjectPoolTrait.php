@@ -39,7 +39,7 @@ trait ObjectPoolTrait
      */
     public static function put($object)
     {
-        if (is_string($object)) {
+        if (\is_string($object)) {
             $object = new $object;
         }
 
@@ -68,7 +68,7 @@ trait ObjectPoolTrait
      */
     public static function getStack($class)
     {
-        $class = is_string($class) ? $class : get_class($class);
+        $class = \is_string($class) ? $class : \get_class($class);
 
         if (!isset(self::$pool[$class])) {
             self::$pool[$class] = new \SplStack();
@@ -80,6 +80,7 @@ trait ObjectPoolTrait
     /**
      * @param null $class
      * @return int
+     * @throws \InvalidArgumentException
      */
     public static function count($class = null)
     {
@@ -91,11 +92,12 @@ trait ObjectPoolTrait
             return self::$pool[$class]->count();
         }
 
-        return count(self::$pool);
+        return \count(self::$pool);
     }
 
     /**
      * @param null $class
+     * @throws \InvalidArgumentException
      */
     public static function destroy($class = null)
     {

@@ -25,7 +25,7 @@ class EnvHelper
     {
         $uNames = ['CYG', 'DAR', 'FRE', 'HP-', 'IRI', 'LIN', 'NET', 'OPE', 'SUN', 'UNI'];
 
-        return in_array(strtoupper(substr(PHP_OS, 0, 3)), $uNames, true);
+        return \in_array(strtoupper(substr(PHP_OS, 0, 3)), $uNames, true);
     }
 
     /**
@@ -101,7 +101,7 @@ class EnvHelper
                 ;
         }
 
-        if (!defined('STDOUT')) {
+        if (!\defined('STDOUT')) {
             return false;
         }
 
@@ -115,7 +115,7 @@ class EnvHelper
      */
     public static function isInteractive($fileDescriptor)
     {
-        return function_exists('posix_isatty') && @posix_isatty($fileDescriptor);
+        return \function_exists('posix_isatty') && @posix_isatty($fileDescriptor);
     }
 
 ////////////////////////////////////////
@@ -128,7 +128,7 @@ class EnvHelper
      */
     public static function getVersion(): string
     {
-        return defined('HHVM_VERSION') ? HHVM_VERSION : PHP_VERSION;
+        return \defined('HHVM_VERSION') ? HHVM_VERSION : PHP_VERSION;
     }
 
     /**
@@ -173,7 +173,7 @@ class EnvHelper
      */
     public static function isWeb(): bool
     {
-        return in_array(PHP_SAPI, [
+        return \in_array(PHP_SAPI, [
             'apache',
             'cgi',
             'fast-cgi',
@@ -190,7 +190,7 @@ class EnvHelper
      */
     public static function isHHVM(): bool
     {
-        return defined('HHVM_VERSION');
+        return \defined('HHVM_VERSION');
     }
 
     /**
@@ -226,6 +226,6 @@ class EnvHelper
      */
     public static function hasXDebug(): bool
     {
-        return static::isPHP() && extension_loaded('xdebug');
+        return static::isPHP() && \extension_loaded('xdebug');
     }
 }

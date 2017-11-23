@@ -58,13 +58,13 @@ class Req
      */
     public static function param($key, $default = null)
     {
-        if (!$key || !is_string($key)) {
+        if (!$key || !\is_string($key)) {
             return false;
         }
 
         $ret = $_POST[$key] ?? $_GET[$key] ?? $default;
 
-        if (is_string($ret)) {
+        if (\is_string($ret)) {
             return stripslashes(urldecode(preg_replace('/((\%5C0+)|(\%00+))/i', '', urlencode($ret))));
         }
 
@@ -131,7 +131,7 @@ class Req
      */
     public static function hasParam($key)
     {
-        if (!$key || !is_string($key)) {
+        if (!$key || !\is_string($key)) {
             return false;
         }
 
@@ -140,7 +140,7 @@ class Req
 
     public static function safePostVars()
     {
-        if (!$_POST || !is_array($_POST)) {
+        if (!$_POST || !\is_array($_POST)) {
             $_POST = [];
         } else {
             $_POST = array_map(array(DataHelper::class, 'htmlentitiesUTF8'), $_POST);
@@ -170,10 +170,10 @@ class Req
      */
     public static function buildQueryParams($data, $separator = '/')
     {
-        $arrData = is_string($data) ? explode($separator, $data) : $data;
+        $arrData = \is_string($data) ? explode($separator, $data) : $data;
         $arrData = array_values(array_filter($arrData));
         $newArr = [];
-        $count = count($arrData); #统计
+        $count = \count($arrData); #统计
 
         // $arrData 中的 奇数位--变为键，偶数位---变为前一个奇数 键的值 array('前一个奇数'=>'偶数位')
         for ($i = 0; $i < $count; $i += 2) {

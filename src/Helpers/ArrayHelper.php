@@ -24,7 +24,7 @@ class ArrayHelper
      */
     public static function accessible($value): bool
     {
-        return is_array($value) || $value instanceof \ArrayAccess;
+        return \is_array($value) || $value instanceof \ArrayAccess;
     }
 
     /**
@@ -81,7 +81,7 @@ class ArrayHelper
         $needed = [];
 
         foreach ($needKeys as $key => $default) {
-            if (is_int($key)) {
+            if (\is_int($key)) {
                 $key = $default;
                 $default = null;
             }
@@ -89,11 +89,11 @@ class ArrayHelper
             if (isset($data[$key])) {
                 $value = $data[$key];
 
-                if (is_int($default)) {
+                if (\is_int($default)) {
                     $value = (int)$value;
-                } elseif (is_string($default)) {
+                } elseif (\is_string($default)) {
                     $value = trim($value);
-                } elseif (is_array($default)) {
+                } elseif (\is_array($default)) {
                     $value = (array)$value;
                 }
 
@@ -118,7 +118,7 @@ class ArrayHelper
      */
     public static function merge($src, array $new)
     {
-        if (!$src || !is_array($src)) {
+        if (!$src || !\is_array($src)) {
             return $new;
         }
 
@@ -127,13 +127,13 @@ class ArrayHelper
         }
 
         foreach ($new as $key => $value) {
-            if (is_int($key)) {
+            if (\is_int($key)) {
                 if (isset($src[$key])) {
                     $src[] = $value;
                 } else {
                     $src[$key] = $value;
                 }
-            } elseif (array_key_exists($key, $src) && is_array($value)) {
+            } elseif (array_key_exists($key, $src) && \is_array($value)) {
                 $src[$key] = self::merge($src[$key], $new[$key]);
             } else {
                 $src[$key] = $value;
@@ -159,13 +159,13 @@ class ArrayHelper
             $next = array_shift($args);
 
             foreach ($next as $k => $v) {
-                if (is_int($k)) {
+                if (\is_int($k)) {
                     if (isset($res[$k])) {
                         $res[] = $v;
                     } else {
                         $res[$k] = $v;
                     }
-                } elseif (is_array($v) && isset($res[$k]) && is_array($res[$k])) {
+                } elseif (\is_array($v) && isset($res[$k]) && \is_array($res[$k])) {
                     $res[$k] = self::merge2($res[$k], $v);
                 } else {
                     $res[$k] = $v;
@@ -235,7 +235,7 @@ class ArrayHelper
         $newArr = array(); //格式化后的数组
 
         foreach ($arr as $k => $v) {
-            if (is_array($v)) {
+            if (\is_array($v)) {
                 $newArr[$k] = self::changeValueCase($v, $toUpper);
             } else {
                 $v = trim($v);
@@ -257,7 +257,7 @@ class ArrayHelper
     public static function valueExistsAll($check, array $sampleArr): bool
     {
         // 以逗号分隔的会被拆开，组成数组
-        if (is_string($check)) {
+        if (\is_string($check)) {
             $check = trim($check, ', ');
             $check = strpos($check, ',') !== false ? explode(',', $check) : array($check);
         }
@@ -275,7 +275,7 @@ class ArrayHelper
     public static function valueExistsOne($check, array $sampleArr): bool
     {
         // 以逗号分隔的会被拆开，组成数组
-        if (is_string($check)) {
+        if (\is_string($check)) {
             $check = trim($check, ', ');
             $check = strpos($check, ',') !== false ? explode(',', $check) : array($check);
         }
@@ -293,7 +293,7 @@ class ArrayHelper
      */
     public static function existsAll($need, $arr, $type = false)
     {
-        if (is_array($need)) {
+        if (\is_array($need)) {
             foreach ((array)$need as $v) {
                 self::existsAll($v, $arr, $type);
             }
@@ -308,7 +308,7 @@ class ArrayHelper
                 $arr = self::valueToLower($arr);//小写
                 $need = strtolower(trim($need));//小写
 
-                if (!in_array($need, $arr, $type)) {
+                if (!\in_array($need, $arr, $type)) {
                     return $need;
                 }
             }
@@ -327,7 +327,7 @@ class ArrayHelper
      */
     public static function existsOne($need, $arr, $type = false): bool
     {
-        if (is_array($need)) {
+        if (\is_array($need)) {
             foreach ((array)$need as $v) {
                 $result = self::existsOne($v, $arr, $type);
                 if ($result) {
@@ -344,7 +344,7 @@ class ArrayHelper
             $arr = self::changeValueCase($arr);//小写
             $need = strtolower($need);//小写
 
-            if (in_array($need, $arr, $type)) {
+            if (\in_array($need, $arr, $type)) {
                 return true;
             }
         }
@@ -402,10 +402,10 @@ class ArrayHelper
         $dataTmp = $data;
 
         foreach ($nodes as $arg) {
-            if (is_object($dataTmp) && isset($dataTmp->$arg)) {
+            if (\is_object($dataTmp) && isset($dataTmp->$arg)) {
                 $dataTmp = $dataTmp->$arg;
             } elseif (
-                (is_array($dataTmp) || $dataTmp instanceof \ArrayAccess)
+                (\is_array($dataTmp) || $dataTmp instanceof \ArrayAccess)
                 && isset($dataTmp[$arg])
             ) {
                 $dataTmp = $dataTmp[$arg];
@@ -440,7 +440,7 @@ class ArrayHelper
         $dataTmp = &$data;
 
         foreach ($nodes as $node) {
-            if (is_array($dataTmp)) {
+            if (\is_array($dataTmp)) {
                 if (empty($dataTmp[$node])) {
                     $dataTmp[$node] = [];
                 }
@@ -475,7 +475,7 @@ class ArrayHelper
         foreach ($array as $values) {
             if ($values instanceof CollectionInterface) {
                 $values = $values->all();
-            } elseif (!is_array($values)) {
+            } elseif (!\is_array($values)) {
                 continue;
             }
 
@@ -522,7 +522,7 @@ class ArrayHelper
         $results = [];
 
         foreach ($array as $key => $value) {
-            if (is_array($value) && !empty($value)) {
+            if (\is_array($value) && !empty($value)) {
                 $results = array_merge($results, static::dot($value, $prepend . $key . '.'));
             } else {
                 $results[$prepend . $key] = $value;
@@ -624,12 +624,12 @@ class ArrayHelper
 
         $keys = explode('.', $key);
 
-        while (count($keys) > 1) {
+        while (\count($keys) > 1) {
             $key = array_shift($keys);
             // If the key doesn't exist at this depth, we will just create an empty array
             // to hold the next value, allowing us to create the arrays to hold final
             // values at the correct depth. Then we'll keep digging into the array.
-            if (!isset($array[$key]) || !is_array($array[$key])) {
+            if (!isset($array[$key]) || !\is_array($array[$key])) {
                 $array[$key] = [];
             }
 
@@ -652,7 +652,7 @@ class ArrayHelper
         return array_reduce($array, function ($result, $item) use ($depth) {
             $item = $item instanceof CollectionInterface ? $item->all() : $item;
 
-            if (!is_array($item)) {
+            if (!\is_array($item)) {
                 return array_merge($result, [$item]);
             }
 
@@ -675,7 +675,7 @@ class ArrayHelper
         $original = &$array;
         $keys = (array)$keys;
 
-        if (count($keys) === 0) {
+        if (\count($keys) === 0) {
             return;
         }
 
@@ -692,10 +692,10 @@ class ArrayHelper
             // clean up before each pass
             $array = &$original;
 
-            while (count($parts) > 1) {
+            while (\count($parts) > 1) {
                 $part = array_shift($parts);
 
-                if (isset($array[$part]) && is_array($array[$part])) {
+                if (isset($array[$part]) && \is_array($array[$part])) {
                     $array = &$array[$part];
                 } else {
                     continue 2;
@@ -842,7 +842,7 @@ class ArrayHelper
      */
     public static function wrap($value): array
     {
-        return !is_array($value) ? (array)$value : $value;
+        return !\is_array($value) ? (array)$value : $value;
     }
 
     ////////////////////////////////////////////////////////////
@@ -862,7 +862,7 @@ class ArrayHelper
      */
     public static function toString($array, $length = 800, $cycles = 6, $showKey = true, $addMark = false, $separator = ', ', $string = ''): string
     {
-        if (!is_array($array) || empty($array)) {
+        if (!\is_array($array) || empty($array)) {
             return '';
         }
 
@@ -872,21 +872,21 @@ class ArrayHelper
         foreach ($array as $key => $value) {
             $num++;
 
-            if ($num >= $cycles || strlen($string) > (int)$length) {
+            if ($num >= $cycles || \strlen($string) > (int)$length) {
                 $string .= '... ...';
                 break;
             }
 
             $keyStr = $showKey ? $key . '=>' : '';
 
-            if (is_array($value)) {
+            if (\is_array($value)) {
                 $string .= $keyStr . 'Array(' . self::toString($value, $length, $cycles, $showKey, $addMark, $separator, $string) . ')' . $separator;
-            } else if (is_object($value)) {
-                $string .= $keyStr . 'Object(' . get_class($value) . ')' . $separator;
-            } else if (is_resource($value)) {
+            } else if (\is_object($value)) {
+                $string .= $keyStr . 'Object(' . \get_class($value) . ')' . $separator;
+            } else if (\is_resource($value)) {
                 $string .= $keyStr . 'Resource(' . get_resource_type($value) . ')' . $separator;
             } else {
-                $value = strlen($value) > 150 ? substr($value, 0, 150) : $value;
+                $value = \strlen($value) > 150 ? substr($value, 0, 150) : $value;
                 $string .= $mark . $keyStr . trim(htmlspecialchars($value)) . $mark . $separator;
             }
         }
@@ -909,7 +909,7 @@ class ArrayHelper
         $string = preg_replace('/\s(?=\s)/', '', $string);
         $string = trim($string);
 
-        if (strlen($string) > $length) {
+        if (\strlen($string) > $length) {
             $string = substr($string, 0, $length) . '...';
         }
 
@@ -918,7 +918,7 @@ class ArrayHelper
 
     public static function toLimitOut($array): array
     {
-        if (!is_array($array)) {
+        if (!\is_array($array)) {
             return $array;
         }
 
@@ -929,12 +929,12 @@ class ArrayHelper
             //     break;
             // }
 
-            if (is_array($value) || is_object($value)) {
-                $value = gettype($value) . '(...)';
-            } else if (is_string($value) || is_numeric($value)) {
-                $value = strlen(trim($value));
+            if (\is_array($value) || \is_object($value)) {
+                $value = \gettype($value) . '(...)';
+            } else if (\is_string($value) || is_numeric($value)) {
+                $value = \strlen(trim($value));
             } else {
-                $value = gettype($value) . "($value)";
+                $value = \gettype($value) . "($value)";
             }
 
             $array[$key] = $value;

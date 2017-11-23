@@ -149,7 +149,7 @@ trait EventTrait
         }
 
         if ($ets = $this->supportedEvents) {
-            return in_array($event, $ets, true);
+            return \in_array($event, $ets, true);
         }
 
         return true;
@@ -184,6 +184,6 @@ trait EventTrait
      */
     public function getEventCount()
     {
-        return count($this->events);
+        return \count($this->events);
     }
 }

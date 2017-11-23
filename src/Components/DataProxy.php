@@ -43,6 +43,7 @@ class DataProxy
      * @param string $name
      * @param array $args
      * @return mixed
+     * @throws \RuntimeException
      */
     public function call(string $name, array $args)
     {

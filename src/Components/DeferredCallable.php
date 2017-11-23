@@ -31,16 +31,17 @@ class DeferredCallable
     /**
      * @param array $args
      * @return mixed
+     * @throws \InvalidArgumentException
      */
     public function __invoke(...$args)
     {
         $callable = $this->callable;
 
-        if (is_callable($callable)) {
+        if (\is_callable($callable)) {
             return PhpHelper::call($callable, ...$args);
         }
 
-        if (is_string($callable) && class_exists($callable)) {
+        if (\is_string($callable) && class_exists($callable)) {
             $obj = new $callable;
 
             if (method_exists($obj, '__invoke')) {

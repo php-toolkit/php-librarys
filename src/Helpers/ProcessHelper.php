@@ -405,7 +405,7 @@ class ProcessHelper
             return false;
         }
 
-        if (function_exists('cli_set_process_title')) {
+        if (\function_exists('cli_set_process_title')) {
             cli_set_process_title($title);
         }
 
@@ -416,6 +416,7 @@ class ProcessHelper
      * Set unix user and group for current process script.
      * @param string $user
      * @param string $group
+     * @throws \RuntimeException
      */
     public static function changeScriptOwner($user, $group = '')
     {

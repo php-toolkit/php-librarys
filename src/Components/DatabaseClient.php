@@ -831,6 +831,7 @@ class DatabaseClient
     /**
      * @param string $statement
      * @param array $bindings
+     * @param int $columnNum
      * @return \Generator
      */
     public function yieldColumn($statement, array $bindings = [], int $columnNum = 0)

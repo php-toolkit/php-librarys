@@ -2,9 +2,19 @@
 
 php的一些有用的基础工具库实现和搜集 
 
-包含： 静态资源加载、认证、命令行应用、数据收集器、依赖注入、环境信息、事件调度、文件系统、html元素、http请求库、进程控制、队列、任务管理、各种帮助类库
+包含：依赖服务容器、静态资源加载、认证、命令行应用、数据收集器、依赖注入、环境信息、事件调度、文件系统、html元素、http请求库、进程控制、队列、任务管理、各种帮助类库
 
 > 这是基于 php7 的分支。 如果你使用的是 php5, 请查看 [php5](https://github.com/inhere/php-librarys/tree/php5) 分支(不再维护)。
+
+## 项目地址
+
+- **github** https://github.com/inhere/php-librarys.git
+- **git@osc** https://git.oschina.net/inhere/php-librarys.git
+
+**注意：**
+
+- master 分支是要求 `php >= 7` 的(推荐使用)。
+- php5 分支是支持 php5 `php >= 5.5` 的代码分支(不再维护)。
 
 ## 安装
 
@@ -29,7 +39,7 @@ composer require inhere/library
 - 直接拉取
 
 ```
-git clone https://git.oschina.net/inhere/php-librarys.git // git@osc
+git clone https://gitee.com/inhere/php-librarys.git // git@osc
 git clone https://github.com/inhere/php-librarys.git // github
 ```
 

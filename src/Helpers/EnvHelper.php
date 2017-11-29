@@ -61,7 +61,11 @@ class EnvHelper
      */
     public static function isRoot(): bool
     {
-        return posix_getuid() === 0;
+        if (\function_exists('posix_getuid')) {
+            return posix_getuid() === 0;
+        }
+
+        return getmyuid() === 0;
     }
 
     /**

@@ -64,9 +64,10 @@ class Sys extends EnvHelper
      * 3. exec
      * 4. shell_exec
      * @param $command
+     * @param bool $returnStatus
      * @return array
      */
-    public static function runCommand($command)
+    public static function runCommand($command, $returnStatus = true)
     {
         $return_var = 1;
 
@@ -96,7 +97,11 @@ class Sys extends EnvHelper
             $return_var = 0;
         }
 
-        return array('output' => $output, 'status' => $return_var);
+        if ($returnStatus) {
+            return ['output' => trim($output), 'status' => $return_var];
+        }
+
+        return trim($output);
     }
 
     /**

@@ -13,17 +13,18 @@ date_default_timezone_set('Asia/Shanghai');
 require dirname(__DIR__) . '/src/functions.php';
 require dirname(__DIR__) . '/src/exceptions.php';
 
-spl_autoload_register(function($class)
-{
-    $inhereDir = dirname(__DIR__, 2);
-    $vendorDir = dirname(__DIR__, 3);
-    $map = [
-        'Inhere\Library\examples\\' => __DIR__,
-        'Inhere\Library\\' => dirname(__DIR__) . '/src',
-        'Inhere\Queue\\' => $inhereDir . '/queue/src',
-        'Psr\Log\\' => $vendorDir . '/psr/log/Psr/Log',
-    ];
+$inhereDir = dirname(__DIR__, 2);
+$vendorDir = dirname(__DIR__, 3);
+$map = [
+    'Inhere\Library\Examples\\' => __DIR__,
+    'Inhere\Library\Tests\\' => dirname(__DIR__) . '/tests',
+    'Inhere\Library\\' => dirname(__DIR__) . '/src',
+    'Inhere\Queue\\' => $inhereDir . '/queue/src',
+    'Psr\Log\\' => $vendorDir . '/psr/log/Psr/Log',
+];
 
+spl_autoload_register(function($class) use ($map)
+{
     foreach ($map as $np => $dir) {
         if (0 === strpos($class, $np)) {
             $path = str_replace('\\', '/', substr($class, strlen($np)));

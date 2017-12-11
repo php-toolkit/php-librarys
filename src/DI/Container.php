@@ -124,7 +124,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @return $this
      * @internal param bool $shared 是否共享
      * @internal param bool $locked 是否锁定服务
-     * @throws \RuntimeException
+     * @throws \Inhere\Exceptions\DependencyResolutionException
      * @throws \InvalidArgumentException
      */
     public function set($id, $definition, array $opts = [])
@@ -133,7 +133,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
 
         // 已锁定的服务，不能更改
         if ($this->isLocked($id)) {
-            throw new \RuntimeException(sprintf('Cannot override frozen service "%s".', $id));
+            throw new \InvalidArgumentException(sprintf('Cannot override frozen service "%s".', $id));
         }
 
         $args = $props = [];
@@ -252,6 +252,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @param $definition
      * @param $share
      * @return $this
+     * @throws \InvalidArgumentException
      */
     public function lock($id, $definition, $share = false)
     {
@@ -293,7 +294,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @param array $arguments
      * @param array $props
      * @return callable
-     * @throws \RuntimeException
+     * @throws \InvalidArgumentException
      * @throws \Inhere\Exceptions\DependencyResolutionException
      */
     public function createCallback($target, array $arguments = [], array $props = [])
@@ -309,7 +310,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
 
         if (($pos = strpos($target, '::')) !== false) {
             $callback = function (self $self) use ($target, $arguments) {
-                return !$arguments ? $target($self) : $target(...$arguments);
+                return $arguments ? $target(...$arguments) : $target($self);
             };
         } elseif (($pos = strpos($target, '->')) !== false) {
             $class = substr($target, 0, $pos);
@@ -329,7 +330,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
             try {
                 $reflection = new \ReflectionClass($class);
             } catch (\Exception $e) {
-                throw new \RuntimeException($e->getMessage());
+                throw new \InvalidArgumentException($e->getMessage());
             }
 
             /** @var \ReflectionMethod */

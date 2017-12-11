@@ -252,6 +252,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @param $definition
      * @param $share
      * @return $this
+     * @throws \Inhere\Exceptions\DependencyResolutionException
      * @throws \InvalidArgumentException
      */
     public function lock($id, $definition, $share = false)
@@ -368,6 +369,8 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * - 其他的则总是返回新的实例
      * @param  string $id 要获取的服务组件id
      * @return mixed
+     * @throws \InvalidArgumentException
+     * @throws \Inhere\Exceptions\NotFoundException
      */
     public function get($id)
     {
@@ -383,6 +386,8 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * 强制获取服务的新实例，针对共享服务
      * @param $id
      * @return mixed
+     * @throws \InvalidArgumentException
+     * @throws \Inhere\Exceptions\NotFoundException
      */
     public function getNew($id)
     {
@@ -396,6 +401,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      */
     public function getIfExist($id)
     {
+        /** @noinspection ExceptionsAnnotatingAndHandlingInspection */
         return $this->getInstance($id, false);
     }
 
@@ -704,6 +710,8 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @param   mixed $offset The array offset.
      * @param   mixed $value The array value.
      * @return $this
+     * @throws \InvalidArgumentException
+     * @throws \Inhere\Exceptions\DependencyResolutionException
      */
     public function offsetSet($offset, $value)
     {

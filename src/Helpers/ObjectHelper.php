@@ -22,9 +22,9 @@ class ObjectHelper
      * @param array $options
      * @return mixed
      */
-    public static function init($object, array $options)
+    public static function smartConfigure($object, array $options)
     {
-        return self::smartConfigure($object, $options);
+        return self::init($object, $options);
     }
 
     /**
@@ -35,7 +35,7 @@ class ObjectHelper
      * @param array $options
      * @return mixed
      */
-    public static function smartConfigure($object, array $options)
+    public static function init($object, array $options)
     {
         foreach ($options as $property => $value) {
             if (is_numeric($property)) {
@@ -60,9 +60,11 @@ class ObjectHelper
      * @param $object
      * @param array $options
      */
-    public static function setAttrs($object, array $options)
+    public static function configure($object, array $options)
     {
-        self::configure($object, $options);
+        foreach ($options as $property => $value) {
+            $object->$property = $value;
+        }
     }
 
     /**
@@ -70,11 +72,9 @@ class ObjectHelper
      * @param $object
      * @param array $options
      */
-    public static function configure($object, array $options)
+    public static function setAttrs($object, array $options)
     {
-        foreach ($options as $property => $value) {
-            $object->$property = $value;
-        }
+        self::configure($object, $options);
     }
 
     /**

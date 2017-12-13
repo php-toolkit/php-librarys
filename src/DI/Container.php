@@ -62,6 +62,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @param array $services
      * @param Container|null $parent
      * @throws \InvalidArgumentException
+     * @throws \Inhere\Exceptions\DependencyResolutionException
      */
     public function __construct(array $services = [], Container $parent = null)
     {
@@ -210,6 +211,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * ]
      * @return $this
      * @throws \InvalidArgumentException
+     * @throws \Inhere\Exceptions\DependencyResolutionException
      */
     public function sets(array $services)
     {
@@ -240,6 +242,8 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @param $definition
      * @param $share
      * @return $this
+     * @throws \InvalidArgumentException
+     * @throws \Inhere\Exceptions\DependencyResolutionException
      */
     public function protect($id, $definition, $share = false)
     {
@@ -307,11 +311,15 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
 
         $arguments = array_values($arguments);
         /** @see $this->set() $definition is array */
-        $target = trim(str_replace(' ', '', $target), '.');
+        $target = trim($target);
 
         if (($pos = strpos($target, '::')) !== false) {
             $callback = function (self $self) use ($target, $arguments) {
-                return $arguments ? $target(...$arguments) : $target($self);
+                if ($arguments) {
+                    return $target(...$arguments);
+                }
+
+                return $target($self);
             };
         } elseif (($pos = strpos($target, '->')) !== false) {
             $class = substr($target, 0, $pos);
@@ -322,7 +330,11 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
 
                 Obj::smartConfigure($object, $props);
 
-                return !$arguments ? $object->$method($self) : $object->$method(...$arguments);
+                if ($arguments) {
+                    return $object->$method(...$arguments);
+                }
+
+                return $object->$method($self);
             };
         } else {
             // 仅是个 class name
@@ -370,13 +382,18 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @param  string $id 要获取的服务组件id
      * @return mixed
      * @throws \InvalidArgumentException
-     * @throws \Inhere\Exceptions\NotFoundException
      */
     public function get($id)
     {
-        // a class name. get from object pool
-        if (strpos($id, '\\')) {
-            return Obj::get($id);
+        if (!$this->has($id)) {
+
+            // a class name.
+            if (strpos($id, '\\') && class_exists($id)) {
+                /** @noinspection ExceptionsAnnotatingAndHandlingInspection */
+                $this->set($id, $id);
+            } else {
+                throw new \InvalidArgumentException("The service '$id' was not found, has not been registered!");
+            }
         }
 
         return $this->getInstance($id);
@@ -387,17 +404,22 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @param $id
      * @return mixed
      * @throws \InvalidArgumentException
-     * @throws \Inhere\Exceptions\NotFoundException
      */
     public function getNew($id)
+    {
+        return $this->new($id);
+    }
+
+    public function new($id)
     {
         return $this->getInstance($id, true, true);
     }
 
     /**
      * 若存在服务则返回 否则返回 null
-     * @param $id
+     * @param string $id
      * @return mixed|null
+     * @throws \InvalidArgumentException
      */
     public function getIfExist($id)
     {
@@ -406,10 +428,9 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     }
 
     /**
-     * @param $id
+     * @param string $id
      * @return mixed
-     * @throws \RuntimeException
-     * @throws NotFoundException
+     * @throws \InvalidArgumentException
      */
     public function raw($id)
     {
@@ -419,7 +440,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
             return $service->getCallback();
         }
 
-        throw new \RuntimeException("get service define error for ID: $id");
+        throw new \InvalidArgumentException("get service define error for ID: $id");
     }
 
     /**
@@ -455,7 +476,6 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @param bool $forceNew 强制获取服务的新实例
      * @return mixed|null
      * @throws \InvalidArgumentException
-     * @throws \Inhere\Exceptions\NotFoundException
      */
     public function getInstance($id, $thrErr = true, $forceNew = false)
     {
@@ -467,6 +487,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
         }
 
         $id = $this->resolveAlias($id);
+
         if ($service = $this->getService($id, $thrErr)) {
             return $service->get($this, $forceNew);
         }
@@ -479,7 +500,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @param $id
      * @param bool $thrErr
      * @return Service|null
-     * @throws NotFoundException
+     * @throws \InvalidArgumentException
      */
     public function getService($id, $thrErr = false)
     {
@@ -490,7 +511,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
         }
 
         if ($thrErr) {
-            throw new NotFoundException("The service '$id' was not found, has not been registered!");
+            throw new \InvalidArgumentException("The service '$id' was not found, has not been registered!");
         }
 
         return null;
@@ -559,7 +580,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     /**
      * @param $id
      * @return bool
-     * @throws \Inhere\Exceptions\NotFoundException
+     * @throws \InvalidArgumentException
      */
     public function isShared($id)
     {
@@ -573,7 +594,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     /**
      * @param $id
      * @return bool
-     * @throws \Inhere\Exceptions\NotFoundException
+     * @throws \InvalidArgumentException
      */
     public function isLocked($id)
     {
@@ -594,6 +615,10 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
         return $this->exists($id);
     }
 
+    /**
+     * @param string $id
+     * @return bool
+     */
     public function exists($id)
     {
         $id = $this->resolveAlias($id);
@@ -608,19 +633,17 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      */
     private function _checkServiceId($id)
     {
-        if (!\is_string($id) || \strlen($id) > 50) {
-            throw new \InvalidArgumentException('Set up the service Id can be a string of not more than 50 characters!');
+        if (!\is_string($id)) {
+            throw new \InvalidArgumentException('Set up the service Id can be a string!');
         }
 
-        if (!$id = trim($id)) {
+        if (!$id = trim(str_replace(' ', '', $id), '.')) {
             throw new \InvalidArgumentException('You must set up the service Id name!');
         }
 
-        $id = trim(str_replace(' ', '', $id), '.');
-
-        if (!preg_match('/^\w[\w-.]{1,56}$/i', $id)) {
-            throw new \InvalidArgumentException("The service Id[$id] is invalid string！");
-        }
+        // if (!preg_match('/^\w[\w-.]{1,56}$/i', $id)) {
+        //     throw new \InvalidArgumentException("The service Id[$id] is invalid string！");
+        // }
 
         return $id;
     }

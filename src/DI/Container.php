@@ -328,7 +328,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
             $callback = function (self $self) use ($class, $method, $arguments, $props) {
                 $object = new $class;
 
-                Obj::smartConfigure($object, $props);
+                Obj::init($object, $props);
 
                 if ($arguments) {
                     return $object->$method(...$arguments);
@@ -660,6 +660,8 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     /**
      * @param $name
      * @param $value
+     * @throws \InvalidArgumentException
+     * @throws \Inhere\Exceptions\DependencyResolutionException
      */
     public function __set($name, $value)
     {
@@ -669,6 +671,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     /**
      * @param $name
      * @return bool
+     * @throws \InvalidArgumentException
      * @throws NotFoundException
      */
     public function __get($name)
@@ -722,6 +725,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * Gets an offset in the iterator.
      * @param   mixed $offset The array offset.
      * @return  mixed  The array value if it exists, null otherwise.
+     * @throws \InvalidArgumentException
      */
     public function offsetGet($offset)
     {

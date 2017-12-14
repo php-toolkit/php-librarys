@@ -31,6 +31,7 @@ trait CallableResolverAwareTrait
      *
      * @return \Closure
      *
+     * @throws \Psr\Container\ContainerExceptionInterface
      * @throws RuntimeException If the string cannot be resolved as a callable
      */
     protected function resolveCallable($callable)

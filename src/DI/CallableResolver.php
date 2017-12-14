@@ -79,6 +79,7 @@ final class CallableResolver implements CallableResolverInterface
      * @param string $method
      * @return callable
      *
+     * @throws \InvalidArgumentException
      * @throws \RuntimeException if the callable does not exist
      */
     private function resolveCallable($class, $method = '__invoke')

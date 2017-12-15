@@ -14,22 +14,19 @@ use Inhere\Exceptions\ExtensionMissException;
 class PhpHelper extends EnvHelper
 {
     /**
-     * @param $cb
+     * @param callable $cb
      * @param array ...$args
      * @return mixed
-     * @throws \InvalidArgumentException
      */
-    public static function call($cb, ...$args)
+    public static function call(callable $cb, ...$args)
     {
-        // $args = array_values($args);
-
         if (\is_string($cb)) {
             // function
             if (strpos($cb, '::') === false) {
                 return $cb(...$args);
             }
 
-            // ClassName/Service::method
+            // ClassName::method
             $cb = explode('::', $cb, 2);
         } elseif (\is_object($cb) && method_exists($cb, '__invoke')) {
             return $cb(...$args);
@@ -41,7 +38,17 @@ class PhpHelper extends EnvHelper
             return \is_object($obj) ? $obj->$mhd(...$args) : $obj::$mhd(...$args);
         }
 
-        throw new \InvalidArgumentException('The parameter is not a callable');
+        return $cb(...$args);
+    }
+
+    /**
+     * @param callable $cb
+     * @param array $args
+     * @return mixed
+     */
+    public static function callByArray(callable $cb, array $args)
+    {
+        return self::call($cb, ...$args);
     }
 
     /**

@@ -32,7 +32,7 @@ trait LiteConfigTrait
      * @param   mixed $default
      * @return  mixed
      */
-    public function getValue(string $name, $default = null)
+    public function getValue($name, $default = null)
     {
         $value = array_key_exists($name, $this->config) ? $this->config[$name] : $default;
 
@@ -79,7 +79,7 @@ trait LiteConfigTrait
      * @param string|null $key
      * @return array
      */
-    public function getConfig(string $key = null)
+    public function getConfig($key = null)
     {
         if ($key) {
             return $this->getValue($key);

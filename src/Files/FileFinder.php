@@ -46,7 +46,7 @@ class FileFinder extends StdObject
     protected $sourcePath;
 
     /**
-     * 包含的可发布的 文件 文件扩展匹配 目录
+     * 包含的 文件 文件扩展匹配 目录
      * 比 {@see $exlude} 优先级更高
      * @var array
      */
@@ -61,7 +61,7 @@ class FileFinder extends StdObject
     ];
 
     /**
-     * 排除发布的 文件 文件扩展匹配 目录
+     * 排除的 文件 文件扩展匹配 目录
      * @var array
      */
     protected $exclude = [
@@ -135,6 +135,13 @@ class FileFinder extends StdObject
         return $this;
     }
 
+    /**
+     * @param bool $recursive
+     * @param string $path
+     * @param string $pathPrefix
+     * @return FileFinder
+     * @throws InvalidArgumentException
+     */
     public function find($recursive = true, $path = '', $pathPrefix = '')
     {
         return $this->findAll($recursive, $path, $pathPrefix);

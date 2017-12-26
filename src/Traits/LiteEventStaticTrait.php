@@ -7,6 +7,7 @@
  */
 
 namespace Inhere\Library\Traits;
+
 use Inhere\Library\Helpers\Php;
 
 /**

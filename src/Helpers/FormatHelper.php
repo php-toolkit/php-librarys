@@ -171,22 +171,32 @@ class FormatHelper
     public static function ampReplace($text)
     {
         $text = str_replace([
-            '&&', '&#', '&#', '&amp;', '*-*', '*--*',
+            '&&',
+            '&#',
+            '&#',
+            '&amp;',
+            '*-*',
+            '*--*',
         ], [
-            '*--*', '*-*', '*-*', '&', '&#', '&&',
+            '*--*',
+            '*-*',
+            '*-*',
+            '&',
+            '&#',
+            '&&',
         ], $text);
 
-        $text = preg_replace('/|&(?![\w]+;)|/', '&amp;', $text);
+        $text = (string)preg_replace('/|&(?![\w]+;)|/', '&amp;', $text);
 
         return $text;
     }
 
     /**
      * Cleans text of all formatting and scripting code
-     * @param   string &$text Text to clean
+     * @param   string|null|array $text Text to clean
      * @return  string  Cleaned text.
      */
-    public static function cleanText($text)
+    public static function cleanText(string $text)
     {
         $text = preg_replace('/<script[^>]*>.*?</script>/si', '', $text);
         $text = preg_replace('/<a\s+.*?href="([^"]+)"[^>]*>([^<]+)<\/a>/is', '\2 (\1)', $text);
@@ -204,7 +214,7 @@ class FormatHelper
     /**
      * 返回删除注释和空格后的PHP源码(php_strip_whitespace)
      * @link http://cn2.php.net/manual/zh/function.php-strip-whitespace.php
-     * @param  string $src
+     * @param  string|bool $src
      * @return string
      */
     public static function phpCode($src)
@@ -245,7 +255,6 @@ class FormatHelper
             return false;
         }
 
-        /** @var string|bool $src */
         if (is_file($src) && (!$src = file_get_contents($src))) {
             return false;
         }
@@ -342,4 +351,4 @@ class FormatHelper
 
         return $new;
     }
-} // end class FormatHelper
+}

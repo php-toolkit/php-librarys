@@ -126,7 +126,13 @@ if (!function_exists('server_value')) {
 if (!function_exists('html_minify')) {
     function html_minify($body)
     {
-        $search = array('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\')\/\/.*))/', '/\n/', '/\>[^\S ]+/s', '/[^\S ]+\</s', '/(\s)+/s');
+        $search = array(
+            '/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\')\/\/.*))/',
+            '/\n/',
+            '/\>[^\S ]+/s',
+            '/[^\S ]+\</s',
+            '/(\s)+/s'
+        );
         $replace = array(' ', ' ', '>', '<', '\\1');
 
         return preg_replace($search, $replace, $body);

@@ -22,7 +22,7 @@ trait LogShortTrait
      * System is unusable.
      *
      * @param string $message
-     * @param array  $context
+     * @param array $context
      *
      * @return void
      */
@@ -38,7 +38,7 @@ trait LogShortTrait
      * trigger the SMS alerts and wake you up.
      *
      * @param string $message
-     * @param array  $context
+     * @param array $context
      *
      * @return void
      */
@@ -53,7 +53,7 @@ trait LogShortTrait
      * Example: Application component unavailable, unexpected exception.
      *
      * @param string $message
-     * @param array  $context
+     * @param array $context
      *
      * @return void
      */
@@ -67,7 +67,7 @@ trait LogShortTrait
      * be logged and monitored.
      *
      * @param string $message
-     * @param array  $context
+     * @param array $context
      *
      * @return void
      */
@@ -83,7 +83,7 @@ trait LogShortTrait
      * that are not necessarily wrong.
      *
      * @param string $message
-     * @param array  $context
+     * @param array $context
      *
      * @return void
      */
@@ -96,7 +96,7 @@ trait LogShortTrait
      * Normal but significant events.
      *
      * @param string $message
-     * @param array  $context
+     * @param array $context
      *
      * @return void
      */
@@ -111,7 +111,7 @@ trait LogShortTrait
      * Example: User logs in, SQL logs.
      *
      * @param string $message
-     * @param array  $context
+     * @param array $context
      *
      * @return void
      */
@@ -124,7 +124,7 @@ trait LogShortTrait
      * Detailed debug information.
      *
      * @param string $message
-     * @param array  $context
+     * @param array $context
      *
      * @return void
      */
@@ -155,9 +155,9 @@ trait LogShortTrait
     /**
      * Logs with an arbitrary level.
      *
-     * @param mixed  $level
+     * @param mixed $level
      * @param string $message
-     * @param array  $context
+     * @param array $context
      *
      * @return void
      */

@@ -17,7 +17,7 @@ use Inhere\Library\Interfaces\PipelineInterface;
  */
 class Pipeline implements PipelineInterface
 {
-    /** @var \SplObjectStorage  */
+    /** @var \SplObjectStorage */
     private $stages;
 
     public function __construct()
@@ -31,7 +31,7 @@ class Pipeline implements PipelineInterface
     public function add(callable $stage)
     {
         if ($stage instanceof $this) {
-            $stage->add(function($payload) {
+            $stage->add(function ($payload) {
                 return $this->invokeStage($payload);
             });
         }
@@ -65,7 +65,7 @@ class Pipeline implements PipelineInterface
         $this->stages->next();
 
         if (\is_callable($stage)) {
-            return $stage($payload, function($payload) {
+            return $stage($payload, function ($payload) {
                 return $this->invokeStage($payload);
             });
         }

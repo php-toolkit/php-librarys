@@ -114,7 +114,8 @@ class Req
         if (self::$parsedBody === false) {
             // post data is json
             if (
-                !isset($_SERVER['HTTP_CONTENT_TYPE']) || !($type = $_SERVER['HTTP_CONTENT_TYPE']) || strpos($type, '/json') <= 0
+                !isset($_SERVER['HTTP_CONTENT_TYPE']) || !($type = $_SERVER['HTTP_CONTENT_TYPE']) || strpos($type,
+                    '/json') <= 0
             ) {
                 self::$parsedBody = &$_POST;
             } else {

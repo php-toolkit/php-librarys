@@ -33,8 +33,16 @@ final class Type
     public static function all()
     {
         return [
-            self::ARRAY, self::BOOL, self::BOOLEAN, self::DOUBLE, self::FLOAT,
-            self::INT, self::INTEGER, self::OBJECT, self::STRING, self::RESOURCE
+            self::ARRAY,
+            self::BOOL,
+            self::BOOLEAN,
+            self::DOUBLE,
+            self::FLOAT,
+            self::INT,
+            self::INTEGER,
+            self::OBJECT,
+            self::STRING,
+            self::RESOURCE
         ];
     }
 
@@ -44,8 +52,13 @@ final class Type
     public static function scalars()
     {
         return [
-            self::BOOL, self::BOOLEAN, self::DOUBLE, self::FLOAT,
-            self::INT, self::INTEGER, self::STRING
+            self::BOOL,
+            self::BOOLEAN,
+            self::DOUBLE,
+            self::FLOAT,
+            self::INT,
+            self::INTEGER,
+            self::STRING
         ];
     }
 }

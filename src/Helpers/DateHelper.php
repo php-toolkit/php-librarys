@@ -101,6 +101,7 @@ class DateHelper
     {
         return strtotime('+1 day 23:59:59');
     }
+
     /**
      * @return false|int
      */

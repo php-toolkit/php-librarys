@@ -225,7 +225,7 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
         }
 
         if (strpos($key, $this->separator)) {
-            list($fileKey, ) = explode($this->separator, $key);
+            list($fileKey,) = explode($this->separator, $key);
         } else {
             $fileKey = $key;
         }
@@ -416,9 +416,10 @@ class Language extends StdObject implements \ArrayAccess, \Countable, \IteratorA
     {
         return $this->isLang($lang);
     }
+
     public function isLang($lang)
     {
-        return $lang && \in_array($lang, $this->langs,true);
+        return $lang && \in_array($lang, $this->langs, true);
     }
 
     /**

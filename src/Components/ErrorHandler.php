@@ -62,9 +62,9 @@ class ErrorHandler
      *
      * By default it will handle errors, exceptions and fatal errors
      *
-     * @param  array|false     $errorLevelMap  an array of E_* constant to LogLevel::* constant mapping, or false to disable error handling
-     * @param  int|false       $exceptionLevel a LogLevel::* constant, or false to disable exception handling
-     * @param  int|false       $fatalLevel     a LogLevel::* constant, or false to disable fatal error handling
+     * @param  array|false $errorLevelMap an array of E_* constant to LogLevel::* constant mapping, or false to disable error handling
+     * @param  int|false $exceptionLevel a LogLevel::* constant, or false to disable exception handling
+     * @param  int|false $fatalLevel a LogLevel::* constant, or false to disable fatal error handling
      * @return ErrorHandler
      */
     public function register(array $errorLevelMap = [], $exceptionLevel = null, $fatalLevel = null)
@@ -105,8 +105,12 @@ class ErrorHandler
      * @param int $errorTypes
      * @param bool $handleOnlyReportedErrors
      */
-    public function registerErrorHandler(array $levelMap = [], $callPrevious = true, $errorTypes = -1, $handleOnlyReportedErrors = true)
-    {
+    public function registerErrorHandler(
+        array $levelMap = [],
+        $callPrevious = true,
+        $errorTypes = -1,
+        $handleOnlyReportedErrors = true
+    ) {
         $prev = set_error_handler([$this, 'handleError'], $errorTypes);
         $this->errorLevelMap = array_replace($this->defaultErrorLevelMap(), $levelMap);
 
@@ -133,21 +137,21 @@ class ErrorHandler
     protected function defaultErrorLevelMap()
     {
         return array(
-            E_ERROR             => LogLevel::CRITICAL,
-            E_WARNING           => LogLevel::WARNING,
-            E_PARSE             => LogLevel::ALERT,
-            E_NOTICE            => LogLevel::NOTICE,
-            E_CORE_ERROR        => LogLevel::CRITICAL,
-            E_CORE_WARNING      => LogLevel::WARNING,
-            E_COMPILE_ERROR     => LogLevel::ALERT,
-            E_COMPILE_WARNING   => LogLevel::WARNING,
-            E_USER_ERROR        => LogLevel::ERROR,
-            E_USER_WARNING      => LogLevel::WARNING,
-            E_USER_NOTICE       => LogLevel::NOTICE,
-            E_STRICT            => LogLevel::NOTICE,
+            E_ERROR => LogLevel::CRITICAL,
+            E_WARNING => LogLevel::WARNING,
+            E_PARSE => LogLevel::ALERT,
+            E_NOTICE => LogLevel::NOTICE,
+            E_CORE_ERROR => LogLevel::CRITICAL,
+            E_CORE_WARNING => LogLevel::WARNING,
+            E_COMPILE_ERROR => LogLevel::ALERT,
+            E_COMPILE_WARNING => LogLevel::WARNING,
+            E_USER_ERROR => LogLevel::ERROR,
+            E_USER_WARNING => LogLevel::WARNING,
+            E_USER_NOTICE => LogLevel::NOTICE,
+            E_STRICT => LogLevel::NOTICE,
             E_RECOVERABLE_ERROR => LogLevel::ERROR,
-            E_DEPRECATED        => LogLevel::NOTICE,
-            E_USER_DEPRECATED   => LogLevel::NOTICE,
+            E_DEPRECATED => LogLevel::NOTICE,
+            E_USER_DEPRECATED => LogLevel::NOTICE,
         );
     }
 
@@ -158,7 +162,8 @@ class ErrorHandler
     {
         $this->logger->log(
             $this->uncaughtExceptionLevel ?? LogLevel::ERROR,
-            sprintf('Uncaught Exception %s: "%s" at %s line %s', \get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()),
+            sprintf('Uncaught Exception %s: "%s" at %s line %s', \get_class($e), $e->getMessage(), $e->getFile(),
+                $e->getLine()),
             ['exception' => $e]
         );
 
@@ -189,7 +194,7 @@ class ErrorHandler
         // fatal error codes are ignored if a fatal error handler is present as well to avoid duplicate log entries
         if (!$this->hasFatalErrorHandler || !\in_array($code, self::$fatalErrors, true)) {
             $level = $this->errorLevelMap[$code] ?? LogLevel::CRITICAL;
-            $this->logger->log($level, self::codeToString($code).': '.$message, [
+            $this->logger->log($level, self::codeToString($code) . ': ' . $message, [
                 'code' => $code,
                 'message' => $message,
                 'file' => $file,
@@ -222,7 +227,7 @@ class ErrorHandler
         if ($lastError && \in_array($lastError['type'], self::$fatalErrors, true)) {
             $this->logger->log(
                 $this->fatalLevel ?? LogLevel::ALERT,
-                'Fatal Error ('.self::codeToString($lastError['type']).'): '.$lastError['message'],
+                'Fatal Error (' . self::codeToString($lastError['type']) . '): ' . $lastError['message'],
                 [
                     'code' => $lastError['type'],
                     'message' => $lastError['message'],

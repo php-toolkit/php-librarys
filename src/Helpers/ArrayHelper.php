@@ -860,8 +860,15 @@ class ArrayHelper
      * @param string $string
      * @return string
      */
-    public static function toString($array, $length = 800, $cycles = 6, $showKey = true, $addMark = false, $separator = ', ', $string = ''): string
-    {
+    public static function toString(
+        $array,
+        $length = 800,
+        $cycles = 6,
+        $showKey = true,
+        $addMark = false,
+        $separator = ', ',
+        $string = ''
+    ): string {
         if (!\is_array($array) || empty($array)) {
             return '';
         }
@@ -880,22 +887,33 @@ class ArrayHelper
             $keyStr = $showKey ? $key . '=>' : '';
 
             if (\is_array($value)) {
-                $string .= $keyStr . 'Array(' . self::toString($value, $length, $cycles, $showKey, $addMark, $separator, $string) . ')' . $separator;
-            } else if (\is_object($value)) {
-                $string .= $keyStr . 'Object(' . \get_class($value) . ')' . $separator;
-            } else if (\is_resource($value)) {
-                $string .= $keyStr . 'Resource(' . get_resource_type($value) . ')' . $separator;
+                $string .= $keyStr . 'Array(' . self::toString($value, $length, $cycles, $showKey, $addMark, $separator,
+                        $string) . ')' . $separator;
             } else {
-                $value = \strlen($value) > 150 ? substr($value, 0, 150) : $value;
-                $string .= $mark . $keyStr . trim(htmlspecialchars($value)) . $mark . $separator;
+                if (\is_object($value)) {
+                    $string .= $keyStr . 'Object(' . \get_class($value) . ')' . $separator;
+                } else {
+                    if (\is_resource($value)) {
+                        $string .= $keyStr . 'Resource(' . get_resource_type($value) . ')' . $separator;
+                    } else {
+                        $value = \strlen($value) > 150 ? substr($value, 0, 150) : $value;
+                        $string .= $mark . $keyStr . trim(htmlspecialchars($value)) . $mark . $separator;
+                    }
+                }
             }
         }
 
         return trim($string, $separator);
     }
 
-    public static function toStringNoKey($array, $length = 800, $cycles = 6, $showKey = false, $addMark = true, $separator = ', '): string
-    {
+    public static function toStringNoKey(
+        $array,
+        $length = 800,
+        $cycles = 6,
+        $showKey = false,
+        $addMark = true,
+        $separator = ', '
+    ): string {
         return static::toString($array, $length, $cycles, $showKey, $addMark, $separator);
     }
 
@@ -931,10 +949,12 @@ class ArrayHelper
 
             if (\is_array($value) || \is_object($value)) {
                 $value = \gettype($value) . '(...)';
-            } else if (\is_string($value) || is_numeric($value)) {
-                $value = \strlen(trim($value));
             } else {
-                $value = \gettype($value) . "($value)";
+                if (\is_string($value) || is_numeric($value)) {
+                    $value = \strlen(trim($value));
+                } else {
+                    $value = \gettype($value) . "($value)";
+                }
             }
 
             $array[$key] = $value;

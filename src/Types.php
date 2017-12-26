@@ -33,8 +33,16 @@ final class Types
     public static function all()
     {
         return [
-            self::T_ARRAY, self::T_BOOL, self::T_BOOLEAN, self::T_DOUBLE, self::T_FLOAT,
-            self::T_INT, self::T_INTEGER, self::T_OBJECT, self::T_STRING, self::T_RESOURCE
+            self::T_ARRAY,
+            self::T_BOOL,
+            self::T_BOOLEAN,
+            self::T_DOUBLE,
+            self::T_FLOAT,
+            self::T_INT,
+            self::T_INTEGER,
+            self::T_OBJECT,
+            self::T_STRING,
+            self::T_RESOURCE
         ];
     }
 
@@ -44,8 +52,13 @@ final class Types
     public static function scalars()
     {
         return [
-            self::T_BOOL, self::T_BOOLEAN, self::T_DOUBLE, self::T_FLOAT,
-            self::T_INT, self::T_INTEGER, self::T_STRING
+            self::T_BOOL,
+            self::T_BOOLEAN,
+            self::T_DOUBLE,
+            self::T_FLOAT,
+            self::T_INT,
+            self::T_INTEGER,
+            self::T_STRING
         ];
     }
 }

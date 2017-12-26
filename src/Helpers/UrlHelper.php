@@ -97,13 +97,43 @@ class UrlHelper
 
     // Build arrays of values we need to decode before parsing
     protected static $entities = array(
-        '%21', '%2A', '%27', '%28', '%29', '%3B', '%3A', '%40', '%26',
-        '%3D', '%24', '%2C', '%2F', '%3F', '%23', '%5B', '%5D'
+        '%21',
+        '%2A',
+        '%27',
+        '%28',
+        '%29',
+        '%3B',
+        '%3A',
+        '%40',
+        '%26',
+        '%3D',
+        '%24',
+        '%2C',
+        '%2F',
+        '%3F',
+        '%23',
+        '%5B',
+        '%5D'
     );
 
     protected static $replacements = array(
-        '!', '*', "'", '(', ')', ';', ':', '@', '&',
-        '=', '$', ',', '/', '?', '#', '[', ']'
+        '!',
+        '*',
+        "'",
+        '(',
+        ')',
+        ';',
+        ':',
+        '@',
+        '&',
+        '=',
+        '$',
+        ',',
+        '/',
+        '?',
+        '#',
+        '[',
+        ']'
     );
 
     public static function parseUrl($url)

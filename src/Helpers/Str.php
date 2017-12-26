@@ -47,7 +47,7 @@ class Str extends StringHelper
      */
     public static function has(string $string, $needle)
     {
-        if (\is_string($string)) {
+        if (\is_string($needle)) {
             return stripos($string, $needle) !== false;
         }
 

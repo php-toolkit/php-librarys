@@ -255,9 +255,8 @@ abstract class StringHelper
      */
     public static function nl2br($str)
     {
-        return str_replace(array("\r\n", "\r", "\n"), '<br />', $str);
+        return str_replace(["\r\n", "\r", "\n"], '<br />', $str);
     }
-
 
     /**
      * @param $str
@@ -561,7 +560,7 @@ abstract class StringHelper
         $truncate .= $ellipsis;
 
         if ($html && $open_tags) {
-            foreach ($open_tags as $tag) {
+            foreach ((array)$open_tags as $tag) {
                 $truncate .= '</' . $tag . '>';
             }
         }
@@ -697,14 +696,13 @@ abstract class StringHelper
     {
         // 将全角角逗号换为空格
         $keyword = str_replace(['，', ','], ' ', $keyword);
-        // 去掉头尾空格
-        $keyword = trim($keyword);
-        // 去掉两个空格以上的
-        $keyword = preg_replace('/\s(?=\s)/', '', $keyword);
-        // 将非空格替换为一个空格
-        $keyword = preg_replace('/[\n\r\t]/', ' ', $keyword);
 
-        return $keyword;
+        return preg_replace([
+            // 去掉两个空格以上的
+            '/\s(?=\s)/',
+            // 将非空格替换为一个空格
+            '/[\n\r\t]/'
+        ], ['', ' '], trim($keyword));
     }
 
     /**

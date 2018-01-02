@@ -899,7 +899,12 @@ class ArrayHelper
         return static::toString($array, $length, $cycles, $showKey, $addMark, $separator);
     }
 
-    public static function getFormatString($array, $length = 400)
+    /**
+     * @param array $array
+     * @param int $length
+     * @return mixed|null|string|string[]
+     */
+    public static function toFormatString($array, $length = 400)
     {
         $string = var_export($array, true);
 

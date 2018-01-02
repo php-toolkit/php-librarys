@@ -48,12 +48,15 @@ class DirChanged
      * @var array
      */
     private $excludeFiles = [
-        '.gitignore', 'LICENSE', 'LICENSE.txt'
+        '.gitignore',
+        'LICENSE',
+        'LICENSE.txt'
     ];
 
     /** @var array 排除的目录 */
     private $excludeDirs = [
-        '.git', '.idea'
+        '.git',
+        '.idea'
     ];
 
 

@@ -137,7 +137,7 @@ class DatabaseClient
         $this->tablePrefix = $this->config['tablePrefix'];
         $this->databaseName = $this->config['database'];
 
-        $retry = (int) $this->config['retry'];
+        $retry = (int)$this->config['retry'];
         $this->config['retry'] = ($retry > 0 && $retry <= 5) ? $retry : 0;
         $this->config['options'] = static::$pdoOptions + $this->config['options'];
 
@@ -160,7 +160,7 @@ class DatabaseClient
         }
 
         $config = $this->config;
-        $retry = (int) $config['retry'];
+        $retry = (int)$config['retry'];
         $retry = ($retry > 0 && $retry <= 5) ? $retry : 0;
         $dsn = DsnHelper::getDsn($config);
 
@@ -533,6 +533,7 @@ class DatabaseClient
     {
         return $this->fetchOne($statement, $bindings);
     }
+
     public function fetchOne(string $statement, array $bindings = [])
     {
         $sth = $this->execute($statement, $bindings);
@@ -680,8 +681,13 @@ class DatabaseClient
     /**
      * {@inheritdoc}
      */
-    public function fetchObjects(string $statement, array $bindings = [], $class = 'stdClass', $indexKey = null, array $args = [])
-    {
+    public function fetchObjects(
+        string $statement,
+        array $bindings = [],
+        $class = 'stdClass',
+        $indexKey = null,
+        array $args = []
+    ) {
         $data = [];
         $sth = $this->execute($statement, $bindings);
 
@@ -1218,7 +1224,7 @@ class DatabaseClient
             if ($node === 'having') {
                 // string: 'having AND col = val'
                 if ($isString) {
-                    $nodes[] = stripos($val, 'having') !== false ? $val: 'HAVING ' . $val;
+                    $nodes[] = stripos($val, 'having') !== false ? $val : 'HAVING ' . $val;
 
                     // array: ['t1.id = t2.id', 'AND']
                 } elseif (\is_array($val)) {
@@ -1360,7 +1366,7 @@ class DatabaseClient
 
         // quote array values, not keys, then combine with commas
         /** @var array $value */
-        foreach ((array) $value as $k => $v) {
+        foreach ((array)$value as $k => $v) {
             $value[$k] = $this->pdo->quote($v, $type);
         }
 
@@ -1681,7 +1687,7 @@ class DatabaseClient
      */
     public function isConnected(): bool
     {
-        return (bool) $this->pdo;
+        return (bool)$this->pdo;
     }
 
 }

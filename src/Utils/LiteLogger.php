@@ -96,7 +96,7 @@ class LiteLogger implements LoggerInterface
      */
     private $records = [];
 
-    /** @var int  */
+    /** @var int */
     private $recordSize = 0;
 
     /**
@@ -160,7 +160,7 @@ class LiteLogger implements LoggerInterface
      */
     public $format = "[%datetime%] [%level_name%] %message% %context%\n";
 
-    /** @var bool  */
+    /** @var bool */
     private $initialized = false;
 
 //////////////////////////////////////////////////////////////////////
@@ -223,6 +223,7 @@ class LiteLogger implements LoggerInterface
     {
         $this->exception($e, $context, $logRequest);
     }
+
     public function exception(\Exception $e, array $context = [], $logRequest = true)
     {
         $message = sprintf(

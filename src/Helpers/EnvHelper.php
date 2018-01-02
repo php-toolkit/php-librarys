@@ -43,6 +43,7 @@ class EnvHelper
     {
         return self::isWindows();
     }
+
     public static function isWindows(): bool
     {
         return stripos(PHP_OS, 'WIN') !== false;

@@ -66,16 +66,17 @@ class PhpHelper extends EnvHelper
      * @param int $startTime
      * @param int|float $startMem
      * @param array $info
+     * @param bool $realUsage
      * @return array
      */
-    public static function runtime($startTime, $startMem, array $info = [])
+    public static function runtime($startTime, $startMem, array $info = [], $realUsage = false)
     {
         $info['startTime'] = $startTime;
         $info['endTime'] = microtime(true);
-        $info['endMemory'] = memory_get_usage(true);
+        $info['endMemory'] = memory_get_usage($realUsage);
 
         // 计算运行时间
-        $info['runtime'] = number_format(($info['endTime'] - $startTime) * 1000, 3)  . 'ms';
+        $info['runtime'] = number_format(($info['endTime'] - $startTime) * 1000, 3) . 'ms';
 
         if ($startMem) {
             $startMem = array_sum(explode(' ', $startMem));

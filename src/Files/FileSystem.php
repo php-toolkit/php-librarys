@@ -129,7 +129,8 @@ abstract class FileSystem
     {
         // we check that target does not exist
         if (!$overwrite && static::isReadable($target)) {
-            throw new IOException(sprintf('Cannot rename because the target "%s" already exists.', $target), 0, null, $target);
+            throw new IOException(sprintf('Cannot rename because the target "%s" already exists.', $target), 0, null,
+                $target);
         }
 
         if (true !== rename($origin, $target)) {
@@ -147,7 +148,8 @@ abstract class FileSystem
     public static function isReadable($filename): bool
     {
         if ('\\' === DIRECTORY_SEPARATOR && \strlen($filename) > 258) {
-            throw new IOException('Could not check if file is readable because path length exceeds 258 characters.', 0, null, $filename);
+            throw new IOException('Could not check if file is readable because path length exceeds 258 characters.', 0,
+                null, $filename);
         }
 
         return is_readable($filename);
@@ -172,7 +174,8 @@ abstract class FileSystem
                 if (!is_dir($dir)) {
                     // The directory was not created by a concurrent process. Let's throw an exception with a developer friendly error message if we have one
                     if ($error) {
-                        throw new IOException(sprintf('Failed to create "%s": %s.', $dir, $error['message']), 0, null, $dir);
+                        throw new IOException(sprintf('Failed to create "%s": %s.', $dir, $error['message']), 0, null,
+                            $dir);
                     }
 
                     throw new IOException(sprintf('Failed to create "%s"', $dir), 0, null, $dir);

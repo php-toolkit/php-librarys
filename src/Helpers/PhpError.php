@@ -14,7 +14,7 @@ namespace Inhere\Library\Helpers;
  */
 class PhpError
 {
-    /** @var array  */
+    /** @var array */
     public static $fatalErrors = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
 
     /**
@@ -25,7 +25,7 @@ class PhpError
      */
     public static function toArray(array $lastError, $catcher = null)
     {
-        $digest = 'Fatal Error ('.self::codeToString($lastError['type']).'): '.$lastError['message'];
+        $digest = 'Fatal Error (' . self::codeToString($lastError['type']) . '): ' . $lastError['message'];
         $data = [
             'code' => $lastError['type'],
             'message' => $lastError['message'],

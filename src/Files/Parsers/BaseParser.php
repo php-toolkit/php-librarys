@@ -26,7 +26,12 @@ abstract class BaseParser
      * @param string $fileDir When the second param is true, this param is valid.
      * @return array
      */
-    abstract protected static function doParse($string, $enhancement = false, callable $pathHandler = null, $fileDir = '');
+    abstract protected static function doParse(
+        $string,
+        $enhancement = false,
+        callable $pathHandler = null,
+        $fileDir = ''
+    );
 
     /**
      * @param $string

@@ -25,5 +25,6 @@ trait SingletonTrait
     }
 
     private function __clone()
-    {}
+    {
+    }
 }

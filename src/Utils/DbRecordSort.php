@@ -83,8 +83,10 @@ class DbRecordSort
                     $this->$key = $val;
                 }
             }
-        } else if (isset($this->$name)) {
-            $this->$name = $value;
+        } else {
+            if (isset($this->$name)) {
+                $this->$name = $value;
+            }
         }
     }
 

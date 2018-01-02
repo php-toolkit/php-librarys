@@ -25,7 +25,8 @@ abstract class StringHelper
             'email' => '/^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/',
             // 'url'       =>  '/^http(s?):\/\/(?:[A-za-z0-9-]+\.)+[A-za-z]{2,4}(?:[\/\?#][\/=\?%\-&~`@[\]\':+!\.#\w]*)?$/',
             'url' => '/^(http|https|ftp):\/\/([A-Z0-9][A-Z0-9_-]*(?:\.[A-Z0-9][A-Z0-9_-]*)+):?(\d+)?\/?/i',
-            'currency' => '/^\d+(\.\d+)?$/', # 货币
+            'currency' => '/^\d+(\.\d+)?$/',
+            # 货币
             'number' => '/^\d+$/',
             'zip' => '/^\d{6}$/',
             'integer' => '/^[-\+]?\d+$/',
@@ -309,7 +310,8 @@ abstract class StringHelper
      */
     public static function strpos($str, $find, $offset = 0, $encoding = 'UTF-8')
     {
-        return \function_exists('mb_strpos') ? mb_strpos($str, $find, $offset, $encoding) : strpos($str, $find, $offset);
+        return \function_exists('mb_strpos') ? mb_strpos($str, $find, $offset, $encoding) : strpos($str, $find,
+            $offset);
     }
 
     /**
@@ -321,7 +323,8 @@ abstract class StringHelper
      */
     public static function strrpos($str, $find, $offset = 0, $encoding = 'utf-8')
     {
-        return \function_exists('mb_strrpos') ? mb_strrpos($str, $find, $offset, $encoding) : strrpos($str, $find, $offset);
+        return \function_exists('mb_strrpos') ? mb_strrpos($str, $find, $offset, $encoding) : strrpos($str, $find,
+            $offset);
     }
 
     /**
@@ -339,7 +342,8 @@ abstract class StringHelper
      */
     public static function ucwords($str)
     {
-        return \function_exists('mb_convert_case') ? mb_convert_case($str, MB_CASE_TITLE) : ucwords(self::strtolower($str));
+        return \function_exists('mb_convert_case') ? mb_convert_case($str,
+            MB_CASE_TITLE) : ucwords(self::strtolower($str));
     }
 
     /**
@@ -448,7 +452,9 @@ abstract class StringHelper
     public static function truncateString($text, $length = 120, array $options = array())
     {
         $default = [
-            'ellipsis' => '...', 'exact' => true, 'html' => true
+            'ellipsis' => '...',
+            'exact' => true,
+            'html' => true
         ];
 
         $options = array_merge($default, $options);
@@ -484,13 +490,15 @@ abstract class StringHelper
                     }
                 }
                 $truncate .= $tag[1];
-                $content_length = self::strlen(preg_replace('/&[0-9a-z]{2,8};|&#[\d]{1,7};|&#x[0-9a-f]{1,6};/i', ' ', $tag[3]));
+                $content_length = self::strlen(preg_replace('/&[0-9a-z]{2,8};|&#[\d]{1,7};|&#x[0-9a-f]{1,6};/i', ' ',
+                    $tag[3]));
 
                 if ($content_length + $total_length > $length) {
                     $left = $length - $total_length;
                     $entities_length = 0;
 
-                    if (preg_match_all('/&[0-9a-z]{2,8};|&#[\d]{1,7};|&#x[0-9a-f]{1,6};/i', $tag[3], $entities, PREG_OFFSET_CAPTURE)) {
+                    if (preg_match_all('/&[0-9a-z]{2,8};|&#[\d]{1,7};|&#x[0-9a-f]{1,6};/i', $tag[3], $entities,
+                        PREG_OFFSET_CAPTURE)) {
                         foreach ((array)$entities[0] as $entity) {
                             if ($entity[1] + 1 - $entities_length <= $left) {
                                 $left--;
@@ -721,8 +729,10 @@ abstract class StringHelper
         if ((int)$type === 1) {
             $preg_arr = [
                 '/\/\*.*?\*\/\s*/is'    // 去掉所有多行注释/* .... */
-                , '/\/\/.*?[\r\n]/is'    // 去掉所有单行注释//....
-                , '/\#.*?[\r\n]/is'      // 去掉所有单行注释 #....
+                ,
+                '/\/\/.*?[\r\n]/is'    // 去掉所有单行注释//....
+                ,
+                '/\#.*?[\r\n]/is'      // 去掉所有单行注释 #....
             ];
 
             return preg_replace($preg_arr, '', $data);
@@ -730,9 +740,12 @@ abstract class StringHelper
 
         $preg_arr = [
             '/\/\*.*?\*\/\s*/is'    // 去掉所有多行注释 /* .... */
-            , '/\/\/.*?[\r\n]/is'    // 去掉所有单行注释 //....
-            , '/\#.*?[\r\n]/is'      // 去掉所有单行注释 #....
-            , '/(?!\w)\s*?(?!\w)/is' //去掉空白行
+            ,
+            '/\/\/.*?[\r\n]/is'    // 去掉所有单行注释 //....
+            ,
+            '/\#.*?[\r\n]/is'      // 去掉所有单行注释 #....
+            ,
+            '/(?!\w)\s*?(?!\w)/is' //去掉空白行
         ];
 
         return preg_replace($preg_arr, '', $data);

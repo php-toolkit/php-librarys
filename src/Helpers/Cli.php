@@ -27,14 +27,14 @@ class Cli
     const FG_DEFAULT = 39;
 
     // extra Foreground color
-    const FG_DARK_GRAY        = 90;
-    const FG_LIGHT_RED        = 91;
-    const FG_LIGHT_GREEN      = 92;
-    const FG_LIGHT_YELLOW     = 93;
-    const FG_LIGHT_BLUE       = 94;
-    const FG_LIGHT_MAGENTA    = 95;
-    const FG_LIGHT_CYAN       = 96;
-    const FG_WHITE_W          = 97;
+    const FG_DARK_GRAY = 90;
+    const FG_LIGHT_RED = 91;
+    const FG_LIGHT_GREEN = 92;
+    const FG_LIGHT_YELLOW = 93;
+    const FG_LIGHT_BLUE = 94;
+    const FG_LIGHT_MAGENTA = 95;
+    const FG_LIGHT_CYAN = 96;
+    const FG_WHITE_W = 97;
 
     // Background color
     const BG_BLACK = 40;
@@ -47,14 +47,14 @@ class Cli
     const BG_DEFAULT = 49;
 
     // extra Background color
-    const BG_DARK_GRAY     = 100;
-    const BG_LIGHT_RED     = 101;
-    const BG_LIGHT_GREEN   = 102;
-    const BG_LIGHT_YELLOW  = 103;
-    const BG_LIGHT_BLUE    = 104;
+    const BG_DARK_GRAY = 100;
+    const BG_LIGHT_RED = 101;
+    const BG_LIGHT_GREEN = 102;
+    const BG_LIGHT_YELLOW = 103;
+    const BG_LIGHT_BLUE = 104;
     const BG_LIGHT_MAGENTA = 105;
-    const BG_LIGHT_CYAN    = 106;
-    const BG_WHITE_W       = 107;
+    const BG_LIGHT_CYAN = 106;
+    const BG_WHITE_W = 107;
 
     // color option
     const BOLD = 1;      // 加粗
@@ -63,7 +63,7 @@ class Cli
     const UNDERSCORE = 4;  // 下划线
     const BLINK = 5;      // 闪烁
     const REVERSE = 7;    // 颠倒的 交换背景色与前景色
-    const CONCEALED     = 8;      // 隐匿的
+    const CONCEALED = 8;      // 隐匿的
 
     /**
      * Regex to match tags
@@ -311,7 +311,8 @@ class Cli
 
                 if ($value === true && $nxp !== false && $nxp{0} !== '-' && !\in_array($opt, $noValues, true)) {
                     // list(,$value) = each($params);
-                    $value = current($params); next($params);
+                    $value = current($params);
+                    next($params);
 
                     // short-opt: bool opts. like -e -abc
                 } elseif (!$isLong && $value === true) {

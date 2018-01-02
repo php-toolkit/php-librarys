@@ -73,15 +73,15 @@ final class PhpDotEnv
         unset($loadedVars['']);
 
         foreach ($data as $name => $value) {
+            if (\is_int($name) || !\is_string($value)) {
+                continue;
+            }
+
             $name = strtoupper($name);
             $notHttpName = 0 !== strpos($name, 'HTTP_');
 
             // don't check existence with getenv() because of thread safety issues
             if ((isset($_ENV[$name]) || (isset($_SERVER[$name]) && $notHttpName)) && !isset($loadedVars[$name])) {
-                continue;
-            }
-
-            if (\is_int($name) || !\is_string($value)) {
                 continue;
             }
 

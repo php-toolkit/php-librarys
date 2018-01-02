@@ -29,6 +29,8 @@ namespace Inhere\Library\Components;
  */
 final class PhpDotEnv
 {
+    const FULL_KEY = 'PHP_DOTENV_VARS';
+
     /**
      * @param string $fileDir
      * @param string $fileName
@@ -48,6 +50,14 @@ final class PhpDotEnv
     {
         $file = $fileDir . DIRECTORY_SEPARATOR . ($fileName ?: '.env');
 
+        $this->add($file);
+    }
+
+    /**
+     * @param string $file
+     */
+    public function add(string $file)
+    {
         if (is_file($file) && is_readable($file)) {
             $this->settingEnv(parse_ini_file($file));
         }
@@ -59,7 +69,18 @@ final class PhpDotEnv
      */
     private function settingEnv(array $data)
     {
+        $loadedVars = array_flip(explode(',', getenv(self::FULL_KEY)));
+        unset($loadedVars['']);
+
         foreach ($data as $name => $value) {
+            $name = strtoupper($name);
+            $notHttpName = 0 !== strpos($name, 'HTTP_');
+
+            // don't check existence with getenv() because of thread safety issues
+            if ((isset($_ENV[$name]) || (isset($_SERVER[$name]) && $notHttpName)) && !isset($loadedVars[$name])) {
+                continue;
+            }
+
             if (\is_int($name) || !\is_string($value)) {
                 continue;
             }
@@ -70,7 +91,21 @@ final class PhpDotEnv
             }
 
             // eg: "FOO=BAR"
-            putenv(strtoupper($name) . "=$value");
+            putenv("$name=$value");
+            $_ENV[$name] = $value;
+
+            if ($notHttpName) {
+                $_SERVER[$name] = $value;
+            }
+
+            $loadedVars[$name] = true;
+        }
+
+        if ($loadedVars) {
+            $loadedVars = implode(',', array_keys($loadedVars));
+            putenv(self::FULL_KEY . "=$loadedVars");
+            $_ENV[self::FULL_KEY] = $loadedVars;
+            $_SERVER[self::FULL_KEY] = $loadedVars;
         }
     }
 }

@@ -10,7 +10,7 @@ namespace Inhere\Library\Helpers;
 
 /**
  * Class ProcessHelper
- * @package inhere\process
+ * @package Inhere\Library\Helpers
  */
 class ProcessHelper
 {

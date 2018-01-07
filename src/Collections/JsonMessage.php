@@ -12,7 +12,7 @@ use Inhere\Exceptions\PropertyException;
 
 /**
  * Class JsonMessage
- * @package slimExt\helpers
+ * @package SlimExt\Helpers
  * $mg = JsonMessage::create(['msg' => 'success', 'code' => 23]);
  * $mg->data = [ 'key' => 'test'];
  * echo json_encode($mg);

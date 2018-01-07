@@ -8,7 +8,7 @@ use Inhere\Library\Collections\SimpleCollection;
 
 /**
  * Class BaseModel
- * @package slimExt
+ * @package SlimExt
  *
  */
 abstract class Model extends SimpleCollection

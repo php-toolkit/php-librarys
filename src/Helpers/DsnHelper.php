@@ -44,7 +44,7 @@ class DsnHelper
      */
     public static function getDsn(array $options = [], $driver = null)
     {
-        if (isset($options['dsn'])) {
+        if (!empty($options['dsn'])) {
             return $options['dsn'];
         }
 

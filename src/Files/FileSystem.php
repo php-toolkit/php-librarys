@@ -69,6 +69,23 @@ abstract class FileSystem
     }
 
     /**
+     * @param string $path e.g phar://E:/workenv/php-dockerized/www/phplang/ugirls-social/social-uem/uem.phar/web
+     * @return string
+     */
+    public function clearPharPath(string $path): string
+    {
+        if (strpos($path, 'phar://') === 0) {
+            $path = (string)substr($path, 7);
+
+            if (strpos($path, '.phar')) {
+                return preg_replace('//[\w-]+\.phar/', '', $path);
+            }
+        }
+
+        return $path;
+    }
+
+    /**
      * 检查文件/夹/链接是否存在
      * @param string $file 要检查的目标
      * @param null|string $type

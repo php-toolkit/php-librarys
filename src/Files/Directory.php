@@ -45,7 +45,12 @@ class Directory extends FileSystem
      * @return \RecursiveIteratorIterator
      * @throws \LogicException
      */
-    public static function getRecursiveIterator($srcDir, callable $filter)
+    public static function getRecursiveIterator($srcDir, callable $filter): \RecursiveIteratorIterator
+    {
+        return self::getIterator($srcDir, $filter);
+    }
+
+    public static function getIterator($srcDir, callable $filter): \RecursiveIteratorIterator
     {
         if (!$srcDir || !file_exists($srcDir)) {
             throw new \LogicException('Please provide a exists source directory.');

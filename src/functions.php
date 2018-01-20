@@ -192,6 +192,18 @@ if (!function_exists('cookie')) {
     }
 }
 
+if (!\function_exists('fnmatch')) {
+    function fnmatch($pattern, $string)
+    {
+        $pattern = strtr(preg_quote($pattern, '#'), array('\*' => '.*', '\?' => '.', '\[' => '[', '\]' => ']'));
+
+        return preg_match(
+            '#^' . $pattern . '$#i',
+            $string
+        );
+    }
+}
+
 if (!function_exists('random_token')) {
     function random_token($length = 32)
     {

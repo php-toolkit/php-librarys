@@ -30,31 +30,31 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
     /** @var int */
     private $ignore;
 
-    /** @var array  */
+    /** @var array */
     private $dirs = [];
 
-    /** @var array  */
+    /** @var array */
     private $names = [];
 
-    /** @var array  */
+    /** @var array */
     private $notNames = [];
 
-    /** @var array  */
+    /** @var array */
     private $paths = [];
 
-    /** @var array  */
+    /** @var array */
     private $notPaths = [];
 
-    /** @var array  */
+    /** @var array */
     private $excludes = [];
 
     /** @var array */
     private $filters = [];
 
-    /** @var array  */
+    /** @var array */
     private $iterators = [];
 
-    /** @var bool  */
+    /** @var bool */
     private $followLinks = false;
 
     /**
@@ -148,7 +148,7 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
      */
     public function exclude($dirs): self
     {
-        $this->excludes = array_merge($this->excludes, (array) $dirs);
+        $this->excludes = array_merge($this->excludes, (array)$dirs);
 
         return $this;
     }
@@ -313,7 +313,6 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
             $flags |= \RecursiveDirectoryIterator::FOLLOW_SYMLINKS;
         }
 
-        // $iterator = new \RecursiveDirectoryIterator($dir, $flags);
         $iterator = new class ($dir, $flags) extends \RecursiveDirectoryIterator
         {
             private $rootPath;
@@ -326,8 +325,8 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
                     throw new \RuntimeException('This iterator only support returning current as fileInfo.');
                 }
 
-                parent::__construct($path, $flags);
                 $this->rootPath = $path;
+                parent::__construct($path, $flags);
 
                 if ('/' !== DIRECTORY_SEPARATOR && !($flags & self::UNIX_PATHS)) {
                     $this->directorySeparator = DIRECTORY_SEPARATOR;
@@ -345,7 +344,7 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
                 }
 
                 $subPathname .= $this->getFilename();
-
+var_dump($this->rootPath);
                 $fileInfo = new \SplFileInfo($this->rootPath . $this->directorySeparator . $subPathname);
                 $fileInfo->relativePath = $this->subPath;
                 $fileInfo->relativePathname = $subPathname;
@@ -354,24 +353,42 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
             }
         };
 
-        if ($ex = $this->excludes) {
-            $iterator = new class ($iterator, $ex) extends \FilterIterator
+        if ($this->excludes) {
+            $iterator = new class ($iterator, $this->excludes) extends \FilterIterator implements \RecursiveIterator
             {
-                private $dirs;
+                private $excludes;
+                private $iterator;
 
-                public function __construct(\Iterator $iterator, array $dirs)
+                public function __construct(\RecursiveIterator $iterator, array $excludes)
                 {
-                    $this->dirs = array_flip($dirs);
+                    $this->excludes = array_flip($excludes);
+                    $this->iterator = $iterator;
+
                     parent::__construct($iterator);
                 }
 
                 public function accept(): bool
                 {
                     $name = $this->current()->getFilename();
-                    return !($this->current()->isDir() && isset($this->dirs[$name]));
+                    return !($this->current()->isDir() && isset($this->excludes[$name]));
+                }
+
+                public function hasChildren()
+                {
+                    return $this->iterator->hasChildren();
+                }
+
+                public function getChildren()
+                {
+                    $children = new self($this->iterator->getChildren(), []);
+                    $children->excludes = $this->excludes;
+
+                    return $children;
                 }
             };
         }
+
+        $iterator = new \RecursiveIteratorIterator($iterator, \RecursiveIteratorIterator::SELF_FIRST);
 
         if ($this->mode) {
             $iterator = new class ($iterator, $this->mode) extends \FilterIterator
@@ -395,7 +412,7 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
                     if (SimpleFinder::ONLY_FILE === $this->mode && $info->isDir()) {
                         return false;
                     }
-
+                    var_dump($info, $this->mode);
                     return true;
                 }
             };

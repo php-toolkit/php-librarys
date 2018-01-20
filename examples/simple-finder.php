@@ -10,11 +10,13 @@ require __DIR__ . '/s-autoload.php';
 
 $finder = \Inhere\Library\Files\SimpleFinder::create()
     ->files()
-    ->inDir(__DIR__)
-    ->name('*.php')
+    ->inDir(__DIR__ . '/tmp')
+    // ->name('*.php')
 ;
 
 foreach ($finder as $file) {
     // var_dump($file);die;
     echo "+ {$file->getFilename()}\n";
 }
+
+var_dump($finder->count());

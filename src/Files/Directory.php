@@ -50,18 +50,6 @@ class Directory extends FileSystem
         return self::getIterator($srcDir, $filter);
     }
 
-    public static function getIterator($srcDir, callable $filter): \RecursiveIteratorIterator
-    {
-        if (!$srcDir || !file_exists($srcDir)) {
-            throw new \LogicException('Please provide a exists source directory.');
-        }
-
-        $directory = new \RecursiveDirectoryIterator($srcDir);
-        $filterIterator = new \RecursiveCallbackFilterIterator($directory, $filter);
-
-        return new \RecursiveIteratorIterator($filterIterator);
-    }
-
     /**
      * 判断文件夹是否为空
      * @param $dir

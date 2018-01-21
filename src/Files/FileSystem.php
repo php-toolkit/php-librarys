@@ -250,11 +250,28 @@ abstract class FileSystem
     }
 
     /**
+     * @param string $srcDir
+     * @param callable $filter
+     * @return \RecursiveIteratorIterator
+     */
+    public static function getIterator(string $srcDir, callable $filter): \RecursiveIteratorIterator
+    {
+        if (!$srcDir || !file_exists($srcDir)) {
+            throw new \LogicException('Please provide a exists source directory.');
+        }
+
+        $directory = new \RecursiveDirectoryIterator($srcDir);
+        $filterIterator = new \RecursiveCallbackFilterIterator($directory, $filter);
+
+        return new \RecursiveIteratorIterator($filterIterator);
+    }
+
+    /**
      * @param $path
      * @param int $mode
      * @return bool
      */
-    public static function chmodDir($path, $mode = 0664): bool
+    public static function chmodDir(string $path, $mode = 0664): bool
     {
         if (!is_dir($path)) {
             return @chmod($path, $mode);
@@ -287,7 +304,7 @@ abstract class FileSystem
      * @param string $dir
      * @return string
      */
-    public static function availableSpace($dir = '.'): string
+    public static function availableSpace(string $dir = '.'): string
     {
         $base = 1024;
         $bytes = disk_free_space($dir);
@@ -304,7 +321,7 @@ abstract class FileSystem
      * @param string $dir
      * @return string
      */
-    public static function totalSpace($dir = '.'): string
+    public static function countSpace(string $dir = '.'): string
     {
         $base = 1024;
         $bytes = disk_total_space($dir);
@@ -324,7 +341,7 @@ abstract class FileSystem
      *                  返回值在二进制计数法中，四位由高到低分别代表
      *                  可执行rename()函数权限 |可对文件追加内容权限 |可写入文件权限|可读取文件权限。
      */
-    public static function pathModeInfo($file_path): int
+    public static function pathModeInfo(string $file_path): int
     {
         /* 如果不存在，则不可读、不可写、不可改 */
         if (!file_exists($file_path)) {
@@ -334,13 +351,11 @@ abstract class FileSystem
         $mark = 0;
 
         if (0 === stripos(PHP_OS, 'WIN')) {
-
             /* 测试文件 */
             $test_file = $file_path . '/cf_test.txt';
 
             /* 如果是目录 */
             if (is_dir($file_path)) {
-
                 /* 检查目录是否可读 */
                 $dir = @opendir($file_path);
 
@@ -374,7 +389,6 @@ abstract class FileSystem
 
                 /* 检查目录是否可修改 */
                 $fp = @fopen($test_file, 'ab+');
-
                 if ($fp === false) {
                     return $mark;
                 }
@@ -404,7 +418,6 @@ abstract class FileSystem
 
                 /* 试着修改文件 */
                 $fp = @fopen($file_path, 'ab+');
-
                 if ($fp && @fwrite($fp, '') !== false) {
                     $mark ^= 6; //可修改可写可读 111，不可修改可写可读011...
                 }
@@ -416,9 +429,7 @@ abstract class FileSystem
                     $mark ^= 8;
                 }
             }
-
         } else {
-
             if (@is_readable($file_path)) {
                 $mark ^= 1;
             }

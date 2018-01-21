@@ -111,7 +111,7 @@ class Sys extends EnvHelper
     /**
      * @return string
      */
-    public static function getTempDir()
+    public static function getTempDir(): string
     {
         // @codeCoverageIgnoreStart
         if (\function_exists('sys_get_temp_dir')) {

@@ -10,6 +10,19 @@ namespace Inhere\Library\Files;
 
 /**
  * Class SimpleFinder
+ *
+ * ```php
+ * $finder = SimpleFinder::create()
+ *      ->files()
+ *      ->name('*.php')
+ *      ->notName('some.php')
+ *      ->in('/path/to/project')
+ * ;
+ *
+ * foreach($finder as $file) {
+ *      // something ......
+ * }
+ * ```
  * @package Inhere\Library\Files
  * @see \Symfony\Component\Finder\Finder
  */
@@ -17,7 +30,6 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
 {
     const ONLY_FILE = 1;
     const ONLY_DIR = 2;
-
     const IGNORE_VCS_FILES = 1;
     const IGNORE_DOT_FILES = 2;
 
@@ -29,6 +41,9 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
 
     /** @var int */
     private $ignore;
+
+    /** @var bool */
+    private $ignoreVcsAdded = false;
 
     /** @var array */
     private $dirs = [];
@@ -66,6 +81,31 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
     }
 
     /**
+     * @param array $config
+     * @return SimpleFinder
+     */
+    public static function createFromArray(array $config): self
+    {
+        $finder = new self();
+        $allowed = [
+            'names' => 'addNames',
+            'notNames' => 'addNotNames',
+            'paths' => 'addNotPaths',
+            'notPaths' => 'addNotPaths',
+            'excludes' => 'exclude',
+        ];
+
+        foreach ($config as $prop => $values) {
+            if (isset($allowed[$prop])) {
+                $method = $allowed[$prop];
+                $finder->$method($values);
+            }
+        }
+
+        return $finder;
+    }
+
+    /**
      * SimpleFinder constructor.
      */
     public function __construct()
@@ -77,6 +117,16 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
      * @return $this
      */
     public function directories(): self
+    {
+        $this->mode = self::ONLY_DIR;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function dirs(): self
     {
         $this->mode = self::ONLY_DIR;
 
@@ -108,12 +158,34 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
     }
 
     /**
+     * @param string|array $patterns
+     * @return SimpleFinder
+     */
+    public function addNames($patterns): self
+    {
+        $this->names = array_merge($this->names, $patterns);
+
+        return $this;
+    }
+
+    /**
      * @param string $pattern
      * @return SimpleFinder
      */
     public function notName(string $pattern): self
     {
         $this->notNames[] = $pattern;
+
+        return $this;
+    }
+
+    /**
+     * @param string|array $patterns
+     * @return SimpleFinder
+     */
+    public function addNotNames($patterns): self
+    {
+        $this->notNames = array_merge($this->notNames, $patterns);
 
         return $this;
     }
@@ -132,12 +204,34 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
     }
 
     /**
+     * @param string|array $patterns
+     * @return SimpleFinder
+     */
+    public function addPaths($patterns): self
+    {
+        $this->paths = array_merge($this->paths, $patterns);
+
+        return $this;
+    }
+
+    /**
      * @param string $pattern
      * @return SimpleFinder
      */
     public function notPath(string $pattern): self
     {
         $this->notPaths[] = $pattern;
+
+        return $this;
+    }
+
+    /**
+     * @param string|array $patterns
+     * @return SimpleFinder
+     */
+    public function addNotPaths($patterns): self
+    {
+        $this->notPaths = array_merge($this->notPaths, $patterns);
 
         return $this;
     }
@@ -228,33 +322,6 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
     }
 
     /**
-     * Retrieve an external iterator
-     * @link http://php.net/manual/en/iteratoraggregate.getiterator.php
-     * @return \Iterator|\SplFileInfo[] An iterator
-     */
-    public function getIterator(): \Traversable
-    {
-        if (0 === \count($this->dirs) && 0 === \count($this->iterators)) {
-            throw new \LogicException('You must call one of in() or append() methods before iterating over a Finder.');
-        }
-
-        if (1 === \count($this->dirs) && 0 === \count($this->iterators)) {
-            return $this->findInDirectory($this->dirs[0]);
-        }
-
-        $iterator = new \AppendIterator();
-        foreach ($this->dirs as $dir) {
-            $iterator->append($this->findInDirectory($dir));
-        }
-
-        foreach ($this->iterators as $it) {
-            $iterator->append($it);
-        }
-
-        return $iterator;
-    }
-
-    /**
      * @param mixed $iterator
      * @return $this
      */
@@ -294,19 +361,47 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
     }
 
     /**
+     * Retrieve an external iterator
+     * @link http://php.net/manual/en/iteratoraggregate.getiterator.php
+     * @return \Iterator|\SplFileInfo[] An iterator
+     */
+    public function getIterator(): \Traversable
+    {
+        if (0 === \count($this->dirs) && 0 === \count($this->iterators)) {
+            throw new \LogicException('You must call one of in() or append() methods before iterating over a Finder.');
+        }
+
+        if (!$this->ignoreVcsAdded && self::IGNORE_VCS_FILES === (self::IGNORE_VCS_FILES & $this->ignore)) {
+            $this->excludes = array_merge($this->excludes, self::$vcsPatterns);
+            $this->ignoreVcsAdded = true;
+        }
+
+        if (self::IGNORE_DOT_FILES === (self::IGNORE_DOT_FILES & $this->ignore)) {
+            $this->notNames[] = '.*';
+        }
+
+        if (1 === \count($this->dirs) && 0 === \count($this->iterators)) {
+            return $this->findInDirectory($this->dirs[0]);
+        }
+
+        $iterator = new \AppendIterator();
+        foreach ($this->dirs as $dir) {
+            $iterator->append($this->findInDirectory($dir));
+        }
+
+        foreach ($this->iterators as $it) {
+            $iterator->append($it);
+        }
+
+        return $iterator;
+    }
+
+    /**
      * @param string $dir
      * @return \Iterator
      */
     private function findInDirectory(string $dir): \Iterator
     {
-        if (self::IGNORE_VCS_FILES === (self::IGNORE_VCS_FILES & $this->ignore)) {
-            $this->excludes = array_merge($this->excludes, self::$vcsPatterns);
-        }
-
-        if (self::IGNORE_DOT_FILES === (self::IGNORE_DOT_FILES & $this->ignore)) {
-            $this->notPaths[] = '.*';
-        }
-
         $flags = \RecursiveDirectoryIterator::SKIP_DOTS;
 
         if ($this->followLinks) {
@@ -317,7 +412,9 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
         {
             private $rootPath;
             private $subPath;
+            private $rewindable;
             private $directorySeparator = '/';
+            private $ignoreUnreadableDirs;
 
             public function __construct(string $path, int $flags, bool $ignoreUnreadableDirs = false)
             {
@@ -326,6 +423,7 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
                 }
 
                 $this->rootPath = $path;
+                $this->ignoreUnreadableDirs = $ignoreUnreadableDirs;
                 parent::__construct($path, $flags);
 
                 if ('/' !== DIRECTORY_SEPARATOR && !($flags & self::UNIX_PATHS)) {
@@ -344,15 +442,65 @@ final class SimpleFinder implements \IteratorAggregate, \Countable
                 }
 
                 $subPathname .= $this->getFilename();
-var_dump($this->rootPath);
+
+                // $fileInfo = new \SplFileInfo($this->getPathname());
                 $fileInfo = new \SplFileInfo($this->rootPath . $this->directorySeparator . $subPathname);
                 $fileInfo->relativePath = $this->subPath;
                 $fileInfo->relativePathname = $subPathname;
 
                 return $fileInfo;
             }
+
+            public function getChildren()
+            {
+                try {
+                    $children = parent::getChildren();
+
+                    if ($children instanceof self) {
+                        $children->rootPath = $this->rootPath;
+                        $children->rewindable = &$this->rewindable;
+                        $children->ignoreUnreadableDirs = $this->ignoreUnreadableDirs;
+                    }
+
+                    return $children;
+                } catch (\UnexpectedValueException $e) {
+                    if ($this->ignoreUnreadableDirs) {
+                        return new \RecursiveArrayIterator([]);
+                    }
+
+                    throw new \RuntimeException($e->getMessage(), $e->getCode(), $e);
+                }
+            }
+
+            public function rewind()
+            {
+                if (false === $this->isRewindable()) {
+                    return;
+                }
+
+                parent::rewind();
+            }
+
+            public function isRewindable()
+            {
+                if (null !== $this->rewindable) {
+                    return $this->rewindable;
+                }
+
+                if (false !== $stream = @opendir($this->getPath())) {
+                    $infoS = stream_get_meta_data($stream);
+                    closedir($stream);
+
+                    if ($infoS['seekable']) {
+                        return $this->rewindable = true;
+                    }
+                }
+
+                return $this->rewindable = false;
+            }
         };
 
+        // exclude directories
         if ($this->excludes) {
             $iterator = new class ($iterator, $this->excludes) extends \FilterIterator implements \RecursiveIterator
             {
@@ -388,8 +536,10 @@ var_dump($this->rootPath);
             };
         }
 
+        // create recursive iterator
         $iterator = new \RecursiveIteratorIterator($iterator, \RecursiveIteratorIterator::SELF_FIRST);
 
+        // mode: find files or dirs
         if ($this->mode) {
             $iterator = new class ($iterator, $this->mode) extends \FilterIterator
             {
@@ -404,7 +554,6 @@ var_dump($this->rootPath);
                 public function accept(): bool
                 {
                     $info = $this->current();
-
                     if (SimpleFinder::ONLY_DIR === $this->mode && $info->isFile()) {
                         return false;
                     }
@@ -412,7 +561,7 @@ var_dump($this->rootPath);
                     if (SimpleFinder::ONLY_FILE === $this->mode && $info->isDir()) {
                         return false;
                     }
-                    var_dump($info, $this->mode);
+
                     return true;
                 }
             };
@@ -433,20 +582,25 @@ var_dump($this->rootPath);
 
                 public function accept(): bool
                 {
-                    $pathname = $this->current()->getPathname();
+                    $pathname = $this->current()->getFilename();
+
                     foreach ($this->notNames as $not) {
                         if (fnmatch($not, $pathname)) {
                             return false;
                         }
                     }
 
-                    foreach ($this->names as $need) {
-                        if (fnmatch($need, $pathname)) {
-                            return true;
+                    if ($this->names) {
+                        foreach ($this->names as $need) {
+                            if (fnmatch($need, $pathname)) {
+                                return true;
+                            }
                         }
+
+                        return false;
                     }
 
-                    return false;
+                    return true;
                 }
             };
         }
@@ -465,7 +619,6 @@ var_dump($this->rootPath);
                 public function accept(): bool
                 {
                     $fileInfo = $this->current();
-
                     foreach ($this->filters as $filter) {
                         if (false === $filter($fileInfo)) {
                             return false;
@@ -504,10 +657,14 @@ var_dump($this->rootPath);
                         }
                     }
 
-                    foreach ($this->paths as $need) {
-                        if (fnmatch($need, $pathname)) {
-                            return true;
+                    if ($this->paths) {
+                        foreach ($this->paths as $need) {
+                            if (fnmatch($need, $pathname)) {
+                                return true;
+                            }
                         }
+
+                        return false;
                     }
 
                     return true;

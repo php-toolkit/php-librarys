@@ -8,15 +8,24 @@
 
 require __DIR__ . '/s-autoload.php';
 
+// var_dump(fnmatch('.*', ".gitkeep"));die;
+// var_dump(glob(__DIR__ . '/{t,T}ests', GLOB_BRACE | GLOB_ONLYDIR));
+
 $finder = \Inhere\Library\Files\SimpleFinder::create()
     ->files()
-    ->inDir(__DIR__ . '/tmp')
-    // ->name('*.php')
+    ->name('*.php')
+    // ->inDir(__DIR__ . '/tmp')
+    // ->ignoreVCS(false)
+    // ->ignoreDotFiles(false)
+    // ->exclude('tmp')
+    ->notPath('tmp')
+    ->inDir(__DIR__)
 ;
 
 foreach ($finder as $file) {
     // var_dump($file);die;
-    echo "+ {$file->getFilename()}\n";
+    echo "+ {$file->getPathname()}\n";
 }
 
+// print_r($finder);
 var_dump($finder->count());

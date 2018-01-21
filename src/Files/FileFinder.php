@@ -15,6 +15,7 @@ use Inhere\Library\StdObject;
 /**
  * Class FileFinder
  * @package Inhere\Library\Files
+ * @deprecated Please use SimpleFinder::class
  *  $finder = new FileFinder([
  *       'sourcePath'  => '/var/xxx/vendor/bower/jquery'),
  *   ]);

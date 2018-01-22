@@ -21,7 +21,7 @@ trait StdObjectTrait
      * get called class full name
      * @return string
      */
-    final public static function fullName()
+    final public static function fullName(): string
     {
         return static::class;
     }
@@ -31,7 +31,7 @@ trait StdObjectTrait
      * @param null|string $fullName
      * @return string
      */
-    final public static function spaceName($fullName = null)
+    final public static function spaceName(string $fullName = null): string
     {
         $fullName = $fullName ?: self::fullName();
         $fullName = str_replace('\\', '/', $fullName);
@@ -44,7 +44,7 @@ trait StdObjectTrait
      * @param null|string $fullName
      * @return string
      */
-    final public static function className($fullName = null)
+    final public static function className(string $fullName = null): string
     {
         $fullName = $fullName ?: self::fullName();
         $fullName = str_replace('\\', '/', $fullName);

@@ -40,10 +40,10 @@ trait NameAliasTrait
     }
 
     /**
-     * @param $alias
+     * @param string $alias
      * @return mixed
      */
-    public function resolveAlias($alias)
+    public function resolveAlias(string $alias)
     {
         return $this->aliases[$alias] ?? $alias;
     }

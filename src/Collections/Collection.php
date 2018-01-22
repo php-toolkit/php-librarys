@@ -43,7 +43,7 @@ class Collection extends SimpleCollection
     /**
      * @var array
      */
-//    protected $files = [];
+    // protected $files = [];
 
     /**
      * Property separator.
@@ -124,7 +124,7 @@ class Collection extends SimpleCollection
         return Arr::getByPath($this->data, $path, $default, $this->separator);
     }
 
-    public function exists($path)
+    public function exists($path): bool
     {
         return $this->get($path) !== null;
     }
@@ -133,7 +133,7 @@ class Collection extends SimpleCollection
      * @param string $path
      * @return bool
      */
-    public function has(string $path)
+    public function has(string $path): bool
     {
         return $this->exists($path);
     }

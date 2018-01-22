@@ -30,7 +30,7 @@ final class Type
     /**
      * @return array
      */
-    public static function all()
+    public static function all(): array
     {
         return [
             self::ARRAY,
@@ -49,7 +49,7 @@ final class Type
     /**
      * @return array
      */
-    public static function scalars()
+    public static function scalars(): array
     {
         return [
             self::BOOL,

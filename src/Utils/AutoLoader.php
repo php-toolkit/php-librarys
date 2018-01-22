@@ -90,7 +90,7 @@ class AutoLoader
     /**
      * @return array
      */
-    public static function getFiles()
+    public static function getFiles(): array
     {
         return self::$files;
     }
@@ -172,7 +172,7 @@ class AutoLoader
     /**
      * @return array
      */
-    public function getPsr4Map()
+    public function getPsr4Map(): array
     {
         return $this->psr4Map;
     }
@@ -188,7 +188,7 @@ class AutoLoader
     /**
      * @return array
      */
-    public function getClassMap()
+    public function getClassMap(): array
     {
         return $this->classMap;
     }
@@ -255,7 +255,7 @@ class AutoLoader
     {
         // work around for PHP 5.3.0 - 5.3.2 https://bugs.php.net/50731
         if ('\\' === $class[0]) {
-            $class = substr($class, 1);
+            $class = (string)substr($class, 1);
         }
 
         // class map lookup
@@ -276,7 +276,7 @@ class AutoLoader
     private function findFileWithExtension($class, $ext)
     {
         // PSR-4 lookup
-        $logicalPathPsr4 = strtr($class, '\\', DIRECTORY_SEPARATOR) . $ext;
+        $logicalPathPsr4 = str_replace('\\', DIRECTORY_SEPARATOR, $class) . $ext;
 
         // PSR-4
         foreach ($this->psr4Map as $prefix => $dir) {
@@ -290,7 +290,7 @@ class AutoLoader
         }
 
         // PEAR-like class name
-        $logicalPathPsr0 = strtr($class, '_', DIRECTORY_SEPARATOR) . $ext;
+        $logicalPathPsr0 = str_replace('_', DIRECTORY_SEPARATOR, $class) . $ext;
 
         foreach ($this->psr0Map as $prefix => $dir) {
             if (0 === strpos($class, $prefix)) {
@@ -306,7 +306,7 @@ class AutoLoader
     /**
      * @return array
      */
-    public function getMissingClasses()
+    public function getMissingClasses(): array
     {
         return $this->missingClasses;
     }

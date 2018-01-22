@@ -14,11 +14,11 @@ require __DIR__ . '/s-autoload.php';
 $finder = \Inhere\Library\Files\SimpleFinder::create()
     ->files()
     ->name('*.php')
-    // ->inDir(__DIR__ . '/tmp')
     // ->ignoreVCS(false)
     // ->ignoreDotFiles(false)
     // ->exclude('tmp')
     ->notPath('tmp')
+    // ->inDir(__DIR__ . '/tmp')
     ->inDir(__DIR__)
 ;
 
@@ -28,4 +28,4 @@ foreach ($finder as $file) {
 }
 
 // print_r($finder);
-var_dump($finder->count());
+// var_dump($finder->count());

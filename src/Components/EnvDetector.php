@@ -46,7 +46,7 @@ class EnvDetector
      * @param string $defaultEnv
      * @return string
      */
-    public static function getEnvNameByHost($defaultEnv = null, $hostname = null)
+    public static function getEnvNameByHost(string $defaultEnv = null, string $hostname = null): string
     {
         $hostname = $hostname ?: gethostname();
 
@@ -69,7 +69,7 @@ class EnvDetector
      * @param null|string $domain
      * @return string
      */
-    public static function getEnvNameByDomain($defaultEnv = null, $domain = null)
+    public static function getEnvNameByDomain(string $defaultEnv = null, string $domain = null): string
     {
         $domain = $domain ?: PhpHelper::serverParam('HTTP_HOST');
 

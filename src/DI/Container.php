@@ -128,7 +128,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @throws \Inhere\Exceptions\DependencyResolutionException
      * @throws \InvalidArgumentException
      */
-    public function set($id, $definition, array $opts = [])
+    public function set(string $id, $definition, array $opts = [])
     {
         $id = $this->_checkServiceId($id);
 
@@ -245,21 +245,21 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @throws \InvalidArgumentException
      * @throws \Inhere\Exceptions\DependencyResolutionException
      */
-    public function protect($id, $definition, $share = false)
+    public function protect(string $id, $definition, $share = false)
     {
         return $this->lock($id, $definition, $share);
     }
 
     /**
      * (注册)锁定的服务，也可在注册后锁定,防止 getNew() 强制重载
-     * @param  string $id [description]
+     * @param  string $id description
      * @param $definition
      * @param $share
      * @return $this
      * @throws \Inhere\Exceptions\DependencyResolutionException
      * @throws \InvalidArgumentException
      */
-    public function lock($id, $definition, $share = false)
+    public function lock(string $id, $definition, $share = false)
     {
         return $this->set($id, $definition, [
             'shared' => $share,
@@ -302,7 +302,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @throws \InvalidArgumentException
      * @throws \Inhere\Exceptions\DependencyResolutionException
      */
-    public function createCallback($target, array $arguments = [], array $props = [])
+    public function createCallback($target, array $arguments = [], array $props = []): callable
     {
         // a Closure OR a callable Object
         if (\is_object($target) && method_exists($target, '__invoke')) {
@@ -386,7 +386,6 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     public function get($id)
     {
         if (!$this->has($id)) {
-
             // a class name.
             if (strpos($id, '\\') && class_exists($id)) {
                 /** @noinspection ExceptionsAnnotatingAndHandlingInspection */
@@ -405,12 +404,16 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @return mixed
      * @throws \InvalidArgumentException
      */
-    public function getNew($id)
+    public function getNew(string $id)
     {
         return $this->new($id);
     }
 
-    public function new($id)
+    /**
+     * @param string $id
+     * @return mixed|null
+     */
+    public function new(string $id)
     {
         return $this->getInstance($id, true, true);
     }
@@ -432,7 +435,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @return mixed
      * @throws \InvalidArgumentException
      */
-    public function raw($id)
+    public function raw(string $id)
     {
         $id = $this->resolveAlias($id);
 
@@ -447,7 +450,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * 删除服务
      * @param $id
      */
-    public function del($id)
+    public function del(string $id)
     {
         $id = $this->resolveAlias($id);
 
@@ -477,9 +480,9 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @return mixed|null
      * @throws \InvalidArgumentException
      */
-    public function getInstance($id, $thrErr = true, $forceNew = false)
+    public function getInstance(string $id, $thrErr = true, $forceNew = false)
     {
-        if (!$id || !\is_string($id)) {
+        if (!$id) {
             throw new \InvalidArgumentException(sprintf(
                 'The first parameter must be a non-empty string, %s given',
                 \gettype($id)
@@ -502,7 +505,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @return Service|null
      * @throws \InvalidArgumentException
      */
-    public function getService($id, $thrErr = false)
+    public function getService(string $id, $thrErr = false)
     {
         $id = $this->resolveAlias($id);
 
@@ -521,7 +524,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @param $alias
      * @return mixed
      */
-    public function resolveAlias($alias)
+    public function resolveAlias(string $alias)
     {
         // is a real id
         if (isset($this->services[$alias])) {
@@ -548,7 +551,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * 获取全部服务信息
      * @return array
      */
-    public function getServices()
+    public function getServices(): array
     {
         return $this->services;
     }
@@ -570,7 +573,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @param bool $toArray
      * @return array
      */
-    public function getIds($toArray = true)
+    public function getIds($toArray = true): array
     {
         $ids = array_keys($this->services);
 
@@ -582,7 +585,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @return bool
      * @throws \InvalidArgumentException
      */
-    public function isShared($id)
+    public function isShared(string $id): bool
     {
         if ($service = $this->getService($id)) {
             return $service->isShared();
@@ -596,7 +599,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @return bool
      * @throws \InvalidArgumentException
      */
-    public function isLocked($id)
+    public function isLocked(string $id): bool
     {
         if ($service = $this->getService($id)) {
             return $service->isLocked();
@@ -619,7 +622,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @param string $id
      * @return bool
      */
-    public function exists($id)
+    public function exists(string $id): bool
     {
         $id = $this->resolveAlias($id);
 
@@ -631,7 +634,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @return string
      * @throws \InvalidArgumentException
      */
-    private function _checkServiceId($id)
+    private function _checkServiceId(string $id): string
     {
         if (!\is_string($id)) {
             throw new \InvalidArgumentException('Set up the service Id can be a string!');
@@ -696,7 +699,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
     /**
      * @return int
      */
-    public function count()
+    public function count(): int
     {
         return \count($this->services);
     }
@@ -706,7 +709,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * Returns an iterator for this object, for use with foreach
      * @return \ArrayIterator
      */
-    public function getIterator()
+    public function getIterator(): \Iterator
     {
         return new \ArrayIterator($this->services);
     }
@@ -716,7 +719,7 @@ class Container implements ContainerInterface, \ArrayAccess, \IteratorAggregate,
      * @param   mixed $offset The array offset.
      * @return  boolean  True if the offset exists, false otherwise.
      */
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return $this->exists($offset);
     }

@@ -28,7 +28,6 @@ use Inhere\Exceptions\InvalidArgumentException;
  * @property string $urn
  * @property string $variant
  * @property string $version
- *
  */
 class UUID
 {
@@ -129,7 +128,7 @@ class UUID
      * @param string $uuid
      * @throws InvalidArgumentException
      */
-    protected function __construct($uuid)
+    protected function __construct(string $uuid)
     {
         if (!empty($uuid) && \strlen($uuid) !== 16) {
             throw new InvalidArgumentException('Input must be a 128-bit integer.');
@@ -179,9 +178,8 @@ class UUID
      * @param string $node
      * @return string
      */
-    protected static function mintTime($node = null)
+    protected static function mintTime($node = null): string
     {
-
         /** Get time since Gregorian calendar reform in 100ns intervals
          * This is exceedingly difficult because of PHP's (and pack()'s)
          * integer size limits.
@@ -231,10 +229,10 @@ class UUID
     /**
      * Randomness is returned as a string of bytes
      *
-     * @param $bytes
+     * @param int $bytes
      * @return string
      */
-    public static function randomBytes($bytes)
+    public static function randomBytes($bytes): string
     {
         return random_bytes($bytes);
     }
@@ -256,10 +254,12 @@ class UUID
             return $str;
         }
 
-        // strip URN scheme and namespace
-        $str = preg_replace('/^urn:uuid:/is', '', $str);
-        // strip non-hex characters
-        $str = preg_replace('/[^a-f0-9]/is', '', $str);
+        $str = (string)preg_replace([
+            // strip URN scheme and namespace
+            '/^urn:uuid:/is',
+            // strip non-hex characters
+            '/[^a-f0-9]/is',
+        ], '', $str);
 
         if (\strlen($str) !== ($len * 2)) {
             return null;
@@ -272,13 +272,13 @@ class UUID
      * Generates a Version 3 or Version 5 UUID.
      * These are derived from a hash of a name and its namespace, in binary form.
      *
-     * @param string $ver
+     * @param int $ver
      * @param string $node
      * @param string|null $ns
      * @return string
      * @throws InvalidArgumentException
      */
-    protected static function mintName($ver, $node, $ns)
+    protected static function mintName($ver, $node, $ns): string
     {
         if (empty($node)) {
             throw new InvalidArgumentException('A name-string is required for Version 3 or 5 UUIDs.');
@@ -290,8 +290,7 @@ class UUID
             throw new InvalidArgumentException('A binary namespace is required for Version 3 or 5 UUIDs.');
         }
 
-        $version = null;
-        $uuid = null;
+        $version = $uuid = null;
 
         switch ($ver) {
             case static::MD5:
@@ -322,7 +321,7 @@ class UUID
      *
      * @return string
      */
-    protected static function mintRand()
+    protected static function mintRand(): string
     {
         $uuid = static::randomBytes(16);
         // set variant
@@ -340,7 +339,7 @@ class UUID
      * @return Uuid
      * @throws \Inhere\Exceptions\InvalidArgumentException
      */
-    public static function import($uuid)
+    public static function import(string $uuid): UUID
     {
         return new static(static::makeBin($uuid, 16));
     }
@@ -354,9 +353,21 @@ class UUID
      * @param string $b
      * @return string|string
      */
-    public static function compare($a, $b)
+    public static function compare(string $a, string $b): string
     {
         return static::makeBin($a, 16) === static::makeBin($b, 16);
+    }
+
+    /**
+     * Import and validate an UUID
+     *
+     * @param Uuid|string $uuid
+     * @return boolean
+     * @throws InvalidArgumentException
+     */
+    public static function validate(string $uuid): bool
+    {
+        return (boolean)preg_match('~' . static::VALID_UUID_REGEX . '~', static::import($uuid)->string);
     }
 
     public function __isset($var)
@@ -371,9 +382,9 @@ class UUID
 
     /**
      * @param string $var
-     * @return string|string|number|number|number|number|number|NULL|number|NULL|NULL
+     * @return string|int|NULL
      */
-    public function __get($var)
+    public function __get(string $var)
     {
         switch ($var) {
             case 'bytes':
@@ -443,17 +454,5 @@ class UUID
     public function __toString()
     {
         return $this->string;
-    }
-
-    /**
-     * Import and validate an UUID
-     *
-     * @param Uuid|string $uuid
-     *
-     * @return boolean
-     */
-    public static function validate($uuid)
-    {
-        return (boolean)preg_match('~' . static::VALID_UUID_REGEX . '~', static::import($uuid)->string);
     }
 }

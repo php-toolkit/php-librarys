@@ -99,7 +99,7 @@ class SimpleCollection implements CollectionInterface
      * @param array $names
      * @return array
      */
-    public function gets(array $names)
+    public function gets(array $names): array
     {
         $values = [];
 
@@ -162,7 +162,7 @@ class SimpleCollection implements CollectionInterface
      * @param string $char
      * @return string
      */
-    public function implode($char = ',')
+    public function implode(string $char = ','): string
     {
         return implode($char, $this->all());
     }
@@ -171,12 +171,15 @@ class SimpleCollection implements CollectionInterface
      * Get all items in collection
      * @return array The collection's source data
      */
-    public function all()
+    public function all(): array
     {
         return $this->data;
     }
 
-    public function toArray()
+    /**
+     * @return array
+     */
+    public function toArray(): array
     {
         return $this->all();
     }
@@ -185,7 +188,7 @@ class SimpleCollection implements CollectionInterface
      * Get collection keys
      * @return array The collection's source data keys
      */
-    public function keys()
+    public function keys(): array
     {
         return array_keys($this->data);
     }
@@ -195,7 +198,7 @@ class SimpleCollection implements CollectionInterface
      * @param string $key The data key
      * @return bool
      */
-    public function has(string $key)
+    public function has(string $key): bool
     {
         return array_key_exists($key, $this->data);
     }
@@ -234,7 +237,7 @@ class SimpleCollection implements CollectionInterface
      * @param  string $key The data key
      * @return bool
      */
-    public function offsetExists($key)
+    public function offsetExists($key): bool
     {
         return $this->has($key);
     }
@@ -277,7 +280,7 @@ class SimpleCollection implements CollectionInterface
      * Get number of items in collection
      * @return int
      */
-    public function count()
+    public function count(): int
     {
         return \count($this->data);
     }
@@ -289,7 +292,7 @@ class SimpleCollection implements CollectionInterface
     /**
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->data;
     }
@@ -298,7 +301,10 @@ class SimpleCollection implements CollectionInterface
      * Serializable interface
      *******************************************************************************/
 
-    public function serialize()
+    /**
+     * @return string
+     */
+    public function serialize(): string
     {
         return serialize($this->data);
     }

@@ -98,11 +98,11 @@ class Token
         /* Next, create a string that will be passed to crypt, containing all
          * of the settings, separated by dollar signs
          */
-        $param = '$' . implode('$', array(
+        $param = '$' . implode('$', [
                 '2x', //select the most secure version of blowfish (>=PHP 5.3.7)
                 str_pad($cost, 2, "0", STR_PAD_LEFT), //add the cost in two digits
                 $salt //add the salt
-            ));
+            ]);
 
         //now do the actual hashing
         return crypt($password, $param);
@@ -116,7 +116,7 @@ class Token
      * @param $password
      * @return bool
      */
-    public static function verifyHash($hash, $password)
+    public static function verifyHash($hash, $password): bool
     {
         /* Regenerating the with an available hash as the options parameter should
          * produce the same hash if the same password is passed.
@@ -130,7 +130,7 @@ class Token
      * @param array $opts
      * @return bool|string
      */
-    public static function pwdHash($pwd, $algo, array $opts = [])
+    public static function pwdHash(string $pwd, string $algo, array $opts = [])
     {
         $opts = array_merge([
             'cost' => 9
@@ -144,7 +144,7 @@ class Token
      * @param string $hash
      * @return bool|string
      */
-    public static function pwdVerify($pwd, $hash)
+    public static function pwdVerify(string $pwd, string $hash)
     {
         return password_verify($pwd, $hash);
     }
@@ -153,7 +153,7 @@ class Token
      * 生成guid
      * @return string
      */
-    public static function GUid()
+    public static function GUid(): string
     {
         mt_srand((double)microtime() * 10000);
 
@@ -173,7 +173,7 @@ class Token
      * @param $var array || obj
      * @return string
      */
-    public static function md5($var)
+    public static function md5($var): string
     {
         //serialize()序列化，串行化
         return md5(md5(serialize($var)));

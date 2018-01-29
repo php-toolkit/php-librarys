@@ -129,7 +129,42 @@ class Sys extends EnvHelper
 
         return $tmp;
     }
+    
+    /**
+     * 当前主机的外网IP
+     * @param string $default
+     * @return string
+     */
+    public static function getHostIP(string $default = '127.0.0.1'): string
+    {
+        static $ip;
 
+        if ($ip) {
+            return $ip;
+        }
+
+        $host= gethostname();
+        $maybe = gethostbyname($host);
+
+        if ($host !== $maybe) {
+            $ip = $maybe;
+
+            return $ip;
+        }
+
+        if (Helper::isUnix()) {
+            list($code, $output) = ProcessUtil::run('ip addr | grep eth0');
+
+            if ($code === 0 && $output && preg_match('#inet (.*)\/#', $output, $ms)) {
+                $ip = $ms[1];
+
+                return $ip;
+            }
+        }
+
+        return $default;
+    }
+    
     /**
      * @param string $program
      * @return int|string
